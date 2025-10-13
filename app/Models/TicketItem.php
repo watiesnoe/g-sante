@@ -1,0 +1,39 @@
+<?php
+namespace App\Models;
+use App\Traits\HasUuid;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class TicketItem extends Model
+{
+    use HasUuid;
+    use HasFactory;
+
+    // Champs assignables
+    protected $fillable = [
+        'ticket_id',
+        'prestation_id',
+        'service',
+        'prix_unitaire',
+        'quantite',
+        'remise',
+        'sous_total',
+        'part_assurance',
+        'part_gratuite',
+        'regle_gratuite_id',
+        'part_patient',
+    ];
+
+    // Relation : un item appartient à un ticket
+    public function ticket()
+    {
+        return $this->belongsTo(Ticket::class);
+    }
+
+    // Relation : un item appartient à une prestation
+    public function prestation()
+    {
+        return $this->belongsTo(Prestation::class);
+    }
+}

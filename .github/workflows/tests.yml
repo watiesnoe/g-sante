@@ -1,0 +1,52 @@
+# QUA-07 : formatage et tests automatiques à chaque envoi.
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: gsante_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_mysql, zip, gd, intl
+          coverage: none
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Préparer l'environnement
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+
+      # Le code historique n'est pas encore formaté : on contrôle les nouveaux fichiers
+      - name: Formatage (Pint) des nouveaux fichiers
+        run: |
+          BASE=${{ github.event.pull_request.base.sha || github.event.before }}
+          FICHIERS=$(git diff --name-only --diff-filter=A "$BASE" HEAD -- '*.php' 2>/dev/null || true)
+          if [ -n "$FICHIERS" ]; then vendor/bin/pint --test $FICHIERS; else echo "Aucun fichier PHP modifié."; fi
+
+      - name: Tests (Pest)
+        run: php artisan test
+        env:
+          DB_PASSWORD: root

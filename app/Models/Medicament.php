@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;
+use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Medicament extends Model
+{
+    use AppartientEtablissement;
+    use Audite;
+    use HasFactory, HasUuid;
+
+    protected $fillable = [
+        'uuid',
+        'nom',
+        'code_barre',
+        'description',
+        'stock',
+        'stock_min',
+        'famille_id',
+    ];
+
+    // Relations
+    public function famille()
+    {
+        return $this->belongsTo(Famille::class);
+    }
+
+    /**
+     * Les unités (conditionnements) disponibles pour ce médicament.
+     * Un médicament peut avoir plusieurs unités avec des prix différents.
+     */
+    /** Fiche du guide des médicaments (référentiel commun). */
+    public function fiche()
+    {
+        return $this->belongsTo(FicheMedicament::class, 'fiche_medicament_id');
+    }
+
+    public function unites()
+    {
+        return $this->hasMany(Unite::class);
+    }
+
+    /**
+     * L'unité par défaut (facteur = 1, ou marquée comme default).
+     */
+    public function uniteDefault()
+    {
+        return $this->hasOne(Unite::class)->where('is_default', true);
+    }
+
+    /**
+     * Alias for uniteDefault for ease of access (e.g. eager loading 'unite')
+     */
+    public function unite()
+    {
+        return $this->uniteDefault();
+    }
+
+    /**
+     * Prix de vente du médicament = prix de vente de son unité par défaut.
+     */
+    public function getPrixVenteAttribute()
+    {
+        return $this->uniteDefault->prix_vente ?? 0;
+    }
+
+    public function lots()
+    {
+        return $this->hasMany(Lot::class);
+    }
+
+    public function mouvementsStock()
+    {
+        return $this->hasMany(MouvementStock::class);
+    }
+
+    public function commandeMedicaments()
+    {
+        return $this->hasMany(CommandeMedicaments::class);
+    }
+
+    public function ordonnanceMedicaments()
+    {
+        return $this->hasMany(OrdonnanceMedicament::class);
+    }
+
+    public function receptionLignes()
+    {
+        return $this->hasMany(ReceptionLigne::class);
+    }
+
+    public function protocoles()
+    {
+        return $this->belongsToMany(
+            ProtocoleTraitement::class,
+            'protocole_medicament',
+            'medicament_id',
+            'protocole_id'
+        )
+        ->using(ProtocoleMedicament::class)
+        ->withPivot(['type', 'posologie', 'duree'])
+        ->withTimestamps();
+    }
+
+    /**œ
+     * Scope a query to only include medications with critical stock levels.
+     */
+    public function scopeCritique($query)
+    {
+        return $query->whereColumn('stock', '<=', 'stock_min');
+    }
+}

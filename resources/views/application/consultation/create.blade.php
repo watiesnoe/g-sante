@@ -1,0 +1,1746 @@
+@extends('layouts.app')
+
+@section('titre', $consultation ? 'Modifier Consultation' : 'Consultation Patient')
+
+@section('content')
+    <div class="container mt-4">
+
+        {{-- ═══════════════════════════════════════════════════════════════
+         FORMULAIRE PRINCIPAL
+    ═══════════════════════════════════════════════════════════════ --}}
+        <form id="consultationForm" method="POST"
+            action="{{ $consultation->exists ? route('consultations.update', $consultation) : route('consultations.store') }}">
+            @csrf
+            @if ($consultation->exists)
+                @method('PUT')
+            @endif
+            <input type="hidden" name="medecin_id" value="{{ auth()->user()->id }}">
+            <input type="hidden" name="patient_id" id="patient_id" value="{{ $consultation->patient_id ?? $selectedPatientId ?? '' }}">
+            <input type="hidden" name="ticket_id" id="ticket_id" value="{{ $selectedTicketId ?? '' }}">
+            <input type="hidden" name="grossesse_id" value="{{ $selectedGrossesseId ?? '' }}">
+            <input type="hidden" name="protocole_id" id="protocole_id" value="">
+
+            <div class="row g-4 mb-4">
+
+                {{-- ══════════════════════════════════════════════════════
+                 COLONNE PRINCIPALE (9/12)
+            ══════════════════════════════════════════════════════ --}}
+                <div class="col-lg-9">
+                    <div class="card shadow-lg border-0">
+
+                        {{-- ──── HEADER ──── --}}
+                        <div class="card-header bg-primary text-white border-0 py-3"
+                            style="background: linear-gradient(135deg, #0061f2 0%, #6900c7 100%);">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-white text-primary rounded-circle p-2 shadow-sm">
+                                            <i class="fas fa-stethoscope fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-0 fw-bold">
+                                                {{ $consultation->exists ? 'Modifier la consultation' : 'Nouvelle consultation' }}
+                                            </h4>
+                                            <p class="mb-0 small opacity-75">Remplissez tous les champs nécessaires</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold mb-1 text-white">👤 Patient</label>
+                                    <select id="patientDropdown" class="form-select form-select-sm border-0" required>
+                                        <option value="">-- Sélectionner un patient en attente --</option>
+                                        @foreach ($tickets as $ticket)
+                                            <option value="{{ $ticket->patient->id }}" data-ticket="{{ $ticket->id }}"
+                                                @if (
+                                                    ($consultation->exists && $consultation->patient_id == $ticket->patient->id) ||
+                                                        (isset($selectedTicketId) && $selectedTicketId == $ticket->id) ||
+                                                        (isset($selectedPatientId) && $selectedPatientId == $ticket->patient->id)) selected @endif>
+                                                {{ $ticket->patient->nom }} {{ $ticket->patient->prenom }} - Ticket N°
+                                                {{ $ticket->id }}
+                                            </option>
+                                        @endforeach
+
+                                        {{-- Cas où le patient est passé par paramètre mais n'a pas encore de ticket affiché --}}
+                                        @if(isset($selectedPatientId) && !$tickets->pluck('patient_id')->contains($selectedPatientId))
+                                            @php $p = \App\Models\Patient::find($selectedPatientId); @endphp
+                                            @if($p)
+                                                <option value="{{ $p->id }}" selected>
+                                                    {{ $p->nom }} {{ $p->prenom }} (Suivi Maternité - Sans ticket actif)
+                                                </option>
+                                            @endif
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 bg-light">
+
+                            {{-- ╔═══════════════════════════════════════════════════╗
+                             ║  ÉTAPE 1 : CONSTANTES & ANTÉCÉDENTS              ║
+                             ╚═══════════════════════════════════════════════════╝ --}}
+                            <div class="card shadow-sm mb-4 border-0">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width:35px;height:35px;">
+                                            <i class="fas fa-heartbeat fa-sm"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-primary">ÉTAPE 1 — CONSTANTES & ANTÉCÉDENTS</h6>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-0">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold small text-secondary">Motif de
+                                                consultation</label>
+                                            <textarea name="motif" class="form-control" rows="2" placeholder="Motif de consultation...">{{ $consultation->motif ?? '' }}</textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold small text-secondary">Type d'activité</label>
+                                            <select name="type_activite" class="form-select no-select2">
+                                                @foreach(['generale' => 'Consultation générale', 'pediatrie' => 'Pédiatrie', 'cpn' => 'Consultation prénatale', 'controle' => 'Contrôle / suivi', 'urgence' => 'Urgence'] as $code => $libelle)
+                                                    <option value="{{ $code }}" {{ ($consultation->type_activite ?? 'generale') === $code ? 'selected' : '' }}>{{ $libelle }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold small text-secondary">Antécédents
+                                                médicaux</label>
+                                            <textarea name="antecedents" class="form-control" rows="2"
+                                                placeholder="Antécédents médicaux, allergies, traitements en cours...">{{ $consultation->antecedents ?? '' }}</textarea>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold small text-secondary">Poids (kg)</label>
+                                            <input type="number" name="poids" class="form-control" min="1"
+                                                step="0.1" value="{{ $consultation->poids ?? '' }}" placeholder="kg">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold small text-secondary">Taille (cm)</label>
+                                            <input type="number" name="taille" class="form-control" min="30"
+                                                step="0.1" value="{{ $consultation->taille ?? '' }}" placeholder="cm">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold small text-secondary">IMC (auto)</label>
+                                            <input type="text" id="imc" class="form-control bg-light" readonly
+                                                value="{{ $consultation->exists && $consultation->taille > 0 ? number_format($consultation->poids / ($consultation->taille / 100) ** 2, 2) : '' }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold small text-secondary">Tension
+                                                artérielle</label>
+                                            <input type="text" name="tension" class="form-control" placeholder="Ex: 12/8"
+                                                value="{{ $consultation->tension ?? '' }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold small text-secondary">Groupe
+                                                sanguin</label>
+                                            <select name="groupe_sanguin" class="form-select js-select2">
+                                                <option value="">-- Sélectionner --</option>
+                                                @foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $gs)
+                                                    <option value="{{ $gs }}"
+                                                        @if ($consultation->exists && $consultation->groupe_sanguin == $gs) selected @endif>
+                                                        {{ $gs }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label fw-semibold small text-secondary">Adresse du
+                                                patient</label>
+                                            <input type="text" name="adresse_patient" class="form-control"
+                                                placeholder="Adresse complète"
+                                                value="{{ $consultation->adresse_patient ?? '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- ╔═══════════════════════════════════════════════════╗
+                             ║  ÉTAPE 2 : INTERROGATOIRE & DIAGNOSTIC           ║
+                             ╚═══════════════════════════════════════════════════╝ --}}
+                            <div class="card shadow-sm mb-4 border-0">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width:35px;height:35px;">
+                                            <i class="fas fa-notes-medical fa-sm"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-success">ÉTAPE 2 — INTERROGATOIRE & DIAGNOSTIC</h6>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+
+                                    {{-- Select caché pour compatibilité POST --}}
+                                    <select id="symptomes" name="symptomes[]" multiple class="d-none">
+                                        @foreach ($symptomes as $s)
+                                            <option value="{{ $s->id }}">{{ $s->nom }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    {{-- Analyse IA (pleine largeur) --}}
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0 fw-bold text-info text-uppercase opacity-75">
+                                            <i class="fas fa-brain me-2"></i>Analyse de Probabilité
+                                            <span id="symptomCounter" class="badge bg-success ms-2">0 coché(s)</span>
+                                        </h6>
+                                    </div>
+                                    <div id="diagnosticAssistantContainer" class="bg-white rounded shadow-sm p-3 mb-3"
+                                        style="min-height:120px;">
+                                        <div id="diagnosticAssistantEmpty" class="text-center py-4 text-muted small">
+                                            <i class="fas fa-arrow-right fa-2x mb-2 opacity-25"></i><br>
+                                            Cochez les symptômes dans le panneau latéral <strong>→</strong> pour lancer
+                                            l'analyse.
+                                        </div>
+                                        <div id="diagnosticAssistantContent"></div>
+                                    </div>
+                                    
+                                    {{-- Suggestions de questions pour affiner --}}
+                                    <div id="followUpContainer" class="mb-3 d-none">
+                                        <div class="alert alert-info border-0 shadow-sm py-2 px-3 d-flex align-items-center gap-3">
+                                            <div class="bg-info text-white rounded-circle p-2 shadow-sm">
+                                                <i class="fas fa-question-circle"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold small text-uppercase">Questions suggérées pour affiner</div>
+                                                <div id="followUpQuestions" class="d-flex flex-wrap gap-2 mt-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="suggestionsInputs" style="display:none;"></div>
+
+                                    {{-- Ligne 2 : Diagnostic final + Observations --}}
+                                    <div class="row g-3 mt-4 pt-4 border-top">
+                                        <div class="col-md-5">
+                                            <label class="form-label fw-bold small text-secondary">DIAGNOSTIC FINAL</label>
+                                            <select name="maladie_id" id="maladieSelect" class="form-select js-select2"
+                                                required>
+                                                <option value="">-- Conclure sur une pathologie --</option>
+                                                @foreach ($maladies->groupBy(fn($m) => $m->actif ? ($m->chapitre ?: 'Autres') : 'Archivées (hors guide)') as $chapitre => $groupe)
+                                                    <optgroup label="{{ $chapitre }}">
+                                                        @foreach ($groupe as $maladie)
+                                                            <option value="{{ $maladie->id }}"
+                                                                @if ($consultation->exists && $consultation->maladies->contains($maladie->id)) selected @endif>
+                                                                {{ $maladie->nom }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endforeach
+                                            </select>
+
+                                            {{-- Console Protocole (apparaît après sélection) --}}
+                                            <div id="protocoleContainer" class="mt-3" style="display:none;">
+                                                <div
+                                                    class="card border-0 shadow-lg border-start border-5 border-warning overflow-hidden bg-white">
+                                                    <div class="card-header bg-warning py-2">
+                                                        <h6 class="mb-0 text-white fw-bold">
+                                                            <i class="fas fa-microscope me-2"></i>PROTOCOLE :
+                                                            <span id="protocoleTitre" class="text-uppercase"></span>
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body p-3">
+                                                        <div class="small fw-bold text-success text-uppercase mb-1">
+                                                            Traitement recommandé :</div>
+                                                        <div id="protocoleTraitement" class="h6 fw-bold mb-1"></div>
+                                                        <div id="protocolePosologie" class="small text-muted mb-2"></div>
+                                                        <div id="protocoleAlternatif" class="small text-muted fst-italic mb-2" style="display:none;"></div>
+                                                        <span id="stockBadge" class="badge bg-secondary mb-2"></span>
+
+                                                        {{-- Signes de gravité de la maladie (guide clinique) --}}
+                                                        <div id="graviteBloc" class="border border-danger rounded p-2 mb-2" style="display:none;">
+                                                            <div class="small fw-bold text-danger text-uppercase mb-1"><i class="fas fa-exclamation-circle me-1"></i>Signes de gravité — cochez ceux présents</div>
+                                                            <div id="graviteListe" class="small"></div>
+                                                            <div id="graviteAlerte" class="alert alert-danger py-1 px-2 mt-2 mb-0 small fw-bold" style="display:none;">
+                                                                <i class="fas fa-ambulance me-1"></i>Signe de gravité présent : prise en charge urgente, envisager l'hospitalisation ou la référence.
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Médicaments cités par le guide : le médecin choisit ceux à prescrire --}}
+                                                        <div id="medsOptionsBloc" class="mb-2" style="display:none;">
+                                                            <div class="small fw-bold text-primary text-uppercase mb-1">Médicaments du guide <span id="patientTerrain" class="badge bg-light text-dark border ms-1"></span></div>
+                                                            <div class="small text-muted mb-1">Le guide cite ces molécules selon la situation : choisissez celles à prescrire, la posologie proposée est à adapter.</div>
+                                                            <div id="medsOptionsListe" class="list-group list-group-flush small"></div>
+                                                        </div>
+                                                        <a id="guideCliniqueLien" href="#" target="_blank" class="small d-block mb-1" style="display:none;"><i class="fas fa-book-open me-1"></i>Fiche complète dans le guide clinique</a>
+                                                        <div class="text-muted fst-italic" style="font-size:0.7rem;">Aide à la décision : vérifier le protocole national et l'état du patient.</div>
+                                                        <div class="d-none" id="multiProtocolSelector">
+                                                            <select id="selectProtocoleAlt"
+                                                                class="form-select form-select-sm mt-2"></select>
+                                                        </div>
+                                                        <button type="button" id="btnApplyProtocole"
+                                                            class="btn btn-success btn-sm w-100 shadow-sm mt-2">
+                                                            <i class="fas fa-check-circle me-1"></i>Appliquer à
+                                                            l'Ordonnance
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <label class="form-label fw-bold small text-secondary">RÉSUMÉ CLINIQUE /
+                                                OBSERVATIONS</label>
+                                            <textarea class="form-control" name="diagnostic" placeholder="Saisir la synthèse de la consultation..."
+                                                rows="5" required>{{ $consultation->diagnostic ?? '' }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-secondary">DIAGNOSTIC CODIFIÉ</label>
+                                            <select name="diagnostic_id" id="diagnosticCode" class="form-select" style="width:100%">
+                                                @if(!empty($consultation?->diagnosticCode))
+                                                    <option value="{{ $consultation->diagnostic_id }}" selected>{{ $consultation->diagnosticCode->code }} — {{ $consultation->diagnosticCode->libelle }}</option>
+                                                @endif
+                                            </select>
+                                            <div class="form-text">Nomenclature (CIM-10 ou nationale). Le résumé clinique reste en texte libre.</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-secondary">CONDUITE À TENIR</label>
+                                            <textarea class="form-control" name="conduite_a_tenir" rows="2">{{ $consultation->conduite_a_tenir ?? '' }}</textarea>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            {{-- ╔═══════════════════════════════════════════════════╗
+                             ║  ÉTAPE 3 : ORDONNANCE MÉDICALE                   ║
+                             ╚═══════════════════════════════════════════════════╝ --}}
+                            <div class="card shadow-sm mb-4 border-0">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width:35px;height:35px;">
+                                            <i class="fas fa-prescription-bottle fa-sm"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-info">ÉTAPE 3 — ORDONNANCE MÉDICALE</h6>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-0">
+                                    <div class="mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <label class="fw-semibold mb-0">Ordonnance médicale</label>
+                                            <button type="button" id="btnAjouterMedicament"
+                                                class="btn btn-primary btn-sm mb-2 mt-3">
+                                                <i class="fas fa-plus me-1"></i> Ajouter médicament
+                                            </button>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover mb-0" id="ordonnanceTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Médicament</th>
+                                                        <th>Posologie</th>
+                                                        <th>Durée (Jrs)</th>
+                                                        <th>Qté</th>
+                                                        <th style="width:50px;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if ($consultation->exists && $consultation->ordonnances->count())
+                                                        @foreach ($consultation->ordonnances as $ordonnance)
+                                                            @foreach ($ordonnance->medicaments as $medicament)
+                                                                <tr>
+
+                                                                    <td>
+                                                                        <select name="medicaments[]"
+                                                                            class="form-select selectMedicament" required>
+                                                                            <option value="">-- Sélectionner --
+                                                                            </option>
+                                                                            @foreach ($medicaments as $med)
+                                                                                <option value="{{ $med->id }}"
+                                                                                    data-prix="{{ $med->prix_vente }}"
+                                                                                    data-stock="{{ $med->stock }}"
+                                                                                    @if ($med->id == $medicament->id) selected @endif>
+                                                                                    {{ $med->nom }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </td>
+                                                                    <td><input type="text" name="posologies[]"
+                                                                            class="form-control form-control-sm"
+                                                                            value="{{ $medicament->pivot->posologie }}"
+                                                                            required></td>
+                                                                    <td><input type="number" name="duree_jours[]"
+                                                                            class="form-control form-control-sm"
+                                                                            value="{{ $medicament->pivot->duree_jours }}">
+                                                                    </td>
+                                                                    <td><input type="number" name="quantites[]"
+                                                                            class="form-control form-control-sm input-qty"
+                                                                            value="{{ $medicament->pivot->quantite }}">
+                                                                    </td>
+                                                                    <td class="text-center"><button type="button"
+                                                                            class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i
+                                                                                class="fas fa-trash-alt"></i></button></td>
+                                                                </tr>
+                                                            @endforeach
+                                                        @endforeach
+                                                    @else
+                                                        <tr id="emptyOrdonnanceRow">
+                                                            <td colspan="5" class="text-center text-muted py-3">
+                                                                <i class="fas fa-pills me-2"></i>Aucun médicament ajouté
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                </tbody>
+                                                {{-- Footer retiré (plus de prix) --}}
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {{-- Examens + RDV --}}
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-white">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <label class="fw-semibold mb-0">Examens complémentaires</label>
+                                                    <button type="button" id="btnAjouterAnalyse"
+                                                        class="btn-sm">
+                                                        <i class="fas fa-plus me-1"></i> Ajouter
+                                                    </button>
+                                                </div>
+                                                <ul class="list-group list-group-flush" id="analyseList">
+                                                    @forelse($consultation->examens ?? [] as $ex)
+                                                        <li class="list-group-item px-0 d-flex gap-2 align-items-center">
+                                                            <i class="fas fa-flask text-info"></i>
+                                                            <input type="text" name="examens[]"
+                                                                class="form-control flex-grow-1"
+                                                                value="{{ $ex->examen }}" required>
+                                                            <button type="button"
+                                                                class="btn btn-link text-danger btn-sm btnSupprimerAnalyse p-0"><i
+                                                                    class="fas fa-times"></i></button>
+                                                        </li>
+                                                    @empty
+                                                        <li class="list-group-item text-center text-muted py-3"
+                                                            id="emptyAnalyseRow">
+                                                            <i class="fas fa-flask me-2"></i>Aucune analyse ajoutée
+                                                        </li>
+                                                    @endforelse
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-white">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <label class="fw-semibold mb-0">Rendez-vous de suivi</label>
+                                                    <button type="button" id="btnAjouterRdv"
+                                                        class="btn btn-secondary btn-sm">
+                                                        <i class="fas fa-plus me-1"></i> Ajouter
+                                                    </button>
+                                                </div>
+                                                <ul class="list-group list-group-flush" id="rdvList">
+                                                    @forelse($consultation->rendezVous ?? [] as $r)
+                                                        <li class="list-group-item px-0">
+                                                            <div class="row g-2">
+                                                                <div class="col-5"><input type="text"
+                                                                        name="rdv_motifs[]" class="form-control"
+                                                                        value="{{ $r->motif }}" required></div>
+                                                                <div class="col-3"><input type="date"
+                                                                        name="rdv_dates[]" class="form-control"
+                                                                        value="{{ \Carbon\Carbon::parse($r->date_heure)->format('Y-m-d') }}"
+                                                                        required></div>
+                                                                <div class="col-3"><input type="time"
+                                                                        name="rdv_heures[]" class="form-control"
+                                                                        value="{{ \Carbon\Carbon::parse($r->date_heure)->format('H:i') }}"
+                                                                        required></div>
+                                                                <div class="col-1"><button type="button"
+                                                                        class="btn btn-link text-danger btn-sm btnSupprimerRdv p-0"><i
+                                                                            class="fas fa-trash-alt"></i></button></div>
+                                                            </div>
+                                                        </li>
+                                                    @empty
+                                                        <li class="list-group-item text-center text-muted py-3"
+                                                            id="emptyRdvRow">
+                                                            <i class="fas fa-calendar-check me-2"></i>Aucun rendez-vous
+                                                            planifié
+                                                        </li>
+                                                    @endforelse
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- ╔═══════════════════════════════════════════════════╗
+                             ║  ÉTAPE 4 : CERTIFICAT & HOSPITALISATION          ║
+                             ╚═══════════════════════════════════════════════════╝ --}}
+                            <div class="card shadow-sm mb-4 border-0">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width:35px;height:35px;">
+                                            <i class="fas fa-file-alt fa-sm"></i>
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-danger">ÉTAPE 4 — CERTIFICAT & HOSPITALISATION</h6>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-0">
+                                    <div class="row g-3">
+                                        <div class="col-12 mt-3">
+                                            <textarea class="form-control mt-2" name="certificat" placeholder="Certificat médical (optionnel)..." rows="2">{{ $consultation->certificat?->contenu ?? '' }}</textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input type="checkbox" name="hospitalisation" class="form-check-input"
+                                                    id="hospitalisationCheck" value="1"
+                                                    @if ($consultation->exists && $consultation->hospitalisation) checked @endif>
+                                                <label class="form-check-label fw-semibold"
+                                                    for="hospitalisationCheck">Proposer une hospitalisation</label>
+                                            </div>
+                                        </div>
+                                        <div id="hospitalisationFields" class="col-12"
+                                            style="{{ $consultation->exists && $consultation->hospitalisation ? '' : 'display:none;' }}">
+                                            <div class="row g-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary">Date d'entrée</label>
+                                                    <input type="date" name="date_entree" class="form-control"
+                                                        value="{{ $consultation->hospitalisation?->date_entree ?? '' }}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary">Salle</label>
+                                                    <select id="salleSelect" name="salle_id"
+                                                        class="form-select js-select2">
+                                                        <option value="">-- Sélectionner --</option>
+                                                        @foreach ($salles as $salle)
+                                                            <option value="{{ $salle->id }}"
+                                                                @if ($consultation->exists && $consultation->hospitalisation && $consultation->hospitalisation?->salles_id == $salle->id) selected @endif>
+                                                                {{ $salle->nom }} ({{ $salle->type ?? '' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary">Lit</label>
+                                                    <select id="litSelect" name="lit_id" class="form-select">
+                                                        <option value="">-- Sélectionner --</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small text-secondary">Observations</label>
+                                                    <input type="text" name="observations" class="form-control"
+                                                        placeholder="Observations"
+                                                        value="{{ $consultation->hospitalisation?->observations ?? '' }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>{{-- fin card-body bg-light --}}
+
+                        {{-- ──── FOOTER (Boutons) ──── --}}
+                        <div class="card-footer bg-white border-top-0 py-3">
+                            <div class="d-flex justify-content-end gap-3">
+                                <a href="{{ route('consultations.index') }}" class="btn btn-outline-secondary px-4">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-success px-5 shadow-sm">
+                                    <i class="fas fa-save me-2"></i>{{ $consultation->exists ? 'Mettre à jour' : 'Enregistrer' }}
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>{{-- fin card shadow-lg --}}
+                </div>{{-- fin col-lg-9 --}}
+
+                {{-- ══════════════════════════════════════════════════════
+                 SIDEBAR DROITE — SYMPTÔMES + RÉFÉRENCIEL (3/12)
+            ══════════════════════════════════════════════════════ --}}
+                <div class="col-lg-3">
+                    <div class="card shadow-sm border-0 sticky-top" style="top:70px; z-index:10;">
+
+                        {{-- Onglets --}}
+                        <div class="card-header bg-dark text-white p-0 border-0">
+                            <ul class="nav nav-tabs nav-fill border-0" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active text-white border-0 rounded-0 py-2 small fw-bold"
+                                        style="background:transparent;" data-bs-toggle="tab"
+                                        data-bs-target="#tabSymptomes" type="button">
+                                        <i class="fas fa-stethoscope me-1"></i> Symptômes
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link text-white border-0 rounded-0 py-2 small fw-bold"
+                                        style="background:transparent;" data-bs-toggle="tab" data-bs-target="#tabAtlas"
+                                        type="button">
+                                        <i class="fas fa-book-medical me-1"></i> Atlas
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="tab-content">
+                            {{-- TAB 1 : Symptômes --}}
+                            <div class="tab-pane fade show active" id="tabSymptomes">
+                                <div class="p-2 border-bottom bg-light">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-bold text-success"><i
+                                                class="fas fa-check-circle me-1"></i>Interrogatoire</span>
+                                        <button type="button" id="btnResetQuestions"
+                                            class="btn btn-outline-secondary py-0 px-2"
+                                            style="font-size:0.65rem;">Réinitialiser</button>
+                                    </div>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white border-end-0 py-0"><i
+                                                class="fas fa-search text-muted" style="font-size:0.7rem;"></i></span>
+                                        <input type="text" id="symptomSearch" class="form-control border-start-0 py-1"
+                                            placeholder="Rechercher..." style="font-size:0.8rem;">
+                                    </div>
+                                </div>
+                                <div class="overflow-auto" id="symptomListSidebar"
+                                    style="max-height: calc(100vh - 220px); scrollbar-width:thin;">
+                                    @foreach ($symptomes as $symptome)
+                                        <div class="symptom-item border-bottom">
+                                            <label
+                                                class="d-flex justify-content-between align-items-center px-3 py-2 m-0 symptom-sidebar-label"
+                                                for="s_check_{{ $symptome->id }}" style="cursor:pointer;">
+                                                <span class="small text-dark symptom-label">{{ $symptome->nom }}</span>
+                                                <div class="form-check form-switch m-0">
+                                                    <input class="form-check-input symptom-checkbox shadow-sm"
+                                                        type="checkbox" id="s_check_{{ $symptome->id }}" value="yes"
+                                                        data-symptom-id="{{ $symptome->id }}"
+                                                        style="cursor:pointer; width:2em; height:1em;">
+                                                </div>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- TAB 2 : Atlas / Référenciel --}}
+                            <div class="tab-pane fade" id="tabAtlas">
+                                <div class="p-2 border-bottom bg-light">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white border-end-0 py-0"><i
+                                                class="fas fa-search text-muted" style="font-size:0.7rem;"></i></span>
+                                        <input type="text" id="atlasSearch" class="form-control border-start-0 py-1"
+                                            placeholder="Chercher une maladie..." style="font-size:0.8rem;">
+                                    </div>
+                                </div>
+                                <div class="list-group list-group-flush overflow-auto" id="atlasList"
+                                    style="max-height: calc(100vh - 220px);">
+                                    @foreach ($maladies as $m)
+                                        @if ($m->protocole)
+                                            <div class="list-group-item p-0 border-0 mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="ps-2">
+                                                        <input type="checkbox" class="form-check-input compare-check"
+                                                            data-id="{{ $m->id }}" data-nom="{{ $m->nom }}"
+                                                            style="width:0.9em;height:0.9em;">
+                                                    </div>
+                                                    <a href="javascript:void(0)"
+                                                        class="list-group-item-action px-2 py-2 flex-grow-1 select-atlas-maladie"
+                                                        data-id="{{ $m->id }}">
+                                                        <span class="fw-bold text-dark"
+                                                            style="font-size:0.8rem;">{{ $m->nom }}</span>
+                                                        <div class="text-muted text-truncate" style="font-size:0.65rem;">
+                                                            <i class="fas fa-pills me-1 text-success"></i>
+                                                            {{ $m->protocole->traitement_principal }}
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>{{-- fin tab-content --}}
+
+                        <div id="compareBar" class="card-footer bg-primary text-white py-2 d-none">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small"><span id="compareCount">0</span> sélectionné(s)</span>
+                                <button type="button" id="btnLaunchCompare" class="btn btn-sm btn-light py-0">Comparer
+                                    <i class="fas fa-columns ms-1"></i></button>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light py-1 text-center">
+                            <small class="text-muted" style="font-size:0.6rem;">Symptômes → IA • Atlas → Ordonnance
+                                auto</small>
+                        </div>
+                    </div>
+                </div>{{-- fin col-lg-3 --}}
+
+            </div>{{-- fin row --}}
+        </form>
+
+    </div>{{-- fin container --}}
+
+    {{-- ═══════════════════════════════════════════════════════════════
+     MODAL — COMPARATEUR DE PROTOCOLES
+═══════════════════════════════════════════════════════════════ --}}
+    <div class="modal fade" id="compareModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title"><i class="fas fa-balance-scale me-2"></i> Comparateur de Protocoles</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0" id="compareTable" style="table-layout:fixed;">
+                            <thead class="bg-light align-middle text-center">
+                                <tr>
+                                    <th style="width:15%">Critères</th>
+                                    <th id="compTitle1" class="text-primary fw-bold" style="width:42.5%">Pathologie A
+                                    </th>
+                                    <th id="compTitle2" class="text-success fw-bold" style="width:42.5%">Pathologie B
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="bg-light fw-bold small">Rappel Clinique</td>
+                                    <td id="compSignes1" class="small text-muted p-3"></td>
+                                    <td id="compSignes2" class="small text-muted p-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="bg-light fw-bold small">Diagnostics / Examens</td>
+                                    <td id="compDx1" class="small text-muted p-3"></td>
+                                    <td id="compDx2" class="small text-muted p-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="bg-light fw-bold small">Traitement Principal</td>
+                                    <td class="p-3">
+                                        <div id="compTr1" class="fw-bold mb-2"></div>
+                                        <div id="compPos1" class="small fst-italic text-muted mb-2"></div>
+                                        <div id="compStock1"></div>
+                                    </td>
+                                    <td class="p-3">
+                                        <div id="compTr2" class="fw-bold mb-2"></div>
+                                        <div id="compPos2" class="small fst-italic text-muted mb-2"></div>
+                                        <div id="compStock2"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="bg-light fw-bold small">Action</td>
+                                    <td class="text-center p-3">
+                                        <button type="button" class="btn btn-primary btn-sm rounded-pill"
+                                            id="btnApplyComp1">Appliquer cette Ordonnance</button>
+                                    </td>
+                                    <td class="text-center p-3">
+                                        <button type="button" class="btn btn-success btn-sm rounded-pill"
+                                            id="btnApplyComp2">Appliquer cette Ordonnance</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════════════════════════════
+     STYLES LOCAUX
+═══════════════════════════════════════════════════════════════ --}}
+    <style>
+        .list-group-item-action:hover {
+            background-color: #f8fafc;
+            border-left: 3px solid #0061f2;
+        }
+
+        .bg-soft-success {
+            background-color: rgba(25, 135, 84, 0.1) !important;
+        }
+
+        #compareTable td {
+            vertical-align: top;
+            line-height: 1.6;
+        }
+
+        /* Sidebar symptom items */
+        .symptom-sidebar-label:hover {
+            background-color: #f0f4ff;
+        }
+
+        .symptom-item.bg-soft-success .symptom-label {
+            font-weight: 600;
+            color: #198754 !important;
+        }
+
+        /* Active tab */
+        .nav-tabs .nav-link.active {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-bottom: 3px solid #fff !important;
+        }
+
+        .nav-tabs .nav-link:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Diagnostic cards */
+        .select-suggested-maladie:hover {
+            transform: translateY(-3px);
+            background-color: #f8f9fa;
+        }
+    </style>
+@endsection
+
+{{-- ═══════════════════════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════════════════════ --}}
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+
+            // Échappe le HTML pour éviter toute injection via des noms de médicament/maladie (XSS)
+            function escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, function (s) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+                });
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // 0. SETUP
+            // ═══════════════════════════════════════════════════════════
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Notification discrète (utilisée après l'ajout de médicaments ou d'examens)
+            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true });
+
+            const medicamentsList = @json($medicaments);
+            const symptomeMaladieMap = @json($symptomeMaladieMap);
+            const maladieSymptomesDetails = @json($maladieSymptomesDetails);
+            const patientsInfos = @json(isset($patients) ? collect($patients)->mapWithKeys(fn($p) => [$p->id => ['age' => $p->age, 'genre' => $p->genre]]) : (object) []);
+            const patientsEnceintes = @json($enceintes ?? []);
+            const consultationPatient = @json($consultation->exists && $consultation->patient ? ['id' => $consultation->patient->id, 'age' => $consultation->patient->age, 'genre' => $consultation->patient->genre] : null);
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 1. PATIENT & TICKET
+            // ═══════════════════════════════════════════════════════════
+            function updatePatientTicket() {
+                let selected = $('#patientDropdown').find(':selected');
+                $('#patient_id').val(selected.val());
+                $('#ticket_id').val(selected.data('ticket'));
+            }
+            $('#patientDropdown').change(updatePatientTicket);
+            updatePatientTicket();
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 2. IMC AUTO
+            // ═══════════════════════════════════════════════════════════
+            function updateIMC() {
+                let poids = parseFloat($('input[name="poids"]').val()) || 0;
+                let taille = parseFloat($('input[name="taille"]').val()) || 0;
+                $('#imc').val(taille > 0 ? (poids / ((taille / 100) ** 2)).toFixed(2) : '');
+            }
+            $('input[name="poids"], input[name="taille"]').on('input', updateIMC);
+            updateIMC();
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 3. HOSPITALISATION
+            // ═══════════════════════════════════════════════════════════
+            $('#hospitalisationCheck').change(function() {
+                $('#hospitalisationFields').toggle(this.checked);
+            });
+
+            function chargerLitsPourSalle(salleId, litId = null) {
+                let litSelect = $('#litSelect');
+                let currentLitId = litId || $('#lit_id').val();
+                if (!salleId) {
+                    litSelect.html('<option value="">-- Sélectionner un lit --</option>');
+                    return;
+                }
+                litSelect.html('<option value="">-- Chargement... --</option>').prop('disabled', true);
+                $.ajax({
+                    url: '{{ route('salles.litsLibres', ':salleId') }}'.replace(':salleId', salleId),
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        litSelect.html('').prop('disabled', false);
+                        if (response.length > 0) {
+                            litSelect.append('<option value="">-- Sélectionner un lit --</option>');
+                            $.each(response, function(i, lit) {
+                                let sel = (lit.id == currentLitId) ? 'selected' : '';
+                                litSelect.append(
+                                    `<option value="${lit.id}" ${sel}>Lit #${lit.numero}</option>`
+                                    );
+                            });
+                        } else {
+                            litSelect.append('<option value="">Aucun lit disponible</option>');
+                        }
+                    },
+                    error: function() {
+                        litSelect.html('<option value="">Erreur de chargement</option>').prop(
+                            'disabled', false);
+                    }
+                });
+            }
+            $('#salleSelect').change(function() {
+                chargerLitsPourSalle($(this).val());
+            });
+            let salleInitiale = $('#salleSelect').val();
+            let litInitial = @json($consultation->hospitalisation?->lit_id ?? null);
+            if (salleInitiale) chargerLitsPourSalle(salleInitiale, litInitial);
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 4. INTERROGATOIRE (CHECKBOXES) → DIAGNOSTIC IA
+            // ═══════════════════════════════════════════════════════════
+            // Recherche symptômes
+            $('#symptomSearch').on('keyup', function() {
+                let val = $(this).val().toLowerCase();
+                $('.symptom-item').each(function() {
+                    let label = $(this).find('.symptom-label').text().toLowerCase();
+                    $(this).toggle(label.indexOf(val) > -1);
+                });
+            });
+
+            function updateSymptomCounter() {
+                let count = $('.symptom-checkbox:checked').length;
+                $('#symptomCounter').text(count + ' coché(s)');
+            }
+
+            $('.symptom-checkbox').on('change', function() {
+                let symptomId = $(this).data('symptom-id');
+                let isChecked = $(this).is(':checked');
+                let item = $(this).closest('.symptom-item');
+
+                item.removeClass('bg-soft-success');
+                if (isChecked) {
+                    item.addClass('bg-soft-success');
+                    $(`#symptomes option[value="${symptomId}"]`).prop('selected', true);
+                } else {
+                    $(`#symptomes option[value="${symptomId}"]`).prop('selected', false);
+                }
+                updateSymptomCounter();
+                $('#symptomes').trigger('change');
+            });
+
+            $('#btnResetQuestions').click(function() {
+                $('.symptom-checkbox').prop('checked', false);
+                $('.symptom-item').removeClass('bg-soft-success');
+                $('#symptomes option').prop('selected', false);
+                updateSymptomCounter();
+                $('#symptomSearch').val('');
+                $('.symptom-item').show();
+                $('#symptomes').trigger('change');
+            });
+
+            // Analyse IA des probabilités
+            $('#symptomes').change(function() {
+                let selectedSymptomes = ($(this).val() || []).map(id => parseInt(id));
+                let emptyState = $('#diagnosticAssistantEmpty');
+                let content = $('#diagnosticAssistantContent');
+                let followUpContainer = $('#followUpContainer');
+                let followUpQuestions = $('#followUpQuestions');
+
+                if (selectedSymptomes.length === 0) {
+                    emptyState.show();
+                    content.hide();
+                    followUpContainer.addClass('d-none');
+                    return;
+                }
+                emptyState.hide();
+                content.show();
+
+                // 1. Calcul des scores (Local pour réactivité immédiate)
+                let scores = [];
+                for (let maladieId in maladieSymptomesDetails) {
+                    let maladie = maladieSymptomesDetails[maladieId];
+                    let req = maladie.symptomes;
+                    if (!req || req.length === 0) continue;
+                    let inter = req.filter(sId => selectedSymptomes.includes(sId));
+                    if (inter.length > 0) {
+                        scores.push({
+                            id: maladieId,
+                            nom: maladie.nom,
+                            score: Math.round((inter.length / req.length) * 100),
+                            matchedCount: inter.length,
+                            totalCount: req.length
+                        });
+                    }
+                }
+
+                if (scores.length > 0) {
+                    // Plus de symptômes retrouvés d'abord, puis la meilleure couverture : une maladie
+                    // décrite par un seul symptôme ne passe plus devant une maladie qui en regroupe trois
+                    scores.sort((a, b) => (b.matchedCount - a.matchedCount) || (b.score - a.score));
+                    let html = '<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">';
+                    scores.slice(0, 6).forEach(function(s) {
+                        let color = s.score >= 70 ? 'success' : (s.score >= 40 ? 'warning' : 'secondary');
+                        let prog = s.score >= 70 ? 'bg-success' : (s.score >= 40 ? 'bg-warning' : 'bg-secondary');
+                        html += `
+                            <div class="col">
+                                <div class="card h-100 border-0 shadow-sm select-suggested-maladie animate__animated animate__fadeIn" style="cursor:pointer;" data-id="${s.id}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="fw-bold text-dark mb-0 small">${escapeHtml(s.nom)}</h6>
+                                            <span class="badge bg-${color} rounded-pill" style="font-size: 0.65rem;">${s.score}%</span>
+                                        </div>
+                                        <div class="progress mb-2" style="height:5px;"><div class="progress-bar ${prog} progress-bar-striped progress-bar-animated" style="width:${s.score}%"></div></div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted" style="font-size: 0.7rem;">${s.matchedCount}/${s.totalCount} signes</small>
+                                            <small class="text-primary fw-bold" style="font-size: 0.7rem;">Sélect. <i class="fas fa-check-circle ms-1"></i></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+                    html += '</div>';
+                    content.html(html);
+
+                    // 2. Appel API pour suggestions de perfectionnement (Follow-up)
+                    $.get('{{ route('clinical.suggest_symptoms') }}', { symptomes: selectedSymptomes }, function(data) {
+                        if (data && data.length > 0) {
+                            let qHtml = '';
+                            data.slice(0, 8).forEach(s => {
+                                qHtml += `<span class="badge bg-white text-info border border-info py-2 px-3 cursor-pointer suggest-badge animate__animated animate__pulse" data-id="${s.id}" style="cursor:pointer;">
+                                    ${escapeHtml(s.nom)} ?
+                                </span>`;
+                            });
+                            followUpQuestions.html(qHtml);
+                            followUpContainer.removeClass('d-none');
+                        } else {
+                            followUpContainer.addClass('d-none');
+                        }
+                    });
+
+                    if (scores[0].score >= 80 && $('#maladieSelect').val() != scores[0].id) {
+                        // Optionnel : Notification discrète
+                    }
+                } else {
+                    content.html('<div class="text-center py-5 text-muted small">Aucune correspondance trouvée.</div>');
+                    followUpContainer.addClass('d-none');
+                }
+            });
+
+            // Clic sur suggestion de symptôme
+            $(document).on('click', '.suggest-badge', function() {
+                let sId = $(this).data('id');
+                $(`#s_check_${sId}`).prop('checked', true).trigger('change');
+            });
+
+            // Clic sur suggestion IA → sélection pathologie
+            $(document).on('click', '.select-suggested-maladie', function() {
+                $('#maladieSelect').val($(this).data('id')).trigger('change');
+            });
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 5. SÉLECTION PATHOLOGIE → PROTOCOLE → AUTO-ORDONNANCE
+            // ═══════════════════════════════════════════════════════════
+            $('#maladieSelect').change(function() {
+                let maladieId = $(this).val();
+                if (!maladieId) {
+                    $('#protocoleContainer').hide();
+                    return;
+                }
+
+                let url = "{{ route('infectiologie.get_protocole', ':id') }}";
+                url = url.replace(':id', maladieId);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success && response.protocoles && response.protocoles
+                            .length > 0) {
+                            let protocols = response.protocoles;
+                            let p = protocols[0];
+
+                            if (protocols.length > 1) {
+                                let opts = '';
+                                protocols.forEach((item, idx) => {
+                                    opts +=
+                                        `<option value="${idx}">${item.titre}</option>`;
+                                });
+                                $('#selectProtocoleAlt').html(opts);
+                                $('#multiProtocolSelector').show();
+                                $('#selectProtocoleAlt').off('change').on('change', function() {
+                                    updateProtocoleUI(protocols[$(this).val()]);
+                                });
+                            } else {
+                                $('#multiProtocolSelector').hide();
+                            }
+
+                            updateProtocoleUI(p);
+                            afficherGuideMaladie(response.maladie);
+                            $('#protocoleContainer').slideDown();
+
+                            // Auto-prescription : seulement pour un protocole local à traitement principal défini ;
+                            // les médicaments du guide clinique sont proposés, jamais ajoutés d'office
+                            if (protocoleMedsAutoPrescriptibles(p).length > 0) {
+                                setTimeout(() => {
+                                    $('#btnApplyProtocole').trigger('click');
+                                }, 300);
+                            }
+                        } else {
+                            $('#protocoleContainer').hide();
+                            $('#btnApplyProtocole').data('protocole', null);
+                            afficherGuideMaladie(null);
+                        }
+                    },
+                    error: function() {
+                        $('#protocoleContainer').hide();
+                    }
+                });
+            });
+
+            // "principal" et "adjuvant" sont donnés ENSEMBLE (ex. traitement curatif + paracétamol
+            // pour la fièvre) ; "alternatif" est donné À LA PLACE du principal, jamais en plus —
+            // il ne doit donc jamais être ajouté automatiquement à l'ordonnance.
+            function protocoleMedsAutoPrescriptibles(p) {
+                return (p.medicaments || []).filter(m => m.pivot && ['principal', 'adjuvant']
+                    .includes(m.pivot.type));
+            }
+
+            function protocoleMedsAlternatifs(p) {
+                return (p.medicaments || []).filter(m => m.pivot && m.pivot.type === 'alternatif');
+            }
+
+            function updateProtocoleUI(p) {
+                $('#protocoleTitre').text(p.titre || 'Protocole');
+
+                // Source de vérité : les médicaments réellement liés (pivot protocole_medicament),
+                // pas les colonnes texte legacy (souvent vides pour les protocoles générés par seeder).
+                let principalMeds = protocoleMedsAutoPrescriptibles(p);
+                let altMeds = protocoleMedsAlternatifs(p);
+
+                if (principalMeds.length > 0) {
+                    $('#protocoleTraitement').text(principalMeds.map(m => m.nom).join(' + '));
+                    $('#protocolePosologie').text(principalMeds.map(m => `${m.nom} : ${m.pivot.posologie || ''}`)
+                        .join(' | '));
+                } else {
+                    $('#protocoleTraitement').text(p.traitement_principal || 'N/A');
+                    $('#protocolePosologie').text(p.posologie_principale || '');
+                }
+
+                if (altMeds.length > 0) {
+                    $('#protocoleAlternatif').text('Alternative(s) (non ajoutée(s) automatiquement) : ' + altMeds
+                        .map(m => m.nom).join(', ')).show();
+                } else {
+                    $('#protocoleAlternatif').hide();
+                }
+
+                // Stock check — basé directement sur les médicaments structurés (pas de correspondance
+                // approximative par nom), le stock étant déjà chargé sur chaque médicament du protocole.
+                let badge = $('#stockBadge');
+                if (principalMeds.length > 0) {
+                    let inStock = principalMeds.filter(m => (m.stock || 0) > 0).length;
+                    if (inStock === principalMeds.length) badge.removeClass('bg-danger bg-warning').addClass(
+                        'bg-success').text('En stock ✅');
+                    else if (inStock > 0) badge.removeClass('bg-success bg-danger').addClass(
+                        'bg-warning text-dark').text('Stock partiel ⚠️');
+                    else badge.removeClass('bg-success bg-warning').addClass('bg-danger').text(
+                        'Indisponible ❌');
+                } else {
+                    badge.removeClass('bg-success bg-warning bg-danger').addClass('bg-secondary').text('');
+                }
+                $('#btnApplyProtocole').data('protocole', p);
+
+                // Protocole du guide clinique : traitement résumé + choix des médicaments
+                afficherMedsOptions(p);
+                let seulementOptions = (p.medicaments || []).length > 0 && principalMeds.length === 0;
+                $('#btnApplyProtocole').toggle(!seulementOptions);
+                if (seulementOptions) {
+                    $('#protocoleTraitement').text('Traitement selon le guide');
+                    badge.removeClass('bg-success bg-warning bg-danger').addClass('bg-secondary').text('');
+                }
+            }
+
+            // ── Guide clinique : terrain du patient, signes de gravité, médicaments au choix ──
+            function patientCourant() {
+                let id = $('#patient_id').val();
+                let info = (id && patientsInfos[id]) || (consultationPatient && consultationPatient.id == id ? consultationPatient : null) || consultationPatient;
+                let enceinte = !!$('input[name="grossesse_id"]').val() || (id && patientsEnceintes.includes(parseInt(id)));
+                return { age: info ? parseInt(info.age) : null, enceinte: enceinte };
+            }
+
+            function afficherGuideMaladie(maladie) {
+                $('#graviteListe').empty();
+                $('#graviteAlerte').hide();
+                if (!maladie) {
+                    $('#alertesOms').remove();
+                    $('#graviteBloc, #guideCliniqueLien').hide();
+                    return;
+                }
+                (maladie.gravite || []).forEach((signe, i) => {
+                    $('#graviteListe').append(`<div class="form-check"><input class="form-check-input signe-gravite" type="checkbox" id="grav_${i}" value="${escapeHtml(signe)}"><label class="form-check-label" for="grav_${i}">${escapeHtml(signe)}</label></div>`);
+                });
+                $('#graviteBloc').toggle((maladie.gravite || []).length > 0);
+                $('#alertesOms').remove();
+                if ((maladie.alertes || []).length) {
+                    $('#graviteBloc').before(`<div id="alertesOms" class="alert alert-danger py-1 px-2 small mb-2">${maladie.alertes.map(a => '<div><i class="fas fa-ban me-1"></i>' + escapeHtml(a) + '</div>').join('')}</div>`);
+                }
+                if (maladie.guide_url) $('#guideCliniqueLien').attr('href', maladie.guide_url).show();
+            }
+
+            $(document).on('change', '.signe-gravite', function() {
+                let presents = $('.signe-gravite:checked').map(function() { return $(this).val(); }).get();
+                $('#graviteAlerte').toggle(presents.length > 0);
+                // Les signes cochés sont reportés dans le résumé clinique
+                let diag = $('textarea[name="diagnostic"]');
+                let texte = (diag.val() || '').replace(/\n?• SIGNES DE GRAVITÉ : .*/g, '');
+                diag.val(presents.length ? (texte ? texte + '\n' : '') + '• SIGNES DE GRAVITÉ : ' + presents.join(' ; ') : texte);
+            });
+
+            function afficherMedsOptions(p) {
+                let options = (p.medicaments || []).filter(m => m.pivot && m.pivot.type === 'option');
+                let liste = $('#medsOptionsListe').empty();
+                $('#medsOptionsBloc').toggle(options.length > 0);
+                if (!options.length) return;
+
+                let terrain = patientCourant();
+                $('#patientTerrain').text((terrain.age !== null && !isNaN(terrain.age) ? (terrain.age < 15 ? 'Enfant, ' : 'Adulte, ') + terrain.age + ' ans' : 'Âge inconnu') + (terrain.enceinte ? ' · Enceinte' : ''));
+
+                options.forEach((m, i) => {
+                    let ref = m.reference || {};
+                    let ci = ref.contre_indications || '';
+                    let alerteGrossesse = terrain.enceinte && /gross|enceinte|FE\b/i.test(ci);
+                    let stock = m.id ? ((m.stock || 0) > 0 ? `<span class="badge bg-success">${m.stock} en stock</span>` : '<span class="badge bg-danger">Rupture</span>') : '<span class="badge bg-secondary">Non référencé</span>';
+                    let oms = ref.liste_oms ? `<span class="badge bg-light text-dark border">OMS : ${escapeHtml(ref.liste_oms)}</span>` : '';
+                    liste.append(`
+                        <div class="list-group-item px-0 py-2">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <span class="fw-bold">${escapeHtml(m.dci || m.nom)}</span> ${stock} ${oms}
+                                    ${m.id && m.nom !== m.dci ? `<div class="text-muted">${escapeHtml(m.nom)}</div>` : ''}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-success py-0 btn-ajouter-option" data-index="${i}" ${m.id ? '' : 'disabled title="Absent du stock de l\'établissement"'}><i class="fas fa-plus"></i></button>
+                            </div>
+                            ${m.alerte ? `<div class="text-danger fw-bold mt-1"><i class="fas fa-ban me-1"></i>${escapeHtml(m.alerte)}</div>` : ''}
+                            <div class="mt-1">${escapeHtml(m.pivot.posologie || '')}</div>
+                            ${alerteGrossesse ? `<div class="text-danger fw-bold mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Précaution grossesse : ${escapeHtml(ci)}</div>` : (ci ? `<details class="mt-1"><summary class="text-warning">Contre-indications / précautions</summary>${escapeHtml(ci)}</details>` : '')}
+                            ${ref.posologie ? `<details class="mt-1"><summary class="text-primary">Posologie de référence enfant / adulte</summary>${escapeHtml(ref.posologie)}</details>` : ''}
+                        </div>`);
+                });
+                liste.data('options', options);
+            }
+
+            $(document).on('click', '.btn-ajouter-option', function() {
+                let med = $('#medsOptionsListe').data('options')[$(this).data('index')];
+                if (!med || !med.id) return;
+                let existe = false;
+                $('.selectMedicament').each(function() { if ($(this).val() == med.id) existe = true; });
+                if (existe) {
+                    Toast.fire({ icon: 'info', title: 'Déjà sur l\'ordonnance' });
+                    return;
+                }
+                $('#emptyOrdonnanceRow').remove();
+                $('#ordonnanceFooter').removeClass('d-none');
+                let opts = `<option value="${med.id}" data-prix="${med.prix_vente}" data-stock="${med.stock}" selected>${escapeHtml(med.nom)}</option>`;
+                medicamentsList.forEach(m => {
+                    if (m.id != med.id) opts += `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}">${escapeHtml(m.nom)}</option>`;
+                });
+                let row = $(`<tr class="table-success">
+                    <td><select name="medicaments[]" class="form-select js-select2 form-select-sm selectMedicament" required>${opts}</select></td>
+                    <td><input type="text" name="posologies[]" class="form-control form-control-sm" value="${escapeHtml(med.pivot.posologie || '')}" required></td>
+                    <td><input type="number" name="duree_jours[]" class="form-control form-control-sm" min="1" placeholder="Jours"></td>
+                    <td><input type="number" name="quantites[]" class="form-control form-control-sm input-qty" min="1" value="1"></td>
+                    <td class="text-center"><button type="button" class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i class="fas fa-trash-alt"></i></button></td>
+                </tr>`);
+                $('#ordonnanceTable tbody').append(row);
+                if ($.fn.select2) row.find('.js-select2').select2({ width: '100%', allowClear: true });
+                $('#protocole_id').val($('#btnApplyProtocole').data('protocole')?.id || '');
+                updateMedicamentOptions();
+                calculateTotals();
+                Toast.fire({ icon: 'success', title: escapeHtml(med.dci || med.nom) + ' ajouté : adaptez la posologie' });
+            });
+
+            // Bouton "Appliquer à l'Ordonnance"
+            $('#btnApplyProtocole').click(function() {
+                let p = $(this).data('protocole');
+                if (!p) return;
+
+                // Diagnostic texte
+                let diagArea = $('textarea[name="diagnostic"]');
+                let currentDiag = diagArea.val() || '';
+                if (!currentDiag.includes(p.titre)) {
+                    diagArea.val((currentDiag ? currentDiag + '\n' : '') + `• PATHOLOGIE : ${p.titre}`);
+                }
+
+                // Génération ordonnance — seuls les médicaments "principal"/"adjuvant" du protocole
+                // sont ajoutés automatiquement. Les "alternatif" (ex. Hydrochlorothiazide en
+                // alternative à l'Amlodipine, ou un antipsychotique alternatif) ne doivent pas être
+                // prescrits en même temps que le principal : ils restent une information (voir
+                // #protocoleAlternatif), à ajouter manuellement par le médecin si besoin.
+                // Seuls les produits du stock de l'établissement (id) s'ajoutent à l'ordonnance ;
+                // les autres restent affichés dans le protocole, à prescrire à la main
+                let principalMeds = protocoleMedsAutoPrescriptibles(p).filter(m => m.id);
+                if (principalMeds.length > 0) {
+                    if ($('#ordonnanceTable tbody tr').length <= 1 && $('#emptyOrdonnanceRow').length > 0) {
+                        $('#ordonnanceTable tbody').empty();
+                    }
+
+                    principalMeds.forEach(med => {
+                        // Anti-doublon
+                        let alreadyExists = false;
+                        $('.selectMedicament').each(function() {
+                            if ($(this).val() == med.id) alreadyExists = true;
+                        });
+
+                        if (!alreadyExists) {
+                            $('#emptyOrdonnanceRow').remove();
+                            $('#ordonnanceFooter').removeClass('d-none');
+
+                            // Create options with medicament already selected
+                            let opts = `<option value="${med.id}" data-prix="${med.prix_vente}" data-stock="${med.stock}" selected>${escapeHtml(med.nom)}</option>`;
+                            // Add other medicines for choice
+                            medicamentsList.forEach(m => {
+                                if (m.id != med.id) {
+                                    opts += `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}">${escapeHtml(m.nom)}</option>`;
+                                }
+                            });
+
+                            let row = `<tr class="table-success auto-added-row">
+                                <td><select name="medicaments[]" class="form-select js-select2 form-select-sm selectMedicament" required>${opts}</select></td>
+                                <td><input type="text" name="posologies[]" class="form-control form-control-sm" value="${med.pivot.posologie || p.posologie_principale || ''}" required></td>
+                                <td><input type="number" name="duree_jours[]" class="form-control form-control-sm" min="1" value="${parseInt(med.pivot.duree) || 7}"></td>
+                                <td><input type="number" name="quantites[]" class="form-control form-control-sm input-qty" min="1" value="1"></td>
+                                <td class="text-center"><button type="button" class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i class="fas fa-trash-alt"></i></button></td>
+                            </tr>`;
+                            let newRow = $(row);
+                            $('#ordonnanceTable tbody').append(newRow);
+                            if ($.fn.select2) newRow.find('.js-select2').select2({ width: '100%', allowClear: true });
+                        }
+                    });
+                } else if (p.traitement_principal && !(p.medicaments || []).length) {
+                    if ($('#ordonnanceTable tbody tr').length <= 1 && $('#emptyOrdonnanceRow').length > 0) {
+                        $('#ordonnanceTable tbody').empty();
+                    }
+
+                    let medsToSearch = p.traitement_principal.split(/[\+\,]/);
+                    medsToSearch.forEach(medName => {
+                        let searchTerm = medName.trim().toLowerCase();
+                        if (!searchTerm) return;
+
+                        let matchedMed = medicamentsList.find(m => m.nom.toLowerCase().includes(
+                            searchTerm) || searchTerm.includes(m.nom.toLowerCase()));
+
+                        // Anti-doublon
+                        let alreadyExists = false;
+                        if (matchedMed) {
+                            $('.selectMedicament').each(function() {
+                                if ($(this).val() == matchedMed.id) alreadyExists = true;
+                            });
+                        }
+
+                        if (!alreadyExists) {
+                            $('#emptyOrdonnanceRow').remove();
+                            $('#ordonnanceFooter').removeClass('d-none');
+
+                            let label = matchedMed ? '-- Sélectionner --' :
+                                '-- Choisir l\'équivalent (' + medName.trim() + ') --';
+                            let opts = '<option value="">' + label + '</option>';
+                            medicamentsList.forEach(m => {
+                                let sel = (matchedMed && m.id == matchedMed.id) ?
+                                    'selected' : '';
+                                opts +=
+                                    `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}" ${sel}>${escapeHtml(m.nom)}</option>`;
+                            });
+
+                            let rowClass = matchedMed ? 'table-success' : 'table-warning';
+                            let alertHtml = !matchedMed ?
+                                '<small class="text-danger fw-bold"><i class="fas fa-exclamation-triangle"></i> Non trouvé en stock</small>' :
+                                '';
+                            let row = `<tr class="${rowClass} auto-added-row">
+                        <td>
+                            <select name="medicaments[]" class="form-select js-select2 form-select-sm selectMedicament" required>${opts}</select>
+                            ${alertHtml}
+                        </td>
+                        <td><input type="text" name="posologies[]" class="form-control form-control-sm" value="${p.posologie_principale || ''}" required></td>
+                        <td><input type="number" name="duree_jours[]" class="form-control form-control-sm" min="1" value="7"></td>
+                        <td><input type="number" name="quantites[]" class="form-control form-control-sm input-qty" min="1" value="1"></td>
+                        <td class="text-center"><button type="button" class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i class="fas fa-trash-alt"></i></button></td>
+                    </tr>`;
+                            let newRow = $(row);
+                            $('#ordonnanceTable tbody').append(newRow);
+                            if ($.fn.select2) newRow.find('.js-select2').select2({
+                                width: '100%',
+                                allowClear: true
+                            });
+                        }
+                    });
+                    calculateTotals();
+                    updateMedicamentOptions();
+                }
+
+                $('#protocole_id').val(p.id);
+
+                // 🔹 Génération des examens complémentaires (Diagnostics)
+                if (p.diagnostics) {
+                    let examsSuggested = p.diagnostics.split(/[\,\;]/);
+                    examsSuggested.forEach(exName => {
+                        let name = exName.trim();
+                        // On ignore les termes génériques ou vides
+                        if (!name || name.toLowerCase() === 'clinique' || name.toLowerCase() === 'n/a' || name.length < 2) return;
+
+                        // Anti-doublon
+                        let alreadyExists = false;
+                        $('input[name="examens[]"]').each(function() {
+                            if ($(this).val().toLowerCase().includes(name.toLowerCase())) alreadyExists = true;
+                        });
+
+                        if (!alreadyExists) {
+                            $('#emptyAnalyseRow').remove();
+                            let examRow = $(`
+                                <li class="list-group-item px-0 d-flex gap-2 align-items-center auto-added-exam animate__animated animate__fadeInLeft" style="background-color: #fff9db;">
+                                    <i class="fas fa-flask text-warning"></i>
+                                    <input type="text" name="examens[]" class="form-control form-control-sm flex-grow-1 border-warning" value="${name}" required>
+                                    <button type="button" class="btn btn-link text-danger btn-sm btnSupprimerAnalyse p-0"><i class="fas fa-times"></i></button>
+                                </li>
+                            `);
+                            $('#analyseList').append(examRow);
+                            
+                            // Retrait de la couleur après 3s
+                            setTimeout(() => {
+                                examRow.css('background-color', 'transparent');
+                                examRow.find('input').removeClass('border-warning');
+                            }, 3000);
+                        }
+                    });
+                }
+
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Traitement & Examens générés !'
+                });
+                setTimeout(() => {
+                    $('.auto-added-row').removeClass('table-success');
+                }, 3000);
+            });
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 6. ORDONNANCE — AJOUT MANUEL / CALCULS / SUPPRESSION
+            // ═══════════════════════════════════════════════════════════
+            function updateMedicamentOptions() {
+                let selected = [];
+                $('.selectMedicament').each(function() {
+                    if ($(this).val()) selected.push($(this).val());
+                });
+                $('.selectMedicament').each(function() {
+                    let cur = $(this).val();
+                    $(this).find('option').each(function() {
+                        $(this).toggle($(this).val() === "" || !selected.includes($(this).val()) ||
+                            $(this).val() === cur);
+                    });
+                });
+            }
+
+            $('#btnAjouterMedicament').click(function() {
+                $('#emptyOrdonnanceRow').remove();
+                $('#ordonnanceFooter').removeClass('d-none');
+                let row = `<tr>
+            <td><select name="medicaments[]" class="form-select js-select2 form-select-sm selectMedicament" required>
+                <option value="">-- Sélectionner --</option>
+                @foreach ($medicaments as $med)
+                <option value="{{ $med->id }}" data-prix="{{ $med->prix_vente }}" data-stock="{{ $med->stock }}">{{ $med->nom }}</option>
+                @endforeach
+            </select></td>
+            <td><input type="text" name="posologies[]" class="form-control form-control-sm" placeholder="Ex: 2x/jour" required></td>
+            <td><input type="number" name="duree_jours[]" class="form-control form-control-sm" min="1" placeholder="Jours"></td>
+            <td><input type="number" name="quantites[]" class="form-control form-control-sm input-qty" min="1" placeholder="Qté"></td>
+            <td class="text-center"><button type="button" class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i class="fas fa-trash-alt"></i></button></td>
+        </tr>`;
+                let newRow = $(row);
+                $('#ordonnanceTable tbody').append(newRow);
+                newRow.find('.js-select2').select2({
+                    width: '100%',
+                    placeholder: "-- Sélectionner --",
+                    allowClear: true
+                });
+                updateMedicamentOptions();
+            });
+
+            function calculateTotals() {
+                $('#ordonnanceTable tbody tr').each(function() {
+                    let row = $(this);
+                    let select = row.find('.selectMedicament option:selected');
+                    let qty = parseFloat(row.find('.input-qty').val()) || 0;
+                    let stock = parseFloat(select.data('stock')) || 0;
+                    if (qty > stock) row.find('.input-qty').addClass('is-invalid').attr('title',
+                        'Stock insuffisant ! (Max: ' + stock + ')');
+                    else row.find('.input-qty').removeClass('is-invalid').removeAttr('title');
+                });
+            }
+
+            $(document).on('change', '.selectMedicament, .input-qty', calculateTotals);
+            $(document).on('click', '.btnSupprimer', function() {
+                $(this).closest('tr').remove();
+                if ($('#ordonnanceTable tbody tr').length === 0) {
+                    $('#ordonnanceTable tbody').html(
+                        '<tr id="emptyOrdonnanceRow"><td colspan="5" class="text-center text-muted py-3"><i class="fas fa-pills me-2"></i>Aucun médicament ajouté</td></tr>'
+                        );
+                }
+                updateMedicamentOptions();
+                calculateTotals();
+            });
+            $(document).on('change', '.selectMedicament', updateMedicamentOptions);
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 7. EXAMENS & RDV
+            // ═══════════════════════════════════════════════════════════
+            $('#btnAjouterAnalyse').click(function() {
+                $('#emptyAnalyseRow').remove();
+                $('#analyseList').append(
+                    '<li class="list-group-item px-0 d-flex gap-2 align-items-center"><i class="fas fa-flask text-info"></i><input type="text" name="examens[]" class="form-control form-control-sm flex-grow-1" placeholder="Nom de l\'examen" required><button type="button" class="btn btn-link text-danger btn-sm btnSupprimerAnalyse p-0"><i class="fas fa-times"></i></button></li>'
+                    );
+            });
+            $(document).on('click', '.btnSupprimerAnalyse', function() {
+                $(this).closest('li').remove();
+                if ($('#analyseList li').length === 0) $('#analyseList').html(
+                    '<li class="list-group-item text-center text-muted py-3" id="emptyAnalyseRow"><i class="fas fa-flask me-2"></i>Aucune analyse</li>'
+                    );
+            });
+
+            $('#btnAjouterRdv').click(function() {
+                $('#emptyRdvRow').remove();
+                $('#rdvList').append(`<li class="list-group-item px-0"><div class="row g-2 align-items-center">
+            <div class="col-5"><input type="text" name="rdv_motifs[]" class="form-control form-control-sm" placeholder="Motif" required></div>
+            <div class="col-3"><input type="date" name="rdv_dates[]" class="form-control form-control-sm" required></div>
+            <div class="col-3"><input type="time" name="rdv_heures[]" class="form-control form-control-sm" required></div>
+            <div class="col-1 text-end"><button type="button" class="btn btn-link text-danger btn-sm btnSupprimerRdv p-0"><i class="fas fa-trash-alt"></i></button></div>
+        </div></li>`);
+            });
+            $(document).on('click', '.btnSupprimerRdv', function() {
+                $(this).closest('li').remove();
+                if ($('#rdvList li').length === 0) $('#rdvList').html(
+                    '<li class="list-group-item text-center text-muted py-3" id="emptyRdvRow"><i class="fas fa-calendar-check me-2"></i>Aucun rendez-vous</li>'
+                    );
+            });
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 8. ATLAS — SIDEBAR ACTIONS
+            // ═══════════════════════════════════════════════════════════
+            $('#atlasSearch').on('keyup', function() {
+                let value = $(this).val().toLowerCase();
+                $('#atlasList .list-group-item').each(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+
+            $(document).on('click', '.select-atlas-maladie', function() {
+                let id = $(this).data('id');
+                $('#maladieSelect').val(id).trigger('change');
+                $('html, body').animate({
+                    scrollTop: $("#ordonnanceTable").offset().top - 100
+                }, 800);
+            });
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 9. COMPARATEUR DE PROTOCOLES
+            // ═══════════════════════════════════════════════════════════
+            let selectedForCompare = [];
+
+            $(document).on('change', '.compare-check', function() {
+                let id = $(this).data('id'),
+                    nom = $(this).data('nom');
+                if ($(this).is(':checked')) {
+                    if (selectedForCompare.length >= 2) {
+                        $(this).prop('checked', false);
+                        Toast.fire({
+                            icon: 'warning',
+                            title: 'Max 2 protocoles'
+                        });
+                        return;
+                    }
+                    selectedForCompare.push({
+                        id,
+                        nom
+                    });
+                } else {
+                    selectedForCompare = selectedForCompare.filter(i => i.id != id);
+                }
+                updateCompareBar();
+            });
+
+            function updateCompareBar() {
+                $('#compareCount').text(selectedForCompare.length);
+                selectedForCompare.length > 0 ? $('#compareBar').removeClass('d-none') : $('#compareBar').addClass(
+                    'd-none');
+                $('#btnLaunchCompare').prop('disabled', selectedForCompare.length !== 2);
+            }
+
+            $('#btnLaunchCompare').click(function() {
+                if (selectedForCompare.length !== 2) return;
+                $.when(
+                    $.get('/infectiologie/api/protocoles/' + selectedForCompare[0].id),
+                    $.get('/infectiologie/api/protocoles/' + selectedForCompare[1].id)
+                ).then(function(res1, res2) {
+                    fillCompareColumn(1, res1[0].protocoles[0]);
+                    fillCompareColumn(2, res2[0].protocoles[0]);
+                    $('#compareModal').modal('show');
+                });
+            });
+
+            function fillCompareColumn(idx, p) {
+                $(`#compTitle${idx}`).text(p.titre || 'Inconnu');
+                $(`#compSignes${idx}`).text(p.signes || 'N/A');
+                $(`#compDx${idx}`).text(p.diagnostics || 'N/A');
+
+                let principalMeds = protocoleMedsAutoPrescriptibles(p);
+
+                if (principalMeds.length > 0) {
+                    $(`#compTr${idx}`).text(principalMeds.map(m => m.nom).join(' + '));
+                    $(`#compPos${idx}`).text(principalMeds.map(m => `${m.nom} : ${m.pivot.posologie || ''}`)
+                        .join(' | '));
+                } else {
+                    $(`#compTr${idx}`).text(p.traitement_principal || 'N/A');
+                    $(`#compPos${idx}`).text(p.posologie_principale || 'N/A');
+                }
+
+                let badgeClass = 'text-secondary';
+                let badgeText = 'N/A';
+                if (principalMeds.length > 0) {
+                    let inStock = principalMeds.filter(m => (m.stock || 0) > 0).length;
+                    badgeClass = inStock === principalMeds.length ? 'text-success' : (inStock > 0 ?
+                        'text-warning' : 'text-danger');
+                    badgeText = inStock === principalMeds.length ? 'En stock' : (inStock > 0 ?
+                        'Stock partiel' : 'Rupture');
+                }
+                $(`#compStock${idx}`).html(
+                    `<span class="badge bg-light ${badgeClass} border"><i class="fas fa-box me-1"></i> ${badgeText}</span>`
+                    );
+
+                $(`#btnApplyComp${idx}`).off('click').on('click', function() {
+                    $('#maladieSelect').val(p.maladie_id).trigger('change');
+                    setTimeout(() => {
+                        if ($('#btnApplyProtocole').is(':visible')) $('#btnApplyProtocole').trigger(
+                            'click');
+                    }, 800);
+                    $('#compareModal').modal('hide');
+                    $('.compare-check').prop('checked', false);
+                    selectedForCompare = [];
+                    updateCompareBar();
+                });
+            }
+
+
+            // ═══════════════════════════════════════════════════════════
+            // 10. AJAX SUBMIT
+            // ═══════════════════════════════════════════════════════════
+            $('#consultationForm').submit(function(e) {
+                e.preventDefault();
+                let form = $(this),
+                    url = form.attr('action');
+                let method = form.find('input[name="_method"]').val() || 'POST';
+                let submitBtn = form.find('button[type="submit"]');
+                submitBtn.prop('disabled', true).text('Enregistrement...');
+
+                let formData = new FormData(this);
+                if (method.toUpperCase() === 'PUT') formData.set('_method', 'PUT');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: response.data || 'Consultation enregistrée !'
+                        }).then(() => {
+                            if (!form.find('input[name="_method"]').length) {
+                                form.trigger('reset');
+                                $('#ordonnanceTable tbody').html(
+                                    '<tr id="emptyOrdonnanceRow"><td colspan="7" class="text-center text-muted py-3"><i class="fas fa-pills me-2"></i>Aucun médicament ajouté</td></tr>'
+                                    );
+                                $('#analyseList').html(
+                                    '<li class="list-group-item text-center text-muted py-3" id="emptyAnalyseRow"><i class="fas fa-flask me-2"></i>Aucune analyse</li>'
+                                    );
+                                $('#rdvList').html(
+                                    '<li class="list-group-item text-center text-muted py-3" id="emptyRdvRow"><i class="fas fa-calendar-check me-2"></i>Aucun rendez-vous</li>'
+                                    );
+                                updatePatientTicket();
+                                updateIMC();
+                            }
+                            if (response.redirect) window.location.href = response
+                                .redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        let errors = xhr.responseJSON?.errors,
+                            msg = '';
+                        // EF-04.04 : allergie connue, on demande une confirmation explicite
+                        if (xhr.status === 422 && errors?.allergie) {
+                            Swal.fire({
+                                icon: 'warning', title: 'Allergie connue', text: errors.allergie[0],
+                                showCancelButton: true, confirmButtonText: 'Prescrire quand même', cancelButtonText: 'Revoir l\'ordonnance'
+                            }).then((r) => {
+                                if (r.isConfirmed) {
+                                    form.append('<input type="hidden" name="confirmer_allergie" value="1">');
+                                    form.trigger('submit');
+                                }
+                            });
+                            return;
+                        }
+                        if (errors) $.each(errors, function(k, v) {
+                            msg += v[0] + '\n';
+                        });
+                        else msg = xhr.responseJSON?.error || 'Une erreur est survenue';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: msg
+                        });
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).html(
+                            '<i class="fas fa-save me-2"></i>{{ $consultation ? 'Mettre à jour' : 'Enregistrer' }}'
+                            );
+                    }
+                });
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // 11. HOSPITALISATION — CHARGEMENT DES LITS
+            // ═══════════════════════════════════════════════════════════
+            $('#salleSelect').on('change', function() {
+                let salleId = $(this).val();
+                let litSelect = $('#litSelect');
+                litSelect.empty().append('<option value="">Chargement...</option>');
+
+                if (!salleId) {
+                    litSelect.html('<option value="">-- Sélectionner une salle --</option>');
+                    return;
+                }
+                let url = "{{ route('salles.litsLibres', ':salleId') }}".replace(':salleId', salleId);
+                $.get(url, function(data) {
+                    litSelect.empty().append('<option value="">-- Sélectionner un lit --</option>');
+                    if (data.length === 0) {
+                        litSelect.append('<option value="" disabled>Aucun lit libre disponible</option>');
+                    } else {
+                        data.forEach(lit => {
+                            litSelect.append(`<option value="${lit.id}">Lit n°${lit.numero}</option>`);
+                        });
+                    }
+                }).fail(function() {
+                    litSelect.html('<option value="">Erreur de chargement</option>');
+                });
+            });
+
+            // Init
+            if ($('#maladieSelect').val()) $('#maladieSelect').trigger('change');
+            if ($('#salleSelect').val()) $('#salleSelect').trigger('change');
+            if ($('#symptomes').val() && $('#symptomes').val().length > 0) $('#symptomes').trigger('change');
+
+        });
+    
+    // EF-04.02 : recherche dans la nomenclature des diagnostics
+    $(function () {
+        $('#diagnosticCode').select2({
+            placeholder: 'Code ou libellé…',
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: "{{ route('diagnostics.recherche') }}",
+                dataType: 'json',
+                delay: 250,
+                data: (params) => ({ q: params.term }),
+                processResults: (data) => ({ results: data.map(d => ({ id: d.id, text: d.code + ' — ' + d.libelle })) })
+            }
+        });
+    });
+</script>
+@endsection

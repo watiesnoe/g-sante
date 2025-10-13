@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide Thérapeutique de Terrain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,600;0,700;1,600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #EDEEE6;
+      --paper-raised: #F6F6F0;
+      --ink: #1D2321;
+      --ink-soft: #4B534E;
+      --teal: #1B4B43;
+      --teal-deep: #12332D;
+      --amber: #B9791F;
+      --amber-soft: #F1E3C6;
+      --red: #A9382C;
+      --red-soft: #F4DAD4;
+      --line: #D8D6C8;
+      --tab-w: 250px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'IBM Plex Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: var(--amber-soft);
+    }
+
+    /* ---------- Layout shell ---------- */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar: index tabs ---------- */
+    .sidebar {
+      width: var(--tab-w);
+      flex: 0 0 auto;
+      background: var(--teal-deep);
+      color: #EFEFE6;
+      padding: 0 0 24px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-head {
+      padding: 26px 22px 18px 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .sidebar-head .kicker {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #9FCABE;
+      margin: 0 0 6px 0;
+    }
+
+    .sidebar-head h1 {
+      font-family: 'IBM Plex Serif', serif;
+      font-size: 21px;
+      line-height: 1.25;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .sidebar-count {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: #8FB6AA;
+      margin-top: 10px;
+    }
+
+    .chapter-tabs {
+      list-style: none;
+      margin: 0;
+      padding: 10px 0;
+    }
+
+    .chapter-tab {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: #D6E2DC;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13.5px;
+      padding: 9px 22px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      line-height: 1.35;
+    }
+
+    .chapter-tab .num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      color: #6E9A8C;
+      flex: 0 0 18px;
+    }
+
+    .chapter-tab:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .chapter-tab.active {
+      background: var(--teal);
+      border-left: 3px solid var(--amber);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .chapter-tab.active .num {
+      color: var(--amber);
+    }
+
+    /* ---------- Main ---------- */
+    .main {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 32px 40px 80px 40px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      background: var(--paper);
+      padding: 0 0 18px 0;
+      z-index: 5;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--paper-raised);
+      border: 1.5px solid var(--line);
+      border-radius: 3px;
+      padding: 11px 14px;
+    }
+
+    .search-box svg {
+      flex: 0 0 auto;
+      opacity: .55;
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      background: none;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      width: 100%;
+    }
+
+    .search-box input::placeholder {
+      color: #8A9089;
+    }
+
+    .urgent-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: var(--paper-raised);
+      border: 1.5px solid var(--line);
+      border-radius: 3px;
+      padding: 11px 14px;
+      cursor: pointer;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .urgent-toggle.active {
+      background: var(--red-soft);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .urgent-toggle .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    .result-meta {
+      margin-top: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+    }
+
+    .chapter-section {
+      margin-top: 38px;
+    }
+
+    .chapter-title {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 10px;
+      margin-bottom: 18px;
+    }
+
+    .chapter-title .idx {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    .chapter-title h2 {
+      font-family: 'IBM Plex Serif', serif;
+      font-size: 23px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .chapter-title .n {
+      margin-left: auto;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    /* ---------- Pathology card ---------- */
+    .path-card {
+      position: relative;
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .path-card.urgent {
+      border-color: var(--red);
+    }
+
+    .path-card .fold {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 26px 26px 0;
+      border-color: transparent var(--red) transparent transparent;
+    }
+
+    .path-card .fold-label {
+      position: absolute;
+      top: 3px;
+      right: 1px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.5px;
+      color: #fff;
+      transform: rotate(0deg);
+    }
+
+    .path-summary {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 15px 18px;
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    .path-summary h3 {
+      margin: 0;
+      font-size: 15.5px;
+      font-weight: 600;
+      color: var(--ink);
+      flex: 1 1 auto;
+    }
+
+    .med-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 46%;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--amber-soft);
+      color: #7A551A;
+      white-space: nowrap;
+    }
+
+    .chip.more {
+      background: var(--line);
+      color: var(--ink-soft);
+    }
+
+    .chevron {
+      flex: 0 0 auto;
+      transition: transform .15s ease;
+      opacity: .6;
+    }
+
+    .path-card.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .path-detail {
+      display: none;
+      padding: 0 18px 20px 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .path-card.open .path-detail {
+      display: block;
+    }
+
+    .detail-block {
+      margin-top: 16px;
+    }
+
+    .detail-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin: 0 0 6px 0;
+      font-weight: 600;
+    }
+
+    .detail-block.tx .detail-label {
+      color: var(--red);
+    }
+
+    .detail-block p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+
+    .detail-block.diag p {
+      color: var(--ink-soft);
+    }
+
+    .med-full-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--ink-soft);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+
+    @media (max-width: 880px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left .2s ease;
+        z-index: 50;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .3);
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .main {
+        padding: 20px 16px 60px 16px;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--teal-deep);
+        color: #fff;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 3px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        margin-bottom: 14px;
+        cursor: pointer;
+      }
+
+      .med-chips {
+        max-width: 100%;
+        display: none;
+      }
+
+      .path-summary {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (min-width:881px) {
+      .mobile-menu-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <p class="kicker">Réf. clinique — soins primaires</p>
+        <h1>Guide Thérapeutique de Terrain</h1>
+        <div class="sidebar-count" id="sidebarCount">— pathologies</div>
+      </div>
+      <ul class="chapter-tabs" id="chapterTabs"></ul>
+    </aside>
+
+    <main class="main">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">☰ Chapitres</button>
+      <div class="topbar">
+        <div class="search-row">
+          <div class="search-box">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input id="searchInput" type="text"
+              placeholder="Rechercher une pathologie ou un médicament (ex. amoxicilline, fièvre, paludisme…)">
+          </div>
+          <button class="urgent-toggle" id="urgentToggle">
+            <span class="dot"></span> Urgences seulement
+          </button>
+        </div>
+        <div class="result-meta" id="resultMeta"></div>
+      </div>
+
+      <div id="content"></div>
+    </main>
+  </div>
+
+  <script>
+    const DATA = [
+      { c: "Urgences", u: 1, t: "État de choc", d: "Diagnostic clinique : évaluer FC, FR, TA, température, temps de recoloration cutanée, SpO2 et conscience.", m: ["Ceftriaxone"], tx: "Poser une sonde urinaire pour surveiller la diurèse horaire. Surveiller FC, FR, TA, température, TRC, SpO2 et conscience. Réaliser : hémoglobine, glycémie, test rapide du paludisme en zone endémique, hémoculture si disponible et groupe sanguin. Chez l'enfant, administrer la ceftriaxone IV selon protocole." },
+      { c: "Urgences", u: 1, t: "Crises généralisées tonico-cloniques et état de mal convulsif", d: "Diagnostic clinique de la crise ; rechercher une cause sous-jacente (fièvre, trauma, toxique, métabolique).", m: ["Diazépam rectal", "Phénobarbital", "Midazolam", "Diazépam"], tx: "Étape 1 (première ligne) : midazolam buccal/intranasal ou diazépam rectal ; en cas d'accès IV/IO, diazépam IV lent (3–5 min). Étape 2 (seconde ligne) selon l'âge et le sexe : lévétiracétam ou acide valproïque en premier choix, phénobarbital en second choix — se référer au tableau des posologies par tranche d'âge." },
+      { c: "Urgences", u: 1, t: "Hypoglycémie", d: "Hypoglycémie : glycémie < 3,3 mmol/l (< 60 mg/dl) ; sévère si < 2,2 mmol/l (< 40 mg/dl). Chez le diabétique suivi : < 3,9 mmol/l (< 70 mg/dl). Si la glycémie n'est pas mesurable, se fier à la résolution des symptômes après resucrage.", m: ["Ciprofloxacine", "Ofloxacine", "Énalapril", "Tramadol", "Aspirine", "Insuline", "Quinine"], tx: "Traitement étiologique : remplacer si possible les médicaments responsables (quinine IV, pentamidine, ciprofloxacine, énalapril, bêtabloquants, aspirine à forte dose, tramadol) ou anticiper l'hypoglycémie, par exemple en perfusant la quinine IV dans du glucosé." },
+      { c: "Urgences", u: 0, t: "Fièvre", d: "Chez le nourrisson de 1 à 3 mois avec fièvre sans foyer : bandelette urinaire, ECBU si possible, hémoculture, NFS, ponction lombaire selon signes de gravité.", m: ["Paracétamol", "Ibuprofène"], tx: "Traitement symptomatique de 3 jours maximum. Paracétamol PO : enfant ≥1 mois, 15 mg/kg 3–4x/j (max 60 mg/kg/j) ; adulte 1 g 3–4x/j (max 4 g/j). Ou ibuprofène PO chez l'enfant >3 mois. Faire boire le patient et poursuivre l'allaitement fréquent chez le nourrisson." },
+      { c: "Urgences", u: 0, t: "Douleur", d: "Localiser la douleur et rechercher des signes spécifiques d'une pathologie sous-jacente (ex. douleur osseuse évocatrice d'une carence en vitamine C).", m: [], tx: "Le traitement dépend du type et de l'intensité de la douleur : symptomatique et étiologique lorsqu'une cause curable est retrouvée, symptomatique seul dans les autres cas." },
+      { c: "Urgences", u: 0, t: "Anémie", d: "Taux d'hémoglobine ; test rapide ou frottis/goutte épaisse en zone impaludée ; bandelette urinaire à la recherche d'hémoglobinurie ou d'hématurie.", m: ["Acide folique", "Sels ferreux", "Fer"], tx: "Carence en fer : sels ferreux/acide folique PO (ou sels ferreux seuls) pendant 3 mois. Prévention (grossesse, malnutrition) : même supplémentation tant que le risque persiste, posologie exprimée en fer élément selon l'âge." },
+      { c: "Urgences", u: 0, t: "Déshydratation", d: "Évaluation clinique du degré de déshydratation selon les plans de traitement OMS (A, B, C).", m: [], tx: "Appliquer le plan de traitement OMS correspondant au degré de déshydratation. Administrer un traitement étiologique si nécessaire, et du sulfate de zinc chez l'enfant de moins de 5 ans (voir Diarrhée aiguë)." },
+      { c: "Urgences", u: 1, t: "Malnutrition aiguë sévère", d: "Critères anthropométriques et cliniques ; le périmètre brachial (PB/MUAC) mesure l'atrophie musculaire — un MUAC < 115 mm signe une MAS à risque de mortalité élevé.", m: ["Amoxicilline", "Albendazole"], tx: "Dès J1, sauf signes d'infection spécifique : amoxicilline PO 50 mg/kg (max 1 g) 2x/j pendant 5–7 jours. En zone endémique, test rapide du paludisme à J1 et traitement selon résultat." },
+      { c: "Urgences", u: 1, t: "Obstruction aiguë des voies aériennes supérieures", d: "Souvent chez l'enfant de 6 mois à 5 ans, corps étranger obstruant brutalement le pharynx ou le larynx, sans signe précurseur.", m: [], tx: "Assurer une bonne hydratation orale si possible, IV en cas de difficulté ou de refus de boire. Prise en charge en urgence de l'obstruction (manœuvres de désobstruction selon protocole)." },
+
+      { c: "ORL et respiratoire", u: 0, t: "Rhinite (rhume) et rhinopharyngite", d: "Diagnostic clinique, pas d'antibiothérapie justifiée.", m: ["Paracétamol"], tx: "Pas de traitement antibiotique : n'accélère pas la guérison et ne prévient pas les complications. Désobstruction du nez au chlorure de sodium 0,9 %. Fièvre et mal de gorge : paracétamol PO 2–3 jours." },
+      { c: "ORL et respiratoire", u: 0, t: "Sinusite aiguë", d: "Diagnostic clinique ; distinguer sinusite virale (< 10 jours, symptômes modérés) de sinusite bactérienne.", m: ["Amoxicilline/acide clavulanique", "Érythromycine", "Amoxicilline"], tx: "Traitement de première ligne : amoxicilline PO. Si diagnostic incertain et ré-examen possible, commencer par un traitement symptomatique comme pour une rhinopharyngite." },
+      { c: "ORL et respiratoire", u: 0, t: "Angine (pharyngite) aiguë", d: "Diagnostic clinique de l'inflammation pharyngée.", m: ["Métronidazole", "Azithromycine", "Amoxicilline", "Paracétamol", "Ibuprofène"], tx: "Traitement symptomatique de la fièvre et de la douleur : paracétamol ou ibuprofène PO. Antibiothérapie selon l'étiologie suspectée." },
+      { c: "ORL et respiratoire", u: 0, t: "Diphtérie", d: "Confirmation par isolement d'une souche toxinogène de C. diphtheriae sur culture d'écouvillonnage pharyngé.", m: ["Azithromycine", "Érythromycine", "Épinéphrine"], tx: "Méthode de Besredka pour l'antitoxine : injection test de 0,1 ml SC, surveillance 15 min, puis 0,25 ml SC, puis le reste en IM/IV selon tolérance. Prise en charge des contacts proches (foyer, exposition rapprochée)." },
+      { c: "ORL et respiratoire", u: 0, t: "Laryngotrachéite et laryngotrachéobronchite (croup)", d: "Diagnostic clinique (toux aboyante, stridor).", m: ["Dexaméthasone", "Prednisolone", "Épinéphrine", "Adrénaline"], tx: "Corticoïde en dose unique : dexaméthasone PO 0,15–0,6 mg/kg (max 16 mg), ou à défaut prednisolone PO 1 mg/kg. Garder l'enfant en observation au moins 30 minutes après la prise." },
+      { c: "ORL et respiratoire", u: 1, t: "Épiglottite", d: "Urgence clinique ORL — détresse respiratoire fébrile de l'enfant.", m: ["Amoxicilline/acide clavulanique", "Amoxicilline", "Ceftriaxone"], tx: "Poser une voie veineuse, hydrater par voie IV. Ceftriaxone IV lente (3 min) ou en perfusion (30 min) — ne jamais administrer en IM, risque de précipiter un arrêt respiratoire par agitation." },
+      { c: "ORL et respiratoire", u: 1, t: "Trachéite bactérienne", d: "Diagnostic clinique de surinfection trachéale.", m: ["Amoxicilline", "Cloxacilline", "Ceftriaxone", "Oxacilline"], tx: "Voie veineuse et hydratation IV. Ceftriaxone IV lente ou en perfusion — ne pas administrer en IM chez l'enfant (risque d'agitation et d'arrêt respiratoire)." },
+      { c: "ORL et respiratoire", u: 0, t: "Otite externe aiguë", d: "Diagnostic clinique otoscopique.", m: ["Ciprofloxacine", "Paracétamol", "Ofloxacine"], tx: "Traitement de la douleur : paracétamol PO. Gouttes auriculaires de ciprofloxacine dans l'oreille atteinte pendant 7 jours (3 gouttes 2x/j chez l'enfant ≥1 an, 4 gouttes 2x/j chez l'adulte)." },
+      { c: "ORL et respiratoire", u: 0, t: "Otite moyenne aiguë (OMA)", d: "Diagnostic otoscopique.", m: ["Amoxicilline/acide clavulanique", "Azithromycine", "Amoxicilline", "Paracétamol"], tx: "Traiter fièvre et douleur avec paracétamol PO. Si ré-examen possible à 48–72h, privilégier l'attente avant antibiothérapie, l'évolution étant souvent spontanément favorable." },
+      { c: "ORL et respiratoire", u: 0, t: "Otite moyenne chronique suppurée (OMCS)", d: "Écoulement auriculaire chronique.", m: ["Ciprofloxacine", "Ceftriaxone", "Ofloxacine"], tx: "Gouttes auriculaires de ciprofloxacine jusqu'à tarissement de l'écoulement (environ 2 semaines, max 4 semaines) : 3 gouttes 2x/j (enfant ≥1 an), 4 gouttes 2x/j (adulte)." },
+      { c: "ORL et respiratoire", u: 0, t: "Coqueluche", d: "Diagnostic clinique (toux quinteuse), confirmation PCR si disponible.", m: ["Cotrimoxazole", "Azithromycine", "Érythromycine"], tx: "Prévention par vaccination systématique : primovaccination en 3 doses d'un vaccin polyvalent contenant l'antigène coquelucheux, dès 6 semaines ou selon le protocole national." },
+      { c: "ORL et respiratoire", u: 0, t: "Bronchite aiguë", d: "Diagnostic clinique, souvent viral.", m: ["Amoxicilline", "Paracétamol"], tx: "Fièvre : paracétamol PO. Chez l'enfant, désobstruction du rhinopharynx au chlorure de sodium 0,9 % ou Ringer lactate, 4–6 fois par jour." },
+      { c: "ORL et respiratoire", u: 0, t: "Bronchite chronique", d: "Diagnostic clinique, antécédent de toux productive chronique.", m: [], tx: "Bronchite chronique simple : antibiotiques inutiles. Exacerbation aiguë sur terrain fragile uniquement : antibiothérapie possible (voir Bronchite aiguë). Déconseiller le tabac et les facteurs irritants." },
+      { c: "ORL et respiratoire", u: 0, t: "Bronchiolite", d: "Diagnostic clinique chez le nourrisson.", m: [], tx: "Évolution habituelle : signes d'obstruction pendant une dizaine de jours, toux pouvant persister 2 semaines ou plus. Surveillance des signes de détresse respiratoire." },
+      { c: "ORL et respiratoire", u: 0, t: "Pneumonie chez l'enfant de moins de 5 ans", d: "Diagnostic clinique (polypnée, tirage, auscultation) selon critères OMS par âge.", m: ["Amoxicilline/acide clavulanique", "Azithromycine", "Amoxicilline", "Cloxacilline", "Gentamicine", "Ampicilline", "Ceftriaxone", "Paracétamol", "Oxacilline", "Céfotaxime"], tx: "Antibiothérapie graduée selon la sévérité (ambulatoire orale à hospitalisation IV) et prise en charge symptomatique de la fièvre — se référer au protocole de sévérité pour le choix précis." },
+      { c: "ORL et respiratoire", u: 0, t: "Pneumonie chez l'enfant de plus de 5 ans et l'adulte", d: "Diagnostic clinique et radiologique si disponible.", m: ["Amoxicilline/acide clavulanique", "Azithromycine", "Amoxicilline", "Cloxacilline", "Ampicilline", "Ceftriaxone", "Paracétamol", "Oxacilline"], tx: "Antibiothérapie selon la sévérité clinique, en ambulatoire ou hospitalière, associée au traitement symptomatique de la fièvre." },
+      { c: "ORL et respiratoire", u: 0, t: "Pneumonie traînante", d: "Pneumonie ne répondant pas à un traitement de première ligne bien conduit.", m: ["Azithromycine", "Érythromycine", "Doxycycline"], tx: "Envisager une étiologie atypique (mycoplasme, chlamydia) et adapter l'antibiothérapie en conséquence." },
+      { c: "ORL et respiratoire", u: 0, t: "Staphylococcie pleuro-pulmonaire", d: "Radiographie pulmonaire si disponible : consolidation multilobaire, cavitation, pneumatocèles, pneumothorax spontané évocateurs.", m: ["Amoxicilline", "Clindamycine", "Cloxacilline", "Ceftriaxone", "Paracétamol", "Oxacilline"], tx: "Antibiothérapie large spectre si l'étiologie staphylococcique ne peut être confirmée : ceftriaxone IM/IV lente 50 mg/kg 1x/j associée à la cloxacilline en perfusion IV, posologie adaptée à l'âge du nouveau-né/enfant." },
+      { c: "ORL et respiratoire", u: 0, t: "Asthme", d: "Diagnostic clinique (sifflements, dyspnée réversible).", m: ["Aspirine"], tx: "Attention : l'aspirine peut déclencher une crise chez certains asthmatiques — l'éviter en cas d'antécédent d'intolérance." },
+      { c: "ORL et respiratoire", u: 0, t: "Asthme aigu (crise d'asthme)", d: "Évaluation de la gravité de la crise (parole, fréquence respiratoire, SpO2, sibilants).", m: [], tx: "Rassurer le patient. Le traitement et le suivi dépendent de la gravité de la crise et de la réponse au traitement initial (bronchodilatateurs, corticoïdes selon sévérité)." },
+      { c: "ORL et respiratoire", u: 0, t: "Asthme chronique", d: "Évaluation du contrôle des symptômes pour ajuster le palier de traitement.", m: ["Budésonide", "Salbutamol", "Formotérol"], tx: "Traitement de fond par corticoïde inhalé (budésonide) à dose faible, moyenne ou élevée selon l'âge et la sévérité, associé à un bronchodilatateur selon besoin." },
+      { c: "ORL et respiratoire", u: 0, t: "Tuberculose pulmonaire", d: "Test Xpert MTB/RIF sur crachats : détecte M. tuberculosis et la résistance à la rifampicine.", m: ["Pyrazinamide", "Rifampicine", "Isoniazide", "Éthambutol"], tx: "Traitement en 2 phases (attaque puis entretien) pendant 6 mois au total. Prévention : vaccination BCG des nouveau-nés (~59 % de protection contre la forme pulmonaire), précautions air en structure de soins, traitement préventif à l'isoniazide 6 mois pour les contacts étroits." },
+
+      { c: "Digestif", u: 0, t: "Diarrhée aiguë", d: "Diagnostic clinique ; évaluer le degré de déshydratation associé.", m: [], tx: "Principe de base : prévenir ou traiter la déshydratation en remplaçant les pertes en eau et électrolytes au fur et à mesure, jusqu'à l'arrêt de la diarrhée." },
+      { c: "Digestif", u: 0, t: "Shigellose", d: "En contexte épidémique : confirmer l'agent par culture des selles et tester la sensibilité aux antibiotiques.", m: ["Ciprofloxacine", "Azithromycine", "Ceftriaxone", "Paracétamol", "Ofloxacine", "Céfixime", "SRO"], tx: "Traitement de première intention : ciprofloxacine PO pendant 3 jours si la souche est sensible, 15 mg/kg 2x/j chez l'enfant en l'absence d'antibiogramme." },
+      { c: "Digestif", u: 0, t: "Amibiase", d: "Dysenterie amibienne : trophozoïtes mobiles à l'examen frais des selles. Abcès amibien du foie : sérologie (hémagglutination indirecte, ELISA) et échographie (POCUS).", m: ["Métronidazole", "SRO"], tx: "Amibiase intestinale confirmée : tinidazole PO 50 mg/kg 1x/j pendant 3 jours chez l'enfant." },
+      { c: "Digestif", u: 0, t: "Reflux gastro-œsophagien", d: "Diagnostic clinique (pyrosis, régurgitations).", m: ["Oméprazole"], tx: "Éviter l'alcool et le tabac. Hydroxyde d'aluminium/magnésium PO 1–2 comprimés 3x/j après les repas, ou au moment des douleurs." },
+      { c: "Digestif", u: 0, t: "Ulcères gastro-duodénaux chez l'adulte", d: "Diagnostic clinique ; endoscopie si disponible pour les formes compliquées.", m: ["Oméprazole"], tx: "Ulcère non compliqué : rechercher et arrêter AINS/aspirine, éviter alcool et tabac, oméprazole PO 20 mg 1x/j le matin pendant 7 à 10 jours." },
+      { c: "Digestif", u: 0, t: "Troubles dyspeptiques", d: "Diagnostic clinique d'exclusion après avoir écarté un ulcère ou une autre cause organique.", m: ["Oméprazole"], tx: "Oméprazole PO 10 mg 1x/j pendant 4 semaines, utile même en l'absence d'infection à H. pylori documentée." },
+      { c: "Digestif", u: 0, t: "Candidose orale ou oropharyngée", d: "Diagnostic clinique (dépôts blanchâtres muqueux).", m: ["Nystatine"], tx: "Nystatine suspension orale pendant 7 jours : 400 000 UI/j (1 ml, 100 000 UI, 4x/j) chez l'enfant et l'adulte ; ou miconazole gel buccal 7 jours." },
+      { c: "Digestif", u: 0, t: "Herpès buccal", d: "Diagnostic clinique de la gingivo-stomatite herpétique aiguë.", m: ["Amoxicilline", "Paracétamol", "Ibuprofène", "Aciclovir"], tx: "Traiter la douleur au paracétamol ou à l'ibuprofène PO. Si vu dans les 96 heures suivant le début des symptômes, aciclovir PO 5 à 7 jours." },
+      { c: "Digestif", u: 0, t: "Stomatite du scorbut (carence en vitamine C)", d: "Diagnostic clinique (gingivite hémorragique, contexte de carence alimentaire).", m: [], tx: "Acide ascorbique (vitamine C) PO ; la dose optimale n'est pas clairement établie, adapter selon la sévérité." },
+      { c: "Digestif", u: 0, t: "Autres lésions d'origine carentielle", d: "Diagnostic clinique orienté par le contexte nutritionnel.", m: ["Fer"], tx: "Correction de la carence sous-jacente identifiée et supplémentation adaptée." },
+
+      { c: "Peau", u: 0, t: "Gale", d: "Diagnostic clinique (prurit à recrudescence nocturne, sillons).", m: ["Ivermectine"], tx: "Traitement antiparasitaire par ivermectine PO et/ou traitement topique scabicide selon disponibilité, à étendre aux contacts proches." },
+      { c: "Peau", u: 0, t: "Mycoses superficielles", d: "Diagnostic clinique des lésions cutanées mycosiques.", m: ["Paracétamol", "Nystatine"], tx: "Traitement antifongique local adapté à la localisation ; antalgique si besoin." },
+      { c: "Peau", u: 0, t: "Impétigo", d: "Diagnostic clinique (lésions croûteuses mielleuses).", m: ["Cloxacilline", "Oxacilline"], tx: "Nettoyer à l'eau et au savon avant d'appliquer la mupirocine, 3 applications/j pendant 7 jours ; réévaluer à J3." },
+      { c: "Peau", u: 0, t: "Furoncle et anthrax staphylococcique", d: "Diagnostic clinique.", m: ["Amoxicilline/acide clavulanique", "Amoxicilline"], tx: "Nettoyer à l'eau et au savon 2x/j, recouvrir d'un pansement sec ; antibiothérapie selon l'étendue et le terrain." },
+      { c: "Peau", u: 0, t: "Erysipèle et cellulite", d: "Rechercher une protéinurie à la bandelette 3 semaines après l'infection pour dépister une glomérulonéphrite post-streptococcique.", m: ["Amoxicilline/acide clavulanique", "Amoxicilline", "Clindamycine", "Cloxacilline", "Oxacilline"], tx: "Antibiothérapie orale ou IV selon la sévérité clinique." },
+      { c: "Peau", u: 0, t: "Charbon cutané", d: "À partir du liquide vésiculaire : culture et antibiogramme (rarement disponible) ou frottis coloré au Gram ; PCR en laboratoire spécialisé.", m: ["Ciprofloxacine", "Amoxicilline", "Clindamycine", "Doxycycline", "Ampicilline", "Ofloxacine"], tx: "Antibioprophylaxie en cas d'exposition cutanée connue : même traitement oral qu'un charbon non compliqué pendant 10 jours. Prévention : vaccination du bétail, incinération/enfouissement des carcasses." },
+      { c: "Peau", u: 0, t: "Tréponématoses endémiques", d: "Diagnostic clinique et sérologique similaire à la syphilis.", m: ["Azithromycine", "Doxycycline"], tx: "Antibiothérapie en dose adaptée à l'âge, extension du dépistage/traitement aux contacts en zone d'endémie." },
+      { c: "Peau", u: 0, t: "Lèpre", d: "Diagnostic biologique par mise en évidence de bacilles acido-alcoolo-résistants (coloration de Ziehl-Neelsen) sur frottis nasal ou biopsie cutanée du lobe de l'oreille et d'une lésion.", m: ["Clofazimine", "Rifampicine", "Dapsone"], tx: "Schéma de première ligne recommandé par l'OMS, différencié entre lèpre multibacillaire (>5 lésions) et paucibacillaire (1 à 5 lésions), avec posologies mensuelles/quotidiennes selon l'âge." },
+      { c: "Peau", u: 0, t: "Herpès cutané", d: "Diagnostic clinique (vésicules groupées en bouquet).", m: [], tx: "Nettoyer à l'eau et au savon 2x/j jusqu'à guérison des lésions. En cas de surinfection bactérienne, traiter comme un impétigo." },
+      { c: "Peau", u: 0, t: "Zona", d: "Diagnostic clinique (éruption vésiculeuse unilatérale suivant un dermatome).", m: ["Paracétamol", "Aciclovir"], tx: "Traitement similaire à l'herpès, avec en plus une prise en charge antalgique systématique au paracétamol PO." },
+      { c: "Peau", u: 0, t: "Eczéma", d: "Diagnostic clinique ; rechercher une dermatose sous-jacente déclenchante.", m: [], tx: "Nettoyer à l'eau et au savon 2x/j. Eczéma aigu : lotion à la calamine 2x/j. Eczéma chronique : pommade à l'oxyde de zinc 2x/j. Rechercher et traiter une cause sous-jacente (gale, poux)." },
+      { c: "Peau", u: 0, t: "Dermatite séborrhéique", d: "Diagnostic clinique (squames grasses du cuir chevelu et du visage).", m: ["Hydrocortisone"], tx: "Nettoyer à l'eau et au savon 2x/j, shampoing sur le cuir chevelu. Hydrocortisone 1 % crème, 1–2 applications/j en couche mince, max 7 jours, jamais si surinfection bactérienne." },
+      { c: "Peau", u: 0, t: "Urticaire", d: "Diagnostic clinique (plaques érythémateuses prurigineuses fugaces).", m: ["Loratadine"], tx: "Si prurit intense, antihistaminique quelques jours : loratadine PO 5 mg (enfant >2 ans, <30 kg) ou 10 mg (>30 kg et adulte) 1x/j. En cas de réaction anaphylactique, voir État de choc." },
+      { c: "Peau", u: 0, t: "Pellagre", d: "Diagnostic clinique (dermatite photosensible, contexte de carence alimentaire).", m: [], tx: "Nicotinamide (vitamine PP) PO 100 mg 3x/j jusqu'à guérison complète, associé à une alimentation riche en protéines. En contexte épidémique, adapter la ration alimentaire de la population." },
+
+      { c: "Yeux", u: 0, t: "Xérophtalmie (carence en vitamine A)", d: "Diagnostic clinique (héméralopie, taches de Bitot, kératomalacie au stade avancé).", m: ["Tétracycline", "Vitamine A"], tx: "Traiter systématiquement le stade de kératomalacie pour préserver l'œil et la vie du patient : rétinol (vitamine A) PO selon protocole par âge. Prévention : rétinol systématique chez l'enfant rougeoleux (J1 et J2) et supplémentation périodique en zone d'endémie." },
+      { c: "Yeux", u: 0, t: "Conjonctivite", d: "Diagnostic clinique (rougeur, sécrétions).", m: ["Tétracycline"], tx: "Nettoyer les yeux 4x/j à l'eau bouillie ou au chlorure de sodium 0,9 %. Tétracycline ophtalmique 1 % dans les deux yeux, 2x/j pendant 7 jours. Ne jamais utiliser de collyre corticoïde." },
+      { c: "Yeux", u: 0, t: "Conjonctivite du nouveau-né", d: "Diagnostic clinique chez le nouveau-né dans les premiers jours de vie.", m: ["Azithromycine", "Érythromycine", "Tétracycline", "Ceftriaxone", "Céfotaxime"], tx: "Nettoyage des yeux avec une solution isotonique stérile 4x/j. Prévention : application de pommade ophtalmique à la tétracycline 1 % dans l'heure suivant la naissance." },
+      { c: "Yeux", u: 0, t: "Kérato-conjonctivite virale épidémique", d: "Diagnostic clinique, contexte épidémique.", m: ["Vitamine A"], tx: "Mesures d'hygiène oculaire strictes pour limiter la transmission ; traitement symptomatique." },
+      { c: "Yeux", u: 0, t: "Trachome", d: "Diagnostic clinique selon la classification OMS des stades.", m: ["Azithromycine", "Érythromycine", "Tétracycline"], tx: "Nettoyer les yeux et le visage plusieurs fois par jour. Traitement de choix : azithromycine PO en dose unique (20 mg/kg chez l'enfant, 1 g chez l'adulte)." },
+      { c: "Yeux", u: 0, t: "Cellulite périorbitaire et orbitaire", d: "Diagnostic clinique ; distinguer forme périorbitaire de la forme orbitaire (plus grave).", m: ["Amoxicilline/acide clavulanique", "Amoxicilline", "Clindamycine", "Cloxacilline", "Ceftriaxone", "Oxacilline"], tx: "Hospitalisation si cellulite orbitaire, enfant de moins de 3 mois, altération sévère de l'état général, complications locales ou risque de non-observance." },
+      { c: "Yeux", u: 0, t: "Onchocercose (cécité des rivières)", d: "Lésions oculaires toujours associées à des lésions extra-oculaires d'onchocercose.", m: ["Ivermectine"], tx: "Traitement antiparasitaire de l'atteinte oculaire, associé à la prise en charge systémique (voir chapitre parasitoses)." },
+      { c: "Yeux", u: 0, t: "Loase (atteinte oculaire)", d: "Migration sous-conjonctivale visible du ver adulte évocatrice.", m: [], tx: "Voir prise en charge antiparasitaire dans le chapitre Paludisme et parasitoses." },
+      { c: "Yeux", u: 0, t: "Ptérygion", d: "Diagnostic clinique, deux stades : peu évolutif ou évolutif recouvrant la pupille.", m: [], tx: "Peu évolutif, sans complication : pas de traitement. Évolutif : nettoyer à l'eau stérile ou au chlorure de sodium 0,9 % ; traitement chirurgical selon les possibilités locales." },
+
+      { c: "Paludisme et parasitoses", u: 0, t: "Paludisme", d: "Hémoglobine à mesurer systématiquement en cas d'anémie clinique ou de paludisme sévère. Glycémie à mesurer systématiquement (risque d'hypoglycémie sous quinine ou en cas de malnutrition).", m: ["Luméfantrine", "Chloroquine", "Paracétamol", "Furosémide", "Artésunate", "Artéméther", "Méfloquine", "Primaquine", "Quinine"], tx: "P. vivax/ovale/malariae/knowlesi : chloroquine PO (10 mg base/kg J1–J2, 5 mg/kg J3). Forme simple : combinaison à base d'artémisinine (ACT) PO 3 jours selon le protocole national. Forme sévère : traitement pré-transfert par artésunate rectal chez l'enfant <6 ans, puis prise en charge hospitalière avec surveillance horaire des constantes, de la glycémie et de la diurèse." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Trypanosomiase humaine africaine (maladie du sommeil)", d: "Diagnostic en 3 étapes pour T.b. gambiense (dépistage, confirmation, stade) et en 2 étapes pour T.b. rhodesiense.", m: [], tx: "Traitement spécifique selon l'espèce et le stade (hémato-lymphatique ou neurologique). Suivi post-thérapeutique tous les 6 mois pendant 24 mois (clinique, ponction lombaire, recherche de trypanosomes) pour dépister une rechute." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Trypanosomiase américaine (maladie de Chagas)", d: "Phase aiguë : identification directe de Trypanosoma cruzi au microscope (sang frais ou concentration par micro-hématocrite).", m: [], tx: "Benznidazole ou nifurtimox PO, durée et posologie adaptées à l'âge (60 à 90 jours selon la molécule et la tranche d'âge)." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Leishmanioses", d: "Diagnostic parasitologique selon la forme (cutanée, viscérale) et l'espèce en cause.", m: [], tx: "Le choix de l'antileishmanien dépend de l'espèce en cause ; se conformer au protocole national." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Protozooses intestinales (diarrhées parasitaires)", d: "Mise en évidence du parasite (kystes/trophozoïtes pour giardia, oocystes pour cryptosporidium, cyclospora, isospora) sur 2 à 3 échantillons de selles espacés de 2 à 3 jours.", m: ["Métronidazole", "Tinidazole"], tx: "Giardiase : tinidazole PO dose unique (50 mg/kg enfant, max 2 g ; 2 g adulte) ou métronidazole PO 3 jours. Cryptosporidiose chez l'immunocompétent : pas de traitement étiologique, résolution spontanée en 1–2 semaines." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Distomatoses (douves)", d: "Mise en évidence des œufs de douve dans les selles ou les urines selon l'espèce.", m: ["Praziquantel"], tx: "Traitement antiparasitaire spécifique de l'espèce en cause." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Schistosomiases", d: "Mise en évidence des œufs dans les selles ou les urines selon l'espèce.", m: ["Praziquantel"], tx: "Praziquantel PO chez l'enfant ≥4 ans et l'adulte : 40 mg/kg dose unique (S. haematobium, mansoni, intercalatum) ou 2 doses de 30 mg/kg (S. japonicum, mekongi)." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Cestodoses", d: "Mise en évidence d'anneaux ou d'œufs de ténia dans les selles.", m: ["Acide folique", "Praziquantel", "Albendazole"], tx: "Traitement antiparasitaire spécifique selon l'espèce identifiée." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Nématodoses", d: "Mise en évidence d'œufs de nématodes intestinaux dans les selles.", m: ["Prednisolone", "Ivermectine", "Albendazole", "Mébendazole", "Fer"], tx: "Traitement antiparasitaire adapté à l'espèce, associé à une correction de l'anémie carentielle si présente." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Filarioses", d: "Mise en évidence de microfilaires selon l'espèce et l'heure de prélèvement adaptée à leur périodicité.", m: ["Diéthylcarbamazine", "Ivermectine", "Doxycycline", "Albendazole"], tx: "Traitement antiparasitaire spécifique de l'espèce, adapté à la co-endémicité éventuelle avec la loase." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Onchocercose (cécité des rivières) — atteinte cutanée", d: "Mise en évidence de microfilaires dans le derme (biopsie cutanée exsangue, crête iliaque) ; rechercher une loase associée en zone de co-endémie avant biopsie.", m: ["Diéthylcarbamazine", "Ivermectine", "Doxycycline"], tx: "Doxycycline PO 200 mg 1x/j pendant 4 à 6 semaines : tue une proportion importante de vers adultes et réduit progressivement la microfilarémie." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Loase", d: "Prélèvement sanguin à réaliser entre 10h et 17h (périodicité diurne des microfilaires de L. loa).", m: ["Diéthylcarbamazine", "Ivermectine", "Doxycycline", "Albendazole", "Paracétamol"], tx: "Si microfilarémie <1000–2000 mf/ml, cure de diéthylcarbamazine (DEC) de 28 jours débutée à faible dose (6 mg à J1, soit 1/8 de comprimé à 50 mg 2x/j) puis augmentation progressive selon protocole." },
+      { c: "Paludisme et parasitoses", u: 0, t: "Filarioses lymphatiques (FL)", d: "Mise en évidence de microfilaires dans le sang périphérique, prélèvement entre 21h et 3h du matin (périodicité nocturne).", m: ["Diéthylcarbamazine", "Ivermectine", "Doxycycline", "Albendazole"], tx: "Doxycycline PO en cure prolongée (200 mg 1x/j, minimum 4 semaines) élimine la majorité des macrofilaires et améliore le lymphœdème. Prévention des poussées : repos, surélévation du membre, refroidissement, hygiène cutanée." },
+
+      { c: "Maladies infectieuses et fièvres", u: 1, t: "Méningite bactérienne", d: "Analyse du LCR : numération leucocytaire, pression, aspect, protéines. LCR normal : <5 leucocytes/mm³, limpide, <40 mg/dl de protéines.", m: ["Dexaméthasone", "Cloxacilline", "Gentamicine", "Ampicilline", "Ceftriaxone", "Oxacilline", "Céfotaxime"], tx: "Antibiothérapie empirique selon l'âge (ampicilline + céfotaxime chez le nouveau-né, ceftriaxone au-delà). Dexaméthasone IV en complément sauf chez le nouveau-né. Prise en charge des convulsions et du coma associés, surveillance rapprochée." },
+      { c: "Maladies infectieuses et fièvres", u: 1, t: "Tétanos", d: "Diagnostic clinique (trismus, contractures, hyperexcitabilité) ; rechercher la porte d'entrée.", m: ["Métronidazole", "Cloxacilline", "Gentamicine", "Oxacilline", "Céfotaxime"], tx: "Traiter la porte d'entrée et les infections associées. En cas d'omphalite compliquée de septicémie chez le nouveau-né, associer au métronidazole IV la cloxacilline + céfotaxime ou cloxacilline + gentamicine." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Fièvres entériques (typhoïde et paratyphoïde)", d: "Culture de S. Typhi ou Paratyphi et antibiogramme (sang et selles).", m: ["Chloramphénicol", "Ciprofloxacine", "Cotrimoxazole", "Métronidazole", "Azithromycine", "Dexaméthasone", "Amoxicilline", "Ampicilline", "Ceftriaxone", "Ofloxacine", "Méropénème", "Céfixime"], tx: "Antibiotique de première intention : azithromycine PO 7 jours (y compris souches multirésistantes et femme enceinte). La fièvre disparaît généralement en 4 à 5 jours si le traitement est efficace." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Brucellose", d: "Culture bactérienne lente (7 à 21 jours) ; éliminer une tuberculose associée en cas de toux prolongée.", m: ["Streptomycine", "Gentamicine", "Rifampicine", "Doxycycline"], tx: "Bithérapie prolongée selon l'âge : doxycycline + rifampicine ou doxycycline + gentamicine/streptomycine chez l'adulte ; cotrimoxazole + rifampicine ou gentamicine chez l'enfant de moins de 8 ans, pendant 6 semaines." },
+      { c: "Maladies infectieuses et fièvres", u: 1, t: "Peste", d: "Collecte d'échantillons avant traitement selon la forme : aspiration ganglionnaire (bubonique), crachats (pulmonaire), sang (septicémique) ou LCR (méningée).", m: ["Chloramphénicol", "Ciprofloxacine", "Streptomycine", "Gentamicine", "Doxycycline", "Ofloxacine"], tx: "Débuter une antibiothérapie empirique dès suspicion clinique, sans attendre les résultats, pendant 10 à 14 jours." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Leptospirose", d: "Collecte d'échantillons avant traitement, envoi au laboratoire de référence.", m: ["Azithromycine", "Amoxicilline", "Doxycycline", "Ceftriaxone", "Paracétamol", "Aspirine"], tx: "Forme légère ambulatoire : repos, paracétamol PO pour douleur et fièvre, doxycycline PO 7 jours (2–2,2 mg/kg, max selon poids)." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Fièvre récurrente à poux (FRP)", d: "Mise en évidence de Borrelia sur frottis/goutte épaisse (Giemsa), prélèvement impérativement pendant l'accès fébrile.", m: ["Azithromycine", "Érythromycine", "Doxycycline", "Paracétamol"], tx: "Cas suspects/confirmés et contacts proches : doxycycline PO dose unique (enfant 4 mg/kg max 100 mg, adulte 200 mg) ou érythromycine/azithromycine en alternative." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Fièvres récurrentes à tiques (FRT)", d: "Mise en évidence de Borrelia dans le sang, à renouveler si le premier frottis est négatif malgré une forte suspicion.", m: ["Azithromycine", "Doxycycline", "Ceftriaxone", "Paracétamol"], tx: "Doxycycline PO 7 à 10 jours (2,2 mg/kg 2x/j chez l'enfant <45 kg, 100 mg 2x/j au-delà) ou azithromycine si la doxycycline est contre-indiquée." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Rickettsioses éruptives", d: "Confirmation par deux prélèvements sérologiques à 10 jours d'intervalle.", m: ["Doxycycline", "Paracétamol", "Aspirine"], tx: "Hydratation, paracétamol contre la fièvre ; l'aspirine est contre-indiquée (risque hémorragique). Doxycycline PO 5 à 7 jours ou jusqu'à 3 jours après disparition de la fièvre." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Rougeole", d: "Diagnostic clinique (fièvre, éruption maculo-papuleuse, catarrhe) ; confirmation sérologique possible.", m: ["Amoxicilline/acide clavulanique", "Dexaméthasone", "Tétracycline", "Amoxicilline", "Cloxacilline", "Épinéphrine", "Ceftriaxone", "Paracétamol", "Oxacilline", "Salbutamol", "Adrénaline"], tx: "Augmenter la fréquence des tétées/repas. Nettoyer les yeux et administrer du rétinol à J1–J2 pour prévenir les complications oculaires. Pneumonie sévère associée : ceftriaxone + cloxacilline IV, oxygène et salbutamol selon les signes." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Poliomyélite", d: "Deux prélèvements de selles à 24–48h d'intervalle, dans les 14 jours suivant le début des symptômes.", m: [], tx: "Hospitaliser les formes paralytiques : repos, prévention d'escarres, antalgiques (éviter l'IM en phase fébrile), ventilation assistée si paralysie respiratoire." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Rage", d: "Diagnostic clinique et évaluation du risque d'exposition (morsure, griffure, contact salivaire).", m: [], tx: "Selon le type de plaie : les plaies superficielles ne sont pas suturées pour ne pas favoriser la pénétration du virus, ou laissées ouvertes et réévaluées à 48–72h avant décision de suture." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Hépatites virales", d: "Infection par le VHB : détection de l'AgHBs. Hépatite chronique : persistance de l'AgHBs au-delà de 6 mois ; forme active : AgHBe et/ou ADN viral détectables.", m: [], tx: "Traitement antiviral indiqué si AgHBs positif avec élévation persistante des transaminases (>2x la normale sur 2 prélèvements à 3–6 mois d'intervalle) ou charge virale élevée (>20 000 UI/ml) : ténofovir PO à vie." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Dengue", d: "Détection d'IgM 5 à 6 jours après le début des symptômes ; oriente sans confirmer une infection récente.", m: ["Paracétamol", "Ibuprofène", "SRO"], tx: "Protection individuelle (vêtements couvrants, répulsifs, moustiquaire de jour). Élimination des gîtes larvaires. Éviter les AINS et l'aspirine en raison du risque hémorragique." },
+      { c: "Maladies infectieuses et fièvres", u: 1, t: "Fièvres hémorragiques virales", d: "Échantillon de sang total envoyé à un laboratoire de référence avec description clinique jointe.", m: ["Paracétamol", "Tramadol", "Aspirine", "Morphine"], tx: "Prise en charge symptomatique : réhydratation orale ou IV (Ringer lactate) selon le degré de déshydratation, prise en charge de la douleur, mesures de précaution strictes pour le personnel soignant." },
+      { c: "Maladies infectieuses et fièvres", u: 0, t: "Infection par le HIV et sida", d: "Diagnostic par tests sérologiques (anticorps anti-HIV) ou virologiques, en particulier chez le nourrisson.", m: [], tx: "Traitement par multithérapie antirétrovirale (au moins 3 ARV), traitement de référence à vie : n'éradique pas le virus mais retarde l'évolution, réduit la réplication virale et restaure le taux de CD4." },
+
+      { c: "Uro-génital", u: 0, t: "Syndrome néphrotique chez l'enfant", d: "Protéinurie ≥+++ ou ≥300 mg/dl (≥30 g/l). Albuminémie <30 g/l et hyperlipidémie si bilan sanguin disponible.", m: ["Prednisolone", "Prednisone"], tx: "Traitement initial par corticothérapie sur une durée totale de 2 à 4 mois." },
+      { c: "Uro-génital", u: 0, t: "Lithiase urinaire", d: "Diagnostic clinique (colique néphrétique) ; imagerie si disponible.", m: [], tx: "Encourager le patient à boire abondamment. Administrer des antalgiques adaptés à l'intensité de la douleur." },
+      { c: "Uro-génital", u: 0, t: "Cystite aiguë", d: "Bandelette urinaire : recherche de nitrites (entérobactéries) et de leucocytes (inflammation).", m: ["Amoxicilline/acide clavulanique", "Nitrofurantoïne", "Ciprofloxacine", "Amoxicilline", "Fosfomycine", "Ofloxacine", "Céfixime"], tx: "Antibiothérapie orale courte adaptée aux résistances locales, guidée par la bandelette urinaire." },
+      { c: "Uro-génital", u: 0, t: "Pyélonéphrite aiguë", d: "Mêmes principes diagnostiques que la cystite aiguë, associés à des signes généraux (fièvre, douleur lombaire).", m: ["Amoxicilline/acide clavulanique", "Ciprofloxacine", "Amoxicilline", "Gentamicine", "Ampicilline", "Ceftriaxone", "Céfotaxime", "Ofloxacine", "Céfixime"], tx: "Antibiothérapie orale en ambulatoire ; passage à la voie IV et réévaluation si absence d'amélioration clinique 24h après le début du traitement oral." },
+      { c: "Uro-génital", u: 0, t: "Prostatite aiguë", d: "Diagnostic clinique (douleur pelvienne, fièvre, troubles urinaires).", m: ["Ciprofloxacine", "Ofloxacine"], tx: "Ciprofloxacine PO 500 mg 2x/j pendant 14 jours puis réévaluation ; prolonger 14 jours supplémentaires si persistance des symptômes." },
+
+      { c: "Infections génitales", u: 0, t: "Infections génitales", d: "Diagnostic clinique syndromique le plus souvent, en l'absence de tests de confirmation disponibles sur le terrain.", m: [], tx: "Privilégier un traitement en dose unique chaque fois qu'il est indiqué, pour maximiser l'observance." },
+      { c: "Infections génitales", u: 0, t: "Écoulement urétral", d: "C. trachomatis difficilement identifiable en laboratoire de terrain ; traitement probabiliste en l'absence de test rapide fiable.", m: ["Métronidazole", "Azithromycine", "Doxycycline", "Ceftriaxone", "Kanamycine", "Céfixime"], tx: "Traitement combiné chlamydiose + gonococcie : azithromycine PO 1 g dose unique + ceftriaxone IM 500 mg dose unique (ou céfixime PO 400 mg si ceftriaxone indisponible)." },
+      { c: "Infections génitales", u: 0, t: "Écoulement vaginal anormal", d: "Tests moléculaires PCR (Xpert) recommandés pour C. trachomatis et N. gonorrhoeae si disponibles.", m: ["Métronidazole", "Azithromycine", "Érythromycine", "Doxycycline", "Ceftriaxone", "Céfixime"], tx: "Hors grossesse : azithromycine PO 1 g dose unique + ceftriaxone IM 500 mg (ou céfixime). Chez la femme enceinte : azithromycine PO en dose unique associée au traitement de la gonococcie adapté à la grossesse." },
+      { c: "Infections génitales", u: 0, t: "Ulcérations génitales", d: "Tests de terrain peu contributifs (un RPR/VDRL négatif n'exclut pas une syphilis primaire précoce).", m: [], tx: "Le partenaire sexuel reçoit le même traitement que le patient, symptomatique ou non, sauf en cas d'herpès (traitement du partenaire uniquement s'il est symptomatique)." },
+      { c: "Infections génitales", u: 0, t: "Infections génitales hautes (IGH)", d: "Diagnostic clinique ; évaluer la sévérité pour orienter vers l'hospitalisation.", m: [], tx: "Hospitaliser si signes de sévérité (péritonite, abcès, septicémie), incertitude diagnostique (GEU, appendicite), impossibilité de traitement ambulatoire ou absence d'amélioration après 48h. Les autres patientes sont traitées en ambulatoire." },
+      { c: "Infections génitales", u: 0, t: "Condylomes", d: "Diagnostic clinique (lésions verruqueuses génitales).", m: [], tx: "Le choix du traitement dépend de la taille et de la localisation des lésions. Chez les patients infectés par le HIV, traitement souvent moins efficace et rechutes plus fréquentes." },
+      { c: "Infections génitales", u: 0, t: "Principales infections génitales (résumé)", d: "Approche syndromique combinant les tableaux précédents.", m: ["Ciprofloxacine", "Métronidazole", "Azithromycine", "Érythromycine", "Doxycycline", "Ceftriaxone", "Ofloxacine", "Aciclovir", "Céfixime"], tx: "Se référer aux protocoles spécifiques par syndrome (écoulement urétral, écoulement vaginal, ulcération génitale) pour le choix précis de l'association thérapeutique." },
+      { c: "Infections génitales", u: 0, t: "Saignements utérins anormaux (en dehors de la grossesse)", d: "Diagnostic clinique, rechercher une cause organique ou fonctionnelle sous-jacente.", m: ["Ibuprofène"], tx: "En attendant le traitement étiologique approprié, l'acide tranexamique PO (1 g 3x/j pendant 5 jours max) peut être utilisé pour réduire les saignements." },
+
+      { c: "Plaies et peau", u: 0, t: "Pansements", d: "Deux situations principales : plaie laissée ouverte / perte de substance cutanée, ou ulcère.", m: [], tx: "Adapter le type de pansement à la phase de cicatrisation et à l'état de la plaie (détersion, bourgeonnement, épidermisation)." },
+      { c: "Plaies et peau", u: 0, t: "Traitement d'une plaie simple", d: "Évaluation clinique de la plaie (profondeur, contamination, atteinte des structures profondes).", m: ["Épinéphrine"], tx: "Nettoyage, désinfection et fermeture ou pansement adapté selon l'ancienneté et le degré de contamination de la plaie." },
+      { c: "Plaies et peau", u: 0, t: "Brûlures", d: "Évaluation de la surface et de la profondeur de la brûlure.", m: ["Paracétamol", "Tramadol", "Morphine", "Naloxone"], tx: "Douleurs modérées : paracétamol + tramadol PO. Douleurs modérées à sévères : paracétamol + morphine à libération prolongée PO. Chez le grand brûlé, l'absorption digestive étant aléatoire les premières 48h, privilégier la voie parentérale pour la morphine." },
+      { c: "Plaies et peau", u: 0, t: "Abcès cutané", d: "Radiographie si suspicion d'ostéomyélite ou d'arthrite septique associée.", m: [], tx: "Incision et drainage de l'abcès dans des conditions d'asepsie strictes (matériel stérile, préparation cutanée antiseptique)." },
+      { c: "Plaies et peau", u: 0, t: "Pyomyosite", d: "POCUS pour caractériser l'abcès et exclure une thrombose veineuse profonde ; radiographie à la recherche d'un corps étranger ou de signes d'ostéomyélite.", m: [], tx: "Pansement alcoolisé (compresses imbibées d'alcool à 70 %) 2 à 3x/j pour favoriser la collection de l'abcès, jusqu'à l'incision-drainage." },
+      { c: "Plaies et peau", u: 0, t: "Ulcère de jambe", d: "Diagnostic clinique ; rechercher une étiologie vasculaire ou infectieuse sous-jacente.", m: ["Métronidazole", "Sulfadiazine", "Doxycycline"], tx: "Bain de jambe 10–15 minutes au NaDCC avec rinçage à l'eau bouillie. Ablation des zones nécrotiques et fibrineuses. Antibiothérapie générale (doxycycline ou métronidazole PO) si signes d'infection, souvent peu efficace au stade chronique isolé." },
+      { c: "Plaies et peau", u: 1, t: "Infections nécrosantes de la peau et des tissus mous", d: "Signes évocateurs si disponibles : leucocytes >15 000/mm³ ou <4000/mm³, créatininémie >141 µmol/l, glycémie >10 mmol/l ou <3,3 mmol/l.", m: ["Amoxicilline/acide clavulanique", "Amoxicilline", "Clindamycine", "Cloxacilline", "Ceftriaxone", "Oxacilline"], tx: "Prise en charge chirurgicale rapide associée à une antibiothérapie IV, essentielle pour réduire la mortalité. Réexamen impératif au bloc opératoire après 24 à 36h pour évaluer la nécessité d'une excision supplémentaire." },
+      { c: "Plaies et peau", u: 0, t: "Morsures et piqûres venimeuses", d: "Évaluation clinique du type d'animal, du délai et des signes d'envenimation.", m: ["Amoxicilline/acide clavulanique", "Amoxicilline", "Épinéphrine", "Paracétamol", "Adrénaline", "Aspirine", "Diazépam"], tx: "Prise en charge selon le type d'exposition : antalgiques, antibioprophylaxie si morsure, sérum antivenimeux si disponible et indiqué, surveillance des signes systémiques." },
+      { c: "Plaies et peau", u: 0, t: "Infections dentaires", d: "Diagnostic clinique (douleur, tuméfaction, abcès dentaire).", m: ["Amoxicilline", "Paracétamol", "Ibuprofène"], tx: "Antalgiques (paracétamol, ibuprofène) et antibiothérapie si signes d'infection ou de diffusion ; orientation vers des soins dentaires dès que possible." },
+
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Anxiété", d: "Diagnostic clinique ; évaluer l'intensité et le retentissement fonctionnel.", m: ["Diazépam"], tx: "Si symptômes exacerbés (tachycardie, sensation d'étouffement, peur de mourir, agitation ou prostration), diazépam 5 à 10 mg PO ou 10 mg IM, renouvelable après une heure si besoin." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Insomnie", d: "Diagnostic clinique ; rechercher un facteur déclenchant (événement de vie, deuil).", m: ["Diazépam"], tx: "Si liée à un événement de vie particulier, traitement court à visée sédative : prométhazine PO 25 mg au coucher pendant 7 à 10 jours, ou hydroxyzine en alternative." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Agitation", d: "Diagnostic clinique ; évaluer le risque pour le patient et pour autrui.", m: ["Diazépam"], tx: "Diazépam PO 10 mg pour réduire l'agitation et permettre l'examen clinique sans sédation excessive. Si le patient est violent ou dangereux : diazépam IM 10 mg, renouvelable après 30 à 60 minutes si besoin." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "État confusionnel", d: "Diagnostic clinique ; rechercher systématiquement une cause organique sous-jacente (infection, métabolique, toxique).", m: ["Diazépam"], tx: "Traiter la cause sous-jacente en priorité ; sédation prudente uniquement si nécessaire pour la sécurité du patient." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Syndromes post-traumatiques", d: "Diagnostic clinique après un événement traumatique.", m: [], tx: "Les symptômes associés (anxiété, insomnie) persistants peuvent être soulagés par un traitement symptomatique de 2 semaines maximum." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Dépression", d: "Diagnostic clinique selon les critères habituels ; évaluer le risque suicidaire.", m: ["Méfloquine", "Diazépam"], tx: "Avant de prescrire un traitement antidépresseur, s'assurer que le patient pourra être suivi (observance, évolution clinique) pendant au moins 9 mois." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Psychoses chroniques", d: "Diagnostic clinique, suivi psychiatrique spécialisé recommandé si disponible.", m: ["Diazépam"], tx: "Prise en charge au long cours par antipsychotique selon le protocole national ; diazépam en gestion ponctuelle des épisodes d'agitation associés." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Troubles bipolaires", d: "Diagnostic clinique, suivi psychiatrique spécialisé recommandé si disponible.", m: ["Diazépam"], tx: "Prise en charge au long cours par thymorégulateur selon le protocole national ; diazépam en gestion ponctuelle des épisodes aigus." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Drépanocytose", d: "Hémoglobine au diagnostic et 1x/an. Bilan complémentaire lors des crises vaso-occlusives, fièvre, anémie aiguë (≤5 g/dl ou baisse ≥2 g/dl par rapport au taux de base), AVC ou syndrome thoracique aigu.", m: ["Acide folique", "Méfloquine"], tx: "Prévention des infections à pneumocoque par pénicilline V PO jusqu'à 15 ans (au moins jusqu'à 5 ans), posologie croissante par tranche d'âge. Vérifier et mettre à jour le calendrier vaccinal." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Épilepsie", d: "Diagnostic clinique et anamnestique des crises ; EEG si disponible.", m: [], tx: "En cas d'arrêt du traitement, réduire la dose progressivement (par exemple de 10 % toutes les 2 semaines) sur une période d'au moins 3 mois." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Diabète de type 2 chez l'adulte", d: "Glycémie à jeun ≥7 mmol/l (≥126 mg/dl) sur 2 prélèvements si asymptomatique, ou 1 prélèvement si symptomatique. Glycémie aléatoire ≥11 mmol/l (≥200 mg/dl) évocatrice.", m: ["Glibenclamide", "Metformine", "Insuline"], tx: "Cible : glycémie à jeun ≤7 mmol/l ou HbA1c à 7 %, sans descendre sous 4,5 mmol/l. Traitement médicamenteux de première intention : metformine PO, posologie habituelle de 1 à 2 g par jour." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Hypertension artérielle essentielle de l'adulte (HTA)", d: "Bilan sanguin : ionogramme (kaliémie), créatininémie. ECG et échographie cardiaque à la recherche de retentissement (insuffisance cardiaque, coronaropathie).", m: ["Amlodipine", "Énalapril"], tx: "Traitement de fond : inhibiteur calcique ou diurétique thiazidique (hydrochlorothiazide PO 12,5–25 mg 1x/j le matin) ou IEC (énalapril PO, débuter à 5 mg 1x/j)." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Insuffisance cardiaque chronique", d: "Échographie cardiaque si disponible, examen de choix pour confirmer une cardiopathie sous-jacente.", m: ["Spironolactone", "Furosémide", "Énalapril"], tx: "Rétention hydrosodée : furosémide PO débutant à 20 mg 1x/j, à ajuster selon la réponse clinique. Traitement de fond à vie par IEC (énalapril), réduire la dose de diurétique à l'introduction. Spironolactone associée dans les formes sévères, sous surveillance de la kaliémie." },
+      { c: "Santé mentale et maladies chroniques", u: 1, t: "Insuffisance cardiaque aiguë (OAP)", d: "Diagnostic principalement clinique. ECG à la recherche d'une ischémie myocardique ou d'un trouble du rythme.", m: ["Furosémide"], tx: "Signes de surcharge volémique et/ou urgence hypertensive : furosémide IV 40 à 80 mg, renouvelable selon la diurèse et la détresse respiratoire. Si déjà sous furosémide >40 mg, administrer la dose habituelle par voie IV." },
+      { c: "Santé mentale et maladies chroniques", u: 0, t: "Goitre endémique et carence en iode", d: "Diagnostic clinique (goitre visible/palpable) en zone de carence iodée connue.", m: [], tx: "Huile iodée PO en prévention, une fois par an, posologie en capsules selon l'âge (de 1 capsule chez le nourrisson à 3 capsules chez l'enfant de 6 à 15 ans ; 2 capsules chez la femme enceinte/allaitante ou en âge de procréer)." },
+    ];
+
+    const chapterOrder = [...new Set(DATA.map(d => d.c))];
+
+    let state = { query: "", urgentOnly: false, activeChapter: null };
+
+    function slug(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-'); }
+
+    function renderSidebar() {
+      const ul = document.getElementById('chapterTabs');
+      ul.innerHTML = '';
+      chapterOrder.forEach((c, i) => {
+        const count = DATA.filter(d => d.c === c).length;
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.className = 'chapter-tab' + (state.activeChapter === c ? ' active' : '');
+        btn.innerHTML = `<span class="num">${String(i + 1).padStart(2, '0')}</span><span>${c} <span style="opacity:.55">(${count})</span></span>`;
+        btn.onclick = () => {
+          state.activeChapter = state.activeChapter === c ? null : c;
+          document.getElementById('sidebar').classList.remove('open');
+          render();
+          const el = document.getElementById('sec-' + slug(c));
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+      document.getElementById('sidebarCount').textContent = DATA.length + ' pathologies · ' + chapterOrder.length + ' chapitres';
+    }
+
+    function matchesQuery(item, q) {
+      if (!q) return true;
+      q = q.toLowerCase();
+      if (item.t.toLowerCase().includes(q)) return true;
+      if (item.d.toLowerCase().includes(q)) return true;
+      if (item.tx.toLowerCase().includes(q)) return true;
+      if (item.m.some(m => m.toLowerCase().includes(q))) return true;
+      return false;
+    }
+
+    function render() {
+      const q = state.query.trim();
+      let filtered = DATA.filter(d => {
+        if (state.urgentOnly && !d.u) return false;
+        if (state.activeChapter && d.c !== state.activeChapter) return false;
+        if (!matchesQuery(d, q)) return false;
+        return true;
+      });
+
+      document.getElementById('resultMeta').textContent =
+        filtered.length + ' résultat' + (filtered.length > 1 ? 's' : '') +
+        (state.activeChapter ? ' · chapitre : ' + state.activeChapter : '') +
+        (state.urgentOnly ? ' · urgences uniquement' : '');
+
+      const content = document.getElementById('content');
+      content.innerHTML = '';
+
+      if (filtered.length === 0) {
+        content.innerHTML = '<div class="empty-state">Aucune pathologie ne correspond à cette recherche.<br>Essayez un autre terme ou effacez les filtres.</div>';
+        return;
+      }
+
+      const chaptersToShow = state.activeChapter ? [state.activeChapter] : chapterOrder;
+
+      chaptersToShow.forEach((c, ci) => {
+        const items = filtered.filter(d => d.c === c);
+        if (items.length === 0) return;
+        const idx = chapterOrder.indexOf(c) + 1;
+
+        const section = document.createElement('section');
+        section.className = 'chapter-section';
+        section.id = 'sec-' + slug(c);
+
+        const titleWrap = document.createElement('div');
+        titleWrap.className = 'chapter-title';
+        titleWrap.innerHTML = `<span class="idx">${String(idx).padStart(2, '0')}</span><h2>${c}</h2><span class="n">${items.length} entrée${items.length > 1 ? 's' : ''}</span>`;
+        section.appendChild(titleWrap);
+
+        const grid = document.createElement('div');
+        grid.className = 'card-grid';
+
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'path-card' + (item.u ? ' urgent' : '');
+
+          const visibleChips = item.m.slice(0, 3);
+          const extra = item.m.length - visibleChips.length;
+
+          const summary = document.createElement('button');
+          summary.className = 'path-summary';
+          summary.innerHTML = `
+        ${item.u ? '<div class="fold"></div>' : ''}
+        <h3>${item.t}</h3>
+        <div class="med-chips">
+          ${visibleChips.map(m => `<span class="chip">${m}</span>`).join('')}
+          ${extra > 0 ? `<span class="chip more">+${extra}</span>` : ''}
+        </div>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      `;
+          summary.onclick = () => card.classList.toggle('open');
+
+          const detail = document.createElement('div');
+          detail.className = 'path-detail';
+          detail.innerHTML = `
+        <div class="detail-block diag">
+          <p class="detail-label">Diagnostic</p>
+          <p>${item.d || 'Diagnostic clinique.'}</p>
+        </div>
+        ${item.m.length ? `
+        <div class="detail-block">
+          <p class="detail-label">Médicaments concernés</p>
+          <div class="med-full-list">${item.m.map(m => `<span class="chip">${m}</span>`).join('')}</div>
+        </div>`: ''}
+        <div class="detail-block tx">
+          <p class="detail-label">Traitement pour ordonnance</p>
+          <p>${item.tx}</p>
+        </div>
+      `;
+
+          card.appendChild(summary);
+          card.appendChild(detail);
+          grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        content.appendChild(section);
+      });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      state.query = e.target.value;
+      render();
+    });
+    document.getElementById('urgentToggle').addEventListener('click', function () {
+      state.urgentOnly = !state.urgentOnly;
+      this.classList.toggle('active', state.urgentOnly);
+      render();
+    });
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    renderSidebar();
+    render();
+  </script>
+</body>
+
+</html>

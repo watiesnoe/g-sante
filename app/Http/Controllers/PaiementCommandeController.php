@@ -1,0 +1,292 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Commande;
+use App\Models\PaiementCommande;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+
+class PaiementCommandeController extends Controller
+{
+    public function dashboard()
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        // Récupérer toutes les commandes avec leurs relations
+        $commandes = Commande::with(['fournisseur', 'paiements'])
+            ->latest()
+            ->get();
+
+        // Calculer les statistiques manuellement
+        $totalPaid = PaiementCommande::sum('montant');
+        $totalRemaining = $commandes->sum('reste_a_payer');
+
+        // Statistiques par statut de paiement
+        $fullyPaidOrders = $commandes->where('StatutPaiement', 'total')->count();
+        $partiallyPaidOrders = $commandes->where('StatutPaiement', 'partielle')->count();
+        $unpaidOrders = $commandes->where('StatutPaiement', 'en_cours')->count();
+
+        $stats = [
+            'total_paid' => $totalPaid,
+            'total_remaining' => $totalRemaining,
+            'fully_paid_orders' => $fullyPaidOrders,
+            'partially_paid_orders' => $partiallyPaidOrders,
+            'unpaid_orders' => $unpaidOrders,
+            'total_orders' => $commandes->count()
+        ];
+
+        // Paiements récents
+        $recentPayments = PaiementCommande::with(['commande', 'commande.fournisseur'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Données pour le graphique (30 derniers jours)
+        $chartData = $this->getChartData();
+
+        return view('application.paiementcommande.index', compact(
+            'stats',
+            'recentPayments',
+            'commandes',
+            'chartData'
+        ));
+    }
+
+    private function getChartData()
+    {
+        $labels = [];
+        $data = [];
+
+        for ($i = 29; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $labels[] = $date->format('d/m');
+
+            $total = PaiementCommande::whereDate('date_paiement', $date)
+                ->sum('montant');
+
+            $data[] = $total;
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
+    }
+
+    public function create(Request $request, $commande = null)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        $commandeModel = null;
+
+        if ($commande) {
+            $commandeModel = Commande::where('uuid', $commande)
+                ->orWhere('id', $commande)
+                ->first();
+        } else {
+            $commandeId = $request->get('commande_id');
+            if ($commandeId) {
+                $commandeModel = Commande::where('uuid', $commandeId)
+                    ->orWhere('id', $commandeId)
+                    ->first();
+            }
+        }
+
+        $commande = $commandeModel;
+
+        if ($commande && $commande->StatutPaiement === 'total') {
+            return redirect()->route('paiementscommande.dashboard')
+                ->with('error', 'Cette commande est déjà entièrement payée.');
+        }
+
+        $commandes = Commande::with('fournisseur')
+            ->whereIn('StatutPaiement', ['en_cours', 'partielle']) // NON totalement payées
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($commande && !$commandes->contains('id', $commande->id)) {
+            $commandes->push($commande);
+        }
+
+        return view('application.paiementcommande.create', compact('commande', 'commandes'));
+    }
+
+    public function store(Request $request)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        $request->validate([
+            'commande_id' => 'required|exists:commandes,id',
+            'montant' => 'required|numeric|min:0.01',
+            'mode' => 'required|string|in:espèce,virement,chèque,carte,autre',
+            'date_paiement' => 'required|date',
+            'observations' => 'nullable|string|max:500'
+        ]);
+
+        // Vérifier que le montant ne dépasse pas le reste à payer
+        $commande = Commande::with('paiements')->find($request->commande_id);
+        $resteAPayer = $commande->reste_a_payer;
+
+        if ($request->montant > $resteAPayer) {
+            return back()->withErrors([
+                'montant' => "Le montant ne peut pas dépasser le reste à payer (" . number_format($resteAPayer, 2) . " €)"
+            ])->withInput();
+        }
+
+        try {
+            // Vérifier si la caisse est ouverte
+            if (!\App\Models\CaisseSession::hasOpenSession()) {
+                return back()->withErrors([
+                    'error' => 'Votre caisse est fermée. Veuillez l\'ouvrir pour effectuer un paiement fournisseur.'
+                ])->withInput();
+            }
+
+            // Démarrer une transaction pour garantir l'intégrité des données
+            DB::beginTransaction();
+
+            // Créer le paiement
+            $paiement = PaiementCommande::create([
+                'commande_id' => $request->commande_id,
+                'montant' => $request->montant,
+                'mode' => $request->mode,
+                'date_paiement' => $request->date_paiement,
+                'observations' => $request->observations
+            ]);
+
+            // Enregistrement dans la caisse (Sortie)
+            \App\Models\CaisseSession::enregistrerMouvement(
+                $request->montant,
+                'Paiement Fournisseur (Commande #' . $request->commande_id . ')',
+                'sortie',
+                $paiement,
+                ['espèce' => 'especes', 'virement' => 'virement', 'chèque' => 'cheque', 'carte' => 'carte'][$request->mode] ?? 'autre'
+            );
+
+            // Mettre à jour le StatutPaiement de la commande
+            $this->updateStatutPaiement($commande);
+
+            DB::commit();
+
+            return redirect()->route('paiementscommande.dashboard')
+                ->with('success', 'Paiement enregistré avec succès!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors([
+                'error' => 'Erreur lors de l\'enregistrement: ' . $e->getMessage()
+            ])->withInput();
+        }
+    }
+
+    /**
+     * Met à jour le statut de paiement d'une commande
+     */
+    private function updateStatutPaiement(Commande $commande)
+    {
+        $montantPaye = $commande->montantPaye();
+        $total = $commande->total;
+
+        if ($montantPaye >= $total) {
+            // Paiement total
+            $commande->update(['StatutPaiement' => 'total']);
+        } elseif ($montantPaye > 0 && $montantPaye < $total) {
+            // Paiement partiel
+            $commande->update(['StatutPaiement' => 'partielle']);
+        } else {
+            // Aucun paiement
+            $commande->update(['StatutPaiement' => 'en_cours']);
+        }
+    }
+
+    public function history(Commande $commande)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        $commande->load(['paiements', 'fournisseur']);
+        $paiements = $commande->paiements()->latest()->get();
+
+        return view('application.paiementcommande.history', compact('commande', 'paiements'));
+    }
+
+    public function show(PaiementCommande $paiement)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        $paiement->load(['commande.fournisseur']);
+
+        return view('application.paiementcommande.show', compact('paiement'));
+    }
+
+    /**
+     * Annuler un paiement fournisseur (RG-01) : il reste visible, marqué annulé,
+     * et la sortie de caisse est neutralisée par une écriture inverse.
+     */
+    public function destroy(Request $request, PaiementCommande $paiement)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        $repondre = function (bool $ok, string $message, int $code = 200) use ($request) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => $ok, 'message' => $message], $code);
+            }
+            return redirect()->back()->with($ok ? 'success' : 'error', $message);
+        };
+
+        if (trim((string) $request->motif) === '') {
+            return $repondre(false, 'Le motif de l\'annulation est obligatoire.', 422);
+        }
+        if ($paiement->statut === 'annule') {
+            return $repondre(false, 'Ce paiement est déjà annulé.', 422);
+        }
+
+        try {
+            DB::transaction(function () use ($paiement, $request) {
+                app(\App\Services\CaisseService::class)->annulerReference($paiement, $request->motif);
+                $paiement->update([
+                    'statut'           => 'annule',
+                    'motif_annulation' => $request->motif,
+                    'annule_par'       => Auth::id(),
+                    'annule_at'        => now(),
+                ]);
+                $this->updateStatutPaiement($paiement->commande);
+            });
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return $repondre(false, $e->getMessage(), 403);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $repondre(false, collect($e->errors())->flatten()->first(), 422);
+        }
+
+        return $repondre(true, 'Paiement annulé ; la sortie de caisse a été neutralisée.');
+    }
+    /**
+     * Récupérer les commandes impayées via API
+     */
+    public function getUnpaidOrders()
+    {
+        $unpaidOrders = Commande::with(['fournisseur', 'paiements'])
+            ->where(function ($query) {
+                $query->whereHas('paiements', function ($subQuery) {
+                    $subQuery->selectRaw('commande_id, SUM(montant) as total_paye')
+                        ->groupBy('commande_id')
+                        ->havingRaw('total_paye < commandes.total');
+                })->orDoesntHave('paiements');
+            })
+            ->where('statut', '!=', 'annuler')
+            ->get()
+            ->map(function ($commande) {
+                return [
+                    'id' => $commande->id,
+                    'reference' => $commande->reference,
+                    'fournisseur' => $commande->fournisseur->nom ?? 'N/A',
+                    'total' => $commande->total,
+                    'montant_paye' => $commande->montantPaye(), // Méthode existe
+                    'reste_a_payer' => $commande->reste_a_payer, // Accesseur
+                    'statut_paiement' => $commande->payment_status_text // Accesseur
+                ];
+            });
+
+        return response()->json($unpaidOrders);
+    }
+}

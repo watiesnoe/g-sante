@@ -1,0 +1,23 @@
+<li class="nav-main-item">
+    <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
+        <i class="nav-main-link-icon fa fa-calendar-alt"></i>
+        <span class="nav-main-link-name">Rendez-vous</span>
+    </a>
+    <ul class="nav-main-submenu">
+        <li class="nav-main-item"><a class="nav-main-link" href="{{route('agenda.index')}}"><span class="nav-main-link-name">Agenda du jour</span></a></li>
+        @can('rendezvous.en_ligne')
+        @php $aTraiterEnLigne = \App\Models\DemandeEnLigne::whereIn('statut', ['recue', 'conflit'])->count(); @endphp
+        <li class="nav-main-item"><a class="nav-main-link" href="{{ route('en_ligne.demandes') }}"><span class="nav-main-link-name">Demandes en ligne</span>@if($aTraiterEnLigne)<span class="nav-main-link-badge badge rounded-pill bg-warning">{{ $aTraiterEnLigne }}</span>@endif</a></li>
+        @endcan
+        <li class="nav-main-item"><a class="nav-main-link" href="{{route('rendezvous.index')}}"><span class="nav-main-link-name">Liste des Rendez-vous</span></a></li>
+        <li class="nav-main-item"><a class="nav-main-link" href="{{route('rendezvous.realiser')}}"><span class="nav-main-link-name">Rendez-vous réalisés</span></a></li>
+        <li class="nav-main-item"><a class="nav-main-link" href="{{route('rendezvous.annuler')}}"><span class="nav-main-link-name">Rendez-vous annulés</span></a></li>
+        <li class="nav-main-item">
+            <a class="nav-main-link" href="{{ route('emploi-du-temps.index') }}">
+                <i class="nav-main-link-icon fa fa-clock" style="font-size:.85rem;"></i>
+                <span class="nav-main-link-name">Emploi du Temps</span>
+            </a>
+        </li>
+    </ul>
+</li>
+

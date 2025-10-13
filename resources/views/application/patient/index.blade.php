@@ -1,0 +1,176 @@
+@extends('layouts.app')
+
+@section('titre', 'Liste des Patients')
+
+@section('content')
+    <!-- Page Content -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('patients.create') }}" class="btn btn-sm btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
+        </div>
+
+        <!-- Patients Table -->
+        <div class="block block-rounded">
+            <div class="block-header block-header-default">
+                <h3 class="block-title">
+                    <i class="fa fa-list me-1"></i> Liste des Patients
+                </h3>
+                <div class="block-options">
+                    <button type="button" class="btn-block-option" onclick="$('#patients-table').DataTable().ajax.reload();">
+                        <i class="fa fa-refresh me-1"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="block-content block-content-full">
+                <table id="patients-table" class="table table-bordered table-striped table-vcenter js-dataTable-responsive w-100">
+                    <thead>
+                    <tr>
+                        <th class="text-center" style="width: 80px;">#</th>
+                        <th>N° dossier</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th class="d-none d-sm-table-cell" style="width: 100px;">Sexe</th>
+                        <th class="d-none d-sm-table-cell" style="width: 150px;">Téléphone</th>
+                        <th class="d-none d-md-table-cell" style="width: 120px;">Date Création</th>
+                        <th class="text-center" style="width: 150px;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Les données seront chargées via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END Patients Table -->
+    </div>
+    <!-- END Page Content -->
+@endsection
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            initializeDataTable();
+        });
+
+        function initializeDataTable() {
+            var table = $('#patients-table');
+
+            // Détruire l'instance existante
+            if ($.fn.DataTable.isDataTable(table)) {
+                table.DataTable().destroy();
+                table.empty(); // Vider le contenu
+            }
+
+            // Reconstruire le thead si nécessaire
+            if (table.find('thead').length === 0) {
+                table.append(`
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 80px;">#</th>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th class="d-none d-sm-table-cell" style="width: 100px;">Sexe</th>
+                            <th class="d-none d-sm-table-cell" style="width: 150px;">Téléphone</th>
+                            <th class="d-none d-md-table-cell" style="width: 120px;">Date Création</th>
+                            <th class="text-center" style="width: 150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `);
+            }
+
+            // Initialiser DataTable
+            table.DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('patients.index') }}",
+                columns: [
+                    {
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    },
+                    { data: 'numero_dossier', name: 'numero_dossier' },
+                    { data: 'nom', name: 'nom' },
+                    { data: 'prenom', name: 'prenom' },
+                    {
+                        data: 'genre',
+                        name: 'genre',
+                        className: 'd-none d-sm-table-cell text-center'
+                    },
+                    {
+                        data: 'telephone',
+                        name: 'telephone',
+                        className: 'd-none d-sm-table-cell',
+                        render: function(data) {
+                            // Affiche le numéro formaté selon son pays (drapeau + indicatif) dès que la librairie est chargée
+                            if (!data) return '-';
+                            if (window.intlTelInputUtils) {
+                                try {
+                                    return window.intlTelInputUtils.formatNumber(data, null, window.intlTelInputUtils.numberFormat.INTERNATIONAL);
+                                } catch (e) {
+                                    return data;
+                                }
+                            }
+                            return data;
+                        }
+                    },
+                    {
+                        data: 'created_at',
+                        name: 'created_at',
+                        className: 'd-none d-md-table-cell',
+                        render: function(data) {
+                            if (!data) return '';
+                            if (typeof data === 'string' && data.length >= 10) {
+                                // Extract date part to format as DD/MM/YYYY
+                                let matches = data.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                if (matches) return matches[3] + '/' + matches[2] + '/' + matches[1];
+                            }
+                            let d = new Date(data);
+                            return !isNaN(d.getTime()) ? d.toLocaleDateString('fr-FR') : data;
+                        }
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    }
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
+                    }
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers',
+                pageLength: 15,
+                order: [[5, 'desc']]
+            });
+
+            // Une fois la librairie de formatage téléphonique (utils.js, chargée en
+            // asynchrone par intl-tel-input) disponible, on réaffiche le tableau pour
+            // que les numéros déjà rendus passent au format international.
+            (function pollPhoneUtils(attemptsLeft) {
+                if (window.intlTelInputUtils) {
+                    $('#patients-table').DataTable().draw(false);
+                    return;
+                }
+                if (attemptsLeft <= 0) return;
+                setTimeout(function() { pollPhoneUtils(attemptsLeft - 1); }, 200);
+            })(25);
+        }
+
+        function refreshTable() {
+            $('#patients-table').DataTable().ajax.reload(null, false);
+        }
+    </script>
+@endsection

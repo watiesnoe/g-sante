@@ -1,0 +1,750 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Certificat;
+use App\Models\Consultation;
+use App\Models\Hospitalisation;
+use App\Models\Lit;
+use App\Models\Maladie;
+use App\Models\Medicament;
+use App\Models\ConsultationSuggestion;
+use App\Models\Ordonnance;
+use App\Models\OrdonnanceMedicament;
+use App\Models\Patient;
+use App\Models\PrescriptionExamen;
+use App\Models\RendezVous;
+use App\Models\Salle;
+use App\Models\Symptome;
+use App\Models\Ticket;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Yajra\DataTables\DataTables;
+
+class ConsultationController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+
+  public function index(Request $request)
+    {
+        abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
+
+        if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
+            $consultations = Consultation::with(['patient', 'medecin', 'ticket'])
+                ->whereYear('created_at', $year)
+                ->latest();
+
+            // Un médecin voit ses propres consultations ET celles des patients qui lui ont été transférés
+            if (Auth::user()->hasRole('medecin')) {
+                $medecinId = Auth::id();
+                $patientsTransferes = \App\Models\Transfert::where('dest_medecin_id', $medecinId)
+                    ->pluck('patient_id')
+                    ->unique();
+
+                $consultations->where(function ($q) use ($medecinId, $patientsTransferes) {
+                    $q->where('medecin_id', $medecinId)
+                      ->orWhereIn('patient_id', $patientsTransferes);
+                });
+            }
+
+            return DataTables::of($consultations)
+                ->addColumn('patient', function ($row) {
+                    return $row->patient ? $row->patient->prenom . ' ' . $row->patient->nom : '-';
+                })
+                ->addColumn('medecin', function ($row) {
+                    return $row->medecin ? $row->medecin->name : '-';
+                })
+                ->addColumn('ticket', function ($row) {
+                    return $row->ticket ? $row->ticket->id : '-';
+                })
+                ->addColumn('actions', function ($row) {
+                    $user = Auth::user();
+                    $html = '';
+
+                    if ($user->can('consultations.view')) {
+                        $html .= '<a href="' . route('consultations.show', $row) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    }
+                    if ($user->can('consultations.edit')) {
+                        $html .= '<a href="' . route('consultations.edit', $row) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    }
+                    if ($user->can('transferts.create') && $row->patient) {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal(\'' . $row->patient->uuid . '\', \'' . $row->uuid . '\', \'\')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    }
+                    if ($user->can('rendezvous.create')) {
+                        $html .= '<a href="' . route('rendezvous.index', ['consultation' => $row->uuid]) . '" class="btn btn-sm btn-outline-warning" title="Prendre Rendez-vous"><i class="fa fa-calendar-plus"></i></a>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
+
+        // Si ce n’est pas AJAX, on retourne la vue normale
+        return view('application.consultation.index');
+    }
+
+    public function listeAttente(Request $request)
+    {
+        abort_unless(Auth::user()->can('consultations.liste_attente'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir la liste d\'attente.');
+
+        if ($request->ajax()) {
+            $today = Carbon::today();
+            $ticketsQuery = Ticket::with(['patient', 'items', 'medecin'])
+                ->where('statut', 'en_attente')
+                ->where('date_validite', '>=', $today)
+                ->orderBy('created_at', 'asc');
+
+            // Un médecin ne voit que les tickets qui lui sont assignés ou sans médecin assigné
+            if (Auth::user()->hasRole('medecin')) {
+                $ticketsQuery->where(function ($q) {
+                    $q->where('medecin_id', Auth::id())
+                      ->orWhereNull('medecin_id');
+                });
+            }
+
+            // Utilisation directe du QueryBuilder dans DataTables (meilleures performances que .get())
+            return DataTables::of($ticketsQuery)
+                ->addColumn('patient', function ($row) {
+                    return $row->patient ? $row->patient->prenom . ' ' . $row->patient->nom : '-';
+                })
+                ->addColumn('age', function ($row) {
+                    return $row->patient ? $row->patient->age . ' ans' : '-';
+                })
+                ->addColumn('medecin', function ($row) {
+                    return $row->medecin_id && $row->medecin ? $row->medecin->name : '<span class="badge bg-secondary">Tout médecin</span>';
+                })
+                ->addColumn('motif', function ($row) {
+                    return $row->items->pluck('libelle')->filter()->implode(', ') ?: $row->description;
+                })
+                ->addColumn('actions', function ($row) {
+                    if (Auth::user()->can('consultations.create')) {
+                        // Utilisation exacte de la route "listeentente" configurée avec l'UUID du ticket
+                        return '<a href="' . route('consultations.listeentente', $row->uuid) . '" class="btn btn-sm btn-outline-primary"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                    }
+                    return '-';
+                })
+                ->rawColumns(['medecin', 'actions'])
+                ->make(true);
+        }
+
+        return view('application.consultation.liste_attente');
+    }
+    /**
+     * Show the form for creating a new resource.
+     */
+    // 1. Ajoutez $ticket_uuid = null à la fin des paramètres de la fonction
+    public function create(Request $request, Consultation $consultation, $ticket_uuid = null)
+    {
+        abort_unless(Auth::user()->can('consultations.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une consultation.');
+
+        $today = Carbon::today();
+        $tickets = Ticket::with(['patient', 'items'])
+            ->where('statut', 'en_attente')
+            ->where('date_validite', '>=', $today)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // 2. On récupère le ticket_id depuis la Query String OU depuis le Path (ticket_uuid)
+        $selectedTicketId = $request->get('ticket_id') ?: $ticket_uuid;
+        $selectedPatientId = $request->get('patient_id');
+        $selectedGrossesseId = $request->get('grossesse_id');
+
+        // Pré-remplissage si un ticket est spécifié
+        if ($selectedTicketId) {
+            $ticket = Ticket::with(['patient', 'items'])
+                ->where('uuid', $selectedTicketId)
+                ->orWhere('id', $selectedTicketId)
+                ->first();
+                
+            if ($ticket) {
+                // On force l'ID numérique pour la correspondance exacte dans la vue
+                $selectedTicketId = $ticket->id; 
+                $selectedPatientId = $selectedPatientId ?: $ticket->patient_id;
+                
+                if (!$consultation->motif) {
+                    $consultation->motif = $ticket->items->pluck('libelle')->filter()->implode(', ') ?: $ticket->description;
+                }
+            }
+        }
+
+        $patients    = \App\Models\Etablissement::table('patients')->select('id', 'uuid', 'nom', 'prenom', 'genre', 'age')->orderBy('nom')->get();
+        ['symptomes' => $symptomes, 'maladies' => $maladies, 'symptomeMaladieMap' => $symptomeMaladieMap,
+            'maladieSymptomesDetails' => $maladieSymptomesDetails, 'enceintes' => $enceintes] = $this->donneesCliniques($consultation);
+        $medicaments = \App\Models\Etablissement::table('medicaments')
+            ->leftJoin('unites', function ($join) {
+                $join->on('unites.medicament_id', '=', 'medicaments.id')
+                     ->where('unites.is_default', true);
+            })
+            ->select(
+                'medicaments.id',
+                'medicaments.nom',
+                DB::raw('COALESCE(unites.prix_vente, 0) as prix_vente'),
+                DB::raw('COALESCE(unites.facteur, 1) as stock')
+            )
+            ->orderBy('medicaments.nom')
+            ->get();
+        $salles      = \App\Models\Etablissement::table('salles')->select('id', 'nom', 'type','service_medical_id')->orderBy('nom')->get();
+        $lits        = \App\Models\Etablissement::table('lits')->select('id', 'numero', 'salle_id', 'statut')->orderBy('numero')->get();
+
+        return view('application.consultation.create', compact(
+            'tickets',
+            'patients',
+            'symptomes',
+            'maladies',
+            'symptomeMaladieMap',
+            'maladieSymptomesDetails',
+            'enceintes',
+            'medicaments',
+            'salles',
+            'lits',
+            'consultation',
+            'selectedTicketId',
+            'selectedPatientId',
+            'selectedGrossesseId'
+        ));
+    }
+    /**
+     * Guide clinique pour l'interrogatoire : maladies et symptômes en vigueur (les
+     * archivés restent visibles seulement s'ils sont déjà liés à cette consultation).
+     */
+    private function donneesCliniques(Consultation $consultation): array
+    {
+        $dejaLiees = $consultation->exists ? $consultation->maladies()->pluck('maladies.id')->all() : [];
+        $dejaCoches = $consultation->exists ? $consultation->symptomes()->pluck('symptomes.id')->all() : [];
+
+        $maladies = Maladie::with(['protocole', 'symptomes' => fn($q) => $q->where('symptomes.actif', true)])
+            ->where(fn($q) => $q->where('actif', true)->orWhereIn('id', $dejaLiees))
+            ->ordreGuide()->get();
+        $actives = $maladies->where('actif', true)->pluck('id')->all();
+
+        $symptomes = Symptome::with(['maladies' => fn($q) => $q->whereIn('maladies.id', $actives)])
+            ->where(fn($q) => $q->where('actif', true)->orWhereIn('id', $dejaCoches))
+            ->orderBy('nom')->get();
+
+        return [
+            // Patientes enceintes (suivi en cours) : contre-indications « grossesse » signalées
+            'enceintes' => \App\Models\Grossesse::where('statut', 'En cours')->pluck('patient_id')->unique()->values(),
+            'symptomes' => $symptomes,
+            'maladies' => $maladies,
+            'symptomeMaladieMap' => $symptomes->mapWithKeys(fn($s) => [$s->id => $s->maladies->pluck('id')->all()]),
+            'maladieSymptomesDetails' => $maladies->where('actif', true)->mapWithKeys(fn($m) => [$m->id => [
+                'nom' => $m->nom,
+                'chapitre' => $m->chapitre,
+                'symptomes' => $m->symptomes->pluck('id')->all(),
+                'gravite' => $m->signesGraviteListe(),
+            ]]),
+        ];
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function litsLibres($salleId)
+    {
+        abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé.');
+
+        // On récupère les lits de la salle qui sont libres
+        $lits = Lit::where('salle_id', $salleId)
+            ->where('statut', 'Libre')
+            ->get();
+
+        return response()->json($lits);
+    }
+
+    public function store(Request $request)
+    {
+        abort_unless(Auth::user()->can('consultations.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une consultation.');
+
+        DB::beginTransaction();
+        //            dd($request->all());
+        try {
+            // 🔹 Validation minimale
+            $request->validate([
+                'patient_id'   => 'required|exists:patients,id',
+                'medecin_id'   => 'required|exists:users,id',
+                'poids'        => 'nullable|numeric',
+                'taille'       => 'nullable|numeric',
+                'temperature'  => 'nullable|numeric',
+                'tension'      => 'nullable|string',
+                'motif'        => 'nullable|string',
+                'antecedents'  => 'nullable|string',
+                'symptomes'    => 'nullable|array',
+                'maladie_id'   => 'nullable|exists:maladies,id',
+                'imc'          => 'nullable|numeric',
+                'groupe_sanguin' => 'nullable|string',
+                'adresse_patient' => 'nullable|string',
+                'diagnostic'   => 'required|string',
+                'diagnostic_id' => 'nullable|exists:diagnostics,id',
+                'type_activite' => 'nullable|in:generale,pediatrie,cpn,controle,urgence',
+                'conduite_a_tenir' => 'nullable|string',
+                'ticket_id'    => 'nullable|exists:tickets,id',
+                'grossesse_id' => 'nullable|exists:grossesses,id',
+                'protocole_id' => 'nullable|exists:protocole_traitements,id',
+                'quantites'    => 'array',
+                'suggestions'  => 'nullable|array',
+            ]);
+
+
+            // 🔹 EF-04.04 : alerte si un médicament prescrit correspond à une allergie connue
+            $alertes = \App\Services\AllergieService::alertes(\App\Models\Patient::find($request->patient_id), (array) $request->medicaments);
+            if ($alertes && !$request->boolean('confirmer_allergie')) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['allergie' => 'Allergie connue du patient : ' . implode(' ; ', $alertes) . '. Confirmez la prescription si elle est voulue.']);
+            }
+
+            // 🔹 Création de la consultation
+            $consultation = Consultation::create([
+                'ticket_id'        => $request->ticket_id,
+                'grossesse_id'     => $request->grossesse_id,
+                'patient_id'       => $request->patient_id,
+                'medecin_id'       => $request->medecin_id,
+                'protocole_id'     => $request->protocole_id, // ✅ track the applied protocol
+                'date_consultation' => now(),
+                'motif'            => $request->motif,
+                'type_activite'    => $request->type_activite ?: 'generale',
+                'diagnostic_id'    => $request->diagnostic_id,
+                'conduite_a_tenir' => $request->conduite_a_tenir,
+                'maladie_id'       => $request->maladie_id,
+                'taille'           => $request->taille,
+                'diagnostic'       => $request->diagnostic,
+                'notes'            => $request->antecedents,
+                'poids'            => $request->poids,
+                'temperature'      => $request->temperature,
+                'tension'          => $request->tension,
+                'imc'              => $request->imc,
+                'groupe_sanguin'   => $request->groupe_sanguin,
+                'adresse_patient'  => $request->adresse_patient,
+            ]);
+
+            // 🔹 Symptômes liés
+            if ($request->filled('symptomes')) {
+                $consultation->symptomes()->sync($request->symptomes);
+            }
+
+            // 🔹 Maladie concernée
+            if ($request->filled('maladie_id')) {
+                $consultation->maladies()->sync([$request->maladie_id]);
+            }
+
+            // 🔹 Suggestions IA de Diagnostic
+            if ($request->filled('suggestions')) {
+                foreach ($request->suggestions as $suggestion) {
+                    ConsultationSuggestion::create([
+                        'consultation_id'  => $consultation->id,
+                        'pathologie_id'    => $suggestion['pathologie_id'],
+                        'score'            => $suggestion['score'],
+                        'niveau_confiance' => $suggestion['niveau_confiance'] ?? null
+                    ]);
+                }
+            }
+
+            // 🔹 Ordonnance + Médicaments
+            if ($request->filled('medicaments')) {
+                $ordonnance = Ordonnance::create([
+                    'consultation_id' => $consultation->id,
+                    'date'            => now(),
+                ]);
+
+                foreach ($request->medicaments as $i => $medId) {
+                    if (!$medId) continue; // Ignorer les lignes de sélection vides
+
+                    OrdonnanceMedicament::create([
+                        'ordonnance_id'  => $ordonnance->id,
+                        'medicament_id'  => $medId,
+                        'posologie'      => $request->posologies[$i] ?? '',
+                        'duree_jours'    => $request->duree_jours[$i] ?? null,
+                        'quantite'       => $request->quantites[$i] ?? 1,
+                    ]);
+                }
+            }
+
+            // 🔹 Examens prescrits
+            if ($request->filled('examens')) {
+                foreach ($request->examens as $examen) {
+                    // EF-09.01 : la demande est reliée au catalogue (type, valeurs de référence)
+                    $catalogue = \App\Models\Examen::where('nom', $examen)->first();
+                    PrescriptionExamen::create([
+                        'consultation_id' => $consultation->id,
+                        'examen_id'       => $catalogue?->id,
+                        'type'            => $catalogue->type ?? 'laboratoire',
+                        'examen'          => $examen,
+                        'statut'          => 'demande',
+                    ]);
+                }
+            }
+
+            // 🔹 Rendez-vous
+            if ($request->filled('rdv_motifs')) {
+                foreach ($request->rdv_motifs as $i => $motif) {
+                    RendezVous::create([
+                        'consultation_id' => $consultation->id,
+                        'patient_id'      => $consultation->patient_id,
+                        'medecin_id'      => $consultation->medecin_id,
+                        'motif'           => $motif,
+                        'date_heure'      => $request->rdv_dates[$i] . ' ' . $request->rdv_heures[$i],
+                    ]);
+                }
+            }
+
+            // 🔹 Certificat
+            if ($request->filled('certificat')) {
+                Certificat::create([
+                    'consultation_id' => $consultation->id,
+                    'contenu'         => $request->certificat,
+                    'date'            => now(),
+                ]);
+            }
+
+            // 🔹 Hospitalisation
+            if ($request->filled('hospitalisation')) {
+                app(\App\Services\HospitalisationService::class)->admettre($consultation->patient, Lit::findOrFail($request->lit_id), [
+                    'consultation_id' => $consultation->id,
+                    'date_entree'     => $request->date_entree ?: now(),
+                    'motif'           => $request->motif ?? 'Hospitalisation suite consultation',
+                    'observations'    => $request->observations,
+                ]);
+            }
+
+            // 🔹 Mettre à jour le statut du ticket (si lié)
+            if ($consultation->ticket_id) {
+                Ticket::where('id', $consultation->ticket_id)
+                    ->update(['statut' => 'valide']);
+            }
+
+            // 🔹 EF-03.02 : le passage du patient suit la consultation
+            $passages = app(\App\Services\PassageService::class);
+            $passage = $consultation->ticket_id
+                ? \App\Models\Passage::where('ticket_id', $consultation->ticket_id)->latest('id')->first()
+                : \App\Models\Passage::where('patient_id', $consultation->patient_id)->ouverts()->latest('id')->first();
+            $passage ??= $passages->ouvrir($consultation->patient, ['ticket_id' => $consultation->ticket_id, 'motif' => $consultation->motif]);
+            $consultation->update(['passage_id' => $passage->id]);
+            $passages->avancerSiPossible($passage, $request->filled('hospitalisation') ? 'hospitalise' : 'termine');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data'    => 'Consultation enregistrée avec succès ✅',
+                'redirect' => route('consultations.index')
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Erreurs de saisie et règles métier : message précis, pas d'erreur générique
+            DB::rollBack();
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur création consultation : ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json([
+                'success' => false,
+                'error'   => 'Une erreur est survenue lors de l\'enregistrement de la consultation.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Consultation $consultation)
+    {
+        abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
+
+        // Un médecin peut voir ses consultations ET celles des patients qui lui ont été transférés
+        if (Auth::user()->hasRole('medecin')) {
+            $medecinId = Auth::id();
+            $patientsTransferes = \App\Models\Transfert::where('dest_medecin_id', $medecinId)
+                ->pluck('patient_id')
+                ->unique();
+
+            $estAutorise = $consultation->medecin_id === $medecinId
+                || $patientsTransferes->contains($consultation->patient_id);
+
+            if (!$estAutorise) {
+                abort(403, 'Accès refusé : cette consultation ne vous appartient pas.');
+            }
+        }
+        // Charger toutes les relations nécessaires
+        $consultation->load([
+            'patient',
+            'medecin',
+            'ticket',
+            'protocole.medicaments',
+            'ordonnances.medicaments',
+            'examens',
+            'rendezVous',
+            'certificat',
+            'hospitalisation.salle',
+            'hospitalisation.lit',
+            'symptomes',
+            'maladies',
+            'diagnosticCode',
+            'addenda.user',
+            'signataire',
+            'documents',
+        ]);
+
+        // Retourner la vue show
+        return view('application.consultation.show', compact('consultation'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Consultation $consultation)
+    {
+        abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
+        abort_if($consultation->estSignee(), 403, 'Consultation signée : ajoutez un addendum au lieu de la modifier.');
+
+        // Un médecin peut modifier ses consultations ET celles des patients qui lui ont été transférés
+        if (Auth::user()->hasRole('medecin')) {
+            $medecinId = Auth::id();
+            $patientsTransferes = \App\Models\Transfert::where('dest_medecin_id', $medecinId)
+                ->pluck('patient_id')
+                ->unique();
+
+            $estAutorise = $consultation->medecin_id === $medecinId
+                || $patientsTransferes->contains($consultation->patient_id);
+
+            if (!$estAutorise) {
+                abort(403, 'Accès refusé : vous ne pouvez modifier que vos propres consultations.');
+            }
+        }
+        // ✅ Tickets en attente
+        $tickets = Ticket::with('patient')
+            ->where('statut', 'en attente')
+            ->get();
+
+        // ✅ Ajouter le ticket actuel s'il n'existe pas dans la liste
+        if ($consultation->ticket_id) {
+            $ticketActuel = Ticket::with('patient')->find($consultation->ticket_id);
+
+            if ($ticketActuel && !$tickets->contains('id', $ticketActuel->id)) {
+                $tickets->push($ticketActuel);
+            }
+        }
+
+        ['symptomes' => $symptomes, 'maladies' => $maladies, 'symptomeMaladieMap' => $symptomeMaladieMap,
+            'maladieSymptomesDetails' => $maladieSymptomesDetails, 'enceintes' => $enceintes] = $this->donneesCliniques($consultation);
+
+        $medicaments = \App\Models\Etablissement::table('medicaments')
+            ->leftJoin('unites', function ($join) {
+                $join->on('unites.medicament_id', '=', 'medicaments.id')
+                     ->where('unites.is_default', true);
+            })
+            ->select(
+                'medicaments.id',
+                'medicaments.nom',
+                DB::raw('COALESCE(unites.prix_vente, 0) as prix_vente'),
+                DB::raw('COALESCE(unites.facteur, 1) as stock')
+            )
+            ->orderBy('medicaments.nom')
+            ->get();
+        $salles      = \App\Models\Etablissement::table('salles')->select('id', 'nom', 'service_medical_id')->orderBy('nom')->get();
+
+        // ✅ Chargement des relations
+        $consultation->load([
+            'ordonnances.medicaments',
+            'examens',
+            'rendezVous',
+            'hospitalisation',
+            'symptomes',
+            'maladies',
+            'certificat'
+        ]);
+
+        return view('application.consultation.create', compact(
+            'tickets',
+            'symptomes',
+            'maladies',
+            'symptomeMaladieMap',
+            'maladieSymptomesDetails',
+            'enceintes',
+            'medicaments',
+            'salles',
+            'consultation'
+        ));
+    }
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Consultation $consultation)
+    {
+        abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
+        // RG-13 : une consultation signée ne se modifie plus que par un addendum
+        abort_if($consultation->estSignee(), 403, 'Consultation signée : ajoutez un addendum au lieu de la modifier.');
+
+        DB::beginTransaction();
+        try {
+            // Validation minimale
+            $request->validate([
+                'patient_id'   => 'required|exists:patients,id',
+                'medecin_id'   => 'required|exists:users,id',
+                'diagnostic'   => 'required|string',
+                'ticket_id'    => 'nullable|exists:tickets,id',
+                'quantites'    => 'array',
+            ]);
+
+            // 🔹 Mise à jour de la consultation
+            $consultation->update([
+                'ticket_id'        => $request->ticket_id,
+                'patient_id'       => $request->patient_id,
+                'medecin_id'       => $request->medecin_id,
+                'motif'            => $request->motif,
+                'type_activite'    => $request->type_activite ?: $consultation->type_activite,
+                'diagnostic_id'    => $request->diagnostic_id,
+                'conduite_a_tenir' => $request->conduite_a_tenir,
+                'diagnostic'       => $request->diagnostic,
+                'notes'            => $request->antecedents,
+                'poids'            => $request->poids,
+                'temperature'      => $request->temperature,
+                'tension'          => $request->tension,
+                'taille'           => $request->taille,
+                'groupe_sanguin'   => $request->groupe_sanguin,
+                'adresse_patient'  => $request->adresse_patient,
+            ]);
+
+            // 🔹 Symptômes et maladies
+            $consultation->symptomes()->sync($request->symptomes ?? []);
+            $consultation->maladies()->sync($request->maladie_id ? [$request->maladie_id] : []);
+
+            // 🔹 Ordonnances : supprimer les anciennes et créer les nouvelles
+            $consultation->ordonnances()->delete();
+
+            if ($request->filled('medicaments')) {
+                $ordonnance = Ordonnance::create([
+                    'consultation_id' => $consultation->id,
+                    'date'            => now(),
+                ]);
+
+                foreach ($request->medicaments as $i => $medId) {
+                    OrdonnanceMedicament::create([
+                        'ordonnance_id' => $ordonnance->id,
+                        'medicament_id' => $medId,
+                        'posologie'     => $request->posologies[$i] ?? '',
+                        'duree_jours'   => $request->duree_jours[$i] ?? null,
+                        'quantite'      => $request->quantites[$i] ?? 1,
+                    ]);
+                }
+            }
+
+            // 🔹 Examens : seules les demandes non commencées peuvent être retirées ;
+            // un examen prélevé, réalisé ou avec résultat appartient au dossier.
+            $dejaEngages = $consultation->examens()->where('statut', '!=', 'demande')->pluck('examen')->all();
+            $consultation->examens()->where('statut', 'demande')->delete();
+            foreach (array_diff($request->examens ?? [], $dejaEngages) as $examen) {
+                $catalogue = \App\Models\Examen::where('nom', $examen)->first();
+                PrescriptionExamen::create([
+                    'consultation_id' => $consultation->id,
+                    'examen_id'       => $catalogue?->id,
+                    'type'            => $catalogue->type ?? 'laboratoire',
+                    'examen'          => $examen,
+                    'statut'          => 'demande',
+                ]);
+            }
+
+            // 🔹 Rendez-vous : supprimer anciens et recréer
+            $consultation->rendezVous()->delete();
+            foreach ($request->rdv_motifs ?? [] as $i => $motif) {
+                RendezVous::create([
+                    'consultation_id' => $consultation->id,
+                    'patient_id'      => $consultation->patient_id,
+                    'medecin_id'      => $consultation->medecin_id,
+                    'motif'           => $motif,
+                    'date_heure'      => $request->rdv_dates[$i] . ' ' . $request->rdv_heures[$i],
+                ]);
+            }
+
+            // 🔹 Certificat
+            if ($request->filled('certificat')) {
+                $certificat = $consultation->certificat;
+                if ($certificat) {
+                    $certificat->update(['contenu' => $request->certificat, 'date' => now()]);
+                } else {
+                    Certificat::create([
+                        'consultation_id' => $consultation->id,
+                        'contenu'         => $request->certificat,
+                        'date'            => now(),
+                    ]);
+                }
+            }
+
+            // 🔹 Hospitalisation : changement de lit = transfert, sinon admission (RG-12)
+            if ($request->filled('hospitalisation')) {
+                $sejours = app(\App\Services\HospitalisationService::class);
+                $hospitalisation = $consultation->hospitalisation;
+                if ($hospitalisation && $hospitalisation->etat === 'en cours') {
+                    if ($request->lit_id && (int) $request->lit_id !== (int) $hospitalisation->lit_id) {
+                        $sejours->transferer($hospitalisation, Lit::findOrFail($request->lit_id));
+                    }
+                    $hospitalisation->update([
+                        'motif'        => $request->motif ?? $hospitalisation->motif,
+                        'observations' => $request->observations,
+                    ]);
+                } elseif (!$hospitalisation) {
+                    $sejours->admettre($consultation->patient, Lit::findOrFail($request->lit_id), [
+                        'consultation_id' => $consultation->id,
+                        'date_entree'     => $request->date_entree ?: now(),
+                        'motif'           => $request->motif ?? 'Hospitalisation suite consultation',
+                        'observations'    => $request->observations,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data'    => 'Consultation mise à jour avec succès ✅'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur mise à jour consultation : ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json([
+                'success' => false,
+                'error'   => 'Une erreur est survenue lors de la mise à jour de la consultation.'
+            ], 500);
+        }
+    }
+    public function print(Consultation $consultation)
+    {
+        abort_unless(Auth::user()->can('consultations.print'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'imprimer une consultation.');
+
+        $consultation->load([
+            'patient',
+            'medecin',
+            'ordonnances.medicaments',
+            'examens',
+            'rendezVous',
+            'certificat',
+            'hospitalisation.salle',
+            'hospitalisation.lit',
+            'symptomes',
+            'maladies'
+        ]);
+
+        // Option 1 : Affichage HTML pour impression directe
+        return view('application.consultation.pdf', compact('consultation'));
+
+        // Option 2 : Générer un PDF
+        // $pdf = PDF::loadView('consultations.print', compact('consultation'));
+        // return $pdf->stream('consultation_'.$consultation->id.'.pdf');
+    }
+
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Consultation $consultation)
+    {
+        abort_unless(Auth::user()->can('consultations.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer une consultation.');
+        //
+    }
+}

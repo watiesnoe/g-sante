@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Traits;
+
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
+/**
+ * Journal d'audit (SEC-06) : créations, modifications et suppressions du modèle
+ * avec l'auteur, la date et les valeurs avant / après.
+ */
+trait Audite
+{
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('audit')
+            ->logAll()
+            ->logExcept(['password', 'remember_token', 'updated_at', 'en_ligne_secret', 'secret', 'en_ligne_curseur', 'en_ligne_synchro_at', 'en_ligne_erreur'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+}
