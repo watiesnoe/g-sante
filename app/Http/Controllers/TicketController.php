@@ -5,27 +5,69 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use App\Models\Prestation;
 use App\Models\Ticket;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\DataTables;
 
 class TicketController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+    public function index(Request $request)
     {
-        $today = Carbon::today();
+        if ($request->ajax()) {
+            $today = \Carbon\Carbon::today();
 
-        // Récupérer tous les tickets en attente et non expirés
-        $tickets = Ticket::with(['patient', 'items'])
-            ->where('statut', 'en_attente')        // seulement en attente
-            ->where('date_validite', '>=', $today) // pas encore expiré
-            ->orderBy('created_at', 'asc')         // tri par date de création
-            ->get();
+            $tickets = Ticket::with(['patient', 'items'])
+                ->where('statut', 'en_attente')
+                ->where('date_validite', '>=', $today)
+                ->orderBy('created_at', 'asc');
 
-        return view('application.ticket.index', compact('tickets'));
+            return DataTables::of($tickets)
+                ->addIndexColumn()
+                ->addColumn('patient', function($ticket){
+                    return $ticket->patient->nom ?? '-' . ' ' . ($ticket->patient->prenom ?? '');
+                })
+                ->addColumn('nombre_prestations', function($ticket){
+                    return $ticket->items->count();
+                })
+                ->addColumn('total', function($ticket){
+                    return number_format($ticket->items->sum('sous_total'), 0, ',', ' ');
+                })
+                ->addColumn('date', function($ticket){
+                    return $ticket->created_at->format('d/m/Y H:i');
+                })
+                ->addColumn('actions', function($ticket){
+                    $btn = '
+                        <div class="dropdown">
+                          <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="dropdownMenuButton'.$ticket->id.'" data-bs-toggle="dropdown" aria-expanded="false">
+                            ⚙️ Actions
+                          </button>
+                          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton'.$ticket->id.'">
+                            <li><a class="dropdown-item" href="'.route('tickets.show', $ticket->id).'">👁️ Voir</a></li>
+                            <li><a class="dropdown-item" href="'.route('tickets.edit', $ticket->id).'">✏️ Modifier</a></li>
+                            <li><a class="dropdown-item" href="'.route('tickets.print', $ticket->id).'" target="_blank">🖨️ Imprimer</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                              <form action="'.route('tickets.destroy', $ticket->id).'" method="POST" onsubmit="return confirm(\'Supprimer ce ticket ?\');" style="display:inline;">
+                                '.csrf_field().method_field('DELETE').'
+                                <button type="submit" class="dropdown-item text-danger">🗑️ Supprimer</button>
+                              </form>
+                            </li>
+                          </ul>
+                        </div>
+                        ';
+                    return $btn;
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
+
+        return view('application.ticket.index');
     }
 
     /**
@@ -70,6 +112,7 @@ class TicketController extends Controller
                 'total'        => collect($request->items)->sum(fn($i) => $i['sous_total']),
                 'date_validite'=> now()->addWeek(),   // validité = 7 jours
                 'statut'       => 'en_attente',           // statut initial
+                'user_id' => auth()->id()
             ]);
 
             // --- Ajout des items
@@ -105,16 +148,27 @@ class TicketController extends Controller
         }
     }
 
-
-
-
-
     /**
      * Display the specified resource.
      */
     public function show(Ticket $ticket)
     {
-        //
+        // Charger les relations nécessaires
+        $ticket->load([
+            'patient',
+            'items.prestation.serviceMedical',
+            'consultation',
+            'user'
+        ]);
+
+        // Calculer des statistiques supplémentaires si besoin
+        $stats = [
+            'nombre_prestations' => $ticket->items->count(),
+            'total_prestations' => $ticket->items->sum('sous_total'),
+            'moyenne_prix' => $ticket->items->avg('prix_unitaire'),
+        ];
+
+        return view('application.ticket.show', compact('ticket', 'stats'));
     }
 
     /**
@@ -189,7 +243,18 @@ class TicketController extends Controller
             ], 500);
         }
     }
+    public function print($id)
+    {
+        $ticket = Ticket::with(['patient', 'consultation', 'user'])->findOrFail($id);
 
+        // 🔹 Vue PDF personnalisée
+        $pdf = Pdf::loadView('application.ticket.pdf', compact('ticket'))
+            ->setPaper('a4', 'portrait');
+
+        // 🔹 Soit on télécharge, soit on affiche dans un nouvel onglet
+        return $pdf->stream('ticket_'.$ticket->id.'.pdf');
+        // 👉 pour télécharger automatiquement : return $pdf->download('ticket_'.$ticket->id.'.pdf');
+    }
 
 
     /**

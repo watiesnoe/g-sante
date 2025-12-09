@@ -24,18 +24,19 @@ class CommandeController extends Controller
                     return $row->fournisseur ? $row->fournisseur->nom : '-';
                 })->addColumn('actions', function ($row) {
                     return '
-                    <div class="dropdown text-center">
-                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            ⚙️ Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="'.route('commandes.show', $row->id).'" class="dropdown-item">📄 Voir détails</a></li>
-                            <li><a href="'.route('commandes.edit', $row->id).'" class="dropdown-item">✏️ Modifier</a></li>
-                            <li><a href="'.route('commandes.pdf', $row->id).'" class="dropdown-item" target="_blank">🧾Imprimer</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><button type="button" class="dropdown-item text-danger btnSupprimer" data-id="'.$row->id.'">🗑️ Supprimer</button></li>
-                        </ul>
-                    </div> ';
+                <div class="dropdown text-center">
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        ⚙️ Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="'.route('commandes.show', $row->id).'" class="dropdown-item">📄 Voir détails</a></li>
+                        <li><a href="'.route('commandes.edit', $row->id).'" class="dropdown-item">✏️ Modifier</a></li>
+                        <li><a href="'.route('commandes.pdf', $row->id).'" class="dropdown-item" target="_blank">🧾 Imprimer</a></li>
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button type="button" class="dropdown-item text-danger btnSupprimer" data-id="'.$row->id.'">🗑️ Supprimer</button></li>
+                    </ul>
+                </div> ';
                 })->rawColumns(['actions'])
 
                 ->make(true);

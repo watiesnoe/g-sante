@@ -18,11 +18,17 @@ return new class extends Migration
             $table->string('prenom')->nullable();    // Prénom
             $table->string('telephone')->nullable();
             $table->string('adresse')->nullable();
-            $table->string('role')->default('client'); // client ou admin
+            $table->enum('role', ['superadmin', 'pharmacien','gestionnaire', 'secretaire', 'medecin', 'infirmier', 'docteur'])
+                ->default('superadmin');
 
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('statut')->default('actif');
+            $table->string('photo')->nullable();
+            $table->string('telephone')->nullable()->change();
+            $table->string('adresse')->nullable()->change();
+            $table->unsignedBigInteger('service_medical_id')->nullable();
 
             $table->rememberToken();
             $table->timestamps();

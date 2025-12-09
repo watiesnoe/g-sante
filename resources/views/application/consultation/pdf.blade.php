@@ -1,103 +1,105 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Détail Consultation #{{ $consultation->id }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 14px; }
+        h2 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table, th, td { border: 1px solid #000; padding: 8px; }
+        th { background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+<h2>Détail Consultation</h2>
 
-@section('titre')
-    ⚙️ Configuration - Système de Santé
-@endsection
+<h3>Patient</h3>
+<p>Nom : {{ $consultation->patient->nom }} {{ $consultation->patient->prenom }}</p>
+<p>Téléphone : {{ $consultation->patient->telephone }}</p>
+<p>Adresse : {{ $consultation->adresse_patient }}</p>
+<p>Ticket : {{ $consultation->ticket_id }}</p>
 
-@section('content')
-    <div class="content">
-        <div class="row">
-            <!-- Sidebar gauche -->
-            <div class="col-xl-3 col-lg-4">
-                <div class="block block-rounded h-100 mb-0">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Menu</h3>
-                    </div>
-                    <div class="block-content">
-                        <ul class="nav nav-pills flex-column push">
-                            <li class="nav-item mb-1">
-                                <a class="nav-link active" href="#">
-                                    <i class="fa fa-hospital me-1"></i> Structure
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-stethoscope me-1"></i> Services médicaux
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users me-1"></i> Utilisateurs
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-door-open me-1"></i> Salles
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-bed me-1"></i> Lits
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-vials me-1"></i> Examens
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-layer-group me-1"></i> Unités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users-cog me-1"></i> Famille
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-user-md me-1"></i> Spécialités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-id-card me-1"></i> Sécurité sociale
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<h3>Consultation</h3>
+<p>Medecin : {{ $consultation->medecin->name }}</p>
+<p>Date : {{ $consultation->date_consultation ?? now()->format('d/m/Y') }}</p>
+<p>Motif : {{ $consultation->motif }}</p>
+<p>Diagnostic : {{ $consultation->diagnostic }}</p>
+<p>Notes / Antécédents : {{ $consultation->notes }}</p>
 
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8">
-                <div class="block block-rounded">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Configuration - Structure</h3>
-                    </div>
-                    <div class="block-content">
-                        <form action="" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label">Nom de la structure</label>
-                                <input type="text" class="form-control" placeholder="Ex: Centre de Santé Municipal">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Adresse</label>
-                                <input type="text" class="form-control" placeholder="Adresse complète">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Téléphone</label>
-                                <input type="text" class="form-control" placeholder="+223 70 00 00 00">
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-save me-1"></i> Sauvegarder
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
+<h3>Constantes</h3>
+<p>Poids : {{ $consultation->poids }} kg</p>
+<p>Taille : {{ $consultation->taille }} cm</p>
+<p>IMC : {{ $consultation->taille > 0 ? number_format($consultation->poids/(($consultation->taille/100)**2),2) : '-' }}</p>
+<p>Tension : {{ $consultation->tension }}</p>
+<p>Groupe sanguin : {{ $consultation->groupe_sanguin }}</p>
+
+<h3>Symptômes</h3>
+<ul>
+    @foreach($consultation->symptomes as $symptome)
+        <li>{{ $symptome->nom }}</li>
+    @endforeach
+</ul>
+
+<h3>Maladie</h3>
+<ul>
+    @foreach($consultation->maladies as $maladie)
+        <li>{{ $maladie->nom }}</li>
+    @endforeach
+</ul>
+
+<h3>Ordonnances / Médicaments</h3>
+<table>
+    <thead>
+    <tr>
+        <th>Médicament</th>
+        <th>Posologie</th>
+        <th>Durée (jours)</th>
+        <th>Quantité</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach($consultation->ordonnances as $ordonnance)
+        @foreach($ordonnance->medicaments as $med)
+            <tr>
+                <td>{{ $med->nom }}</td>
+                <td>{{ $med->pivot->posologie }}</td>
+                <td>{{ $med->pivot->duree_jours }}</td>
+                <td>{{ $med->pivot->quantite }}</td>
+            </tr>
+        @endforeach
+    @endforeach
+    </tbody>
+</table>
+
+<h3>Examens</h3>
+<ul>
+    @foreach($consultation->examens as $ex)
+        <li>{{ $ex->examen }}</li>
+    @endforeach
+</ul>
+
+<h3>Rendez-vous</h3>
+<ul>
+    @foreach($consultation->rendezVous as $r)
+        <li>{{ \Carbon\Carbon::parse($r->date_heure)->format('d/m/Y H:i') }} - {{ $r->motif }}</li>
+    @endforeach
+</ul>
+
+<h3>Certificat</h3>
+<p>{{ $consultation->certificat->contenu ?? '-' }}</p>
+
+<h3>Hospitalisation</h3>
+@if($consultation->hospitalisation)
+    <p>Date entrée : {{ $consultation->hospitalisation->date_entree }}</p>
+    <p>Salle : {{ $consultation->hospitalisation->salles_id }}</p>
+    <p>Lit : {{ $consultation->hospitalisation->lit_id }}</p>
+    <p>Observations : {{ $consultation->hospitalisation->observations }}</p>
+@else
+    <p>Aucune hospitalisation</p>
+@endif
+
+<script>
+    window.onload = function() { window.print(); };
+</script>
+</body>
+</html>

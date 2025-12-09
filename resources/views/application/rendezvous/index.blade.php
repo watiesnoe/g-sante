@@ -4,37 +4,46 @@
 
 @section('content')
     <div class="container mt-4">
-        <h2 class="mb-4">📅 Liste des Rendez-vous</h2>
 
-        <!-- Bouton Ajouter -->
-        <button class="btn btn-primary mb-3" id="addRdvBtn">➕ Nouveau</button>
+        <div class="card shadow-lg">
+            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                <h4 class="m-0">📅 Liste des Rendez-vous</h4>
+                <button class="btn btn-light btn-sm" id="addRdvBtn">➕ Nouveau</button>
+            </div>
 
-        <!-- Tableau -->
-        <table class="table table-bordered" id="rendezvous-table">
-            <thead class="table-dark">
-            <tr>
-                <th>Patient</th>
-                <th>Médecin</th>
-                <th>Consultation</th>
-                <th>Date & Heure</th>
-                <th>Motif</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-        </table>
+            <div class="card-body">
+
+                <table class="table table-bordered table-striped" id="rendezvous-table">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Patient</th>
+                        <th>Médecin</th>
+                        <th>Consultation</th>
+                        <th>Date & Heure</th>
+                        <th>Motif</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                </table>
+
+            </div>
+        </div>
+
     </div>
 
-    <!-- Modal Ajouter / Éditer -->
+    <!-- Modal -->
     <div class="modal fade" id="rdvModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="rdvForm">
                 @csrf
                 <input type="hidden" name="id" id="rdv_id">
+
                 <div class="modal-content">
-                    <div class="modal-header">
+                    <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">Nouveau Rendez-vous</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
+
                     <div class="modal-body">
                         <div class="mb-2">
                             <label>Patient</label>
@@ -57,15 +66,19 @@
                             <input type="text" name="motif" id="motif" class="form-control">
                         </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Enregistrer</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     </div>
                 </div>
+
             </form>
         </div>
     </div>
+
 @endsection
+
 
 @section('scripts')
     <script>
@@ -130,7 +143,9 @@
                     $.ajax({
                         url: "/rendezvous/"+id,
                         method: "DELETE",
-                        data: {_token: "{{ csrf_token() }}"},
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
                         success: function(){
                             table.ajax.reload();
                         }

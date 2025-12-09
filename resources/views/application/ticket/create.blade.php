@@ -14,35 +14,37 @@
             @endif
 
             <!-- 🔍 Patient -->
-            <div class="card shadow-lg mb-3">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">🔍 Recherche Patient</h5>
-                    <button class="btn btn-light btn-sm" type="button" id="btnNouveauPatient">➕ Nouveau Patient</button>
-                </div>
-                <div class="card-body">
-                    <input type="text" class="form-control mb-2" id="search_patient" placeholder="Nom ou téléphone du patient...">
-                    <select class="form-select" id="patient" name="patient_id">
-                        <option value="">-- Sélectionner un patient existant --</option>
-                        @foreach($patients as $patient)
-                            <option value="{{ $patient->id }}"
-                                {{ isset($ticket) && $ticket->patient_id == $patient->id ? 'selected' : '' }}>
-                                {{ $patient->nom }} {{ $patient->prenom }} - {{ $patient->telephone }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
 
+            <div class="row">
+                <div class="">
+                    <button  type="button" class="btnNouveauPatient btn btn-primary float-end mb-2" id="btnNouveauPatient" >Ajouter</button>
+                </div>
+
+            </div>
             <!-- 🏥 Ajouter prestation -->
-            <div class="card shadow-lg mb-3">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">🏥 Ajouter une Prestation</h5>
+            <div class="card  mb-3">
+
+                <div class="card-header bg-primary text-white">
+
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
+
+
+                    <div class="row g-3  mb-3">
+                        <div class="col-12 ">
+                            <select class="form-select js-select2" id="patient" name="patient_id">
+                                <option value="">-- Sélectionner un patient existant --</option>
+                                @foreach($patients as $patient)
+                                    <option value="{{ $patient->id }}"
+                                        {{ isset($ticket) && $ticket->patient_id == $patient->id ? 'selected' : '' }}>
+                                        {{ $patient->nom }} {{ $patient->prenom }} - {{ $patient->telephone }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Prestation</label>
-                            <select id="prestation" class="form-select">
+                            <select id="prestation" class="form-select js-select2 hyphens-auto">
                                 <option value="">-- Choisir une prestation --</option>
                                 @foreach($prestations as $prestation)
                                     <option value="{{ $prestation->id }}"
@@ -70,8 +72,7 @@
 
             <!-- 🛒 Panier -->
             <div class="card shadow-lg mb-3">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0">🛒 Prestations Ajoutées</h5>
+                <div class="card-header bg-primary">
                 </div>
                 <div class="card-body">
                     <div class="table-responsive mb-0">
@@ -116,8 +117,7 @@
 
             <!-- 📝 Observations -->
             <div class="card shadow-lg mb-3">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">📝 Observations & Validation</h5>
+                <div class="card-header bg-primary text-white">
                 </div>
                 <div class="card-body">
                     <textarea class="form-control mb-3" id="description" name="description" rows="3" placeholder="Notes ou détails supplémentaires...">{{ $ticket->description ?? '' }}</textarea>
@@ -285,45 +285,288 @@
             });
             $("#btnNouveauPatient").on("click", function(){
                 Swal.fire({
-                    title:'Nouveau Patient',
-                    html:`
-                <input id="np_nom" class="swal2-input" placeholder="Nom">
-                <input id="np_prenom" class="swal2-input" placeholder="Prénom">
-                <select id="np_genre" class="swal2-input">
-                    <option value="">-- Genre --</option>
-                    <option value="M">Masculin</option>
-                    <option value="F">Féminin</option>
-                </select>
-                <input id="np_tel" class="swal2-input" placeholder="Téléphone">
-                <input id="np_ethnie" class="swal2-input" placeholder="Ethnie">
-                <input id="np_age" type="number" class="swal2-input" placeholder="Âge" min="0">
-            `,
-                    focusConfirm:false,
-                    preConfirm:()=>{
-                        let data={
-                            nom: $("#np_nom").val(),
-                            prenom: $("#np_prenom").val(),
-                            genre: $("#np_genre").val(),
-                            telephone: $("#np_tel").val(),
-                            ethnie: $("#np_ethnie").val(),
-                            age: $("#np_age").val(),
+                    title: '<i class="fa fa-user-plus me-2"></i>Nouveau Patient',
+                    html: `
+            <div class="row g-3">
+                <!-- Section Informations Personnelles -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3 border-bottom pb-2">
+                        <i class="fa fa-id-card me-2"></i>Informations Personnelles
+                    </h6>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" for="np_nom">
+                        <i class="fa fa-font me-1 text-muted"></i>Nom <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="np_nom" name="np_nom"
+                           placeholder="Ex: DUPONT" required
+                           data-bs-toggle="tooltip" title="Saisissez le nom en majuscules">
+                    <div class="form-text text-end"><span id="nom-counter">0</span>/50 caractères</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" for="np_prenom">
+                        <i class="fa fa-user me-1 text-muted"></i>Prénom <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="np_prenom" name="np_prenom"
+                           placeholder="Ex: Jean" required>
+                    <div class="form-text text-end"><span id="prenom-counter">0</span>/50 caractères</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" for="np_genre">
+                        <i class="fa fa-venus-mars me-1 text-muted"></i>Genre <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="np_genre" name="np_genre" required>
+                        <option value="">-- Choisir le genre --</option>
+                        <option value="M">👨 Masculin</option>
+                        <option value="F">👩 Féminin</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label" for="np_age">
+                        <i class="fa fa-calendar-alt me-1 text-muted"></i>Âge
+                    </label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="np_age" name="np_age"
+                               placeholder="Ex: 35" min="0" max="150"
+                               data-bs-toggle="tooltip" title="Âge entre 0 et 150 ans">
+                        <span class="input-group-text bg-light">ans</span>
+                    </div>
+                </div>
+
+                <!-- Section Contact et Démographie -->
+                <div class="col-12 mt-4">
+                    <h6 class="text-primary mb-3 border-bottom pb-2">
+                        <i class="fa fa-address-book me-2"></i>Contact et Démographie
+                    </h6>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" for="np_tel">
+                        <i class="fa fa-phone me-1 text-muted"></i>Téléphone
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fa fa-phone text-muted"></i>
+                        </span>
+                        <input type="tel" class="form-control" id="np_tel" name="np_tel"
+                               placeholder="Ex: 07 12 34 56 78"
+                               pattern="[0-9]{10}"
+                               data-bs-toggle="tooltip"
+                               title="Format : 10 chiffres sans espace">
+                    </div>
+                    <div class="form-text">Format : 10 chiffres (ex: 0712345678)</div>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" for="np_ethnie">
+                        <i class="fa fa-globe-africa me-1 text-muted"></i>Ethnie
+                    </label>
+                    <select class="form-select" id="np_ethnie" name="np_ethnie">
+                        <option value="">-- Choisir une ethnie --</option>
+                        <option value="Bambara">Bambara</option>
+                        <option value="Peul">Peul</option>
+                        <option value="Sénoufo">Sénoufo</option>
+                        <option value="Malinké">Malinké</option>
+                        <option value="Soninké">Soninké</option>
+                        <option value="Dogon">Dogon</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                    <div class="form-text mt-1">
+                        <input type="text" class="form-control form-control-sm d-none mt-2"
+                               id="np_ethnie_autre" placeholder="Préciser l'ethnie">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top">
+                <div class="alert alert-info py-2 mb-0">
+                    <i class="fa fa-info-circle me-2"></i>
+                    <small>
+                        <span class="text-danger">*</span> Champs obligatoires.
+                        Les informations seront modifiables ultérieurement.
+                    </small>
+                </div>
+            </div>
+        `,
+                    width: '700px',
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fa fa-save me-1"></i>Enregistrer le patient',
+                    cancelButtonText: '<i class="fa fa-times me-1"></i>Annuler',
+                    confirmButtonColor: '#1bc5bd',
+                    cancelButtonColor: '#d33',
+                    customClass: {
+                        popup: 'swal2-dashmix swal2-enhanced',
+                        confirmButton: 'btn btn-success px-4',
+                        cancelButton: 'btn btn-danger px-4'
+                    },
+                    buttonsStyling: false,
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: () => {
+                        // Validation améliorée
+                        const nom = $("#np_nom").val().trim();
+                        const prenom = $("#np_prenom").val().trim();
+                        const genre = $("#np_genre").val();
+                        const tel = $("#np_tel").val().trim();
+                        let ethnie = $("#np_ethnie").val();
+
+                        // Validation des champs obligatoires
+                        if (!nom) {
+                            showFieldError('np_nom', 'Le nom est obligatoire');
+                            return false;
+                        }
+                        if (nom.length > 50) {
+                            showFieldError('np_nom', 'Le nom ne doit pas dépasser 50 caractères');
+                            return false;
+                        }
+
+                        if (!prenom) {
+                            showFieldError('np_prenom', 'Le prénom est obligatoire');
+                            return false;
+                        }
+                        if (prenom.length > 50) {
+                            showFieldError('np_prenom', 'Le prénom ne doit pas dépasser 50 caractères');
+                            return false;
+                        }
+
+                        if (!genre) {
+                            showFieldError('np_genre', 'Le genre est obligatoire');
+                            return false;
+                        }
+
+                        // Validation téléphone
+                        if (tel && !/^[0-9]{10}$/.test(tel.replace(/\s/g, ''))) {
+                            showFieldError('np_tel', 'Le numéro doit contenir 10 chiffres');
+                            return false;
+                        }
+
+                        // Gestion ethnie "Autre"
+                        if (ethnie === 'Autre') {
+                            const autreEthnie = $("#np_ethnie_autre").val().trim();
+                            if (!autreEthnie) {
+                                showFieldError('np_ethnie_autre', 'Veuillez préciser l\'ethnie');
+                                return false;
+                            }
+                            ethnie = autreEthnie;
+                        }
+
+                        // Préparation des données
+                        const data = {
+                            nom: nom.toUpperCase(),
+                            prenom: prenom,
+                            genre: genre,
+                            telephone: tel.replace(/\s/g, ''),
+                            ethnie: ethnie,
+                            age: $("#np_age").val() || null,
                             _token: "{{ csrf_token() }}"
                         };
+
                         return $.post("{{ route('patients.store') }}", data)
                             .done(function(response){
                                 if(response.success){
                                     let p = response.patient;
-                                    let text = `${p.nom} ${p.prenom} - ${p.telephone}`;
+                                    let text = `${p.nom} ${p.prenom}${p.telephone ? ' - ' + p.telephone : ''}`;
+
+                                    // Ajouter au select
                                     $("#patient").append(new Option(text, p.id, true, true));
-                                    Swal.fire('Ajouté !','Nouveau patient enregistré avec succès.','success');
+                                    $("#patient").trigger('change');
+
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: '<i class="fa fa-check-circle me-2"></i>Patient créé !',
+                                        html: `
+                                <div class="text-start">
+                                    <p class="mb-2"><strong>${p.nom} ${p.prenom}</strong> a été ajouté avec succès.</p>
+                                    <small class="text-muted">ID Patient: ${p.id}</small>
+                                </div>
+                            `,
+                                        timer: 3000,
+                                        showConfirmButton: false,
+                                        customClass: { popup: 'swal2-dashmix' }
+                                    });
                                 }
                             })
                             .fail(function(xhr){
-                                Swal.showValidationMessage('Erreur : ' + (xhr.responseJSON.message || 'Erreur serveur'));
+                                let errorMessage = 'Erreur lors de l\'enregistrement';
+                                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                                    const errors = Object.values(xhr.responseJSON.errors).flat();
+                                    errorMessage = errors.join('<br>');
+                                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+                                Swal.showValidationMessage(`<i class="fa fa-exclamation-triangle me-2"></i>${errorMessage}`);
                             });
+                    },
+                    didOpen: () => {
+                        // Initialisation
+                        setTimeout(() => $("#np_nom").focus(), 300);
+
+                        // Styles améliorés
+                        $('.swal2-enhanced .form-control, .swal2-enhanced .form-select').addClass('form-control-alt');
+
+                        // Compteurs de caractères
+                        $('#np_nom, #np_prenom').on('input', function() {
+                            const count = $(this).val().length;
+                            const counterId = $(this).attr('id') + '-counter';
+                            $('#' + counterId).text(count);
+                            if (count > 50) {
+                                $('#' + counterId).addClass('text-danger');
+                            } else {
+                                $('#' + counterId).removeClass('text-danger');
+                            }
+                        });
+
+                        // Gestion ethnie "Autre"
+                        $('#np_ethnie').on('change', function() {
+                            const autreField = $('#np_ethnie_autre');
+                            if ($(this).val() === 'Autre') {
+                                autreField.removeClass('d-none').prop('required', true);
+                                setTimeout(() => autreField.focus(), 100);
+                            } else {
+                                autreField.addClass('d-none').prop('required', false);
+                            }
+                        });
+
+                        // Formatage téléphone
+                        $('#np_tel').on('input', function() {
+                            let value = $(this).val().replace(/\D/g, '');
+                            if (value.length > 0) {
+                                value = value.match(/.{1,2}/g).join(' ');
+                            }
+                            $(this).val(value.substring(0, 14));
+                        });
+
+                        // Initialisation des tooltips Bootstrap
+                        $('[data-bs-toggle="tooltip"]').tooltip({
+                            trigger: 'hover focus',
+                            placement: 'top'
+                        });
+                    },
+                    willClose: () => {
+                        // Nettoyage des tooltips
+                        $('[data-bs-toggle="tooltip"]').tooltip('dispose');
                     }
                 });
             });
+
+// Fonction utilitaire pour afficher les erreurs de champ
+            function showFieldError(fieldId, message) {
+                $(`#${fieldId}`).addClass('is-invalid');
+                Swal.showValidationMessage(`<i class="fa fa-exclamation-circle me-2"></i>${message}`);
+                setTimeout(() => $(`#${fieldId}`).focus(), 100);
+            }
+
+// Fonction utilitaire pour afficher les erreurs de champ
+            function showFieldError(fieldId, message) {
+                $(`#${fieldId}`).addClass('is-invalid');
+                Swal.showValidationMessage(`<i class="fa fa-exclamation-circle me-2"></i>${message}`);
+                setTimeout(() => $(`#${fieldId}`).focus(), 100);
+            }
 
         });
     </script>

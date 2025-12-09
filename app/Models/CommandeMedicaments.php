@@ -17,6 +17,7 @@ class CommandeMedicaments extends Model
         'quantite',
         'prix_unitaire',
         'total',
+        'quantiterecue'
     ];
 
     /**

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('fournisseur_id')->constrained()->cascadeOnDelete();
             $table->date('date_commande');
             $table->enum('statut', ['en_cours','valide','annuler'])->default('en_cours');
+            $table->enum('StatutPaiement',['en_cours', 'partielle', 'total'])->default('en_cours');
             $table->decimal('total', 12, 2)->nullable();
             $table->timestamps();
         });

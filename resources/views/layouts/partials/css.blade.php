@@ -12,3 +12,19 @@
 
     <!-- Load and set color theme + dark mode preference (blocking script to prevent flashing) -->
     <script src="{{ asset('admin/js/setTheme.js') }}"></script>
+  <style>
+      /* Ajuste la hauteur et la taille du texte */
+      .select2-container--default .select2-selection--single {
+          height: 36px;          /* ajuste selon ton besoin */
+          padding: 6px 12px;     /* padding interne */
+          font-size: 1rem;       /* taille du texte */
+      }
+
+      .select2-container--default .select2-selection--single .select2-selection__rendered {
+          line-height: 32px;     /* centrer verticalement le texte */
+      }
+
+      .select2-container--default .select2-selection--single .select2-selection__arrow {
+          height: 36px;          /* même hauteur que le select */
+      }
+  </style>

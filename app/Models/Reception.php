@@ -12,7 +12,6 @@ class Reception extends Model
         'fournisseur_id',
         'date_reception',
         'reference_reception',
-        'statut',
         'observations',
         'user_id'
     ];

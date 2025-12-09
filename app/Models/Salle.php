@@ -28,4 +28,5 @@ class Salle extends Model
     {
         return $this->hasMany(Lit::class);
     }
+
 }

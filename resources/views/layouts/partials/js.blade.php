@@ -36,6 +36,15 @@
 
 
 {{-- Table offre js datatbable---}}
+    <script>
+        $(document).ready(function() {
+            $('.js-select2').select2({
+                placeholder: "-- Sélectionner un patient existant --",
+                allowClear: true,
+                width: '100%' // prend toute la largeur du parent
+            });
+        });
+    </script>
 
 
 

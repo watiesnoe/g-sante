@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Rendezvous;
+use App\Models\RendezVous;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -13,7 +13,7 @@ class RendezvousController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $rdvs = Rendezvous::with(['patient', 'medecin', 'consultation'])
+            $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
                 ->whereNotIn('statut', ['annule', 'realise']) // 🔹 Exclure annulé et réalisé
                 ->select('rendezvous.*');
 
@@ -80,7 +80,7 @@ class RendezvousController extends Controller
     public function disponible(Request $request)
     {
         if ($request->ajax()) {
-            $rdvs = Rendezvous::with(['patient', 'medecin', 'consultation'])
+            $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
                 ->where('statut', ['realise']) // 🔹 Exclure annulé et réalisé
                 ->select('rendezvous.*');
 
@@ -147,7 +147,7 @@ class RendezvousController extends Controller
     public function annuler(Request $request)
     {
         if ($request->ajax()) {
-            $rdvs = Rendezvous::with(['patient', 'medecin', 'consultation'])
+            $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
                 ->where('statut', ['annule']) // 🔹 Exclure annulé et réalisé
                 ->select('rendezvous.*');
 
@@ -211,7 +211,7 @@ class RendezvousController extends Controller
 
         return view('application.rendezvous.annule');
     }
-    public function marquerRealise(Rendezvous $rendezvous)
+    public function marquerRealise(RendezVous $rendezvous)
     {
         // Vérifie que le rendez-vous n'est pas déjà réalisé
         if ($rendezvous->statut !== 'realise') {
@@ -225,7 +225,7 @@ class RendezvousController extends Controller
 
 
     // Optionnel : afficher un rendez-vous
-    public function show(Rendezvous $rendezvous)
+    public function show(RendezVous $rendezvous)
     {
         return view('rendezvous.show', compact('rendezvous'));
     }

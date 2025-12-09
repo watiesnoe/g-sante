@@ -5,15 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Hospitalisation;
 use App\Models\Paiement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PaiementController extends Controller
 {
     /**
-     * Afficher la liste des paiements.
+     * Afficher la liste des paiements avec patients.
      */
     public function index()
     {
-        $paiements = Paiement::with(['hospitalisation.patient', 'analyse'])
+        $paiements = Paiement::with(['hospitalisation.patient'])
             ->latest()
             ->paginate(10);
 
@@ -21,68 +22,60 @@ class PaiementController extends Controller
     }
 
     /**
-     * Formulaire de création.
+     * Formulaire de création de paiement.
      */
     public function create()
     {
-        return view('paiements.create');
+        // On peut récupérer les hospitalisations en cours
+        $hospitalisations = Hospitalisation::where('etat', 'en_cours')->with('patient')->get();
+        return view('paiements.create', compact('hospitalisations'));
     }
 
     /**
-     * Enregistrer un paiement.
+     * Enregistrer un paiement et mettre à jour l'hospitalisation.
      */
-
     public function store(Request $request)
     {
-        // 1️⃣ Validation
         $request->validate([
             'hospitalisation_id' => 'required|exists:hospitalisations,id',
-            'dateSortie'         => 'required|date',
-            'montantTotal'       => 'required|numeric|min:0',
-            'montantRecu'        => 'required|numeric|min:0',
+            'date_sortie'        => 'required|date',
+            'montant_total'      => 'required|numeric|min:0',
+            'montant_recu'       => 'required|numeric|min:0',
             'mode_paiement'      => 'nullable|string',
         ]);
 
-        // 2️⃣ Récupérer l’hospitalisation
-        $hospitalisation = Hospitalisation::findOrFail($request->hospitalisation_id);
+        DB::transaction(function () use ($request) {
+            // Récupérer l’hospitalisation
+            $hospitalisation = Hospitalisation::findOrFail($request->hospitalisation_id);
 
-        // 3️⃣ Mettre à jour la date de sortie et l’état
-        $hospitalisation->date_sortie = $request->dateSortie;
-        $hospitalisation->etat = 'terminé';
-        $hospitalisation->save();
+            // Mettre à jour la date de sortie et l’état
+            $hospitalisation->date_sortie = $request->date_sortie;
+            $hospitalisation->etat = 'terminé';
+            $hospitalisation->save();
 
-        // 4️⃣ Calculer montant restant et statut
-        $montantTotal = $request->montantTotal;
-        $montantRecu = $request->montantRecu;
-        $montantRestant = $montantTotal - $montantRecu;
+            // Calculer montant restant et statut
+            $montantRestant = $request->montant_total - $request->montant_recu;
+            $statut = match (true) {
+                $montantRestant <= 0 => 'payé',
+                $request->montant_recu > 0 => 'partiel',
+                default => 'en_attente',
+            };
 
-        $statut = 'en_attente';
-        if ($montantRestant <= 0) {
-            $statut = 'payé';
-        } elseif ($montantRecu > 0) {
-            $statut = 'partiel';
-        }
+            // Créer le paiement
+            Paiement::create([
+                'hospitalisation_id' => $hospitalisation->id,
+                'montant_total'      => $request->montant_total,
+                'montant_recu'       => $request->montant_recu,
+                'montant_restant'    => $montantRestant,
+                'statut'             => $statut,
+                'mode_paiement'      => $request->mode_paiement ?? 'non précisé',
+                'date_paiement'      => now(),
+            ]);
+        });
 
-        // 5️⃣ Créer le paiement
-        $paiement = Paiement::create([
-            'hospitalisation_id' => $hospitalisation->id,
-            'montant_total'      => $montantTotal,
-            'montant_recu'       => $montantRecu,
-            'montant_restant'    => $montantRestant,
-            'statut'             => $statut,
-            'mode_paiement'      => $request->mode_paiement ?? 'non précisé',
-            'date_paiement'      => now(),
-        ]);
-
-        // 6️⃣ Réponse JSON pour AJAX
-        return response()->json([
-            'success' => true,
-            'message' => 'Paiement enregistré avec succès ✅',
-            'paiement' => $paiement,
-        ]);
+        return redirect()->route('paiements.index')
+            ->with('success', 'Paiement enregistré avec succès ✅');
     }
-
-
 
     /**
      * Afficher un paiement.
@@ -93,7 +86,7 @@ class PaiementController extends Controller
     }
 
     /**
-     * Formulaire d’édition.
+     * Formulaire édition.
      */
     public function edit(Paiement $paiement)
     {
@@ -116,7 +109,8 @@ class PaiementController extends Controller
 
         $paiement->update($data);
 
-        return redirect()->route('paiements.index')->with('success', 'Paiement mis à jour.');
+        return redirect()->route('paiements.index')
+            ->with('success', 'Paiement mis à jour.');
     }
 
     /**
@@ -126,6 +120,18 @@ class PaiementController extends Controller
     {
         $paiement->delete();
 
-        return redirect()->route('paiements.index')->with('success', 'Paiement supprimé.');
+        return redirect()->route('paiements.index')
+            ->with('success', 'Paiement supprimé.');
+    }
+
+    /**
+     * Générer une facture imprimable pour un paiement.
+     */
+    public function print(Paiement $paiement)
+    {
+        // Charger patient et hospitalisation
+        $paiement->load('hospitalisation.patient');
+
+        return view('paiements.print', compact('paiement'));
     }
 }

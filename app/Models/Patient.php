@@ -16,6 +16,16 @@ class Patient extends Model {
         'groupe_sanguin'];
 
     public function consultations() { return $this->hasMany(Consultation::class); }
-    public function hospitalisations() { return $this->hasMany(Hospitalisation::class); }
+    public function hospitalisations() {
+        return $this->hasManyThrough(
+            Hospitalisation::class,
+            Consultation::class,
+            'patient_id',       // clé étrangère dans consultations
+            'consultation_id',  // clé étrangère dans hospitalisations
+            'id',               // clé locale patient
+            'id'                // clé locale consultation
+        );
+    }
+
     public function rendezVous() { return $this->hasMany(RendezVous::class); }
 }

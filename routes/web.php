@@ -12,6 +12,7 @@ use App\Http\Controllers\LitController;
 use App\Http\Controllers\MaladieController;
 use App\Http\Controllers\MedicamentController;
 use App\Http\Controllers\OrdonnanceController;
+use App\Http\Controllers\PaiementCommandeController;
 use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PrescriptionExamenController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\SuiviController;
 use App\Http\Controllers\SymptomeController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UniteController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Quand on arrive sur la racine "/", on redirige vers le login
@@ -34,12 +36,11 @@ Route::get('/', function () {
 });
 
 // Page d'accueil après connexion
-Route::get('/home', function() {
-    return view('dashboard'); // ou 'home'
-})->name('home')->middleware(['auth', 'verified']);
 
 // Routes protégées par authentification
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/parametre', [ConfigurationController::class, 'index'])->name('configuration');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -103,10 +104,12 @@ Route::middleware('auth')->group(function () {
 
 // Supprimer un médicament du panier (AJAX)
     Route::post('/commandes/panier/supprimer', [CommandeController::class, 'supprimerDuPanier'])->name('commandes.panier.supprimer');
+    Route::get('/consultations/{consultation}/print', [ConsultationController::class, 'print'])->name('consultations.print');
 
 // Vider le panier
     Route::post('/commandes/panier/vider', [CommandeController::class, 'viderPanier'])->name('commandes.panier.vider');
 
+    Route::get('/tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
 
 //    Route::resource('receptions', ReceptionController::class);
 
@@ -116,9 +119,53 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/receptions', [ReceptionController::class, 'store'])->name('receptions.store');
 
-    Route::get('/salle/{salle}/lits-libres', [SalleController::class, 'litsLibres']);
+    Route::get('/salle/{salleId}/lits-libres', [SalleController::class, 'litsLibres'])->name('salles.litsLibres');
+
+
 // Route pour récupérer les médicaments d'une commande (Ajax)
     Route::get('commandes/{commande}/medicaments', [CommandeController::class,'medicaments'])->name('commandes.medicaments');
+
+    Route::prefix('paiementscommande')->group(function () {
+        Route::get('/dashboard', [PaiementCommandeController::class, 'dashboard'])->name('paiementscommande.dashboard');
+        Route::get('/create', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create');
+        Route::post('/store', [PaiementCommandeController::class, 'store'])->name('paiementscommande.store');
+        Route::get('/history/{commande}', [PaiementCommandeController::class, 'history'])->name('paiementscommande.history');
+        Route::delete('/{id}', [PaiementCommandeController::class, 'destroy'])->name('paiementscommande.destroy');
+    });
+
+    // Dossiers Patients
+    Route::prefix('patients')->group(function () {
+        Route::get('/', [PatientController::class, 'index'])->name('patients.index');
+        Route::get('/create', [PatientController::class, 'create'])->name('patients.create');
+        Route::post('/', [PatientController::class, 'store'])->name('patients.store');
+//        Route::get('/{patient}', [PatientController::class, 'show'])->name('patients.show');
+        Route::get('/{patient}/dossier', [PatientController::class, 'print'])->name('patients.medicales');
+//        Route::get('/medicales/print', [PatientController::class, 'medicales'])->name('patients.medicales');
+        Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit');
+        Route::put('/{patient}', [PatientController::class, 'update'])->name('patients.update');
+        Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+    });
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+    // routes/web.php
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::post('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+// Route
+// Méthode dans UserController
+
+
+    // Routes spécifiques pour les médecins
+    Route::get('/medecins', [UserController::class, 'medecins'])->name('medecins.index');
+    Route::get('/users/datatable', [UserController::class, 'datatable'])->name('users.datatable');
+    Route::get('/users/data', [UserController::class, 'getData'])->name('users.data');
+    // Routes pour le profil utilisateur
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+
 
 });
 

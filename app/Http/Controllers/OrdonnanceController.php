@@ -175,6 +175,7 @@ class OrdonnanceController extends Controller
             'message' => 'Paiement effectué avec succès.',
             'montant' => $montantTotal
         ]);
+
     }
     public function lespayer(Request $request)
     {

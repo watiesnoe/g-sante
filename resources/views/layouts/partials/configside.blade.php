@@ -19,7 +19,7 @@
                 </li>
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
-                       href="#">
+                       href="{{ route('users.index') }}">
                         <i class="fa fa-users me-1"></i> Utilisateurs
                     </a>
                 </li>

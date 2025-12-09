@@ -121,9 +121,9 @@
                 <a href="{{ route('patients.create') }}" class="btn btn-success w-100 mb-2">
                     <i class="fas fa-user-plus me-2"></i>Nouveau Patient
                 </a>
-                <a href="{{ route('factures.create') }}" class="btn btn-warning w-100">
-                    <i class="fas fa-file-invoice me-2"></i>Nouvelle Facture
-                </a>
+{{--                <a href="{{ route('factures.create') }}" class="btn btn-warning w-100">--}}
+{{--                    <i class="fas fa-file-invoice me-2"></i>Nouvelle Facture--}}
+{{--                </a>--}}
             </div>
         </div>
     </div>

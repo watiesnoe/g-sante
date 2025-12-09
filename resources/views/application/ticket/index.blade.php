@@ -11,7 +11,7 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
+                    <table id="ticketsTable" class="table table-bordered align-middle">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
@@ -22,33 +22,40 @@
                             <th>Actions</th>
                         </tr>
                         </thead>
-                        <tbody>
-                        @forelse($tickets as $ticket)
-                            <tr>
-                                <td>{{ $ticket->id }}</td>
-                                <td>{{ $ticket->patient->nom ?? '-' }} {{ $ticket->patient->prenom ?? '' }}</td>
-                                <td>{{ $ticket->items->count() }}</td>
-                                <td>{{ number_format($ticket->items->sum('sous_total'), 0, ',', ' ') }}</td>
-                                <td>{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
-                                <td>
-                                    <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-info btn-sm">👁️ Voir</a>
-                                    <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-warning btn-sm">✏️ Modifier</a>
-                                    <form action="{{ route('tickets.destroy', $ticket->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Supprimer ce ticket ?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-danger btn-sm">🗑️ Supprimer</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">Aucun ticket enregistré</td>
-                            </tr>
-                        @endforelse
-                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+@endsection
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#ticketsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('tickets.index') }}",
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'patient', name: 'patient' },
+                    { data: 'nombre_prestations', name: 'nombre_prestations' },
+                    { data: 'total', name: 'total' },
+                    { data: 'date', name: 'date' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                ],
+                dom: 'Bfrtip', // Position des boutons
+                buttons: [
+                    'copyHtml5',
+                    'csvHtml5',
+                    'excelHtml5',
+                    'pdfHtml5',
+                    'print'
+                ],
+                // language: {
+                //     url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+                // }
+            });
+        });
+    </script>
+
 @endsection

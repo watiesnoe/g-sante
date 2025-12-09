@@ -30,7 +30,7 @@
             </div>
         </div>
 
-        {{-- Modal paiement --}}
+        {{-- 🔹 Modal Paiement --}}
         <div class="modal fade" id="modalPaiement" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <form id="formPaiement" method="POST">
@@ -46,32 +46,32 @@
 
                             <div class="col-md-6 mb-3">
                                 <label>Date d'entrée</label>
-                                <input type="date" id="dateArrive" class="form-control" readonly>
+                                <input type="date" id="date_entree" class="form-control" readonly>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label>Date de sortie</label>
-                                <input type="date" id="dateSortie" name="dateSortie" class="form-control" required>
+                                <input type="date" id="date_sortie" name="date_sortie" class="form-control" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label>Prix / jour</label>
-                                <input type="number" id="montantJour" class="form-control" readonly>
+                                <input type="number" id="montant_jour" class="form-control" readonly>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label>Total à payer</label>
-                                <input type="number" id="montantTotal" name="montantTotal" class="form-control" readonly>
+                                <input type="number" id="montant_total" name="montant_total" class="form-control" readonly>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label>Montant reçu</label>
-                                <input type="number" id="montantRecu" name="montantRecu" class="form-control">
+                                <input type="number" id="montant_recu" name="montant_recu" class="form-control">
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label>Montant restant</label>
-                                <input type="number" id="montantRestant" class="form-control" readonly>
+                                <input type="number" id="montant_restant" class="form-control" readonly>
                             </div>
                         </div>
 
@@ -89,6 +89,7 @@
 @section('scripts')
     <script>
         $(function () {
+
             // ---------------- DataTable ----------------
             let table = $('#hospitalisationsTable').DataTable({
                 processing: true,
@@ -116,13 +117,13 @@
                     let prixJour = response.prix_jour || 0;
 
                     $('#hospitalisation_id').val(id);
-                    $('#dateArrive').val(dateEntree);
-                    $('#montantJour').val(prixJour);
+                    $('#date_entree').val(dateEntree);
+                    $('#montant_jour').val(prixJour);
 
-                    $('#dateSortie').val('');
-                    $('#montantTotal').val('');
-                    $('#montantRecu').val('');
-                    $('#montantRestant').val('');
+                    $('#date_sortie').val('');
+                    $('#montant_total').val('');
+                    $('#montant_recu').val('');
+                    $('#montant_restant').val('');
 
                     $('#modalPaiement').modal('show');
                 }).fail(function(xhr) {
@@ -137,31 +138,31 @@
 
             // ---------------- Calcul total ----------------
             function calculerTotal() {
-                let arrive = new Date($('#dateArrive').val());
-                let sortie = new Date($('#dateSortie').val());
-                let montantJour = parseFloat($('#montantJour').val()) || 0;
+                let arrive = new Date($('#date_entree').val());
+                let sortie = new Date($('#date_sortie').val());
+                let montantJour = parseFloat($('#montant_jour').val()) || 0;
 
                 if (!arrive || !sortie || sortie <= arrive) {
-                    $('#montantTotal').val(0);
+                    $('#montant_total').val(0);
                     return 0;
                 }
 
                 let jours = Math.ceil((sortie - arrive) / (1000 * 3600 * 24));
                 let total = jours * montantJour;
-                $('#montantTotal').val(total.toFixed(2));
+                $('#montant_total').val(total.toFixed(2));
                 return total;
             }
 
-            $('#dateSortie').on('change', function() {
+            $('#date_sortie').on('change', function() {
                 let total = calculerTotal();
-                let recu = parseFloat($('#montantRecu').val()) || 0;
-                $('#montantRestant').val((total - recu).toFixed(2));
+                let recu = parseFloat($('#montant_recu').val()) || 0;
+                $('#montant_restant').val((total - recu).toFixed(2));
             });
 
-            $('#montantRecu').on('input', function() {
-                let total = parseFloat($('#montantTotal').val()) || 0;
+            $('#montant_recu').on('input', function() {
+                let total = parseFloat($('#montant_total').val()) || 0;
                 let recu = parseFloat($(this).val()) || 0;
-                $('#montantRestant').val((total - recu).toFixed(2));
+                $('#montant_restant').val((total - recu).toFixed(2));
             });
 
             // ---------------- Soumission AJAX ----------------
@@ -177,16 +178,22 @@
                     data: formData,
                     dataType: 'json',
                     success: function(data) {
-                        console.log('DEBUG store AJAX:', data); // <-- ici tu vois toutes les données
                         Swal.fire({
                             icon: 'success',
                             title: data.message,
                             timer: 1500,
                             showConfirmButton: false
                         });
+                        $('#modalPaiement').modal('hide');
+                        table.ajax.reload();
                     },
                     error: function(xhr) {
-                        console.error('Erreur AJAX:', xhr.responseText);
+                        console.error('Erreur AJAX:', xhr.responseJSON);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: Object.values(xhr.responseJSON.errors || {}).join("\n")
+                        });
                     }
                 });
             });

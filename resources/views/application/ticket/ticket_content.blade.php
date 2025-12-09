@@ -1,61 +1,30 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Ticket #{{ $ticket->id }}</title>
-    <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .page {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            width: 100%;
-        }
-        .ticket {
-            width: 100%;
-            height: 48%;
-            border: 1px dashed #000;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
-        h2, h3 {
-            margin: 0;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: left;
-        }
-        .footer {
-            text-align: right;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-<div class="page">
-    {{-- 🔹 Premier ticket A5 --}}
-    <div class="ticket">
-        @include('application.ticket.ticket_content', ['ticket' => $ticket])
-    </div>
+<h2>Clinique Santé Plus</h2>
+<h3>Ticket N° {{ $ticket->id }}</h3>
+<p><strong>Patient :</strong> {{ $ticket->patient->nom ?? '' }} {{ $ticket->patient->prenom ?? '' }}</p>
+<p><strong>Date :</strong> {{ \Carbon\Carbon::parse($ticket->created_at)->format('d/m/Y H:i') }}</p>
 
-    {{-- 🔹 Deuxième ticket A5 (identique) --}}
-    <div class="ticket">
-        @include('application.ticket.partials.ticket_content', ['ticket' => $ticket])
-    </div>
+<table>
+    <thead>
+    <tr>
+        <th>Prestation</th>
+        <th>Quantité</th>
+        <th>Prix (F CFA)</th>
+        <th>Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach($ticket->items as $item)
+        <tr>
+            <td>{{ $item->service ?? '-' }}</td>
+            <td>{{ $item->quantite }}</td>
+            <td>{{ number_format($item->prix_unitaire, 0, ',', ' ') }}</td>
+            <td>{{ number_format($item->sous_total, 0, ',', ' ') }}</td>
+        </tr>
+    @endforeach
+    </tbody>
+</table>
+
+<div class="footer">
+    <strong>Total : {{ number_format($ticket->total, 0, ',', ' ') }} F CFA</strong><br>
+    <small>Validité : {{ \Carbon\Carbon::parse($ticket->date_validite)->format('d/m/Y') }}</small>
 </div>
-</body>
-</html>

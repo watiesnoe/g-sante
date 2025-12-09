@@ -13,16 +13,23 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
+
+            // Patient concerné
             $table->foreignId('patient_id')->constrained()->onDelete('cascade');
+
+            // 👇 Nouvel utilisateur qui crée/enregistre le ticket
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+
             $table->text('description')->nullable();
             $table->integer('total')->default(0);
 
             // Nouveaux champs
-            $table->date('date_validite')->nullable(); // date limite d'utilisation
+            $table->date('date_validite')->nullable();
             $table->enum('statut', ['en_attente','valide', 'expire'])->default('en_attente');
 
             $table->timestamps();
         });
+
 
 //        Schema::create('consultations', function (Blueprint $table) {
 //            $table->id();

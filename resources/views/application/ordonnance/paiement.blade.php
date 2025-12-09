@@ -6,7 +6,7 @@
     <div class="container mt-4">
         <h2 class="mb-4">💳 Paiement de l'Ordonnance #{{ $ordonnance->id }}</h2>
 
-        <form id="paiementForme" method="post" action="{{route('ordonnances.payer', $ordonnance->id)}}">
+        <form id="paiementForm" method="post" >
             @csrf
             <table class="table table-bordered">
                 <thead class="table-dark">

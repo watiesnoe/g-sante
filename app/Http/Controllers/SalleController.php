@@ -48,12 +48,21 @@ class SalleController extends Controller
     }
     public function litsLibres($salleId)
     {
-        $salle = Salle::findOrFail($salleId);
+        try {
+            $salle = Salle::findOrFail($salleId);
 
-        // Récupérer les lits libres uniquement
-        $litsLibres = $salle->lits()->where('statut', 'libre')->get(['id', 'numero']);
+            // Récupérer uniquement les lits libres avec plus d'informations
+            $litsLibres = $salle->lits()
+                ->where('statut', 'libre')
+                ->get(['id', 'numero', 'statut', 'created_at']);
 
-        return response()->json($litsLibres);
+            return response()->json($litsLibres);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors du chargement des lits'
+            ], 500);
+        }
     }
     /**
      * Enregistrer une nouvelle salle

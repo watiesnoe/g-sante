@@ -2,53 +2,95 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',       // client/admin
+        'role',
         'prenom',
         'nom',
         'telephone',
         'adresse',
+        'service_medical_id',
+        'statut', // Ajout du statut
+        'photo',  // Ajout de la photo
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Scope pour les utilisateurs actifs
+     */
+    public function scopeActif($query)
+    {
+        return $query->where('statut', 'actif');
+    }
+
+    /**
+     * Scope pour les utilisateurs inactifs
+     */
+    public function scopeInactif($query)
+    {
+        return $query->where('statut', 'inactif');
+    }
+
+    /**
+     * Scope pour un rôle spécifique
+     */
+    public function scopeOfRole($query, $role)
+    {
+        return $query->where('role', $role);
+    }
+
+    /**
+     * Vérifie si l'utilisateur est actif
+     */
+    public function isActif()
+    {
+        return $this->statut === 'actif';
+    }
+
+    /**
+     * Vérifie si l'utilisateur est inactif
+     */
+    public function isInactif()
+    {
+        return $this->statut === 'inactif';
+    }
+
+    /**
+     * Vérifie si l'utilisateur est suspendu
+     */
+    public function isSuspendu()
+    {
+        return $this->statut === 'suspendu';
+    }
+
+    public function hasRole($roles)
+    {
+        if (is_array($roles)) {
+            return in_array($this->role, $roles);
+        }
+        return $this->role === $roles;
     }
 
     public function service()
@@ -63,16 +105,24 @@ class User extends Authenticatable
 
     public function prestations()
     {
-        // récupère toutes les prestations des services auxquels l'utilisateur appartient
         return $this->hasManyThrough(
             Prestation::class,
             ServiceMedical::class,
-            'id',                // clé primaire ServiceMedical
-            'service_medical_id',// clé étrangère Prestation
-            'id',                // clé primaire User inutile ici car relation pivot
+            'id',
+            'service_medical_id',
+            'id',
             'id'
         );
     }
 
-
+    /**
+     * Get the user's photo URL
+     */
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            return Storage::url($this->photo);
+        }
+        return asset('assets/media/avatars/avatar0.jpg');
+    }
 }

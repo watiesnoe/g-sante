@@ -15,8 +15,8 @@ class Consultation extends Model {
     public function patient() {
         return $this->belongsTo(Patient::class);
     }
-    public function ticket()
-    {
+
+    public function ticket() {
         return $this->belongsTo(Ticket::class);
     }
 
@@ -24,8 +24,9 @@ class Consultation extends Model {
         return $this->belongsTo(User::class, 'medecin_id');
     }
 
-    public function ordonnance() {
-        return $this->hasOne(Ordonnance::class);
+    // ✅ RELATION AU PLURIEL
+    public function ordonnances() {
+        return $this->hasMany(Ordonnance::class);
     }
 
     public function examens() {
@@ -33,7 +34,7 @@ class Consultation extends Model {
     }
 
     public function rendezVous() {
-        return $this->hasMany(Rendezvous::class);
+        return $this->hasMany(RendezVous::class);
     }
 
     public function certificat() {
@@ -44,7 +45,6 @@ class Consultation extends Model {
         return $this->hasOne(Hospitalisation::class);
     }
 
-    // ✅ RELATIONS MANY TO MANY
     public function symptomes() {
         return $this->belongsToMany(Symptome::class, 'consultation_symptome', 'consultation_id', 'symptome_id');
     }
@@ -53,8 +53,7 @@ class Consultation extends Model {
         return $this->belongsToMany(Maladie::class, 'consultation_maladie', 'consultation_id', 'maladie_id');
     }
 
-    public function paiements()
-    {
+    public function paiements() {
         return $this->hasMany(OrdonnancePaiement::class);
     }
 }

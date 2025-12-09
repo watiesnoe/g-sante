@@ -1,103 +1,135 @@
 @extends('layouts.app')
 
-@section('titre')
-    ⚙️ Configuration - Système de Santé
-@endsection
+@section('titre', 'Détail Consultation')
 
 @section('content')
-    <div class="content">
-        <div class="row">
-            <!-- Sidebar gauche -->
-            <div class="col-xl-3 col-lg-4">
-                <div class="block block-rounded h-100 mb-0">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Menu</h3>
-                    </div>
-                    <div class="block-content">
-                        <ul class="nav nav-pills flex-column push">
-                            <li class="nav-item mb-1">
-                                <a class="nav-link active" href="#">
-                                    <i class="fa fa-hospital me-1"></i> Structure
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-stethoscope me-1"></i> Services médicaux
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users me-1"></i> Utilisateurs
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-door-open me-1"></i> Salles
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-bed me-1"></i> Lits
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-vials me-1"></i> Examens
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-layer-group me-1"></i> Unités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users-cog me-1"></i> Famille
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-user-md me-1"></i> Spécialités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-id-card me-1"></i> Sécurité sociale
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">Détail Consultation #{{ $consultation->id }}</h2>
 
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8">
-                <div class="block block-rounded">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Configuration - Structure</h3>
-                    </div>
-                    <div class="block-content">
-                        <form action="" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label">Nom de la structure</label>
-                                <input type="text" class="form-control" placeholder="Ex: Centre de Santé Municipal">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Adresse</label>
-                                <input type="text" class="form-control" placeholder="Adresse complète">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Téléphone</label>
-                                <input type="text" class="form-control" placeholder="+223 70 00 00 00">
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-save me-1"></i> Sauvegarder
-                            </button>
-                        </form>
-                    </div>
-                </div>
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white">Patient</div>
+            <div class="card-body">
+                <p><strong>Nom :</strong> {{ $consultation->patient->nom }} {{ $consultation->patient->prenom }}</p>
+                <p><strong>Téléphone :</strong> {{ $consultation->patient->telephone }}</p>
+                <p><strong>Adresse :</strong> {{ $consultation->adresse_patient }}</p>
+                <p><strong>Ticket :</strong> {{ $consultation->ticket_id }}</p>
             </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">Consultation</div>
+            <div class="card-body">
+                <p><strong>Médecin :</strong> {{ $consultation->medecin->name }}</p>
+                <p><strong>Date :</strong> {{ $consultation->date_consultation ?? now()->format('d/m/Y') }}</p>
+                <p><strong>Motif :</strong> {{ $consultation->motif }}</p>
+                <p><strong>Diagnostic :</strong> {{ $consultation->diagnostic }}</p>
+                <p><strong>Notes / Antécédents :</strong> {{ $consultation->notes }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">Constantes</div>
+            <div class="card-body">
+                <p><strong>Poids :</strong> {{ $consultation->poids }} kg</p>
+                <p><strong>Taille :</strong> {{ $consultation->taille }} cm</p>
+                <p><strong>IMC :</strong> {{ $consultation->taille > 0 ? number_format($consultation->poids/(($consultation->taille/100)**2),2) : '-' }}</p>
+                <p><strong>Tension :</strong> {{ $consultation->tension }}</p>
+                <p><strong>Groupe sanguin :</strong> {{ $consultation->groupe_sanguin }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">Symptômes & Maladies</div>
+            <div class="card-body">
+                <p><strong>Symptômes :</strong></p>
+                <ul>
+                    @foreach($consultation->symptomes as $symptome)
+                        <li>{{ $symptome->nom }}</li>
+                    @endforeach
+                </ul>
+
+                <p><strong>Maladies :</strong></p>
+                <ul>
+                    @foreach($consultation->maladies as $maladie)
+                        <li>{{ $maladie->nom }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">Ordonnances / Médicaments</div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Médicament</th>
+                        <th>Posologie</th>
+                        <th>Durée (jours)</th>
+                        <th>Quantité</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($consultation->ordonnances as $ordonnance)
+                        @foreach($ordonnance->medicaments as $med)
+                            <tr>
+                                <td>{{ $med->nom }}</td>
+                                <td>{{ $med->pivot->posologie }}</td>
+                                <td>{{ $med->pivot->duree_jours }}</td>
+                                <td>{{ $med->pivot->quantite }}</td>
+                            </tr>
+                        @endforeach
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">Examens</div>
+            <div class="card-body">
+                <ul>
+                    @foreach($consultation->examens as $ex)
+                        <li>{{ $ex->examen }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white">Rendez-vous</div>
+            <div class="card-body">
+                <ul>
+                    @foreach($consultation->rendezVous as $r)
+                        <li>{{ \Carbon\Carbon::parse($r->date_heure)->format('d/m/Y H:i') }} - {{ $r->motif }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">Certificat</div>
+            <div class="card-body">
+                <p>{{ $consultation->certificat->contenu ?? '-' }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">Hospitalisation</div>
+            <div class="card-body">
+                @if($consultation->hospitalisation)
+                    <p>Date entrée : {{ $consultation->hospitalisation->date_entree }}</p>
+                    <p>Salle : {{ $consultation->hospitalisation->salles_id }}</p>
+                    <p>Lit : {{ $consultation->hospitalisation->lit_id }}</p>
+                    <p>Observations : {{ $consultation->hospitalisation->observations }}</p>
+                @else
+                    <p>Aucune hospitalisation</p>
+                @endif
+            </div>
+        </div>
+
+        <div class="text-center mb-5">
+            <button onclick="window.print()" class="btn btn-primary">🖨 Imprimer</button>
         </div>
     </div>
 @endsection

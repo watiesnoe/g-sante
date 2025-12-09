@@ -13,7 +13,6 @@ return new class extends Migration
             $table->foreignId('fournisseur_id')->nullable()->constrained()->onDelete('set null');
             $table->string('reference_reception')->unique();
             $table->date('date_reception');
-            $table->enum('statut', ['en_cours', 'partielle', 'terminee'])->default('en_cours');
             $table->text('observations')->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();

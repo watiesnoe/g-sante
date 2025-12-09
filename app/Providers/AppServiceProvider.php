@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Commande;
+use App\Observers\CommandeObserver;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Consultation;
 use App\Observers\ConsultationObserver;
@@ -22,5 +24,6 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         Consultation::observe(ConsultationObserver::class);
+        Commande::observe(CommandeObserver::class);
     }
 }
