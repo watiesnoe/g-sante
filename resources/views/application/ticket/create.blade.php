@@ -554,14 +554,14 @@
                 });
             });
 
-// Fonction utilitaire pour afficher les erreurs de champ
+            // Fonction utilitaire pour afficher les erreurs de champ
             function showFieldError(fieldId, message) {
                 $(`#${fieldId}`).addClass('is-invalid');
                 Swal.showValidationMessage(`<i class="fa fa-exclamation-circle me-2"></i>${message}`);
                 setTimeout(() => $(`#${fieldId}`).focus(), 100);
             }
 
-// Fonction utilitaire pour afficher les erreurs de champ
+                // Fonction utilitaire pour afficher les erreurs de champ
             function showFieldError(fieldId, message) {
                 $(`#${fieldId}`).addClass('is-invalid');
                 Swal.showValidationMessage(`<i class="fa fa-exclamation-circle me-2"></i>${message}`);
