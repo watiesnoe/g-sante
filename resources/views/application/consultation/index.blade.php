@@ -13,7 +13,7 @@
                 <table class="table table-bordered" id="consultations-table">
                     <thead class="table-light">
                     <tr>
-                        <th>#</th>
+
                         <th>Patient</th>
                         <th>Médecin</th>
                         <th>Ticket</th>
@@ -36,7 +36,7 @@
                 serverSide: true,
                 ajax: "{{ route('consultations.index') }}",
                 columns: [
-                    { data: 'id', name: 'id' },
+
                     { data: 'patient', name: 'patient' },
                     { data: 'medecin', name: 'medecin' },
                     { data: 'ticket', name: 'ticket' },

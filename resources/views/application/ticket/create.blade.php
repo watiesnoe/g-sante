@@ -287,7 +287,7 @@
                 Swal.fire({
                     title: '<i class="fa fa-user-plus me-2"></i>Nouveau Patient',
                     html: `
-            <div class="row g-3">
+                      <div class="row g-3">
                 <!-- Section Informations Personnelles -->
                 <div class="col-12">
                     <h6 class="text-primary mb-3 border-bottom pb-2">
@@ -378,20 +378,20 @@
                     <div class="form-text mt-1">
                         <input type="text" class="form-control form-control-sm d-none mt-2"
                                id="np_ethnie_autre" placeholder="Préciser l'ethnie">
+                        </div>
                     </div>
-                </div>
-            </div>
+                        </div>
 
-            <div class="mt-4 pt-3 border-top">
-                <div class="alert alert-info py-2 mb-0">
-                    <i class="fa fa-info-circle me-2"></i>
-                    <small>
-                        <span class="text-danger">*</span> Champs obligatoires.
-                        Les informations seront modifiables ultérieurement.
-                    </small>
-                </div>
-            </div>
-        `,
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="alert alert-info py-2 mb-0">
+                                <i class="fa fa-info-circle me-2"></i>
+                                <small>
+                                    <span class="text-danger">*</span> Champs obligatoires.
+                                    Les informations seront modifiables ultérieurement.
+                                </small>
+                            </div>
+                        </div>
+                    `,
                     width: '700px',
                     focusConfirm: false,
                     showCancelButton: true,
