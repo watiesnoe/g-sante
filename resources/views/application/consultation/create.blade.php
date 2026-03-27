@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold small text-secondary">Groupe sanguin</label>
-                                    <select name="groupe_sanguin" class="form-select form-select-sm bg-light">
+                                    <select name="groupe_sanguin" class="form-select js-select2 form-select-sm bg-light">
                                         <option value="">-- Sélectionner --</option>
                                         @foreach(['A+','A-','B+','B-','AB+','AB-','O+','O-'] as $gs)
                                             <option value="{{ $gs }}" @if($consultation && $consultation->groupe_sanguin == $gs) selected @endif>{{ $gs }}</option>
@@ -126,7 +126,7 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold small text-secondary">Symptômes</label>
-                                    <select id="symptomes" class="form-select form-select-sm bg-light" name="symptomes[]" multiple size="3">
+                                    <select id="symptomes" class="form-select  js-select2 form-select-sm bg-light" name="symptomes[]" multiple size="3">
                                         @foreach($symptomes as $symptome)
                                             <option value="{{ $symptome->id }}"
                                                     @if($consultation && $consultation->symptomes->contains($symptome->id)) selected @endif>
@@ -138,7 +138,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold small text-secondary">Maladie / Pathologie</label>
-                                    <select name="maladie_id" id="maladieSelect" class="form-select form-select-sm bg-light" required>
+                                    <select name="maladie_id" id="maladieSelect" class="form-select js-select2 form-select-sm bg-light" required>
                                         <option value="">-- Sélectionner la maladie --</option>
                                         @foreach($maladies as $maladie)
                                             <option value="{{ $maladie->id }}"
@@ -194,7 +194,7 @@
                                                         @foreach($ordonnance->medicaments as $medicament)
                                                             <tr>
                                                                 <td>
-                                                                    <select name="medicaments[]" class="form-select form-select-sm selectMedicament" required>
+                                                                    <select name="medicaments[]" class="form-select  js-select2 form-select-sm selectMedicament" required>
                                                                         <option value="">-- Sélectionner --</option>
                                                                         @foreach($medicaments as $med)
                                                                             <option value="{{ $med->id }}" @if($med->id == $medicament->id) selected @endif>{{ $med->nom }}</option>
@@ -301,7 +301,7 @@
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label small text-secondary">Salle</label>
-                                            <select id="salleSelect" name="salle_id" class="form-select form-select-sm">
+                                            <select id="salleSelect" name="salle_id" class="form-select form-select-sm js-select2">
                                                 <option value="">-- Sélectionner --</option>
                                                 @foreach($salles as $salle)
                                                     <option value="{{ $salle->id }}" @if($consultation && $consultation->hospitalisation && $consultation->hospitalisation->salles_id == $salle->id) selected @endif>{{ $salle->nom }} ({{ $salle->type }})</option>
@@ -386,13 +386,14 @@
 
             $('#btnAjouterMedicament').click(function(){
                 $('#emptyOrdonnanceRow').remove();
+
                 let row = `<tr>
-                    <td>
-                        <select name="medicaments[]" class="form-select form-select-sm selectMedicament" required>
-                            <option value="">-- Sélectionner --</option>
-                            @foreach($medicaments as $med)
+        <td>
+            <select name="medicaments[]" class="form-select js-select2 form-select-sm selectMedicament" required>
+                <option value="">-- Sélectionner --</option>
+                @foreach($medicaments as $med)
                 <option value="{{ $med->id }}">{{ $med->nom }}</option>
-                            @endforeach
+                @endforeach
                 </select>
             </td>
             <td><input type="text" name="posologies[]" class="form-control form-control-sm" placeholder="Ex: 2x/jour" required></td>
@@ -400,7 +401,17 @@
             <td><input type="number" name="quantites[]" class="form-control form-control-sm" min="1" placeholder="Qté"></td>
             <td><button type="button" class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i class="fas fa-trash-alt"></i></button></td>
         </tr>`;
-                $('#ordonnanceTable tbody').append(row);
+
+                let newRow = $(row);
+                $('#ordonnanceTable tbody').append(newRow);
+
+                // 🔥 IMPORTANT : initialiser Select2 sur le nouveau select
+                newRow.find('.js-select2').select2({
+                    width: '100%',
+                    placeholder: "-- Sélectionner un médicament --",
+                    allowClear: true
+                });
+
                 updateMedicamentOptions();
             });
 
