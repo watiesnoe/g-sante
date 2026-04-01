@@ -283,277 +283,253 @@
                     }
                 });
             });
-            $("#btnNouveauPatient").on("click", function(){
+        // Formulaire Nouveau Patient - Version Simplifiée
+        // Version finale: Modal style carte avec boutons clairs
+            $("#btnNouveauPatient").on("click", function() {
                 Swal.fire({
-                    title: '<i class="fa fa-user-plus me-2"></i>Nouveau Patient',
+                    title: false,
                     html: `
-                      <div class="row g-3">
-                <!-- Section Informations Personnelles -->
-                <div class="col-12">
-                    <h6 class="text-primary mb-3 border-bottom pb-2">
-                        <i class="fa fa-id-card me-2"></i>Informations Personnelles
-                    </h6>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label" for="np_nom">
-                        <i class="fa fa-font me-1 text-muted"></i>Nom <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" class="form-control" id="np_nom" name="np_nom"
-                           placeholder="Ex: DUPONT" required
-                           data-bs-toggle="tooltip" title="Saisissez le nom en majuscules">
-                    <div class="form-text text-end"><span id="nom-counter">0</span>/50 caractères</div>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label" for="np_prenom">
-                        <i class="fa fa-user me-1 text-muted"></i>Prénom <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" class="form-control" id="np_prenom" name="np_prenom"
-                           placeholder="Ex: Jean" required>
-                    <div class="form-text text-end"><span id="prenom-counter">0</span>/50 caractères</div>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label" for="np_genre">
-                        <i class="fa fa-venus-mars me-1 text-muted"></i>Genre <span class="text-danger">*</span>
-                    </label>
-                    <select class="form-select" id="np_genre" name="np_genre" required>
-                        <option value="">-- Choisir le genre --</option>
-                        <option value="M">👨 Masculin</option>
-                        <option value="F">👩 Féminin</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label" for="np_age">
-                        <i class="fa fa-calendar-alt me-1 text-muted"></i>Âge
-                    </label>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="np_age" name="np_age"
-                               placeholder="Ex: 35" min="0" max="150"
-                               data-bs-toggle="tooltip" title="Âge entre 0 et 150 ans">
-                        <span class="input-group-text bg-light">ans</span>
-                    </div>
-                </div>
-
-                <!-- Section Contact et Démographie -->
-                <div class="col-12 mt-4">
-                    <h6 class="text-primary mb-3 border-bottom pb-2">
-                        <i class="fa fa-address-book me-2"></i>Contact et Démographie
-                    </h6>
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label" for="np_tel">
-                        <i class="fa fa-phone me-1 text-muted"></i>Téléphone
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light">
-                            <i class="fa fa-phone text-muted"></i>
-                        </span>
-                        <input type="tel" class="form-control" id="np_tel" name="np_tel"
-                               placeholder="Ex: 07 12 34 56 78"
-                               pattern="[0-9]{10}"
-                               data-bs-toggle="tooltip"
-                               title="Format : 10 chiffres sans espace">
-                    </div>
-                    <div class="form-text">Format : 10 chiffres (ex: 0712345678)</div>
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label" for="np_ethnie">
-                        <i class="fa fa-globe-africa me-1 text-muted"></i>Ethnie
-                    </label>
-                    <select class="form-select" id="np_ethnie" name="np_ethnie">
-                        <option value="">-- Choisir une ethnie --</option>
-                        <option value="Bambara">Bambara</option>
-                        <option value="Peul">Peul</option>
-                        <option value="Sénoufo">Sénoufo</option>
-                        <option value="Malinké">Malinké</option>
-                        <option value="Soninké">Soninké</option>
-                        <option value="Dogon">Dogon</option>
-                        <option value="Autre">Autre</option>
-                    </select>
-                    <div class="form-text mt-1">
-                        <input type="text" class="form-control form-control-sm d-none mt-2"
-                               id="np_ethnie_autre" placeholder="Préciser l'ethnie">
-                        </div>
-                    </div>
-                        </div>
-
-                        <div class="mt-4 pt-3 border-top">
-                            <div class="alert alert-info py-2 mb-0">
-                                <i class="fa fa-info-circle me-2"></i>
-                                <small>
-                                    <span class="text-danger">*</span> Champs obligatoires.
-                                    Les informations seront modifiables ultérieurement.
-                                </small>
+                        <div class="text-start">
+                            <div class="text-center mb-4">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-block">
+                                    <i class="fa fa-user-plus fa-2x text-primary"></i>
+                                </div>
+                                <h4 class="mt-2 mb-0">Nouveau Patient</h4>
+                                <small class="text-muted">Remplissez les informations ci-dessous</small>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fa fa-font me-1"></i>Nom <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="nom" placeholder="DUPONT">
+                                    <small class="text-muted"><span id="nomCount">0</span>/50</small>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fa fa-user me-1"></i>Prénom <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="prenom" placeholder="Jean">
+                                    <small class="text-muted"><span id="prenomCount">0</span>/50</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Genre <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="genre">
+                                        <option value="">Sélectionner</option>
+                                        <option value="M">👨 Masculin</option>
+                                        <option value="F">👩 Féminin</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Âge</label>
+                                    <input type="number" class="form-control" id="age" placeholder="Âge" min="0" max="150">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa fa-phone me-1"></i>Téléphone
+                                </label>
+                                <input type="tel" class="form-control" id="telephone" placeholder="07 12 34 56">
+                                <small class="text-muted">8 chiffres</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Ethnie</label>
+                                <select class="form-select" id="ethnie">
+                                    <option value="">Choisir</option>
+                                    <option value="Bambara">Bambara</option>
+                                    <option value="Peulh">Peulh</option>
+                                    <option value="Malinké">Malinké</option>
+                                    <option value="Sénoufo">Sénoufo</option>
+                                    <option value="Dogon">Dogon</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                                <input type="text" class="form-control mt-2 d-none" id="ethnieAutre" placeholder="Précisez l'ethnie">
+                            </div>
+                            
+                            <div class="alert alert-info mt-3 py-2 mb-0">
+                                <i class="fa fa-info-circle me-1"></i>
+                                <small>Les champs avec <span class="text-danger">*</span> sont obligatoires</small>
                             </div>
                         </div>
                     `,
-                    width: '700px',
-                    focusConfirm: false,
+                    width: '600px',
                     showCancelButton: true,
-                    confirmButtonText: '<i class="fa fa-save me-1"></i>Enregistrer le patient',
-                    cancelButtonText: '<i class="fa fa-times me-1"></i>Annuler',
+                    showConfirmButton: true,
+                    confirmButtonText: '<i class="fa fa-save me-2"></i>Enregistrer',
+                    cancelButtonText: '<i class="fa fa-times me-2"></i>Annuler',
                     confirmButtonColor: '#1bc5bd',
-                    cancelButtonColor: '#d33',
-                    customClass: {
-                        popup: 'swal2-dashmix swal2-enhanced',
-                        confirmButton: 'btn btn-success px-4',
-                        cancelButton: 'btn btn-danger px-4'
-                    },
+                    cancelButtonColor: '#dc3545',
+                    reverseButtons: false,
                     buttonsStyling: false,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg',
+                        confirmButton: 'btn btn-success px-4 py-2 fw-semibold',
+                        cancelButton: 'btn btn-danger px-4 py-2 fw-semibold',
+                        actions: 'd-flex justify-content-end gap-2'
+                    },
                     showLoaderOnConfirm: true,
                     allowOutsideClick: () => !Swal.isLoading(),
                     preConfirm: () => {
-                        // Validation améliorée
-                        const nom = $("#np_nom").val().trim();
-                        const prenom = $("#np_prenom").val().trim();
-                        const genre = $("#np_genre").val();
-                        const tel = $("#np_tel").val().trim();
-                        let ethnie = $("#np_ethnie").val();
-
-                        // Validation des champs obligatoires
+                        // Récupération des données
+                        const nom = $('#nom').val().trim();
+                        const prenom = $('#prenom').val().trim();
+                        const genre = $('#genre').val();
+                        const telephone = $('#telephone').val().replace(/\s/g, '');
+                        let ethnie = $('#ethnie').val();
+                        
+                        // Validation
                         if (!nom) {
-                            showFieldError('np_nom', 'Le nom est obligatoire');
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Le nom est requis');
                             return false;
                         }
                         if (nom.length > 50) {
-                            showFieldError('np_nom', 'Le nom ne doit pas dépasser 50 caractères');
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Nom trop long (max 50)');
                             return false;
                         }
-
+                        
                         if (!prenom) {
-                            showFieldError('np_prenom', 'Le prénom est obligatoire');
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Le prénom est requis');
                             return false;
                         }
                         if (prenom.length > 50) {
-                            showFieldError('np_prenom', 'Le prénom ne doit pas dépasser 50 caractères');
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Prénom trop long (max 50)');
                             return false;
                         }
-
+                        
                         if (!genre) {
-                            showFieldError('np_genre', 'Le genre est obligatoire');
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Le genre est requis');
                             return false;
                         }
-
-                        // Validation téléphone
-                        if (tel && !/^[0-9]{10}$/.test(tel.replace(/\s/g, ''))) {
-                            showFieldError('np_tel', 'Le numéro doit contenir 10 chiffres');
+                        
+                        if (telephone && !/^\d{8}$/.test(telephone)) {
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Le téléphone doit contenir 8 chiffres');
                             return false;
                         }
-
-                        // Gestion ethnie "Autre"
+                        
                         if (ethnie === 'Autre') {
-                            const autreEthnie = $("#np_ethnie_autre").val().trim();
-                            if (!autreEthnie) {
-                                showFieldError('np_ethnie_autre', 'Veuillez préciser l\'ethnie');
+                            ethnie = $('#ethnieAutre').val().trim();
+                            if (!ethnie) {
+                                Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Veuillez préciser l\'ethnie');
                                 return false;
                             }
-                            ethnie = autreEthnie;
                         }
-
-                        // Préparation des données
-                        const data = {
+                        
+                        // Envoi
+                        return $.post("{{ route('patients.store') }}", {
                             nom: nom.toUpperCase(),
                             prenom: prenom,
                             genre: genre,
-                            telephone: tel.replace(/\s/g, ''),
-                            ethnie: ethnie,
-                            age: $("#np_age").val() || null,
-                            _token: "{{ csrf_token() }}"
-                        };
-
-                        return $.post("{{ route('patients.store') }}", data)
-                            .done(function(response){
-                                if(response.success){
-                                    let p = response.patient;
-                                    let text = `${p.nom} ${p.prenom}${p.telephone ? ' - ' + p.telephone : ''}`;
-
-                                    // Ajouter au select
-                                    $("#patient").append(new Option(text, p.id, true, true));
-                                    $("#patient").trigger('change');
-
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: '<i class="fa fa-check-circle me-2"></i>Patient créé !',
-                                        html: `
-                                <div class="text-start">
-                                    <p class="mb-2"><strong>${p.nom} ${p.prenom}</strong> a été ajouté avec succès.</p>
-                                    <small class="text-muted">ID Patient: ${p.id}</small>
-                                </div>
-                            `,
-                                        timer: 3000,
-                                        showConfirmButton: false,
-                                        customClass: { popup: 'swal2-dashmix' }
-                                    });
-                                }
-                            })
-                            .fail(function(xhr){
-                                let errorMessage = 'Erreur lors de l\'enregistrement';
-                                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                                    const errors = Object.values(xhr.responseJSON.errors).flat();
-                                    errorMessage = errors.join('<br>');
-                                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                                    errorMessage = xhr.responseJSON.message;
-                                }
-                                Swal.showValidationMessage(`<i class="fa fa-exclamation-triangle me-2"></i>${errorMessage}`);
-                            });
+                            telephone: telephone,
+                            ethnie: ethnie || null,
+                            age: $('#age').val() || null,
+                            _token: $('meta[name="csrf-token"]').attr('content') || "{{ csrf_token() }}"
+                        });
                     },
                     didOpen: () => {
-                        // Initialisation
-                        setTimeout(() => $("#np_nom").focus(), 300);
-
-                        // Styles améliorés
-                        $('.swal2-enhanced .form-control, .swal2-enhanced .form-select').addClass('form-control-alt');
-
+                        // Focus sur le nom
+                        $('#nom').focus();
+                        
                         // Compteurs de caractères
-                        $('#np_nom, #np_prenom').on('input', function() {
+                        $('#nom').on('input', function() {
                             const count = $(this).val().length;
-                            const counterId = $(this).attr('id') + '-counter';
-                            $('#' + counterId).text(count);
+                            $('#nomCount').text(count);
                             if (count > 50) {
-                                $('#' + counterId).addClass('text-danger');
+                                $('#nomCount').addClass('text-danger fw-bold');
                             } else {
-                                $('#' + counterId).removeClass('text-danger');
+                                $('#nomCount').removeClass('text-danger fw-bold');
                             }
                         });
-
-                        // Gestion ethnie "Autre"
-                        $('#np_ethnie').on('change', function() {
-                            const autreField = $('#np_ethnie_autre');
+                        
+                        $('#prenom').on('input', function() {
+                            const count = $(this).val().length;
+                            $('#prenomCount').text(count);
+                            if (count > 50) {
+                                $('#prenomCount').addClass('text-danger fw-bold');
+                            } else {
+                                $('#prenomCount').removeClass('text-danger fw-bold');
+                            }
+                        });
+                        
+                        // Ethnie "Autre"
+                        $('#ethnie').on('change', function() {
+                            const autreField = $('#ethnieAutre');
                             if ($(this).val() === 'Autre') {
-                                autreField.removeClass('d-none').prop('required', true);
-                                setTimeout(() => autreField.focus(), 100);
+                                autreField.removeClass('d-none').focus();
                             } else {
-                                autreField.addClass('d-none').prop('required', false);
+                                autreField.addClass('d-none').val('');
                             }
                         });
-
+                        
                         // Formatage téléphone
-                        $('#np_tel').on('input', function() {
+                        $('#telephone').on('input', function() {
                             let value = $(this).val().replace(/\D/g, '');
-                            if (value.length > 0) {
+                            if (value.length >= 2) {
                                 value = value.match(/.{1,2}/g).join(' ');
                             }
                             $(this).val(value.substring(0, 14));
                         });
-
-                        // Initialisation des tooltips Bootstrap
-                        $('[data-bs-toggle="tooltip"]').tooltip({
-                            trigger: 'hover focus',
-                            placement: 'top'
+                        
+                        // Style des boutons
+                        $('.swal2-confirm').css({
+                            'background-color': '#1bc5bd',
+                            'border': 'none',
+                            'border-radius': '8px',
+                            'font-weight': '500'
                         });
-                    },
-                    willClose: () => {
-                        // Nettoyage des tooltips
-                        $('[data-bs-toggle="tooltip"]').tooltip('dispose');
+                        
+                        $('.swal2-cancel').css({
+                            'background-color': '#dc3545',
+                            'border': 'none',
+                            'border-radius': '8px',
+                            'font-weight': '500'
+                        });
+                    }
+                }).then(result => {
+                    if (result.isConfirmed && result.value?.success) {
+                        const p = result.value.patient;
+                        
+                        // Ajout au select
+                        const displayText = `${p.nom} ${p.prenom}${p.telephone ? ' - ' + p.telephone : ''}`;
+                        const option = new Option(displayText, p.id, true, true);
+                        $('#patient').append(option).trigger('change');
+                        
+                        // Notification de succès
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Patient créé avec succès !',
+                            html: `
+                                <div class="text-center py-3">
+                                    <div class="mb-3">
+                                        <i class="fa fa-check-circle fa-4x text-success"></i>
+                                    </div>
+                                    <h5 class="mb-2 fw-bold">${p.nom} ${p.prenom}</h5>
+                                    <div class="d-flex justify-content-center gap-3 text-muted small">
+                                        ${p.telephone ? `<span><i class="fa fa-phone"></i> ${p.telephone}</span>` : ''}
+                                        <span><i class="fa fa-id-card"></i> ID: ${p.id}</span>
+                                    </div>
+                                </div>
+                            `,
+                            timer: 3000,
+                            showConfirmButton: true,
+                            confirmButtonText: '<i class="fa fa-check me-1"></i> OK',
+                            confirmButtonColor: '#1bc5bd',
+                            customClass: {
+                                popup: 'rounded-4',
+                                confirmButton: 'btn px-4'
+                            }
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        // Optionnel: message d'annulation
+                        console.log('Création annulée');
                     }
                 });
             });
-
             // Fonction utilitaire pour afficher les erreurs de champ
             function showFieldError(fieldId, message) {
                 $(`#${fieldId}`).addClass('is-invalid');

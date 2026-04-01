@@ -61,7 +61,7 @@ class ConsultationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Patient $patient)
+    public function create(Consultation $consultation)
     {
         $today = Carbon::today();
         $tickets = Ticket::with(['patient', 'items'])
@@ -120,10 +120,22 @@ class ConsultationController extends Controller
           $request->validate([
                  'patient_id'   => 'required|exists:patients,id',
                  'medecin_id'   => 'required|exists:users,id',
+                 'poids'        => 'nullable|numeric',
+                 'taille'       => 'nullable|numeric',
+                 'temperature'  => 'nullable|numeric',
+                 'tension'      => 'nullable|string',
+                 'motif'        => 'nullable|string',
+                 'antecedents'  => 'nullable|string',
+                 'symptomes'    => 'nullable|array',
+                 'maladie_id'   => 'nullable|exists:maladies,id',
+                 'imc'          => 'nullable|numeric',
+                 'groupe_sanguin' => 'nullable|string',
+                 'adresse_patient' => 'nullable|string',
                  'diagnostic'   => 'required|string',
                  'ticket_id'    => 'nullable|exists:tickets,id',
                  'quantites'    => 'array',
              ]);
+       
 
              // 🔹 Création de la consultation
              $consultation = Consultation::create([
@@ -132,11 +144,15 @@ class ConsultationController extends Controller
                  'medecin_id'       => $request->medecin_id,
                  'date_consultation'=> now(),
                  'motif'            => $request->motif,
+                 'taille'           => $request->taille,
                  'diagnostic'       => $request->diagnostic,
                  'notes'            => $request->antecedents,
                  'poids'            => $request->poids,
                  'temperature'      => $request->temperature,
                  'tension'          => $request->tension,
+                 'imc'              => $request->imc,
+                 'groupe_sanguin'   => $request->groupe_sanguin,
+                 'adresse_patient'  => $request->adresse_patient,
              ]);
 
              // 🔹 Symptômes liés
@@ -262,34 +278,55 @@ class ConsultationController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Consultation $consultation) {
-        $tickets = Ticket::where('statut', 'en attente')->get();
+    public function edit(Consultation $consultation)
+    {
+        // ✅ Tickets en attente
+        $tickets = Ticket::with('patient')
+            ->where('statut', 'en attente')
+            ->get();
+
+        // ✅ Ajouter le ticket actuel s'il n'existe pas dans la liste
+        if ($consultation->ticket_id) {
+            $ticketActuel = Ticket::with('patient')->find($consultation->ticket_id);
+
+            if ($ticketActuel && !$tickets->contains('id', $ticketActuel->id)) {
+                $tickets->push($ticketActuel);
+            }
+        }
+
         $symptomes = Symptome::all();
         $maladies = Maladie::all();
-        $symptomeMaladieMap = Symptome::with('maladies')->get()->mapWithKeys(function($s){
-            return [$s->id => $s->maladies->pluck('id')->toArray()];
-        });
+
+        $symptomeMaladieMap = Symptome::with('maladies')
+            ->get()
+            ->mapWithKeys(function ($s) {
+                return [$s->id => $s->maladies->pluck('id')->toArray()];
+            });
+
         $medicaments = Medicament::all();
         $salles = Salle::all();
 
-        // ✅ Chargement correct avec 'ordonnances' au pluriel
+        // ✅ Chargement des relations
         $consultation->load([
-            'ordonnances.medicaments',    // Relation au pluriel
+            'ordonnances.medicaments',
             'examens',
             'rendezVous',
             'hospitalisation',
             'symptomes',
             'maladies',
-            'certificat'                  // Ajout de la relation certificat
+            'certificat'
         ]);
 
         return view('application.consultation.create', compact(
-            'tickets','symptomes','maladies','symptomeMaladieMap','medicaments','salles','consultation'
+            'tickets',
+            'symptomes',
+            'maladies',
+            'symptomeMaladieMap',
+            'medicaments',
+            'salles',
+            'consultation'
         ));
     }
-
-
-
     /**
      * Update the specified resource in storage.
      */

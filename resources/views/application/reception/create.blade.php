@@ -16,10 +16,12 @@
                     <select name="commande_id" class="form-select" id="commandeSelect" required>
                         <option value="">-- Sélectionner Commande --</option>
                         @foreach($commandes as $c)
+                        @if($c->statut === 'en_attente')
                             <option value="{{ $c->id }}">
                                 {{ $c->reference }} - {{ $c->fournisseur->nom ?? 'Inconnu' }}
                                 ({{ \Carbon\Carbon::parse($c->date_commande)->format('d/m/Y') }})
                             </option>
+                        @endif
                         @endforeach
                     </select>
                 </div>
@@ -104,7 +106,6 @@
                                 <th>Médicament</th>
                                 <th>Stock</th>
                                 <th>Quantité commandée</th>
-
                                 <th>Quantité restante</th>
                                 <th>Nouvelle quantité reçue</th>
                                 <th>Lot</th>

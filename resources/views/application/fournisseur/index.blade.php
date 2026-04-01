@@ -11,7 +11,7 @@
                 <table class="table table-striped table-hover table-bordered" id="fournisseurs-table">
                     <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
+                    
                         <th>Nom</th>
                         <th>Contact</th>
                         <th>Adresse</th>
@@ -38,7 +38,6 @@
                 },
                 ajax: '{{ route('fournisseurs.index') }}',
                 columns: [
-                    { data: 'id', name: 'id' },
                     { data: 'nom', name: 'nom' },
                     { data: 'contact', name: 'contact' },
                     { data: 'adresse', name: 'adresse' },

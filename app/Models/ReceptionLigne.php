@@ -20,4 +20,9 @@ class ReceptionLigne extends Model
     {
         return $this->belongsTo(Medicament::class);
     }
+
+    public function reception()
+    {
+        return $this->belongsTo(Reception::class);
+    }
 }

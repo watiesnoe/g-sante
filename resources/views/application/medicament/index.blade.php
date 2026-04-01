@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titre','Médicaments')
+@section('titre', 'Médicaments')
 
 
 
@@ -11,19 +11,19 @@
                 <h5 class="mb-0">Liste des Médicaments</h5>
                 <a href="{{ route('medicaments.create') }}" class="btn btn-light btn-sm">➕ Ajouter Médicament</a>
             </div>
-            <div class="card-body">
-                <table class="table table-bordered" id="medicamentsTable">
+            <div class="card-body small">
+                <table class="table table-bordered table-sm" id="medicamentsTable">
                     <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Unité</th>
-                        <th>Famille</th>
-                        <th>Stock</th>
-                        <th>Stock Min</th>
-                        <th>Prix Achat</th>
-                        <th>Prix Vente</th>
-                        <th>Actions</th>
-                    </tr>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Unité</th>
+                            <th>Famille</th>
+                            <th>Stock</th>
+                            <th>Stock Min</th>
+                            <th>Prix Achat</th>
+                            <th>Prix Vente</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                 </table>
             </div>
@@ -39,17 +39,42 @@
             $('#medicamentsTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '{{ route("medicaments.index") }}',
-                columns: [
-                    { data: 'nom', name: 'nom' },
+                ajax: '{{ route('medicaments.index') }}',
+                columns: [{
+                        data: 'nom',
+                        name: 'nom'
+                    },
 
-                    { data: 'unite', name: 'unite' },
-                    { data: 'famille', name: 'famille' },
-                    { data: 'stock', name: 'stock' },
-                    { data: 'stock_min', name: 'stock_min' },
-                    { data: 'prix_achat', name: 'prix_achat' },
-                    { data: 'prix_vente', name: 'prix_vente' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false },
+                    {
+                        data: 'unite',
+                        name: 'unite'
+                    },
+                    {
+                        data: 'famille',
+                        name: 'famille'
+                    },
+                    {
+                        data: 'stock',
+                        name: 'stock'
+                    },
+                    {
+                        data: 'stock_min',
+                        name: 'stock_min'
+                    },
+                    {
+                        data: 'prix_achat',
+                        name: 'prix_achat'
+                    },
+                    {
+                        data: 'prix_vente',
+                        name: 'prix_vente'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false
+                    },
                 ],
                 rowCallback: function(row, data) {
                     if (data.stock <= data.stock_min) {
@@ -60,7 +85,7 @@
 
             // Confirmation avant suppression
             $('body').on('submit', 'form.d-inline', function(e) {
-                if(!confirm('Voulez-vous vraiment supprimer ce médicament ?')) e.preventDefault();
+                if (!confirm('Voulez-vous vraiment supprimer ce médicament ?')) e.preventDefault();
             });
         });
     </script>

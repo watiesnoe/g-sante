@@ -34,34 +34,42 @@ class PaiementController extends Controller
     /**
      * Enregistrer un paiement et mettre à jour l'hospitalisation.
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'hospitalisation_id' => 'required|exists:hospitalisations,id',
-            'date_sortie'        => 'required|date',
-            'montant_total'      => 'required|numeric|min:0',
-            'montant_recu'       => 'required|numeric|min:0',
-            'mode_paiement'      => 'nullable|string',
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'hospitalisation_id' => 'required|exists:hospitalisations,id',
+        'date_sortie'        => 'required|date|after_or_equal:today',
+        'montant_total'      => 'required|numeric|min:0',
+        'montant_recu'       => 'required|numeric|min:0',
+        'mode_paiement'      => 'nullable|string',
+    ]);
 
+    try {
         DB::transaction(function () use ($request) {
-            // Récupérer l’hospitalisation
+
             $hospitalisation = Hospitalisation::findOrFail($request->hospitalisation_id);
 
-            // Mettre à jour la date de sortie et l’état
-            $hospitalisation->date_sortie = $request->date_sortie;
-            $hospitalisation->etat = 'terminé';
-            $hospitalisation->save();
+            // 🔒 Vérifier si déjà terminé
+            if ($hospitalisation->etat === 'terminé') {
+                throw new \Exception("Cette hospitalisation est déjà clôturée.");
+            }
 
-            // Calculer montant restant et statut
+            // ✅ Mise à jour hospitalisation
+            $hospitalisation->update([
+                'date_sortie' => $request->date_sortie,
+                'etat' => 'terminé'
+            ]);
+
+            // ✅ Calcul paiement
             $montantRestant = $request->montant_total - $request->montant_recu;
+
             $statut = match (true) {
                 $montantRestant <= 0 => 'payé',
                 $request->montant_recu > 0 => 'partiel',
                 default => 'en_attente',
             };
 
-            // Créer le paiement
+            // ✅ Création paiement
             Paiement::create([
                 'hospitalisation_id' => $hospitalisation->id,
                 'montant_total'      => $request->montant_total,
@@ -73,9 +81,19 @@ class PaiementController extends Controller
             ]);
         });
 
-        return redirect()->route('paiements.index')
-            ->with('success', 'Paiement enregistré avec succès ✅');
+        return response()->json([
+            'success' => true,
+            'message' => 'Paiement enregistré avec succès ✅'
+        ]);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Afficher un paiement.

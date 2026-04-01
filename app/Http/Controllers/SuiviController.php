@@ -61,7 +61,6 @@ class SuiviController extends Controller
     $consultation = Consultation::findOrFail($request->consultation_id);
 
     $request->validate([
-        'date_heure' => 'required|date',
         'motif'      => 'nullable|string|max:255',
         'resultat'   => 'required|string',
         'statut'     => 'required|in:prévu,réalisé,annulé',
@@ -71,7 +70,7 @@ class SuiviController extends Controller
         'consultation_id' => $consultation->id,
         'patient_id'      => $consultation->patient_id,
         'medecin_id'      => $consultation->medecin_id,
-        'date_heure'      => $request->date_heure,
+        'date_heure'      => now(),
         'motif'           => $request->motif,
         'resultat'        => $request->resultat,
         'statut'          => $request->statut,

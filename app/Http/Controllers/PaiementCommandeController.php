@@ -76,15 +76,16 @@ class PaiementCommandeController extends Controller
     public function create(Request $request)
     {
         $commandeId = $request->get('commande_id');
-        $commande = $commandeId ? Commande::with('fournisseur')->find($commandeId) : null;
+     
 
         // Récupérer toutes les commandes avec fournisseur pour la liste déroulante
         $commandes = Commande::with('fournisseur')
-            ->whereIn('statut', ['en_cours', 'valide']) // Seulement les commandes actives
+            ->where('statut', '===', 'payé') // Seulement les commandes actives
+            ->where('StatutPaiement', '===', 'en_attente' || 'partiel')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('application.paiementcommande.create', compact('commande', 'commandes'));
+        return view('application.paiementcommande.create', compact('commandes'));
     }
 
     public function store(Request $request)

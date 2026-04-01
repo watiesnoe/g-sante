@@ -35,16 +35,21 @@ class FournisseurController extends Controller
         return view('application.fournisseur.create');
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $request->validate([
-            'nom'=>'required|string|max:255',
-            'contact'=>'nullable|string|max:255',
-            'adresse'=>'nullable|string|max:255',
+            'nom' => 'required|string|max:255',
+            'contact' => 'nullable|string|max:255',
+            'adresse' => 'nullable|string|max:255',
         ]);
 
-        Fournisseur::create($request->all());
-        return redirect()->route('fournisseurs.index')->with('success','Fournisseur ajouté !');
+        $fournisseur = Fournisseur::create($request->all());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Fournisseur ajouté avec succès ✅',
+            'data' => $fournisseur
+        ]);
     }
 
     public function edit(Fournisseur $fournisseur)
@@ -55,15 +60,18 @@ class FournisseurController extends Controller
     public function update(Request $request, Fournisseur $fournisseur)
     {
         $request->validate([
-            'nom'=>'required|string|max:255',
-            'contact'=>'nullable|string|max:255',
-            'adresse'=>'nullable|string|max:255',
+            'nom' => 'required|string|max:255',
+            'contact' => 'nullable|string|max:255',
+            'adresse' => 'nullable|string|max:255',
         ]);
 
         $fournisseur->update($request->all());
-        return redirect()->route('fournisseurs.index')->with('success','Fournisseur mis à jour !');
-    }
 
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Fournisseur modifié avec succès ✏️'
+        ]);
+    }
     public function destroy(Fournisseur $fournisseur)
     {
         $fournisseur->delete();

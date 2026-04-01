@@ -19,10 +19,8 @@ return new class extends Migration
                 ->nullable() // 👈 important
                 ->constrained('tickets')
                 ->nullOnDelete(); // équivalent à ->onDelete('set null')
-
             $table->foreignId('patient_id')->constrained()->onDelete('cascade');
             $table->foreignId('medecin_id')->constrained('users')->onDelete('cascade');
-
             $table->dateTime('date_consultation')->useCurrent();
             $table->string('motif')->nullable();
             $table->text('diagnostic')->nullable();
@@ -30,10 +28,13 @@ return new class extends Migration
             $table->float('poids')->nullable();
             $table->float('temperature')->nullable();
             $table->string('tension')->nullable();
+            $table->float('taille')->nullable();
+            $table->float('imc')->nullable();
+            $table->string('groupe_sanguin')->nullable();
+            $table->string('adresse_patient')->nullable();
+            $table->text('antecedents')->nullable();
             $table->timestamps();
         });
-
-
     }
 
     /**

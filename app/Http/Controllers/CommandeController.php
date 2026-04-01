@@ -17,7 +17,7 @@ class CommandeController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $commandes = Commande::with('fournisseur')->latest();
+           $commandes = Commande::with('fournisseur')    ->orderBy('commandes.created_at', 'desc');
 
             return DataTables::of($commandes)
                 ->addColumn('fournisseur', function ($row) {
@@ -111,6 +111,7 @@ class CommandeController extends Controller
             'quantite' => 'required|array',
             'prix_unitaire' => 'required|array',
         ]);
+        
 
         $medicaments = $request->medicament_id;
         $quantites = $request->quantite;

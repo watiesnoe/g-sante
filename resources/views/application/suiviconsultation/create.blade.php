@@ -22,10 +22,7 @@
                         <label>Médecin</label>
                         <input type="text" class="form-control" value="{{ $medecin->name }}" disabled>
                     </div>
-                    <div class="mb-3">
-                        <label>Date & Heure</label>
-                        <input type="datetime-local" name="date_heure" class="form-control" required>
-                    </div>
+                    
                     <div class="mb-3">
                         <label>Motif</label>
                         <input type="text" name="motif" class="form-control">

@@ -170,6 +170,7 @@
                 e.preventDefault();
 
                 let url = '{{ route("paiements.hospitalisation") }}';
+                
                 let formData = $(this).serialize();
 
                 $.ajax({

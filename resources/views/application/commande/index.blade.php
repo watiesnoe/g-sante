@@ -16,7 +16,7 @@
                 <table id="tableCommandes" class="table table-bordered table-striped align-middle mb-0">
                     <thead class="table-light">
                     <tr>
-                        <th>ID</th>
+                       
                         <th>Fournisseur</th>
                         <th>Date Commande</th>
                         <th>Statut</th>
@@ -47,16 +47,14 @@
                 serverSide: true,
                 ajax: '{{ route("commandes.index") }}',
                 columns: [
-                    { data: 'id', name: 'id' },
+                    
                     { data: 'fournisseur', name: 'fournisseur.nom' },
                     { data: 'date_commande', name: 'date_commande' },
                     { data: 'statut', name: 'statut' },
                     { data: 'total', name: 'total' },
                     { data: 'actions', orderable: false, searchable: false }
                 ],
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
-                },
+               
                 pageLength: 10,
                 order: [[0, 'desc']]
             });

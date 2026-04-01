@@ -111,13 +111,14 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
 
-//    Route::resource('receptions', ReceptionController::class);
+    Route::resource('receptions', ReceptionController::class);
 
-    Route::get('/receptions', [ReceptionController::class, 'index'])->name('receptions.index');
+//    Route::get('/receptions', [ReceptionController::class, 'index'])->name('receptions.index');
+//    Route::get('/receptions/create', [ReceptionController::class, 'create'])->name('receptions.create');
 
     Route::get('/commandes/{id}/produits', [ReceptionController::class, 'getProduits']); // pour AJAX
 
-    Route::post('/receptions', [ReceptionController::class, 'store'])->name('receptions.store');
+//    Route::post('/receptions', [ReceptionController::class, 'store'])->name('receptions.store');
 
     Route::get('/salle/{salleId}/lits-libres', [SalleController::class, 'litsLibres'])->name('salles.litsLibres');
 

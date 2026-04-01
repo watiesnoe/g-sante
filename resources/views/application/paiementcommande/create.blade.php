@@ -19,7 +19,6 @@
             <div class="block-content">
                 <form action="{{ route('paiementscommande.store') }}" method="POST" id="paymentForm">
                     @csrf
-
                     <div class="row">
                         <!-- Informations Commande -->
                         <div class="col-md-6">
@@ -41,8 +40,10 @@
                                                         data-remaining="{{ $cmd->reste_a_payer }}"
                                                         data-statut="{{ $cmd->StatutPaiement }}"
                                                     {{ isset($commande) && $commande->id == $cmd->id ? 'selected' : '' }}>
+                                                    @if($cmd->StatutPaiement !== 'payé')
                                                     {{ $cmd->reference }} - {{ $cmd->fournisseur->nom ?? 'N/A' }} - {{ number_format($cmd->total, 2) }} €
                                                     ({{ $cmd->payment_status_text }})
+                                                    @endif
                                                 </option>
                                             @endforeach
                                         </select>

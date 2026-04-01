@@ -12,24 +12,24 @@ class MedicamentsSeeder extends Seeder
      */
     public function run(): void
     {
-        $medicaments = [
+         $medicaments = [
             [
                 "nom" => "Paracétamol 500mg",
                 "description" => "Antalgique et antipyrétique utilisé contre la douleur et la fièvre.",
                 "stock" => 200,
                 "stock_min" => 20,
-                "prix_achat" => 0.05,
-                "prix_vente" => 0.10,
-                "unite_id" => 1,   // ⚠️ adapter selon ta table unites
-                "famille_id" => 1, // ⚠️ adapter selon ta table familles
+                "prix_achat" => 250,     // 250 FCFA
+                "prix_vente" => 500,     // 500 FCFA
+                "unite_id" => 1,
+                "famille_id" => 1,
             ],
             [
                 "nom" => "Amoxicilline 500mg",
                 "description" => "Antibiotique de la famille des pénicillines.",
                 "stock" => 150,
                 "stock_min" => 15,
-                "prix_achat" => 0.12,
-                "prix_vente" => 0.25,
+                "prix_achat" => 500,     // 500 FCFA
+                "prix_vente" => 1000,    // 1 000 FCFA
                 "unite_id" => 1,
                 "famille_id" => 2,
             ],
@@ -38,8 +38,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Anti-inflammatoire non stéroïdien (AINS).",
                 "stock" => 180,
                 "stock_min" => 20,
-                "prix_achat" => 0.08,
-                "prix_vente" => 0.20,
+                "prix_achat" => 350,     // 350 FCFA
+                "prix_vente" => 700,     // 700 FCFA
                 "unite_id" => 1,
                 "famille_id" => 3,
             ],
@@ -48,8 +48,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Traitement du diabète de type 2.",
                 "stock" => 120,
                 "stock_min" => 10,
-                "prix_achat" => 0.15,
-                "prix_vente" => 0.35,
+                "prix_achat" => 600,     // 600 FCFA
+                "prix_vente" => 1200,    // 1 200 FCFA
                 "unite_id" => 1,
                 "famille_id" => 4,
             ],
@@ -58,8 +58,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Inhibiteur de la pompe à protons, traitement des reflux gastriques.",
                 "stock" => 90,
                 "stock_min" => 10,
-                "prix_achat" => 0.18,
-                "prix_vente" => 0.40,
+                "prix_achat" => 700,     // 700 FCFA
+                "prix_vente" => 1400,    // 1 400 FCFA
                 "unite_id" => 1,
                 "famille_id" => 5,
             ],
@@ -68,8 +68,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Bronchodilatateur utilisé dans l’asthme.",
                 "stock" => 60,
                 "stock_min" => 5,
-                "prix_achat" => 2.00,
-                "prix_vente" => 3.50,
+                "prix_achat" => 8000,    // 8 000 FCFA
+                "prix_vente" => 15000,   // 15 000 FCFA
                 "unite_id" => 2,
                 "famille_id" => 6,
             ],
@@ -78,8 +78,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Antibiotique de la famille des fluoroquinolones.",
                 "stock" => 70,
                 "stock_min" => 7,
-                "prix_achat" => 0.25,
-                "prix_vente" => 0.50,
+                "prix_achat" => 800,     // 800 FCFA
+                "prix_vente" => 1600,    // 1 600 FCFA
                 "unite_id" => 1,
                 "famille_id" => 2,
             ],
@@ -88,8 +88,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Diurétique utilisé dans l’hypertension et l’insuffisance cardiaque.",
                 "stock" => 80,
                 "stock_min" => 10,
-                "prix_achat" => 0.10,
-                "prix_vente" => 0.25,
+                "prix_achat" => 400,     // 400 FCFA
+                "prix_vente" => 800,     // 800 FCFA
                 "unite_id" => 1,
                 "famille_id" => 7,
             ],
@@ -98,8 +98,8 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Antihistaminique utilisé contre les allergies.",
                 "stock" => 100,
                 "stock_min" => 15,
-                "prix_achat" => 0.07,
-                "prix_vente" => 0.15,
+                "prix_achat" => 300,     // 300 FCFA
+                "prix_vente" => 600,     // 600 FCFA
                 "unite_id" => 1,
                 "famille_id" => 8,
             ],
@@ -108,11 +108,11 @@ class MedicamentsSeeder extends Seeder
                 "description" => "Complément vitaminique, stimulant immunitaire.",
                 "stock" => 250,
                 "stock_min" => 30,
-                "prix_achat" => 0.03,
-                "prix_vente" => 0.08,
+                "prix_achat" => 150,     // 150 FCFA
+                "prix_vente" => 300,     // 300 FCFA
                 "unite_id" => 1,
                 "famille_id" => 9,
-            ]
+            ],
         ];
 
         foreach ($medicaments as $medicament) {
