@@ -5,9 +5,11 @@
 @section('content')
     <!-- Page Content -->
     <div class="container mt-4">
-        <!-- Quick Actions -->
-  
-        <!-- END Quick Actions -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('patients.create') }}" class="btn btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
+        </div>
 
         <!-- Patients Table -->
         <div class="block block-rounded">
@@ -16,20 +18,9 @@
                     <i class="fa fa-list me-1"></i> Liste des Patients
                 </h3>
                 <div class="block-options">
-                    <div class="dropdown">
-                        <button type="button" class="btn-block-option" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fa fa-ellipsis-v"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <a class="dropdown-item" href="javascript:void(0)" onclick="$('#patients-table').DataTable().ajax.reload();">
-                                <i class="fa fa-refresh me-1"></i> Actualiser
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ route('patients.create') }}">
-                                <i class="fa fa-plus me-1"></i> Ajouter un patient
-                            </a>
-                        </div>
-                    </div>
+                    <button type="button" class="btn-block-option" onclick="$('#patients-table').DataTable().ajax.reload();">
+                        <i class="fa fa-refresh me-1"></i>
+                    </button>
                 </div>
             </div>
             <div class="block-content block-content-full">

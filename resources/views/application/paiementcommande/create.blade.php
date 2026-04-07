@@ -3,7 +3,7 @@
 @section('title', 'Nouveau Paiement')
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="block block-rounded">
             <div class="block-header block-header-default">
                 <h3 class="block-title">
@@ -209,7 +209,7 @@
                                 <i class="fa fa-refresh me-1"></i> Réinitialiser
                             </button>
                             <button type="submit" class="btn btn-primary" id="submitBtn">
-                                <i class="fa fa-check me-1"></i> Enregistrer le Paiement
+                                <i class="fa fa-check me-1"></i> Enregistrer
                             </button>
                         </div>
                     </div>

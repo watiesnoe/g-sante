@@ -3,16 +3,21 @@
 @section('titre', 'Gestion des Unités')
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
      <div class="row">
         <!-- Sidebar -->
         @include('layouts.partials.configside')
 
         <div class="col-xl-9 col-lg-8">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-primary" id="btnAddUnite">
+                    <i class="fa fa-plus me-1"></i> Ajouter
+                </button>
+            </div>
             <div class="block block-rounded">
                 <div class="block-header block-header-default">
                     <h5 class="mb-0 text-primary fw-bold">
-                        {{ isset($examen) ? '✏️ Modifier un examen' : '➕ Ajouter un nouvel examen' }}
+                        <i class="fa fa-balance-scale me-1"></i> Liste des unités
                     </h5>
                 </div>
                 <div class="block-content">

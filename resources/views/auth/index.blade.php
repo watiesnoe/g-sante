@@ -28,7 +28,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="card-title mb-0">Liste des Utilisateurs</h6>
                     <div class="d-flex align-items-center">
-                        <div class="btn-group me-2">
+                        <div class="d-flex align-items-center gap-2 me-2">
                             <button type="button" class="btn btn-outline-primary btn-sm" id="export-csv"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</button>
                             <button type="button" class="btn btn-outline-success btn-sm" id="export-excel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
                             <button type="button" class="btn btn-outline-danger btn-sm" id="export-pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>

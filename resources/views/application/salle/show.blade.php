@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             <!-- Sidebar gauche -->
             <div class="col-xl-3 col-lg-4">

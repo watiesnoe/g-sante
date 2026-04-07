@@ -6,10 +6,14 @@
 
 @section('content')
     <div class="container mt-4">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('medicaments.create') }}" class="btn btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
+        </div>
         <div class="card shadow-lg">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Liste des Médicaments</h5>
-                <a href="{{ route('medicaments.create') }}" class="btn btn-light btn-sm">➕ Ajouter Médicament</a>
             </div>
             <div class="card-body small">
                 <table class="table table-bordered table-sm" id="medicamentsTable">

@@ -107,7 +107,7 @@ class UserController extends Controller
                     : '<i class="fa fa-toggle-off text-danger"></i>';
 
                 return '
-                    <div class="btn-group" role="group">
+                    <div class="d-flex align-items-center justify-content-center gap-2" role="group">
                         <!-- Modifier -->
                         <button type="button" class="btn btn-sm btn-primary editUser" data-id="' . $user->id . '" title="Modifier">
                             <i class="fa fa-pencil-alt"></i>

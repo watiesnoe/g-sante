@@ -3,20 +3,20 @@
 @section('titre', 'Gestion des Maladies')
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             <!-- Sidebar -->
             @include('layouts.partials.configside')
 
             <div class="col-xl-9 col-lg-8">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#maladieModal">
+                        <i class="fa fa-plus me-1"></i> Ajouter
+                    </button>
+                </div>
                 <div class="block block-rounded">
-
-                    <!-- Header avec bouton modal -->
-                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
-                        <h3>Gestion des Maladies</h3>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#maladieModal">
-                            Ajouter une maladie
-                        </button>
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Gestion des Maladies</h3>
                     </div>
 
                     <div class="block-content">

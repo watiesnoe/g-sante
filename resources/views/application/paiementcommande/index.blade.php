@@ -3,9 +3,12 @@
 @section('title', 'Dashboard Paiements')
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <!-- Quick Stats -->
             <!-- Commandes avec état de paiement -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('paiementscommande.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
+        </div>
         <div class="block block-rounded">
             <div class="block-header block-header-default">
                 <h3 class="block-title">État des Paiements par Commande</h3>
@@ -21,9 +24,6 @@
                             <a class="dropdown-item" href="?statut=en_cours">En cours</a>
                         </div>
                     </div>
-                    <a href="{{ route('paiementscommande.create') }}" class="btn btn-sm btn-primary">
-                        <i class="fa fa-plus me-1"></i> Nouveau Paiement
-                    </a>
                 </div>
             </div>
             <div class="block-content">
@@ -79,7 +79,7 @@
                                 </span>
                                 </td>
                                 <td>
-                                    <div class="btn-group">
+                                    <div class="d-flex align-items-center gap-2">
                                         <a href="{{ route('paiementscommande.create', ['commande_id' => $commande->id]) }}"
                                            class="btn btn-sm btn-primary" data-toggle="tooltip" title="Ajouter Paiement">
                                             <i class="fa fa-credit-card"></i>

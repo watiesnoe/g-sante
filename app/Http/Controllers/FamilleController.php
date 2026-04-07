@@ -21,9 +21,9 @@ class FamilleController extends Controller
                     return '
                     <button class="btn btn-sm btn-warning editFamille"
                         data-id="'.$row->id.'"
-                        data-nom="'.$row->nom.'">Modifier</button>
+                        data-nom="'.$row->nom.'" title="Modifier"><i class="fa fa-edit"></i></button>
                     <button class="btn btn-sm btn-danger deleteFamille"
-                        data-id="'.$row->id.'">Supprimer</button>';
+                        data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

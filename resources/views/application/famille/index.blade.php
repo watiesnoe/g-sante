@@ -3,20 +3,22 @@
 @section('titre', 'Gestion des Familles')
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             <!-- Sidebar -->
             @include('layouts.partials.configside')
 
             <div class="col-xl-9 col-lg-8">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary" id="btnAddFamille">
+                        <i class="fa fa-plus me-1"></i> Ajouter
+                    </button>
+                </div>
                 <div class="block block-rounded">
-                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
+                    <div class="block-header block-header-default">
                         <h5 class="mb-0 text-primary fw-bold">
                             Gestion des familles
                         </h5>
-                        <button class="btn btn-success" id="btnAddFamille">
-                            ➕ Ajouter une famille
-                        </button>
                     </div>
 
                     <div class="block-content">

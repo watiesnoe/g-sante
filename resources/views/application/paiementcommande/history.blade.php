@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container mt-4">
         <h3 class="mb-4">Liste des paiements</h3>
 
         @if(session('success'))

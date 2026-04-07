@@ -196,7 +196,7 @@
                                         <td>{{ $c['medecin'] }}</td>
                                         <td class="text-center"><span class="{{ statutBadge($c['statut']) }}">{{ $c['statut'] }}</span></td>
                                         <td class="text-end">
-                                            <div class="btn-group">
+                                            <div class="d-flex align-items-center justify-content-end gap-2">
                                                 <button class="btn btn-sm btn-alt-primary"><i class="fa fa-eye"></i></button>
                                                 <button class="btn btn-sm btn-alt-success"><i class="fa fa-check"></i></button>
                                                 <button class="btn btn-sm btn-alt-danger"><i class="fa fa-times"></i></button>

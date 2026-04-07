@@ -16,7 +16,7 @@
                     <select name="commande_id" class="form-select" id="commandeSelect" required>
                         <option value="">-- Sélectionner Commande --</option>
                         @foreach($commandes as $c)
-                        @if($c->statut === 'en_attente')
+                        @if(in_array($c->statut, ['en_attente', 'en_cours']))
                             <option value="{{ $c->id }}">
                                 {{ $c->reference }} - {{ $c->fournisseur->nom ?? 'Inconnu' }}
                                 ({{ \Carbon\Carbon::parse($c->date_commande)->format('d/m/Y') }})
@@ -62,7 +62,7 @@
                     <div id="produitsContainer" class="mt-4"></div>
 
                     {{-- Bouton Valider --}}
-                    <button type="submit" class="btn btn-success mt-4" id="btnValider">✅ Valider la Réception</button>
+                    <button type="submit" class="btn btn-success mt-4" id="btnValider">✅ Valider</button>
                 </form>
             </div>
         </div>

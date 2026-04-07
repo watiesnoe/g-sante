@@ -4,12 +4,12 @@
 @section('content')
     <div class="container mt-4">
 
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('commandes.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
+        </div>
         <div class="card shadow-lg border-0">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">📦 Liste des Commandes</h4>
-                <a href="{{ route('commandes.create') }}" class="btn btn-light btn-sm">
-                    ➕ Nouvelle Commande
-                </a>
             </div>
 
             <div class="card-body">

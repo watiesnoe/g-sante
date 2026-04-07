@@ -125,7 +125,7 @@
                     <div class="d-flex justify-content-end">
                         <a href="{{ route('tickets.index') }}" class="btn btn-outline-danger me-2">❌ Annuler</a>
                         <button type="submit" class="btn btn-success">
-                            {{ isset($ticket) ? '✏️ Mettre à jour Ticket' : '✅ Enregistrer Ticket' }}
+                            {{ isset($ticket) ? '✏️ Mettre à jour' : '✅ Enregistrer' }}
                         </button>
                     </div>
                 </div>

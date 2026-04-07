@@ -6,7 +6,9 @@
     <div class="container mt-4">
         <h2 class="mb-4">📜 Liste des Ordonnances</h2>
 
-        <a href="{{ route('ordonnances.create') }}" class="btn btn-primary mb-3">➕ Nouvelle Ordonnance</a>
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('ordonnances.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
+        </div>
 
         <table class="table table-bordered table-striped" id="ordonnances-table">
             <thead class="table-dark">

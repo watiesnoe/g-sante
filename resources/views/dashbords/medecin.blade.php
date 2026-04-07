@@ -391,11 +391,11 @@
                                             </span>
                                 </td>
                                 <td class="pe-4">
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('consultations.show', $consultation) }}" class="btn btn-outline-primary">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <a href="{{ route('consultations.show', $consultation) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('consultations.print', $consultation) }}" class="btn btn-outline-secondary">
+                                        <a href="{{ route('consultations.print', $consultation) }}" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-print"></i>
                                         </a>
                                     </div>

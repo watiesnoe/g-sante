@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
@@ -64,7 +64,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary rounded-pill">
-                                {{ isset($salle) ? '✏️ Mettre à jour' : '💾 Enregistrer la salle' }}
+                                {{ isset($salle) ? '✏️ Mettre à jour' : '💾 Enregistrer' }}
                             </button>
                         </form>
                     </div>

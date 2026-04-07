@@ -2,10 +2,14 @@
 @section('titre', 'Liste des Fournisseurs')
 @section('content')
     <div class="container mt-4">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('fournisseurs.create') }}" class="btn btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
+        </div>
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">📋 Liste des Fournisseurs</h5>
-                <a href="{{ route('fournisseurs.create') }}" class="btn btn-light btn-sm">➕ Ajouter Fournisseur</a>
             </div>
             <div class="card-body">
                 <table class="table table-striped table-hover table-bordered" id="fournisseurs-table">

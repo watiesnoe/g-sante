@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             <!-- Sidebar -->
             @include('layouts.partials.configside')

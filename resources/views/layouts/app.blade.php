@@ -80,10 +80,17 @@
             }
             .table th {
                 font-weight: 600;
-                font-size: 0.875rem;
+                font-size: 0.80rem;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
                 color: #6c757d;
+            }
+            .table td {
+                font-size: 0.85rem;
+                vertical-align: middle;
+            }
+            .table tbody tr {
+                transition: all 0.2s;
             }
             .quick-access-card {
                 transition: all 0.3s ease;
@@ -103,6 +110,35 @@
             }
             .hover-bg:hover {
                 background-color: #f8f9fa;
+            }
+            /* Card/Block Header Primary & Text-SM Override */
+            .card-header, .block-header, .block-header-default {
+                background-color: #2c7fb8 !important; /* var(--primary) */
+                color: #fff !important;
+                padding: 10px 15px !important;
+                border-bottom: none !important;
+            }
+            .card-header h1, .card-header h2, .card-header h3, .card-header h4, .card-header h5, .card-header h6, .card-title, .card-header .card-title,
+            .block-header h1, .block-header h2, .block-header h3, .block-header h4, .block-header h5, .block-header h6, .block-title, .block-header .block-title {
+                color: #fff !important;
+                font-size: 0.875rem !important; /* text-sm equivalent */
+                margin: 0 !important;
+                font-weight: 600 !important;
+            }
+            .card-header i, .block-header i {
+                color: #fff !important;
+            }
+            .card-header .btn-outline-primary, .block-header .btn-outline-primary {
+                border-color: rgba(255, 255, 255, 0.5) !important;
+                color: #fff !important;
+            }
+            .card-header .btn-outline-primary:hover, .block-header .btn-outline-primary:hover {
+                background-color: #fff !important;
+                color: #2c7fb8 !important; /* primary */
+            }
+            .card-header .text-primary, .block-header .text-primary,
+            .card-header .text-muted, .block-header .text-muted {
+                color: #edf2f7 !important;
             }
         </style>
 
@@ -464,7 +500,7 @@
         }
 
         th, td {
-            padding: 15px;
+            padding: 10px 12px;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
@@ -473,7 +509,7 @@
             background-color: var(--light);
             color: var(--gray);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         tr:hover {

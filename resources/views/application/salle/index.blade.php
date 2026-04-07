@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
@@ -13,10 +13,12 @@
             <div class="col-xl-9 col-lg-8 ">
 
 
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="{{ route('salles.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
+                </div>
                 <div class="card shadow-sm rounded-3">
-                    <div class="d-flex justify-content-between align-items-center p-2">
+                    <div class="d-flex justify-content-between align-items-center p-2 card-header">
                         <h4 class="mb-0">Liste des Salles</h4>
-                        <a href="{{ route('salles.create') }}" class="btn btn-primary">➕ Nouvelle Salle</a>
                     </div>
                     <div class="card-body">
                         <table id="salles-table" class="table table-bordered table-striped">

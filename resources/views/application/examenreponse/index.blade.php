@@ -4,7 +4,7 @@
 @section('title_page', 'Résultats des examens réalisés')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container mt-4">
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">

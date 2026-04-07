@@ -3,8 +3,7 @@
 @section('titre', 'Réceptions')
 
 @section('content')
-    <div class="container ">
-        <div class="container-fluid">
+    <div class="container mt-4">
 
             <!-- 🔷 HEADER -->
             <div class="block block-rounded">
@@ -17,20 +16,20 @@
                     </div>
 
                     <a href="{{ route('receptions.create') }}" class="btn btn-primary">
-                        <i class="fa fa-plus-circle me-1"></i> Nouvelle Réception
+                        <i class="fa fa-plus-circle me-1"></i> Ajouter
                     </a>
                 </div>
             </div>
 
             <!-- 🔔 ALERTES -->
-            @if(session('success'))
+            @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show">
                     <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
                     <button class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
 
-            @if(session('error'))
+            @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show">
                     <i class="fa fa-exclamation-circle me-2"></i> {{ session('error') }}
                     <button class="btn-close" data-bs-dismiss="alert"></button>
@@ -59,19 +58,18 @@
                     <div class="table-responsive">
                         <table id="table-receptions" class="table table-hover table-striped table-bordered table-vcenter">
                             <thead class="table-dark">
-                            <tr>
-                                <th>Référence</th>
-                                <th>Commande</th>
-                                <th>Fournisseur</th>
-                                <th>Date</th>
-                                <th>Produits</th>
-                                <th>Observation</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Commande</th>
+                                    <th>Fournisseur</th>
+                                    <th>Date</th>
+                                    <th class="text-center">Avancement Cmd.</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
                             </thead>
 
                             <tbody>
-                            <!-- 🔥 VIDE car AJAX -->
+                                <!-- 🔥 VIDE car AJAX -->
                             </tbody>
                         </table>
                     </div>
@@ -86,7 +84,7 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function(){
+        $(document).ready(function() {
 
             // 🔥 DATATABLE AJAX
             $('#table-receptions').DataTable({
@@ -94,14 +92,32 @@
                 serverSide: true,
                 ajax: "{{ route('receptions.index') }}",
 
-                columns: [
-                    { data: 'reference', name: 'reference_reception' },
-                    { data: 'commande', name: 'commande.reference' },
-                    { data: 'fournisseur', name: 'fournisseur.nom' },
-                    { data: 'date', name: 'date_reception' },
-                    { data: 'produits', orderable: false, searchable: false },
-                    { data: 'observation', name: 'observations' },
-                    { data: 'actions', orderable: false, searchable: false }
+                columns: [{
+                        data: 'reference',
+                        name: 'reference_reception'
+                    },
+                    {
+                        data: 'commande',
+                        name: 'commande.reference'
+                    },
+                    {
+                        data: 'fournisseur',
+                        name: 'fournisseur.nom'
+                    },
+                    {
+                        data: 'date',
+                        name: 'date_reception'
+                    },
+                    {
+                        data: 'pourcentage',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'actions',
+                        orderable: false,
+                        searchable: false
+                    }
                 ],
 
                 pageLength: 10,
@@ -112,7 +128,7 @@
             });
 
             // 🔥 TOOLTIP
-            $(document).on('mouseenter', '[data-bs-toggle="tooltip"]', function(){
+            $(document).on('mouseenter', '[data-bs-toggle="tooltip"]', function() {
                 new bootstrap.Tooltip(this);
             });
 
@@ -120,20 +136,20 @@
 
 
         // 🔥 CONFIRM DELETE
-        function confirmDelete(id, ref){
+        function confirmDelete(id, ref) {
             Swal.fire({
                 title: "Supprimer ?",
-                html: "Réception <b>"+(ref || '#'+id)+"</b>",
+                html: "Réception <b>" + (ref || '#' + id) + "</b>",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#d33",
                 confirmButtonText: "Oui",
                 cancelButtonText: "Annuler"
-            }).then((result)=>{
-                if(result.isConfirmed){
-                    $('#delete-form-'+id).submit();
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#delete-form-' + id).submit();
                 }
             });
         }
     </script>
-    @endsection
+@endsection

@@ -46,8 +46,10 @@ class ConsultationController extends Controller
                 })
                 ->addColumn('actions', function($row){
                     return '
-                    <a href="'.route('consultations.show', $row->id).'" class="btn btn-info btn-sm">Voir</a>
-                    <a href="'.route('consultations.edit', $row->id).'" class="btn btn-warning btn-sm">Modifier</a>
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <a href="'.route('consultations.show', $row->id).'" class="btn btn-info btn-sm" title="Voir"><i class="fa fa-eye"></i></a>
+                        <a href="'.route('consultations.edit', $row->id).'" class="btn btn-warning btn-sm" title="Modifier"><i class="fa fa-edit"></i></a>
+                    </div>
                 ';
                 })
                 ->rawColumns(['actions'])

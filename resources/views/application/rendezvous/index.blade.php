@@ -5,10 +5,12 @@
 @section('content')
     <div class="container mt-4">
 
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" id="addRdvBtn"><i class="fa fa-plus me-1"></i> Ajouter</button>
+        </div>
         <div class="card shadow-lg">
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 <h4 class="m-0">📅 Liste des Rendez-vous</h4>
-                <button class="btn btn-light btn-sm" id="addRdvBtn">➕ Nouveau</button>
             </div>
 
             <div class="card-body">

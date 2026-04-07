@@ -425,8 +425,7 @@
                             <i class="fas fa-times me-2"></i>Annuler
                         </a>
                         <button type="submit" class="btn btn-success px-5 shadow-sm">
-                            <i class="fas fa-save me-2"></i>{{ $consultation ? 'Mettre à jour' : 'Enregistrer' }} la
-                            consultation
+                            <i class="fas fa-save me-2"></i>{{ $consultation ? 'Mettre à jour' : 'Enregistrer' }}
                         </button>
                     </div>
                 </div>
@@ -605,7 +604,7 @@ $(document).ready(function() {
                 Swal.fire({ icon: 'error', title: 'Erreur', text: errorMsg });
             },
             complete: function() {
-                submitBtn.prop('disabled', false).text('{{ $consultation ? "Mettre à jour" : "Enregistrer" }} Consultation');
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>{{ $consultation ? "Mettre à jour" : "Enregistrer" }}');
             }
         });
     });

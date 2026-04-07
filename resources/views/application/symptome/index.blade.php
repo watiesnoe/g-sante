@@ -4,14 +4,18 @@
 @section('titre','Gestion des Symptômes')
 
 @section('content')
-    <div class="content">
+    <div class="container mt-4">
         <div class="row">
             @include('layouts.partials.configside')
             <div class="col-xl-9">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#symptomeModal">
+                        <i class="fa fa-plus me-1"></i> Ajouter
+                    </button>
+                </div>
                 <div class="block block-rounded">
-                    <div class="block-header d-flex justify-content-between align-items-center">
-                        <h3>Symptômes</h3>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#symptomeModal">Ajouter Symptôme</button>
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Symptômes</h3>
                     </div>
                     <div class="block-content">
                         <table id="symptomesTable" class="table table-bordered">

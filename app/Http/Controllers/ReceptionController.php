@@ -20,7 +20,7 @@ class ReceptionController extends Controller
     {
         if ($request->ajax()) {
 
-            $data = Reception::with(['commande', 'fournisseur', 'lignes'])
+            $data = Reception::with(['commande.lignes', 'fournisseur', 'lignes'])
                 ->latest();
 
             return DataTables::of($data)
@@ -46,35 +46,51 @@ class ReceptionController extends Controller
                     return \Carbon\Carbon::parse($row->date_reception)->format('d/m/Y');
                 })
 
-                ->addColumn('produits', function($row){
-                    return '<span class="badge bg-primary">'.$row->lignes->count().' produit(s)</span>';
-                })
-
-                ->addColumn('observation', function($row){
-                    return \Str::limit($row->observations, 30);
+                ->addColumn('pourcentage', function($row){
+                    if ($row->commande) {
+                        $totalCmd = $row->commande->lignes->sum('quantite');
+                        $totalRecu = $row->commande->lignes->sum('quantiterecue'); // Total réceptionné sur la commande globale
+                        
+                        if ($totalCmd > 0) {
+                            $percent = round(($totalRecu / $totalCmd) * 100);
+                            $color = $percent >= 100 ? 'bg-success' : 'bg-primary';
+                            return '<div class="progress text-center" style="height: 18px; min-width:80px;" title="'.$percent.'% de la commande">
+                                      <div class="progress-bar '.$color.'" role="progressbar" style="width: '.$percent.'%; font-size:11px; font-weight:bold; line-height:18px;" aria-valuenow="'.$percent.'" aria-valuemin="0" aria-valuemax="100">'.$percent.'%</div>
+                                    </div>';
+                        }
+                    }
+                    return '<span class="text-muted">N/A</span>';
                 })
 
                 ->addColumn('actions', function($row){
-                    return '
-                <div class="btn-group">
-                    <a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-info">
-                        <i class="fa fa-eye"></i>
-                    </a>
-                    <a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-warning">
-                        <i class="fa fa-edit"></i>
-                    </a>
-                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                </div>
+                    $actions = '<div class="d-flex align-items-center justify-content-center gap-2">
+                        <a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-info">
+                            <i class="fa fa-eye"></i>
+                        </a>';
 
-                <form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">
-                    '.csrf_field().method_field('DELETE').'
-                </form>
-                ';
+                    if (!$row->commande || $row->commande->statut !== 'valide') {
+                        $actions .= '<a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-warning">
+                            <i class="fa fa-edit"></i>
+                        </a>';
+                    } else {
+                        $actions .= '<button class="btn btn-sm btn-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;">
+                            <i class="fa fa-edit"></i>
+                        </button>';
+                    }
+
+                    $actions .= '<button class="btn btn-sm btn-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>';
+
+                    $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">
+                        '.csrf_field().method_field('DELETE').'
+                    </form>';
+                    
+                    return $actions;
                 })
 
-                ->rawColumns(['reference','commande','produits','actions'])
+                ->rawColumns(['reference','commande','pourcentage','actions'])
                 ->make(true);
         }
 
@@ -82,11 +98,11 @@ class ReceptionController extends Controller
     }
 
 
-    //    public function create()
-    //    {
-    //        $commandes = Commande::with('fournisseur')->get();
-    //        return view('receptions.create', compact('commandes'));
-    //    }
+       public function create()
+       {
+           $commandes = Commande::with('fournisseur')->get();
+           return view('application.reception.create', compact('commandes'));
+       }
 
     public function store(Request $request)
     {
@@ -109,7 +125,6 @@ class ReceptionController extends Controller
             'reference_reception' => $request->reference_reception,
             'user_id' => auth()->id(),
             'statut' => 'partielle',
-            'observations' => $request->observations ?? null,
         ]);
 
         if ($request->has('receptions')) {
@@ -276,5 +291,157 @@ class ReceptionController extends Controller
             'fournisseur_nom' => $commande->fournisseur->nom ?? '',
             'produits' => $produits
         ]);
+    }
+
+    public function show($id)
+    {
+        $reception = Reception::with(['commande.fournisseur', 'fournisseur', 'lignes.medicament', 'user'])->findOrFail($id);
+        return view('application.reception.show', compact('reception'));
+    }
+
+    public function edit($id)
+    {
+        $reception = Reception::with(['commande', 'fournisseur', 'lignes.medicament'])->findOrFail($id);
+        
+        if ($reception->commande && $reception->commande->statut === 'valide') {
+            return redirect()->route('receptions.index')->with('error', 'Modification bloquée : La commande a déjà été totalement réceptionnée.');
+        }
+        
+        $commande = Commande::with(['lignes.medicament'])->findOrFail($reception->commande_id);
+        
+        $produits = $commande->lignes->map(function ($ligne) use ($reception) {
+            $ligneReception = $reception->lignes->where('medicament_id', $ligne->medicament_id)->first();
+            
+            $quantite_recue_courante = $ligneReception ? $ligneReception->quantite_recue : 0;
+            $lot = $ligneReception ? $ligneReception->lot : '';
+            $date_peremption = $ligneReception ? $ligneReception->date_peremption : '';
+            
+            $quantite_totale_recue = $ligne->quantiterecue ?? 0;
+            // Quantité restante = Qte commandée - (Qte totale reçue - Qte reçue dans cette réception)
+            $quantite_restante = $ligne->quantite - ($quantite_totale_recue - $quantite_recue_courante);
+            
+            return [
+                'commande_medicament_id' => $ligne->id,
+                'medicament_id' => $ligne->medicament_id,
+                'nom' => $ligne->medicament->nom ?? '',
+                'quantite_commandee' => $ligne->quantite,
+                'quantite_recue' => $quantite_recue_courante,
+                'quantite_restante' => max(0, $quantite_restante),
+                'prix_unitaire' => $ligne->prix_unitaire,
+                'stock_ancien' => $ligne->medicament->stock ?? 0,
+                'lot' => $lot,
+                'date_peremption' => $date_peremption,
+            ];
+        });
+
+        return view('application.reception.edit', compact('reception', 'produits'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'date_reception' => 'required|date',
+            'reference_reception' => 'required|string',
+            'receptions.*.commande_medicament_id' => 'required|exists:commande_medicaments,id',
+            'receptions.*.medicament_id' => 'required|exists:medicaments,id',
+            'receptions.*.quantite_recue' => 'required|numeric|min:0',
+        ]);
+
+        $reception = Reception::with('lignes')->findOrFail($id);
+        
+        $reception->update([
+            'date_reception' => $request->date_reception,
+            'reference_reception' => $request->reference_reception,
+        ]);
+
+        if ($request->has('receptions')) {
+            foreach ($request->receptions as $ligne) {
+                $commandeMedicament = DB::table('commande_medicaments')
+                    ->where('id', $ligne['commande_medicament_id'])
+                    ->first();
+
+                if (!$commandeMedicament) continue;
+
+                $ligneReceptionExistante = $reception->lignes()->where('medicament_id', $ligne['medicament_id'])->first();
+
+                $nouvelleQuantiteRecue = $ligne['quantite_recue'];
+
+                if ($nouvelleQuantiteRecue > 0) {
+                    if ($ligneReceptionExistante) {
+                        $ligneReceptionExistante->update([
+                            'quantite_recue' => $nouvelleQuantiteRecue,
+                            'lot' => $ligne['lot'] ?? null,
+                            'date_peremption' => $ligne['date_peremption'] ?? null,
+                        ]);
+                    } else {
+                        $reception->lignes()->create([
+                            'medicament_id' => $ligne['medicament_id'],
+                            'quantite_commandee' => $commandeMedicament->quantite,
+                            'quantite_recue' => $nouvelleQuantiteRecue,
+                            'prix_unitaire' => $commandeMedicament->prix_unitaire,
+                            'lot' => $ligne['lot'] ?? null,
+                            'date_peremption' => $ligne['date_peremption'] ?? null,
+                        ]);
+                    }
+                } elseif ($ligneReceptionExistante) {
+                    $ligneReceptionExistante->delete();
+                }
+
+                // Recalculer le total recu
+                $totalRecu = DB::table('reception_lignes')
+                    ->join('receptions', 'reception_lignes.reception_id', '=', 'receptions.id')
+                    ->where('receptions.commande_id', $reception->commande_id)
+                    ->where('reception_lignes.medicament_id', $ligne['medicament_id'])
+                    ->sum('reception_lignes.quantite_recue');
+
+                DB::table('commande_medicaments')
+                    ->where('id', $commandeMedicament->id)
+                    ->update(['quantiterecue' => $totalRecu]);
+            }
+        }
+
+        $lignes = DB::table('commande_medicaments')->where('commande_id', $reception->commande_id)->get();
+        $toutesRecues = $lignes->every(fn($l) => $l->quantite <= $l->quantiterecue);
+
+        DB::table('commandes')
+            ->where('id', $reception->commande_id)
+            ->update(['statut' => $toutesRecues ? 'valide' : 'en_cours']);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'message' => 'Réception modifiée avec succès !',
+                'reception_id' => $reception->id,
+            ]);
+        }
+
+        return redirect()->route('receptions.index')->with('success', 'Réception mise à jour avec succès.');
+    }
+
+    public function destroy($id)
+    {
+        $reception = Reception::with('lignes')->findOrFail($id);
+        
+        foreach ($reception->lignes as $ligne) {
+            $commandeMedicament = DB::table('commande_medicaments')
+                ->where('commande_id', $reception->commande_id)
+                ->where('medicament_id', $ligne->medicament_id)
+                ->first();
+
+            if ($commandeMedicament) {
+                $nouvelleQuantite = max(0, $commandeMedicament->quantiterecue - $ligne->quantite_recue);
+                DB::table('commande_medicaments')
+                    ->where('id', $commandeMedicament->id)
+                    ->update(['quantiterecue' => $nouvelleQuantite]);
+            }
+        }
+        
+        DB::table('commandes')
+            ->where('id', $reception->commande_id)
+            ->update(['statut' => 'en_cours']);
+
+        $reception->lignes()->delete();
+        $reception->delete();
+
+        return redirect()->route('receptions.index')->with('success', 'Réception supprimée avec succès.');
     }
 }

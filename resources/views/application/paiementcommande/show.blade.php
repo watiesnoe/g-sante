@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div class="container mt-4">
         <h3>Détails du Paiement : {{ $paiement->reference }}</h3>
 
         <ul class="list-group">

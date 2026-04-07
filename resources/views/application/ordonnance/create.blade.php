@@ -227,7 +227,7 @@
             </div>
 
             <div class="d-flex justify-content-end mb-5">
-                <button type="submit" class="btn btn-success">✅ Enregistrer Consultation</button>
+                <button type="submit" class="btn btn-success">✅ Enregistrer</button>
             </div>
         </form>
     </div>

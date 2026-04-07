@@ -78,7 +78,7 @@
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('medicaments.index') }}" class="btn btn-secondary">↩️ Annuler</a>
                         <button type="submit" class="btn btn-success">
-                            {{ isset($medicament) ? '💾 Enregistrer les modifications' : '✅ Enregistrer' }}
+                            {{ isset($medicament) ? '💾 Mettre à jour' : '✅ Enregistrer' }}
                         </button>
                     </div>
 

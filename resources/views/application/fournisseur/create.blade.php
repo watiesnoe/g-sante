@@ -54,7 +54,7 @@
                     </a>
                     <button type="submit" class="btn btn-success">
                         <i class="fa {{ isset($fournisseur) ? 'fa-save' : 'fa-check' }} me-1"></i>
-                        {{ isset($fournisseur) ? 'Enregistrer les modifications' : 'Enregistrer' }}
+                        {{ isset($fournisseur) ? 'Mettre à jour' : 'Enregistrer' }}
                     </button>
                 </div>
             </form>
@@ -260,7 +260,7 @@ $(document).ready(function() {
             complete: function() {
                 btn.prop('disabled', false).html(`
                     <i class="fa ${method !== 'PUT' ? 'fa-check' : 'fa-save'} me-1"></i>
-                    {{ isset($fournisseur) ? 'Enregistrer les modifications' : 'Enregistrer' }}
+                    {{ isset($fournisseur) ? 'Mettre à jour' : 'Enregistrer' }}
                 `);
             }
         });
