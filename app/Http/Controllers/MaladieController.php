@@ -23,7 +23,10 @@ class MaladieController extends Controller
                     return $row->symptomes->pluck('nom')->implode(', ');
                 })
                 ->addColumn('actions', function($row){
-                    return '<button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'">Supprimer</button>';
+                    $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></a> ';
+                    $btn .= '<a href="javascript:void(0)" class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></a> ';
+                    $btn .= '<a href="javascript:void(0)" class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></a>';
+                    return $btn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -58,6 +61,26 @@ class MaladieController extends Controller
         $maladie->delete();
 
         return response()->json(['success' => true, 'message' => 'Maladie supprimée !']);
+    }
+
+    public function update(Request $request, $id) {
+        $request->validate([
+            'nom' => 'required|unique:maladies,nom,'.$id,
+            'symptomes' => 'array'
+        ]);
+
+        $maladie = Maladie::findOrFail($id);
+        $maladie->update([
+            'nom' => $request->nom,
+            'description' => $request->description
+        ]);
+
+        $maladie->symptomes()->sync($request->symptomes ?? []);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Maladie mise à jour avec succès !'
+        ]);
     }
 
     /**

@@ -60,8 +60,8 @@
                     </a>
                 </li>
                 <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('securite.*') ? 'active' : '' }}"
-                       href="#">
+                    <a class="nav-link {{ request()->routeIs('assurances.*') ? 'active' : '' }}"
+                       href="{{ route('assurances.index') }}">
                         <i class="fa fa-id-card me-1"></i> Sécurité sociale
                     </a>
                 </li>

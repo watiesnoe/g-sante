@@ -80,13 +80,13 @@
             }
             .table th {
                 font-weight: 600;
-                font-size: 0.80rem;
+                font-size: 12px !important;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
                 color: #6c757d;
             }
             .table td {
-                font-size: 0.85rem;
+                font-size: 12px !important;
                 vertical-align: middle;
             }
             .table tbody tr {
@@ -139,6 +139,9 @@
             .card-header .text-primary, .block-header .text-primary,
             .card-header .text-muted, .block-header .text-muted {
                 color: #edf2f7 !important;
+            }
+            .block-content {
+                font-size: 12px !important;
             }
         </style>
 
@@ -800,6 +803,8 @@
   webpack is putting everything together at asset/_js/main/app.js
 -->
 @include('layouts.partials.js')
+<script src="{{ asset('admin/js/dashmix.app.min.js') }}"></script>
+<script src="{{ asset('admin/js/crud-helper.js') }}"></script>
 @yield('scripts')
 
 </body>

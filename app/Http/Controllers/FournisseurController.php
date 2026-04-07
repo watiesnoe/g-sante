@@ -14,13 +14,11 @@ class FournisseurController extends Controller
         if ($request->ajax()) {
             $fournisseurs = Fournisseur::select(['id', 'nom', 'contact', 'adresse']);
             return Datatables::of($fournisseurs)
-                ->addColumn('actions', function($fournisseur) {
+                ->addColumn('actions', function($row) {
                     return '
-                    <a href="'.route('fournisseurs.edit', $fournisseur->id).'" class="btn btn-sm btn-warning">✏️</a>
-                    <form action="'.route('fournisseurs.destroy', $fournisseur->id).'" method="POST" class="d-inline">
-                        '.csrf_field().method_field("DELETE").'
-                        <button class="btn btn-sm btn-danger">🗑️</button>
-                    </form>
+                    <button class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
+                    <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
+                    <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
                 ';
                 })
                 ->rawColumns(['actions'])
@@ -75,6 +73,11 @@ class FournisseurController extends Controller
     public function destroy(Fournisseur $fournisseur)
     {
         $fournisseur->delete();
-        return redirect()->route('fournisseurs.index')->with('success','Fournisseur supprimé !');
+        return response()->json(['success' => true, 'message' => 'Fournisseur supprimé avec succès !']);
+    }
+
+    public function show($id) {
+        $fournisseur = Fournisseur::findOrFail($id);
+        return response()->json($fournisseur);
     }
 }

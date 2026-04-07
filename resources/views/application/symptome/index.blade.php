@@ -1,145 +1,82 @@
+<x-config-layout titre="Gestion des Symptômes" icon="fa fa-stethoscope">
+    <x-slot name="actions">
+        <button class="btn btn-primary" id="btnAdd">
+            <i class="fa fa-plus me-1"></i> Ajouter
+        </button>
+    </x-slot>
 
-@extends('layouts.app')
+    <div class="table-responsive">
+        <table id="symptomesTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
 
-@section('titre','Gestion des Symptômes')
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th width="100">Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 
-@section('content')
-    <div class="container mt-4">
-        <div class="row">
-            @include('layouts.partials.configside')
-            <div class="col-xl-9">
-                <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#symptomeModal">
-                        <i class="fa fa-plus me-1"></i> Ajouter
-                    </button>
-                </div>
-                <div class="block block-rounded">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">Symptômes</h3>
+    <x-slot name="modals">
+        <div class="modal fade" id="crudModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Ajouter un symptôme</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="block-content">
-                        <table id="symptomesTable" class="table table-bordered">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nom</th>
-                                <th>Description</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                        </table>
+                    <div class="modal-body">
+                        <form id="crudForm">
+                            @csrf
+                            <input type="hidden" name="id" id="id">
+                            <div class="mb-3">
+                                <label class="form-label">Nom du symptôme</label>
+                                <input type="text" name="nom" id="nom" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" id="description" class="form-control" placeholder="Description"></textarea>
+                            </div>
+                            <div class="text-end border-top pt-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="submit" class="btn btn-primary" id="btnSave">Enregistrer</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </x-slot>
 
-    <!-- Modal Ajouter/Modifier -->
-    <div class="modal fade" id="symptomeModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Ajouter / Modifier Symptôme</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="symptomeForm">
-                        @csrf
-                        <input type="hidden" id="symptome_id" name="symptome_id">
-                        <div class="mb-3">
-                            <input type="text" name="nom" id="nom" class="form-control" placeholder="Nom du symptôme" required>
-                        </div>
-                        <div class="mb-3">
-                            <textarea name="description" id="description" class="form-control" placeholder="Description"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="saveBtn">Enregistrer</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-
-@section('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-        $(document).ready(function() {
-
-            // Datatable
-            var table = $('#symptomesTable').DataTable({
-                processing:true,
-                serverSide:true,
-                ajax: "{{ route('symptomes.index') }}",
-                columns:[
-                    {data:'DT_RowIndex', name:'DT_RowIndex', orderable:false, searchable:false},
-                    {data:'nom', name:'nom'},
-                    {data:'description', name:'description'},
-                    {data:'actions', name:'actions', orderable:false, searchable:false}
-                ]
-            });
-
-            // Store / Update
-            $('#symptomeForm').submit(function(e){
-                e.preventDefault();
-                let id = $('#symptome_id').val();
-                let url = id ? '/symptomes/'+id : "{{ route('symptomes.store') }}";
-                let type = id ? 'PUT' : 'POST';
-
-                $.ajax({
-                    url: url,
-                    type: type,
-                    data: $(this).serialize(),
-                    success:function(res){
-                        Swal.fire('Succès', res.message, 'success');
-                        $('#symptomeForm')[0].reset();
-                        $('#symptome_id').val('');
-                        $('#symptomeModal').modal('hide');
-                        table.ajax.reload();
-                    },
-                    error:function(xhr){
-                        let errors = xhr.responseJSON.errors;
-                        let errorMsg = '';
-                        for(let key in errors){ errorMsg += errors[key] + '\n'; }
-                        Swal.fire('Erreur', errorMsg, 'error');
+    @section('scripts')
+        <script>
+            $(document).ready(function() {
+                CrudHelper.init({
+                    baseUrl: '/symptomes',
+                    ajaxUrl: "{{ route('symptomes.index') }}",
+                    tableId: '#symptomesTable',
+                    columns: [{
+                            data: 'nom',
+                            name: 'nom'
+                        },
+                        {
+                            data: 'description',
+                            name: 'description'
+                        },
+                        {
+                            data: 'actions',
+                            name: 'actions',
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    mapData: function(data) {
+                        $('#nom').val(data.nom);
+                        $('#description').val(data.description);
                     }
                 });
             });
-
-            // Edit
-            $('#symptomesTable').on('click','.edit', function(){
-                let id = $(this).data('id');
-                $.get('/symptomes/'+id+'/edit', function(data){
-                    $('#symptome_id').val(data.id);
-                    $('#nom').val(data.nom);
-                    $('#description').val(data.description);
-                    $('#symptomeModal').modal('show');
-                });
-            });
-
-            // Delete
-            $('#symptomesTable').on('click','.delete', function(){
-                let id = $(this).data('id');
-                Swal.fire({
-                    title:'Êtes-vous sûr ?',
-                    icon:'warning',
-                    showCancelButton:true,
-                    confirmButtonText:'Oui, supprimer !'
-                }).then((result)=>{
-                    if(result.isConfirmed){
-                        $.ajax({
-                            url:'/symptomes/'+id,
-                            type:'DELETE',
-                            data:{_token:"{{ csrf_token() }}"},
-                            success:function(res){
-                                Swal.fire('Supprimé', res.message, 'success');
-                                table.ajax.reload();
-                            }
-                        });
-                    }
-                });
-            });
-
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
+</x-config-layout>

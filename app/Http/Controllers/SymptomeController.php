@@ -17,9 +17,10 @@ class SymptomeController extends Controller
             return Datatables::of($symptomes)
                 ->addIndexColumn()
                 ->addColumn('actions', function($row){
-                    $editBtn = '<button class="btn btn-info btn-sm edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-edit"></i></button> ';
+                    $viewBtn = '<button class="btn btn-primary btn-sm view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button> ';
+                    $editBtn = '<button class="btn btn-info btn-sm edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button> ';
                     $deleteBtn = '<button class="btn btn-danger btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
-                    return $editBtn.$deleteBtn;
+                    return $viewBtn.$editBtn.$deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -64,6 +65,11 @@ class SymptomeController extends Controller
     // Edit (pour récupérer les données AJAX)
     public function edit(Symptome $symptome)
     {
+        return response()->json($symptome);
+    }
+
+    public function show($id) {
+        $symptome = Symptome::findOrFail($id);
         return response()->json($symptome);
     }
 }

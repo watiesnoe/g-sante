@@ -18,10 +18,12 @@ class UniteController extends Controller
                 ->addIndexColumn()
                 ->addColumn('actions', function ($row) {
                     return '
-                    <button class="btn btn-sm btn-warning editUnite"
+                    <button class="btn btn-sm btn-primary view"
+                        data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
+                    <button class="btn btn-sm btn-info edit"
                         data-id="'.$row->id.'"
-                        data-nom="'.$row->nom.'" title="Modifier"><i class="fa fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger deleteUnite"
+                        data-nom="'.$row->nom.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
+                    <button class="btn btn-sm btn-danger delete"
                         data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
                 ';
                 })
@@ -65,5 +67,10 @@ class UniteController extends Controller
         $unite->delete();
 
         return response()->json(['success' => 'Unité supprimée avec succès']);
+    }
+
+    public function show($id) {
+        $unite = Unite::findOrFail($id);
+        return response()->json($unite);
     }
 }

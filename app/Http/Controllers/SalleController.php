@@ -23,18 +23,18 @@ class SalleController extends Controller
                     return $row->serviceMedical->nom ?? 'N/A';
                 })
                 ->addColumn('actions', function ($row) {
-                    $editUrl = route('salles.edit', $row->id);
-                    $deleteUrl = route('salles.destroy', $row->id);
                     return '
-                    <a href="'.$editUrl.'" class="btn btn-sm btn-warning">✏️</a>
-                    <button data-url="'.$deleteUrl.'" class="btn btn-sm btn-danger delete-btn">🗑</button>
+                    <button class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
+                    <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
+                    <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
                 ';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
         }
 
-        return view('application.salle.index');
+        $services = ServiceMedical::all();
+        return view('application.salle.index', compact('services'));
     }
 
 
@@ -122,7 +122,11 @@ class SalleController extends Controller
     {
         $salle->delete();
 
-        return redirect()->route('salles.index')
-            ->with('success', 'Salle supprimée avec succès 🗑');
+        return response()->json(['success' => true, 'message' => 'Salle supprimée avec succès !']);
+    }
+
+    public function show($id) {
+        $salle = Salle::with('serviceMedical')->findOrFail($id);
+        return response()->json($salle);
     }
 }

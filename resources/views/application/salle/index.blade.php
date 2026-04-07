@@ -1,94 +1,99 @@
-@extends('layouts.app')
+<x-config-layout titre="Gestion des Salles" icon="fa fa-hospital">
+    <x-slot name="actions">
+        <button class="btn btn-primary" id="btnAdd">
+            <i class="fa fa-plus me-1"></i> Ajouter
+        </button>
+    </x-slot>
 
-@section('titre')
-    🏥 Gestion des Salles
-@endsection
+    <div class="table-responsive">
+        <table id="sallesTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Service médical</th>
+                    <th>Capacité</th>
+                    <th width="100">Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 
-@section('content')
-    <div class="container mt-4">
-        <div class="row">
-            <!-- Sidebar gauche -->
-            @include('layouts.partials.configside')
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8 ">
-
-
-                <div class="d-flex justify-content-end mb-3">
-                    <a href="{{ route('salles.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
-                </div>
-                <div class="card shadow-sm rounded-3">
-                    <div class="d-flex justify-content-between align-items-center p-2 card-header">
-                        <h4 class="mb-0">Liste des Salles</h4>
+    <x-slot name="modals">
+        <div class="modal fade" id="crudModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Ajouter une salle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="card-body">
-                        <table id="salles-table" class="table table-bordered table-striped">
-                            <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Nom</th>
-                                <th>Type</th>
-                                <th>Service médical</th>
-                                <th>Capacité</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                        </table>
+                    <div class="modal-body">
+                        <form id="crudForm">
+                            @csrf
+                            <input type="hidden" name="id" id="id">
+                            <div class="mb-3">
+                                <label class="form-label">Nom de la salle</label>
+                                <input type="text" name="nom" id="nom" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Type de salle</label>
+                                <select name="type" id="type" class="form-control" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="Seringuage">Seringuage</option>
+                                    <option value="Chirurgie">Chirurgie</option>
+                                    <option value="Consultation">Consultation</option>
+                                    <option value="Hospitalisation">Hospitalisation</option>
+                                    <option value="Observation">Observation</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Service médical</label>
+                                <select name="service_medical_id" id="service_medical_id" class="form-control" required>
+                                    <option value="">Sélectionner</option>
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->id }}">{{ $service->nom }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Capacité (Lits)</label>
+                                <input type="number" name="capacite" id="capacite" class="form-control" min="1" required>
+                            </div>
+                            <div class="text-end border-top pt-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="submit" class="btn btn-primary" id="btnSave">Enregistrer</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-@endsection
+    </x-slot>
 
-@section('scripts')
-    <script>
-        $(function () {
-            // Initialisation DataTable
-            let table = $('#salles-table').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: "{{ route('salles.index') }}",
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'nom', name: 'nom' },
-                    { data: 'type', name: 'type' },
-                    { data: 'service', name: 'service' },
-                    { data: 'capacite', name: 'capacite' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false }
-                ]
-            });
-
-
-            // Suppression avec SweetAlert
-            $(document).on('click', '.delete-btn', function () {
-                let url = $(this).data('url');
-
-                Swal.fire({
-                    title: "Êtes-vous sûr ?",
-                    text: "Cette salle sera supprimée définitivement.",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#d33",
-                    cancelButtonColor: "#3085d6",
-                    confirmButtonText: "Oui, supprimer",
-                    cancelButtonText: "Annuler"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: url,
-                            type: 'DELETE',
-                            data: { _token: "{{ csrf_token() }}" },
-                            success: function (res) {
-                                table.ajax.reload();
-                                Swal.fire("Supprimé !", "La salle a été supprimée.", "success");
-                            },
-                            error: function () {
-                                Swal.fire("Erreur !", "Impossible de supprimer.", "error");
-                            }
-                        });
+    @section('scripts')
+        <script>
+            $(document).ready(function() {
+                CrudHelper.init({
+                    baseUrl: '/salles',
+                    ajaxUrl: "{{ route('salles.index') }}",
+                    tableId: '#sallesTable',
+                    columns: [
+                    
+                        { data: 'nom', name: 'nom' },
+                        { data: 'type', name: 'type' },
+                        { data: 'service', name: 'service' },
+                        { data: 'capacite', name: 'capacite' },
+                        { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                    ],
+                    mapData: function(data) {
+                        $('#nom').val(data.nom);
+                        $('#type').val(data.type);
+                        $('#service_medical_id').val(data.service_medical_id);
+                        $('#capacite').val(data.capacite);
                     }
                 });
             });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
+</x-config-layout>

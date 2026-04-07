@@ -28,6 +28,7 @@ use App\Http\Controllers\SymptomeController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UniteController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AssuranceController;
 use Illuminate\Support\Facades\Route;
 
 // Quand on arrive sur la racine "/", on redirige vers le login
@@ -61,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('patients', PatientController::class);
     Route::resource('consultations', ConsultationController::class);
     Route::resource('suivis', SuiviController::class);
+    Route::resource('assurances', AssuranceController::class);
 
 //    Route::get('suivis/create', [SuiviController::class, 'create'])->name('suivis.create');
 // Route pour créer un suivi depuis une consultation

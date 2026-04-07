@@ -1,0 +1,167 @@
+/**
+ * CRUD Helper for Ges-Santé
+ * Centralizes DataTable initialization and AJAX CRUD operations.
+ */
+window.CrudHelper = {
+    init: function(config) {
+        // Default configuration
+        const defaults = {
+            tableId: '#crudTable',
+            formId: '#crudForm',
+            modalId: '#crudModal',
+            modalLabel: '#modalTitle',
+            btnAddId: '#btnAdd',
+            btnSaveId: '#btnSave',
+            hiddenId: '#id',
+            editClass: '.edit',
+            deleteClass: '.delete',
+            viewClass: '.view',
+            addTitle: 'Ajouter',
+            editTitle: 'Modifier',
+            viewTitle: 'Détails',
+            csrfToken: $('meta[name="csrf-token"]').attr('content'),
+            languageUrl: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
+        };
+
+        const settings = $.extend({}, defaults, config);
+
+        // 1. Initialize DataTable
+        const table = $(settings.tableId).DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: settings.ajaxUrl,
+            columns: settings.columns,
+            language: { url: settings.languageUrl }
+        });
+
+        // 2. Add Button Click
+        $(settings.btnAddId).click(function() {
+            $(settings.formId)[0].reset();
+            $(settings.hiddenId).val('');
+            $(settings.formId).find('input, textarea, select').prop('disabled', false);
+            
+            // Reset Select2 if present
+            if ($.fn.select2) {
+                $(settings.formId).find('select').val(null).trigger('change');
+            }
+
+            if (settings.onAdd) settings.onAdd();
+            
+            $(settings.modalLabel).text(settings.addTitle);
+            $(settings.btnSaveId).text('Ajouter').show();
+            $(settings.modalId).modal('show');
+        });
+
+        // 3. Edit/View Button Click
+        const handleShow = function(id, isReadOnly) {
+            const editUrl = settings.showUrl ? settings.showUrl.replace(':id', id) : (settings.baseUrl + '/' + id);
+
+            $.get(editUrl, function(data) {
+                $(settings.formId)[0].reset();
+                $(settings.hiddenId).val(data.id);
+                
+                // Map data to form fields
+                if (settings.mapData) {
+                    settings.mapData(data);
+                } else {
+                    for (let key in data) {
+                        let field = $(settings.formId).find(`[name="${key}"]`);
+                        if (field.length) field.val(data[key]);
+                    }
+                }
+
+                if (isReadOnly) {
+                    $(settings.modalLabel).text(settings.viewTitle);
+                    $(settings.btnSaveId).hide();
+                    $(settings.formId).find('input, textarea, select').prop('disabled', true);
+                } else {
+                    $(settings.modalLabel).text(settings.editTitle);
+                    $(settings.btnSaveId).text('Enregistrer').show();
+                    $(settings.formId).find('input, textarea, select').prop('disabled', false);
+                }
+                
+                $(settings.modalId).modal('show');
+            });
+        };
+
+        $(settings.tableId).on('click', settings.editClass, function() {
+            handleShow($(this).data('id'), false);
+        });
+
+        $(settings.tableId).on('click', settings.viewClass, function() {
+            handleShow($(this).data('id'), true);
+        });
+
+        // 4. Form Submit (Store & Update)
+        $(settings.formId).submit(function(e) {
+            e.preventDefault();
+            const id = $(settings.hiddenId).val();
+            const url = id ? (settings.updateUrl ? settings.updateUrl.replace(':id', id) : settings.baseUrl + '/' + id) 
+                         : settings.storeUrl;
+            const type = id ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                type: type,
+                data: $(this).serialize(),
+                success: function(res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Succès',
+                        text: res.message || res.success,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    $(settings.modalId).modal('hide');
+                    table.ajax.reload();
+                },
+                error: function(xhr) {
+                    let errors = xhr.responseJSON.errors || { error: [xhr.responseJSON.message || 'Une erreur est survenue'] };
+                    let msg = '';
+                    for (let k in errors) msg += errors[k] + '\n';
+                    Swal.fire('Erreur', msg, 'error');
+                }
+            });
+        });
+
+        // 5. Delete Action
+        $(settings.tableId).on('click', settings.deleteClass, function() {
+            const id = $(this).data('id');
+            const deleteUrl = settings.deleteUrl ? settings.deleteUrl.replace(':id', id) : (settings.baseUrl + '/' + id);
+
+            Swal.fire({
+                title: 'Êtes-vous sûr ?',
+                text: "Cette action est irréversible.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Oui, supprimer !',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: deleteUrl,
+                        type: 'DELETE',
+                        data: { _token: settings.csrfToken },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé',
+                                text: res.message || res.success,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            table.ajax.reload();
+                        },
+                        error: function() {
+                            Swal.fire('Erreur', "Impossible de supprimer l'élément.", 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        return table;
+    }
+};
