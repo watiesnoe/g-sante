@@ -7,15 +7,16 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
+             <div class="d-flex justify-content-end mb-3">
+                    <a href="{{ route('prestations.create') }}" class="btn btn-primary">
+                        <i class="fa fa-plus me-1"></i> Ajouter
+                    </a>
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
 
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8">
-                <div class="d-flex justify-content-end mb-3">
-                    <a href="{{ route('prestations.create') }}" class="btn btn-primary">
-                        <i class="fa fa-plus me-1"></i> Ajouter
-                    </a>
+               
                 </div>
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">

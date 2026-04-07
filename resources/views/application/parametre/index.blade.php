@@ -80,7 +80,7 @@
                         <table id="services-table" class="table table-bordered">
                             <thead>
                             <tr>
-                                <th>#</th>
+                              
                                 <th>Nom</th>
                                 <th>Description</th>
                                 <th>Créé le</th>
@@ -102,7 +102,7 @@
                 serverSide: true,
                 ajax: "{{ route('service.index') }}",
                 columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+                   
                     { data: 'nom', name: 'nom' },
                     { data: 'description', name: 'description' },
                     { data: 'created_at', name: 'created_at' },

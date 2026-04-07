@@ -5,15 +5,16 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
-            <!-- Sidebar gauche -->
-            @include('layouts.partials.configside')
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8 ">
-                <div class="d-flex justify-content-end mb-3">
+             <div class="d-flex justify-content-end mb-3">
                     <a href="{{ route('examens.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus me-1"></i> Ajouter
                     </a>
                 </div>
+            <!-- Sidebar gauche -->
+            @include('layouts.partials.configside')
+            <!-- Contenu principal -->
+            <div class="col-xl-9 col-lg-8 ">
+               
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
                         <h3 class="block-title">Liste des examens</h3>
@@ -22,7 +23,7 @@
                         <table class="table table-bordered table-striped table-vcenter" id="examens-table">
                             <thead>
                             <tr>
-                                <th>#</th>
+                                
                                 <th>Nom</th>
                                 <th>Service médical</th>
                                 <th>Description</th>
@@ -47,7 +48,6 @@
                 serverSide: true,
                 ajax: "{{ route('examens.index') }}",
                 columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'nom', name: 'nom' },
                     { data: 'service', name: 'service_medical.nom' },
                     { data: 'description', name: 'description' },

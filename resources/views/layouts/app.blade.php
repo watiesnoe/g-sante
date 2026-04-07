@@ -803,7 +803,7 @@
   webpack is putting everything together at asset/_js/main/app.js
 -->
 @include('layouts.partials.js')
-<script src="{{ asset('admin/js/dashmix.app.min.js') }}"></script>
+
 <script src="{{ asset('admin/js/crud-helper.js') }}"></script>
 @yield('scripts')
 

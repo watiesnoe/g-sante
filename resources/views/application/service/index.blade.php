@@ -1,25 +1,40 @@
-<x-config-layout titre="Gestion de la Structure" icon="fa fa-hospital">
-    <x-slot name="actions">
-        <button class="btn btn-primary" id="btnAdd">
-            <i class="fa fa-plus me-1"></i> Ajouter
-        </button>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="table-responsive">
-        <table id="servicesTable" class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Nom</th>
-                    <th>Description</th>
-                    <th>Créé le</th>
-                    <th width="120">Actions</th>
-                </tr>
-            </thead>
-        </table>
-    </div>
+@section('titre', '🛏️ Gestion des Structures')
 
-    <x-slot name="modals">
-        <div class="modal fade" id="crudModal" tabindex="-1">
+@section('content')
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Sidebar gauche -->
+             <div class="d-flex justify-content-end mb-3">
+                    <a href="{{ route('lits.create') }}" class="btn btn-primary">
+                        <i class="fa fa-plus me-1"></i> Ajouter
+                    </a>
+                </div>
+            @include('layouts.partials.configside')
+            <!-- Contenu principal -->
+            <div class="col-xl-9 col-lg-8 ">
+               
+                <div class="block block-rounded">
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Liste des structure</h3>
+                    </div>
+                    <div class="block-content block-content-full">
+                         <table id="servicesTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th >Description</th>
+                                    <th>Créé le</th>
+                                    <th width="20%">Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+  <div class="modal fade" id="crudModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -47,9 +62,9 @@
                 </div>
             </div>
         </div>
-    </x-slot>
-
-    @section('scripts')
+    </div>
+@endsection
+  @section('scripts')
         <script>
             $(document).ready(function() {
                 CrudHelper.init({
@@ -70,4 +85,4 @@
             });
         </script>
     @endsection
-</x-config-layout>
+

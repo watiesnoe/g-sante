@@ -6,14 +6,15 @@
     <div class="container mt-4">
         <div class="row">
             <!-- Sidebar gauche -->
-            @include('layouts.partials.configside')
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8 ">
-                <div class="d-flex justify-content-end mb-3">
+            <div class="d-flex justify-content-end mb-3">
                     <a href="{{ route('lits.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus me-1"></i> Ajouter
                     </a>
                 </div>
+            @include('layouts.partials.configside')
+            <!-- Contenu principal -->
+            <div class="col-xl-9 col-lg-8 ">
+                
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
                         <h3 class="block-title">Liste des lits</h3>
@@ -22,7 +23,7 @@
                         <table class="table table-bordered table-striped table-vcenter" id="lits-table">
                             <thead>
                             <tr>
-                                <th>#</th>
+                                
                                 <th>Numéro</th>
                                 <th>Salle</th>
                                 <th>Statut</th>
@@ -46,8 +47,7 @@
                 serverSide: true,
                 ajax: "{{ route('lits.index') }}",
                 columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'numero', name: 'numero' },
+*                    { data: 'numero', name: 'numero' },
                     { data: 'salle', name: 'salle.nom' },
                     { data: 'statut', name: 'statut' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false },
