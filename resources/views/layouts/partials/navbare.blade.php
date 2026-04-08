@@ -5,14 +5,14 @@
         <div class="space-x-1">
             <!-- Toggle Sidebar -->
             <!-- Layout API, functionality initialized in Template._uiApiLayout()-->
-            <button type="button" class="btn btn-alt-secondary" data-toggle="layout" data-action="sidebar_toggle">
+            <button type="button" class="btn btn-sm btn-alt-secondary" data-toggle="layout" data-action="sidebar_toggle">
                 <i class="fa fa-fw fa-bars"></i>
             </button>
             <!-- END Toggle Sidebar -->
 
             <!-- Open Search Section -->
             <!-- Layout API, functionality initialized in Template._uiApiLayout() -->
-            <button type="button" class="btn btn-alt-secondary" data-toggle="layout" data-action="header_search_on">
+            <button type="button" class="btn btn-sm btn-alt-secondary" data-toggle="layout" data-action="header_search_on">
                 <i class="fa fa-fw opacity-50 fa-search"></i> <span class="ms-1 d-none d-sm-inline-block">Search</span>
             </button>
             <!-- END Open Search Section -->
@@ -23,7 +23,7 @@
         <div class="space-x-1">
             <!-- User Dropdown -->
             <div class="dropdown d-inline-block">
-                <button type="button" class="btn btn-alt-secondary" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="btn btn-sm btn-alt-secondary" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-fw fa-bell"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-notifications-dropdown">
@@ -88,14 +88,14 @@
                         </li>
                     </ul>
                     <div class="p-2 border-top">
-                        <a class="btn btn-alt-primary w-100 text-center" href="javascript:void(0)">
+                        <a class="btn btn-sm btn-alt-primary w-100 text-center" href="javascript:void(0)">
                             <i class="fa fa-fw fa-eye opacity-50 me-1"></i> View All
                         </a>
                     </div>
                 </div>
             </div>
             <div class="dropdown d-inline-block">
-                <button type="button" class="btn btn-alt-secondary" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="btn btn-sm btn-alt-secondary" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-fw fa-user d-sm-none"></i>
                     <span class="d-none d-sm-inline-block">Admin</span>
                     <i class="fa fa-fw fa-angle-down opacity-50 ms-1 d-none d-sm-inline-block"></i>

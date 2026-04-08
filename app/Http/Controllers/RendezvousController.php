@@ -27,7 +27,7 @@ class RendezvousController extends Controller
                 ->addColumn('medecin', fn($rdv) => optional($rdv->medecin)->name ?? '-')
 
                 // Date formatée
-                ->addColumn('date_heure', fn($rdv) => $rdv->date_heure ? Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') : '-')
+                ->addColumn('date_heure', fn($rdv) => $rdv->date_heure ? Carbon::parse($rdv->date_heure)->format('d-m-Y H:i') : '-')
 
                 // Motif
                 ->addColumn('motif', fn($rdv) => $rdv->motif ?? '-')
@@ -94,7 +94,7 @@ class RendezvousController extends Controller
                 ->addColumn('medecin', fn($rdv) => optional($rdv->medecin)->name ?? '-')
 
                 // Date formatée
-                ->addColumn('date_heure', fn($rdv) => $rdv->date_heure ? Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') : '-')
+                ->addColumn('date_heure', fn($rdv) => $rdv->date_heure ? Carbon::parse($rdv->date_heure)->format('d-m-Y H:i') : '-')
 
                 // Motif
                 ->addColumn('motif', fn($rdv) => $rdv->motif ?? '-')
@@ -161,7 +161,7 @@ class RendezvousController extends Controller
                 ->addColumn('medecin', fn($rdv) => optional($rdv->medecin)->name ?? '-')
 
                 // Date formatée
-                ->addColumn('date_heure', fn($rdv) => $rdv->date_heure ? Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') : '-')
+                ->addColumn('date_heure', fn($rdv) => $rdv->date_heure ? Carbon::parse($rdv->date_heure)->format('d-m-Y H:i') : '-')
 
                 // Motif
                 ->addColumn('motif', fn($rdv) => $rdv->motif ?? '-')

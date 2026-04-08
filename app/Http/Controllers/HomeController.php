@@ -241,6 +241,7 @@ class HomeController extends Controller
         $stats = [
             'total_patients' => Patient::count(),
             'total_consultations' => Consultation::count(),
+            'total_ordonnances' => Ordonnance::count(),
             'total_medecins' => User::where('role', 'medecin')->count(),
             'total_rendezvous' => RendezVous::count(),
         ];
@@ -262,17 +263,17 @@ class HomeController extends Controller
     private function getMedicamentsStockStats()
     {
         return [
-            'normal' => Medicament::where('quantite', '>', 10)->count(),
-            'low' => Medicament::whereBetween('quantite', [1, 10])->count(),
-            'out' => Medicament::where('quantite', 0)->count(),
+            'normal' => Medicament::where('stock', '>', 10)->count(),
+            'low' => Medicament::whereBetween('stock', [1, 10])->count(),
+            'out' => Medicament::where('stock', 0)->count(),
         ];
     }
 
     private function getTopMedicaments()
     {
-        return Medicament::orderBy('quantite', 'asc')
+        return Medicament::orderBy('stock', 'asc')
             ->take(10)
-            ->get(['nom', 'quantite', 'seuil_alerte']);
+            ->get(['nom', 'stock', 'stock_min']);
     }
 
     private function getConsultationStats()

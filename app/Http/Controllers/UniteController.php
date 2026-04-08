@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Unite;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -16,6 +17,7 @@ class UniteController extends Controller
 
             return DataTables::of($unites)
                 ->addIndexColumn()
+                ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-m-Y') : '-')
                 ->addColumn('actions', function ($row) {
                     return '
                     <button class="btn btn-sm btn-primary view"

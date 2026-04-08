@@ -36,7 +36,7 @@ class ConfigurationController extends Controller
                     </div>';
                 })
                 ->editColumn('created_at', function ($row) {
-                    return Carbon::parse($row->created_at)->format('d/m/Y H:i');
+                    return Carbon::parse($row->created_at)->format('d-m-Y H:i');
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

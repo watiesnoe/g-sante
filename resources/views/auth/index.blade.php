@@ -3,55 +3,55 @@
 @section('titre', 'Liste des Utilisateurs')
 
 @section('content')
-    <div class="container-fluid py-4">
-
-        <!-- En-tête -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="fw-bold text-dark mb-1">👥 Gestion des Utilisateurs</h3>
-                            <p class="text-muted mb-0">Gérez tous les utilisateurs du système avec DataTables</p>
-                        </div>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
-                            <i class="bi bi-plus-circle me-2"></i>Nouvel Utilisateur
-                        </button>
-                    </div>
-                </div>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Action Button Area -->
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                    <i class="fa fa-plus me-1"></i> Nouvel Utilisateur
+                </button>
             </div>
-        </div>
 
-        <!-- Tableau des utilisateurs -->
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0">Liste des Utilisateurs</h6>
-                    <div class="d-flex align-items-center">
-                        <div class="d-flex align-items-center gap-2 me-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="export-csv"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</button>
-                            <button type="button" class="btn btn-outline-success btn-sm" id="export-excel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
-                            <button type="button" class="btn btn-outline-danger btn-sm" id="export-pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
+            <!-- Sidebar gauche -->
+            @include('layouts.partials.configside')
+
+            <!-- Contenu principal -->
+            <div class="col-xl-9 col-lg-8">
+                <div class="block block-rounded">
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Gestion des Utilisateurs</h3>
+                        <div class="block-options">
+                            <button type="button" class="btn-block-option" id="reload-table">
+                                <i class="fa fa-sync"></i>
+                            </button>
                         </div>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="reload-table"><i class="bi bi-arrow-repeat"></i></button>
                     </div>
-                </div>
+                    <div class="block-content block-content-full">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="export-csv"><i class="fa fa-file-csv me-1"></i>CSV</button>
+                                <button type="button" class="btn btn-outline-success btn-sm" id="export-excel"><i class="fa fa-file-excel me-1"></i>Excel</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="export-pdf"><i class="fa fa-file-pdf me-1"></i>PDF</button>
+                            </div>
+                        </div>
 
-                <div class="table-responsive">
-                    <table id="users-datatable" class="table table-hover align-middle w-100">
-                        <thead class="table-light">
-                        <tr>
-                            <th width="60">Photo</th>
-                            <th>Utilisateur</th>
-                            <th>Contact</th>
-                            <th>Rôle</th>
-                            <th>Statut</th>
-                            <th>Date création</th>
-                            <th width="150" class="text-center">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                        <div class="table-responsive">
+                            <table id="users-datatable" class="table table-bordered table-striped table-vcenter w-100">
+                                <thead>
+                                    <tr>
+                                        <th width="60">Photo</th>
+                                        <th>Utilisateur</th>
+                                        <th>Contact</th>
+                                        <th>Rôle</th>
+                                        <th>Statut</th>
+                                        <th>Date création</th>
+                                        <th width="120" class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -113,8 +113,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Créer</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Créer</button>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     </div>
                 </form>
             </div>
@@ -152,8 +152,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-danger" id="confirm-delete">Supprimer</button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="confirm-delete">Supprimer</button>
                 </div>
             </div>
         </div>
@@ -176,7 +176,18 @@
                     { data: 'statut', name: 'statut' },
                     { data: 'date_creation', name: 'date_creation' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
-                ]
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
+                    }
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers'
             });
 
             // ---------------------------

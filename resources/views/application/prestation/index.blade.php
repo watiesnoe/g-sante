@@ -1,46 +1,47 @@
 @extends('layouts.app')
 
-@section('titre')
-    ⚙️ Configuration - Prestations Médicales
-@endsection
+@section('titre', '⚙️ Configuration - Prestations Médicales')
 
 @section('content')
     <div class="container mt-4">
         <div class="row">
-             <div class="d-flex justify-content-end mb-3">
-                    <a href="{{ route('prestations.create') }}" class="btn btn-primary">
-                        <i class="fa fa-plus me-1"></i> Ajouter
-                    </a>
+            <!-- Action Button Area -->
+            <div class="d-flex justify-content-end mb-3">
+                <a href="{{ route('prestations.create') }}" class="btn btn-sm btn-primary">
+                    <i class="fa fa-plus me-1"></i> Ajouter
+                </a>
+            </div>
+
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
 
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8">
-               
-                </div>
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
-                        <h5 class="mb-0 text-primary fw-bold">📰 Liste des prestations</h5>
+                        <h3 class="block-title">Liste des prestations</h3>
                     </div>
-
-                    <div class="block-content">
-                        <table id="prestations-table" class="table table-bordered table-striped">
-                            <thead>
-                            <tr>
-                                <th>Prestation</th>
-                                <th>Service Médical</th>
-                                <th>Description</th>
-                                <th>Prix</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                        </table>
+                    <div class="block-content block-content-full">
+                        <div class="table-responsive">
+                            <table id="prestations-table" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Prestation</th>
+                                        <th>Service Médical</th>
+                                        <th>Description</th>
+                                        <th>Prix</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
+
 @section('scripts')
     <script>
         $(document).ready(function() {
@@ -56,6 +57,17 @@
                     { data: 'actions', name: 'actions', orderable: false, searchable: false }
                 ],
                 order: [[1, 'asc']],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
+                    }
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12'i><'col-sm-12'p>>",
+                pagingType: 'simple_numbers'
             });
 
             // Supprimer avec confirmation

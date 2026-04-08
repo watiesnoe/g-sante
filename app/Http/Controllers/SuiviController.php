@@ -21,7 +21,7 @@ class SuiviController extends Controller
                 ->addColumn('patient', fn($s) => optional($s->patient)->nom . ' ' . optional($s->patient)->prenom)
                 ->addColumn('medecin', fn($s) => optional($s->medecin)->name)
                 ->addColumn('consultation', fn($s) => $s->consultation ? "Consultation #{$s->consultation->id}" : '-')
-                ->addColumn('date_heure', fn($s) => $s->date_heure ? \Carbon\Carbon::parse($s->date_heure)->format('d/m/Y H:i') : '-')
+                ->addColumn('date_heure', fn($s) => $s->date_heure ? \Carbon\Carbon::parse($s->date_heure)->format('d-m-Y H:i') : '-')
                 ->addColumn('motif', fn($s) => $s->motif ?? '-')
                 ->addColumn('resultat', fn($s) => $s->resultat ?? '-')
                 ->addColumn('statut', fn($s) => ucfirst($s->statut))

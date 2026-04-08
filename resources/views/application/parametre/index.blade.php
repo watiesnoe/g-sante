@@ -8,67 +8,7 @@
     <div class="container mt-4">
         <div class="row">
             <!-- Sidebar gauche -->
-            <div class="col-xl-3 col-lg-4">
-                <div class="block block-rounded h-100 mb-0">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Menu</h3>
-                    </div>
-                    <div class="block-content">
-                        <ul class="nav nav-pills flex-column push">
-                            <li class="nav-item mb-1">
-                                <a class="nav-link active" href="#">
-                                    <i class="fa fa-hospital me-1"></i> Structure
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-stethoscope me-1"></i> Services médicaux
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users me-1"></i> Utilisateurs
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-door-open me-1"></i> Salles
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-bed me-1"></i> Lits
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-vials me-1"></i> Examens
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-layer-group me-1"></i> Unités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users-cog me-1"></i> Famille
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-user-md me-1"></i> Spécialités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-id-card me-1"></i> Sécurité sociale
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            @include('layouts.partials.configside')
 
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8">
@@ -102,12 +42,22 @@
                 serverSide: true,
                 ajax: "{{ route('service.index') }}",
                 columns: [
-                   
                     { data: 'nom', name: 'nom' },
                     { data: 'description', name: 'description' },
                     { data: 'created_at', name: 'created_at' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false }
-                ]
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
+                    }
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers'
             });
         });
     </script>

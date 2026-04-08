@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Patient;
-
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PatientController extends Controller
@@ -16,6 +16,7 @@ class PatientController extends Controller
 
             return datatables()->of($patients)
                 ->addIndexColumn()
+                ->editColumn('created_at', fn($p) => $p->created_at ? Carbon::parse($p->created_at)->format('d-m-Y') : '-')
                 ->addColumn('actions', function($patient) {
                     $btn = '
                             <div class="dropdown">

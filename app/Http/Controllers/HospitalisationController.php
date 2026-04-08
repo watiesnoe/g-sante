@@ -36,7 +36,7 @@ class HospitalisationController extends Controller
                     return ($row->salle->nom ?? '-') . '/' . ($row->lit->numero ?? '-');
                 })
                 ->addColumn('date_entree', function ($row) {
-                    return \Carbon\Carbon::parse($row->date_entree)->format('d/m/Y');
+                    return \Carbon\Carbon::parse($row->date_entree)->format('d-m-Y');
                 })
                 ->addColumn('etat', function ($row) {
                     $class = match ($row->etat) {
@@ -118,7 +118,7 @@ class HospitalisationController extends Controller
                     return ($row->salle->nom ?? '-') . '/' . ($row->lit->numero ?? '-');
                 })
                 ->addColumn('date_entree', function ($row) {
-                    return \Carbon\Carbon::parse($row->date_entree)->format('d/m/Y');
+                    return \Carbon\Carbon::parse($row->date_entree)->format('d-m-Y');
                 })
                 ->addColumn('etat', function ($row) {
                     $class = match ($row->etat) {

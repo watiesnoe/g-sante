@@ -43,7 +43,7 @@ class ReceptionController extends Controller
                 })
 
                 ->addColumn('date', function($row){
-                    return \Carbon\Carbon::parse($row->date_reception)->format('d/m/Y');
+                    return \Carbon\Carbon::parse($row->date_reception)->format('d-m-Y');
                 })
 
                 ->addColumn('pourcentage', function($row){

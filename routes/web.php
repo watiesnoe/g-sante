@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('tickets', TicketController::class);
     Route::resource('patients', PatientController::class);
     Route::resource('consultations', ConsultationController::class);
+    Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
     Route::resource('suivis', SuiviController::class);
     Route::resource('assurances', AssuranceController::class);
 

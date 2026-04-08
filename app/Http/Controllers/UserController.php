@@ -40,7 +40,7 @@ class UserController extends Controller
                     $badge = $user->statut === 'actif' ? 'success' : 'danger';
                     return "<span class='badge bg-{$badge} text-uppercase'>{$user->statut}</span>";
                 })
-                ->addColumn('date_creation', fn($user) => $user->created_at->format('d/m/Y'))
+                ->addColumn('date_creation', fn($user) => $user->created_at->format('d-m-Y'))
                 ->addColumn('actions', function ($user) {
                     $statusIcon = $user->statut === 'actif'
                         ? '<i class="fa fa-toggle-on text-success"></i>'

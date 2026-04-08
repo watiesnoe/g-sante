@@ -7,7 +7,9 @@
         <!-- Quick Stats -->
             <!-- Commandes avec état de paiement -->
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('paiementscommande.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
+            <a href="{{ route('paiementscommande.create') }}" class="btn btn-sm btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
         </div>
         <div class="block block-rounded">
             <div class="block-header block-header-default">
@@ -47,7 +49,7 @@
                                 <td>
                                     <div class="fw-semibold">{{ $commande->reference }}</div>
                                     <div class="fs-sm text-muted">
-                                        {{ \Carbon\Carbon::parse($commande->date_commande)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($commande->date_commande)->format('d-m-Y') }}
                                     </div>
                                 </td>
                                 <td>{{ $commande->fournisseur->nom ?? 'N/A' }}</td>

@@ -5,26 +5,30 @@
 @section('content')
     <div class="container mt-4">
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('hospitalisations.create') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Ajouter</a>
+            <a href="{{ route('hospitalisations.create') }}" class="btn btn-sm btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
         </div>
-        <div class="card shadow mt-3">
-            <div class="card-header bg-primary text-white d-flex justify-content-between">
-                <h5 class="mb-0">Liste des hospitalisations</h5>
+        <div class="block block-rounded">
+            <div class="block-header block-header-default">
+                <h3 class="block-title">
+                    <i class="fa fa-bed me-1"></i> Liste des Hospitalisations
+                </h3>
             </div>
-
-            <div class="card-body">
+            <div class="block-content block-content-full">
                 <div class="table-responsive">
-                    <table id="hospitalisationsTable" class="table table-bordered table-hover">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Nom & Prénom</th>
-                            <th>Salle/Lit</th>
-                            <th>Date entrée</th>
-                            <th>Motif</th>
-                            <th>État</th>
-                            <th>Action</th>
-                        </tr>
+                    <table id="hospitalisationsTable" class="table table-bordered table-striped table-vcenter w-100">
+                        <thead>
+                            <tr>
+                                <th>Nom &amp; Prénom</th>
+                                <th>Salle/Lit</th>
+                                <th>Date entrée</th>
+                                <th>Motif</th>
+                                <th>État</th>
+                                <th class="text-center">Action</th>
+                            </tr>
                         </thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
@@ -75,9 +79,9 @@
                             </div>
                         </div>
 
-                        <div class="modal-footer bg-light">
-                            <button type="submit" class="btn btn-primary">Valider</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-sm btn-primary">Valider</button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>
                         </div>
                     </div>
                 </form>
@@ -101,8 +105,19 @@
                     { data: 'date_entree', name: 'date_entree' },
                     { data: 'motif', name: 'motif' },
                     { data: 'etat', name: 'etat', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },
                 ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
+                    }
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers'
             });
 
             // ---------------- Ouvrir modal paiement ----------------

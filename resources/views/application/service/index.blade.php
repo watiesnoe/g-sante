@@ -7,9 +7,9 @@
         <div class="row">
             <!-- Sidebar gauche -->
              <div class="d-flex justify-content-end mb-3">
-                    <a href="{{ route('lits.create') }}" class="btn btn-primary">
+                    <button class="btn btn-sm btn-primary" id="btnAdd">
                         <i class="fa fa-plus me-1"></i> Ajouter
-                    </a>
+                    </button>
                 </div>
             @include('layouts.partials.configside')
             <!-- Contenu principal -->
@@ -54,8 +54,8 @@
                                 <textarea name="description" id="description" class="form-control" rows="3" placeholder="Informations complémentaires"></textarea>
                             </div>
                             <div class="text-end border-top pt-3">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                                <button type="submit" class="btn btn-primary" id="btnSave">Enregistrer</button>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="submit" class="btn btn-sm btn-primary" id="btnSave">Enregistrer</button>
                             </div>
                         </form>
                     </div>

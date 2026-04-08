@@ -49,6 +49,6 @@
     </div>
 
     <div class="mt-3 text-end">
-        <button type="submit" class="btn btn-primary">💾 Mettre à jour</button>
+        <button type="submit" class="btn btn-sm btn-primary">💾 Mettre à jour</button>
     </div>
 </form>

@@ -31,7 +31,17 @@ window.CrudHelper = {
             serverSide: true,
             ajax: settings.ajaxUrl,
             columns: settings.columns,
-            language: { url: settings.languageUrl }
+            language: { 
+                url: settings.languageUrl,
+                paginate: {
+                    previous: '<i class="fa fa-chevron-left"></i>',
+                    next: '<i class="fa fa-chevron-right"></i>'
+                }
+            },
+            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12'i><'col-sm-12'p>>",
+            pagingType: 'simple_numbers'
         });
 
         // 2. Add Button Click

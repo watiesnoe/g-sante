@@ -6,7 +6,7 @@
     <!-- Page Content -->
     <div class="container mt-4">
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('patients.create') }}" class="btn btn-primary">
+            <a href="{{ route('patients.create') }}" class="btn btn-sm btn-primary">
                 <i class="fa fa-plus me-1"></i> Ajouter
             </a>
         </div>
@@ -121,22 +121,16 @@
                     }
                 ],
                 language: {
-                    "emptyTable": "Aucune donnée disponible",
-                    "info": "Affichage de _START_ à _END_ sur _TOTAL_ entrées",
-                    "infoEmpty": "Affichage de 0 à 0 sur 0 entrées",
-                    "infoFiltered": "(filtré depuis _MAX_ entrées totales)",
-                    "lengthMenu": "Afficher _MENU_ entrées",
-                    "loadingRecords": "Chargement...",
-                    "processing": "Traitement...",
-                    "search": "Rechercher:",
-                    "zeroRecords": "Aucun enregistrement correspondant trouvé",
-                    "paginate": {
-                        "first": "Premier",
-                        "last": "Dernier",
-                        "next": "Suivant",
-                        "previous": "Précédent"
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
                     }
                 },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers',
                 pageLength: 15,
                 order: [[5, 'desc']]
             });

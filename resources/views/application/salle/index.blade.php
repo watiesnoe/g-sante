@@ -1,26 +1,45 @@
-<x-config-layout titre="Gestion des Salles" icon="fa fa-hospital">
-    <x-slot name="actions">
-        <button class="btn btn-primary" id="btnAdd">
-            <i class="fa fa-plus me-1"></i> Ajouter
-        </button>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="table-responsive">
-        <table id="sallesTable" class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                
-                    <th>Nom</th>
-                    <th>Type</th>
-                    <th>Service médical</th>
-                    <th>Capacité</th>
-                    <th width="100">Actions</th>
-                </tr>
-            </thead>
-        </table>
-    </div>
+@section('titre', 'Gestion des Salles')
 
-    <x-slot name="modals">
+@section('content')
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Action Button Area -->
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-sm btn-primary" id="btnAdd">
+                    <i class="fa fa-plus me-1"></i> Ajouter
+                </button>
+            </div>
+
+            <!-- Sidebar gauche -->
+            @include('layouts.partials.configside')
+
+            <!-- Contenu principal -->
+            <div class="col-xl-9 col-lg-8">
+                <div class="block block-rounded">
+                    <div class="block-header block-header-default">
+                        <h3 class="block-title">Liste des Salles</h3>
+                    </div>
+                    <div class="block-content block-content-full">
+                        <div class="table-responsive">
+                            <table id="sallesTable" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Service médical</th>
+                                        <th>Capacité</th>
+                                        <th width="100">Actions</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="modal fade" id="crudModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -61,15 +80,17 @@
                                 <input type="number" name="capacite" id="capacite" class="form-control" min="1" required>
                             </div>
                             <div class="text-end border-top pt-3">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                                <button type="submit" class="btn btn-primary" id="btnSave">Enregistrer</button>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="submit" class="btn btn-sm btn-primary" id="btnSave">Enregistrer</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    </x-slot>
+    </div>
+@endsection
+
 
     @section('scripts')
         <script>
@@ -96,4 +117,4 @@
             });
         </script>
     @endsection
-</x-config-layout>
+

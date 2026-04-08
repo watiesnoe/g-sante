@@ -39,7 +39,7 @@ class TicketController extends Controller
                     return number_format($ticket->items->sum('sous_total'), 0, ',', ' ');
                 })
                 ->addColumn('date', function($ticket){
-                    return $ticket->created_at->format('d/m/Y H:i');
+                    return $ticket->created_at->format('d-m-Y H:i');
                 })
                 ->addColumn('actions', function($ticket){
                     $btn = '

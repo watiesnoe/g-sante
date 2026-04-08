@@ -53,12 +53,12 @@
                         <i class="fa fa-users-cog me-1"></i> Famille
                     </a>
                 </li>
-                <li class="nav-item mb-1">
+                {{-- <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('specialites.*') ? 'active' : '' }}"
                        href="#">
                         <i class="fa fa-user-md me-1"></i> Spécialités
                     </a>
-                </li>
+                </li> --}}
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('assurances.*') ? 'active' : '' }}"
                        href="{{ route('assurances.index') }}">

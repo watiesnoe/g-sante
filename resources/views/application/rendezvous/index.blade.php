@@ -17,14 +17,14 @@
 
                 <table class="table table-bordered table-striped" id="rendezvous-table">
                     <thead class="table-dark">
-                    <tr>
-                        <th>Patient</th>
-                        <th>Médecin</th>
-                        <th>Consultation</th>
-                        <th>Date & Heure</th>
-                        <th>Motif</th>
-                        <th>Action</th>
-                    </tr>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Médecin</th>
+                            <th>Consultation</th>
+                            <th>Date & Heure</th>
+                            <th>Motif</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
                 </table>
 
@@ -84,25 +84,44 @@
 
 @section('scripts')
     <script>
-        $(function () {
+        $(function() {
 
             // DataTable
             let table = $('#rendezvous-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('rendezvous.index') }}",
-                columns: [
-                    { data: 'patient', name: 'patient.nom' },
-                    { data: 'medecin', name: 'medecin.name' },
-                    { data: 'consultation', name: 'consultation.id' },
-                    { data: 'date_heure', name: 'date_heure' },
-                    { data: 'motif', name: 'motif' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false } // ← actions au lieu de action
+                columns: [{
+                        data: 'patient',
+                        name: 'patient.nom'
+                    },
+                    {
+                        data: 'medecin',
+                        name: 'medecin.name'
+                    },
+                    {
+                        data: 'consultation',
+                        name: 'consultation.id'
+                    },
+                    {
+                        data: 'date_heure',
+                        name: 'date_heure'
+                    },
+                    {
+                        data: 'motif',
+                        name: 'motif'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false
+                    } // ← actions au lieu de action
                 ]
             });
 
             // Ajouter
-            $('#addRdvBtn').click(function(){
+            $('#addRdvBtn').click(function() {
                 $('#rdvForm')[0].reset();
                 $('#rdv_id').val('');
                 $('#rdvModal .modal-title').text("Nouveau Rendez-vous");
@@ -110,13 +129,13 @@
             });
 
             // Sauvegarder
-            $('#rdvForm').submit(function(e){
+            $('#rdvForm').submit(function(e) {
                 e.preventDefault();
                 $.ajax({
                     url: "{{ route('rendezvous.store') }}",
                     method: "POST",
                     data: $(this).serialize(),
-                    success: function(){
+                    success: function() {
                         $('#rdvModal').modal('hide');
                         table.ajax.reload();
                     }
@@ -124,9 +143,9 @@
             });
 
             // Éditer
-            $(document).on('click', '.editRdv', function(){
+            $(document).on('click', '.editRdv', function() {
                 let id = $(this).data('id');
-                $.get("/rendezvous/"+id+"/edit", function(rdv){
+                $.get("/rendezvous/" + id + "/edit", function(rdv) {
                     $('#rdv_id').val(rdv.id);
                     $('#patient_id').val(rdv.patient_id);
                     $('#medecin_id').val(rdv.medecin_id);
@@ -139,16 +158,16 @@
             });
 
             // Supprimer
-            $(document).on('click', '.deleteRdv', function(){
+            $(document).on('click', '.deleteRdv', function() {
                 let id = $(this).data('id');
-                if(confirm("Voulez-vous vraiment supprimer ce rendez-vous ?")){
+                if (confirm("Voulez-vous vraiment supprimer ce rendez-vous ?")) {
                     $.ajax({
-                        url: "/rendezvous/"+id,
+                        url: "/rendezvous/" + id,
                         method: "DELETE",
                         data: {
                             _token: "{{ csrf_token() }}"
                         },
-                        success: function(){
+                        success: function() {
                             table.ajax.reload();
                         }
                     });
@@ -158,7 +177,7 @@
         });
     </script>
     <script>
-        $(document).on('click', '.btn-realise', function (e) {
+        $(document).on('click', '.btn-realise', function(e) {
             e.preventDefault();
 
             let url = $(this).data('url');
@@ -170,7 +189,7 @@
                     data: {
                         _token: "{{ csrf_token() }}"
                     },
-                    success: function (response) {
+                    success: function(response) {
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',
@@ -182,7 +201,7 @@
                             $('#rdvTable').DataTable().ajax.reload(); // refresh tableau
                         }
                     },
-                    error: function () {
+                    error: function() {
                         alert("❌ Une erreur est survenue.");
                     }
                 });
