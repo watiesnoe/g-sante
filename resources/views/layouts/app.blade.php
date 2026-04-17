@@ -262,6 +262,13 @@
             table.dataTable.no-footer {
                 border-bottom: 1px solid #e2e8f0 !important;
             }
+            .bg-soft-success-light {
+                background-color: rgba(46, 204, 113, 0.05);
+            }
+            .bg-warning-light {
+                background-color: rgba(255, 193, 7, 0.2);
+            }
+            .italic { font-style: italic; }
         </style>
 
     <style>

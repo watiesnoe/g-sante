@@ -113,6 +113,26 @@ class MedicamentsSeeder extends Seeder
                 "unite_id" => 1,
                 "famille_id" => 9,
             ],
+            [
+                "nom" => "Ceftriaxone 1g Injectable",
+                "description" => "Antibiotique céphalosporine de 3ème génération.",
+                "stock" => 50,
+                "stock_min" => 5,
+                "prix_achat" => 2500,
+                "prix_vente" => 4500,
+                "unite_id" => 5, // Ampoule/Flacon
+                "famille_id" => 2,
+            ],
+            [
+                "nom" => "Artéméther + Luméfantrine (Coartem)",
+                "description" => "Traitement combiné à base d'artémisinine (CTA) contre le paludisme.",
+                "stock" => 100,
+                "stock_min" => 10,
+                "prix_achat" => 3000,
+                "prix_vente" => 5500,
+                "unite_id" => 1,
+                "famille_id" => 2,
+            ],
         ];
 
         foreach ($medicaments as $medicament) {

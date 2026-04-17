@@ -9,9 +9,13 @@ class Consultation extends Model {
     use HasFactory;
 
     protected $fillable = [
-        'patient_id','medecin_id','ticket_id','date_consultation','motif','diagnostic','notes','poids','temperature','tension',
-        'taille','imc','groupe_sanguin','adresse_patient','antecedents'
+        'patient_id','medecin_id','ticket_id','protocole_id','date_consultation','motif','diagnostic','notes','poids','temperature','tension',
+        'taille','imc','groupe_sanguin','adresse_patient','antecedents','maladie_id'
     ];
+
+    public function protocole() {
+        return $this->belongsTo(ProtocoleTraitement::class, 'protocole_id');
+    }
     public function patient() {
         return $this->belongsTo(Patient::class);
     }

@@ -81,7 +81,7 @@
                 CrudHelper.init({
                     baseUrl: '/fournisseurs',
                     ajaxUrl: "{{ route('fournisseurs.index') }}",
-                    tableId: '#fournisseursTable',
+                    tableId: '#fournisseurTable',
                     columns: [
                         { data: 'nom', name: 'nom' },
                         { data: 'contact', name: 'contact' },

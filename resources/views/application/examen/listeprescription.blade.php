@@ -41,18 +41,16 @@
                     { data: 'actions', name: 'actions', orderable:false, searchable:false }
                 ],
                 language: {
-                    emptyTable: "Aucune prescription trouvée",
-                    search: "🔍 Rechercher :",
-                    lengthMenu: "Afficher _MENU_ entrées",
-                    info: "Affichage de _START_ à _END_ sur _TOTAL_ prescriptions",
-                    infoEmpty: "Affichage de 0 à 0 sur 0 prescriptions",
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
                     paginate: {
-                        first: "Première",
-                        last: "Dernière",
-                        next: "Suivant",
-                        previous: "Précédent"
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
                     }
                 },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers',
                 pageLength: 10,
                 lengthMenu: [5, 10, 25, 50],
                 order: [[1, 'asc']]

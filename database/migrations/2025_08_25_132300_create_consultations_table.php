@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('tension')->nullable();
             $table->float('taille')->nullable();
             $table->float('imc')->nullable();
+            $table->foreignId('maladie_id')->constrained()->onDelete('cascade');
             $table->string('groupe_sanguin')->nullable();
             $table->string('adresse_patient')->nullable();
             $table->text('antecedents')->nullable();

@@ -40,7 +40,7 @@ class AssuranceController extends Controller
             'nom' => 'required|string|max:255',
             'taux' => 'required|integer|min:0|max:100',
         ]);
-
+        // dd($request->all());
         Assurance::create($request->all());
 
         return redirect()->route('assurances.index')->with('success', 'Assurance ajoutée avec succès !');

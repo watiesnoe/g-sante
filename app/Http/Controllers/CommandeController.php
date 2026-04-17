@@ -7,6 +7,7 @@ use App\Models\Fournisseur;
 use App\Models\Medicament;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Yajra\DataTables\DataTables;
@@ -14,36 +15,88 @@ use Yajra\DataTables\DataTables;
 class CommandeController extends Controller
 {
     // Liste des commandes
-    public function index(Request $request)
-    {
-        if ($request->ajax()) {
-           $commandes = Commande::with('fournisseur')    ->orderBy('commandes.created_at', 'desc');
+   
 
-            return DataTables::of($commandes)
-                ->addColumn('fournisseur', function ($row) {
-                    return $row->fournisseur ? $row->fournisseur->nom : '-';
-                })->addColumn('actions', function ($row) {
-                    return '
-                <div class="dropdown text-center">
-                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        ⚙️ Actions
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="'.route('commandes.show', $row->id).'" class="dropdown-item">📄 Voir détails</a></li>
-                        <li><a href="'.route('commandes.edit', $row->id).'" class="dropdown-item">✏️ Modifier</a></li>
-                        <li><a href="'.route('commandes.pdf', $row->id).'" class="dropdown-item" target="_blank">🧾 Imprimer</a></li>
+public function index(Request $request)
+{
+    if ($request->ajax()) {
 
-                        <li><hr class="dropdown-divider"></li>
-                        <li><button type="button" class="dropdown-item text-danger btnSupprimer" data-id="'.$row->id.'">🗑️ Supprimer</button></li>
-                    </ul>
-                </div> ';
-                })->rawColumns(['actions'])
+        $commandes = Commande::with('fournisseur')->latest();
 
-                ->make(true);
-        }
+        return DataTables::of($commandes)
 
-        return view('application.commande.index');
+            // Référence
+            ->addColumn('reference', function ($row) {
+                return '<strong>'.$row->reference.'</strong>';
+            })
+
+            // Fournisseur
+            ->addColumn('fournisseur', function ($row) {
+                return $row->fournisseur->nom ?? '-';
+            })
+
+            // Date formatée
+            ->editColumn('date_commande', function ($row) {
+                return $row->date_commande;
+            })
+
+            // Statut stylé
+            ->editColumn('statut', function ($row) {
+                $color = match($row->statut) {
+                    'valide' => 'success',
+                    'en_attente' => 'warning',
+                    'annuler' => 'danger',
+                    default => 'secondary'
+                };
+
+                return '<span class="badge bg-'.$color.'">'.ucfirst($row->statut).'</span>';
+            })
+
+            // Total formaté
+            ->editColumn('total', function ($row) {
+                return number_format($row->total, 0, ',', ' ') . ' FCFA';
+            })
+
+            // Actions
+           ->addColumn('actions', function ($row) {
+    return '
+    <div class="d-flex justify-content-center gap-2">
+
+        <!-- Voir -->
+        <a href="'.route('commandes.show', $row->id).'" 
+           class="text-primary" title="Voir">
+            <i class="fa fa-eye"></i>
+        </a>
+
+        <!-- Modifier -->
+        <a href="'.route('commandes.edit', $row->id).'" 
+           class="text-warning" title="Modifier">
+            <i class="fa fa-edit"></i>
+        </a>
+
+        <!-- PDF -->
+        <a href="'.route('commandes.pdf', $row->id).'" 
+           target="_blank" class="text-info" title="Imprimer PDF">
+            <i class="fa fa-file-pdf"></i>
+        </a>
+
+        <!-- Supprimer -->
+        <span class="text-danger btnSupprimer" 
+              style="cursor:pointer;" 
+              data-id="'.$row->id.'" 
+              title="Supprimer">
+            <i class="fa fa-trash"></i>
+        </span>
+
+    </div>';
+})
+            ->rawColumns(['reference', 'statut', 'actions'])
+
+            ->make(true);
     }
+
+    return view('application.commande.index');
+}
 
     // Formulaire de création
     public function create()

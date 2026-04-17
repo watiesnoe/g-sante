@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.app')
 
 @section('title_page', 'Résultats des examens réalisés')
@@ -50,8 +49,16 @@
                     { data: 'actions', name: 'actions', orderable: false, searchable: false }
                 ],
                 language: {
-                    // url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
-                }
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                    paginate: {
+                        previous: '<i class="fa fa-chevron-left"></i>',
+                        next: '<i class="fa fa-chevron-right"></i>'
+                    }
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                pagingType: 'simple_numbers'
             });
 
             // Suppression avec SweetAlert2

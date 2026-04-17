@@ -8,6 +8,7 @@ use App\Models\Hospitalisation;
 use App\Models\Lit;
 use App\Models\Maladie;
 use App\Models\Medicament;
+use App\Models\ConsultationSuggestion;
 use App\Models\Ordonnance;
 use App\Models\OrdonnanceMedicament;
 use App\Models\Patient;
@@ -21,7 +22,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\DataTables;
-
 
 class ConsultationController extends Controller
 {
@@ -60,10 +60,7 @@ class ConsultationController extends Controller
         return view('application.consultation.index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Consultation $consultation)
+    public function listeAttente(Request $request)
     {
         $today = Carbon::today();
         $tickets = Ticket::with(['patient', 'items'])
@@ -72,9 +69,44 @@ class ConsultationController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
+        if ($request->ajax()) {
+            return DataTables::of($tickets)
+                ->addColumn('patient', function($row) {
+                    return $row->patient ? $row->patient->prenom.' '.$row->patient->nom : '-';
+                })
+                ->addColumn('age', function($row) {
+                    return $row->patient ? $row->patient->age.' ans' : '-';
+                })
+                ->addColumn('motif', function($row) {
+                    return $row->items->pluck('libelle')->implode(', ');
+                })
+                ->addColumn('actions', function($row){
+                    return '<a href="'.route('consultations.create', ['ticket_id' => $row->id]).'" class="btn btn-primary btn-sm"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
+
+        return view('application.consultation.liste_attente');
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request, Consultation $consultation)
+    {
+        $today = Carbon::today();
+        $tickets = Ticket::with(['patient', 'items'])
+            ->where('statut', 'en_attente')
+            ->where('date_validite', '>=', $today)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $selectedTicketId = $request->get('ticket_id');
+
         $patients = Patient::all();
         $symptomes = Symptome::all();
-        $maladies = Maladie::all();
+        $maladies = Maladie::with('protocole')->get();
         $medicaments = Medicament::all();
         $salles = Salle::all();
         $lits = Lit::all();
@@ -84,7 +116,14 @@ class ConsultationController extends Controller
             $symptomeMaladieMap[$s->id] = $s->maladies()->pluck('maladies.id')->toArray();
         }
 
-        // 🔹 ajouter cette ligne :
+        $maladieSymptomesDetails = [];
+        foreach ($maladies as $m) {
+            $maladieSymptomesDetails[$m->id] = [
+                'nom' => $m->nom,
+                'symptomes' => $m->symptomes()->pluck('symptomes.id')->toArray()
+            ];
+        }
+
         $consultation = null;
 
         return view('application.consultation.create', compact(
@@ -93,10 +132,12 @@ class ConsultationController extends Controller
             'symptomes',
             'maladies',
             'symptomeMaladieMap',
+            'maladieSymptomesDetails',
             'medicaments',
             'salles',
             'lits',
-            'consultation' // ✅
+            'consultation',
+            'selectedTicketId'
         ));
     }
 
@@ -135,7 +176,9 @@ class ConsultationController extends Controller
                  'adresse_patient' => 'nullable|string',
                  'diagnostic'   => 'required|string',
                  'ticket_id'    => 'nullable|exists:tickets,id',
+                 'protocole_id' => 'nullable|exists:protocole_traitements,id',
                  'quantites'    => 'array',
+                 'suggestions'  => 'nullable|array',
              ]);
        
 
@@ -144,6 +187,7 @@ class ConsultationController extends Controller
                  'ticket_id'        => $request->ticket_id, // ✅ ajouté
                  'patient_id'       => $request->patient_id,
                  'medecin_id'       => $request->medecin_id,
+                 'protocole_id'     => $request->protocole_id, // ✅ track the applied protocol
                  'date_consultation'=> now(),
                  'motif'            => $request->motif,
                  'taille'           => $request->taille,
@@ -167,6 +211,18 @@ class ConsultationController extends Controller
                  $consultation->maladies()->sync([$request->maladie_id]);
              }
 
+             // 🔹 Suggestions IA de Diagnostic
+             if ($request->filled('suggestions')) {
+                 foreach ($request->suggestions as $suggestion) {
+                     ConsultationSuggestion::create([
+                         'consultation_id'  => $consultation->id,
+                         'pathologie_id'    => $suggestion['pathologie_id'],
+                         'score'            => $suggestion['score'],
+                         'niveau_confiance' => $suggestion['niveau_confiance'] ?? null
+                     ]);
+                 }
+             }
+
              // 🔹 Ordonnance + Médicaments
              if ($request->filled('medicaments')) {
                  $ordonnance = Ordonnance::create([
@@ -175,6 +231,8 @@ class ConsultationController extends Controller
                  ]);
 
                  foreach ($request->medicaments as $i => $medId) {
+                     if (!$medId) continue; // Ignorer les lignes de sélection vides
+                     
                      OrdonnanceMedicament::create([
                          'ordonnance_id'  => $ordonnance->id,
                          'medicament_id'  => $medId,
@@ -297,7 +355,7 @@ class ConsultationController extends Controller
         }
 
         $symptomes = Symptome::all();
-        $maladies = Maladie::all();
+        $maladies = Maladie::with('protocole')->get();
 
         $symptomeMaladieMap = Symptome::with('maladies')
             ->get()

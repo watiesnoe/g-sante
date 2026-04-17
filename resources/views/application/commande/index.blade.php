@@ -19,9 +19,10 @@
                     <table id="tableCommandes" class="table table-bordered table-striped table-vcenter w-100">
                         <thead>
                             <tr>
+                                <th>Reference CMD</th>
                                 <th>Fournisseur</th>
                                 <th>Date Commande</th>
-                                <th>Statut</th>
+                                <th>Statut livraison</th>
                                 <th>Total</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -41,7 +42,8 @@
                 processing: true,
                 serverSide: true,
                 ajax: '{{ route("commandes.index") }}',
-                columns: [
+               columns: [
+                    { data: 'reference', name: 'reference' }, // ✅ AJOUT
                     { data: 'fournisseur', name: 'fournisseur.nom' },
                     { data: 'date_commande', name: 'date_commande' },
                     { data: 'statut', name: 'statut' },

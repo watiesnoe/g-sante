@@ -65,7 +65,8 @@ class DatabaseSeeder extends Seeder
             UniteSeeder::class,
             FamilleSeeder::class,
             MaladieSymptomeSeeder::class,
-            MedicamentsSeeder::class
+            MedicamentsSeeder::class,
+            InfectiologieSeeder::class
         ]);
     }
 }
