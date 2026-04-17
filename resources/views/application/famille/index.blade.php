@@ -26,9 +26,10 @@
                             <table id="familleTable" class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>Nom</th>
-                                        <th>Date création</th>
-                                        <th width="100">Actions</th>
+                                        <th class="text-center">Date création</th>
+                                        <th width="100" class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -74,13 +75,11 @@
                     ajaxUrl: "{{ route('familles.index') }}",
                     tableId: '#familleTable',
                     columns: [
-                         { data: 'nom', name: 'nom' },
-                        { data: 'created_at', name: 'created_at' },
-                        { data: 'actions', name: 'actions', orderable: false, searchable: false }
-                    ],
-                    mapData: function(data) {
-                        $('#nom').val(data.nom);
-                    }
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'nom', name: 'nom' },
+                        { data: 'created_at', name: 'created_at', className: 'text-center' },
+                        { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+                    ]
                 });
             });
         </script>

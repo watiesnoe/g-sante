@@ -49,6 +49,7 @@
                     @include('layouts.partials.menus.hospitalisation')
                     @include('layouts.partials.menus.stock')
                     @include('layouts.partials.menus.paiements')
+                    @include('layouts.partials.menus.caisse')
                     @include('layouts.partials.menus.infectiologie')
 
                     <!-- Paramètres -->
@@ -82,6 +83,7 @@
                     @include('layouts.partials.menus.hospitalisation')
                     @include('layouts.partials.menus.stock')
                     @include('layouts.partials.menus.paiements')
+                    @include('layouts.partials.menus.caisse')
                 @endif
 
             </ul>

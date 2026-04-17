@@ -24,16 +24,9 @@ class ConfigurationController extends Controller
                     $editUrl = route('service_medicals.edit', $row->id);
                     $deleteUrl = route('service_medicals.destroy', $row->id);
 
-                    return '
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            ⚙️ Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="'.$editUrl.'">✏️ Éditer</a></li>
-                            <li><button class="dropdown-item text-danger delete-btn" data-url="'.$deleteUrl.'">🗑 Supprimer</button></li>
-                        </ul>
-                    </div>';
+                    $edit = '<a href="'.$editUrl.'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $delete = '<button class="btn-sm border-0 bg-transparent text-danger delete-btn" data-url="'.$deleteUrl.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    return $edit.$delete;
                 })
                 ->editColumn('created_at', function ($row) {
                     return Carbon::parse($row->created_at)->format('d-m-Y H:i');

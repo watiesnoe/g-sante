@@ -137,6 +137,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [PaiementCommandeController::class, 'destroy'])->name('paiementscommande.destroy');
     });
 
+    // Caisse Globale
+    Route::get('/caisse', [\App\Http\Controllers\CaisseController::class, 'index'])->name('caisse.index');
+
     // Dossiers Patients
     Route::prefix('patients')->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('patients.index');

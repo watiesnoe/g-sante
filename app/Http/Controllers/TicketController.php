@@ -18,57 +18,56 @@ class TicketController extends Controller
      */
 
     public function index(Request $request)
-    {
-        if ($request->ajax()) {
-            $today = \Carbon\Carbon::today();
+{
+    if ($request->ajax()) {
+        $today = \Carbon\Carbon::today();
 
-            $tickets = Ticket::with(['patient', 'items'])
-                ->where('statut', 'en_attente')
-                ->where('date_validite', '>=', $today)
-                ->orderBy('created_at', 'asc');
+        // On utilise Eloquent avec Eager Loading
+        // Utilise select('tickets.*') pour éviter les conflits de colonnes avec DataTables
+        $query = Ticket::with(['patient']) 
+            ->where('statut', 'en_attente')
+            ->whereDate('date_validite', '>=', $today) // Utilise whereDate pour plus de précision
+            ->orderBy('created_at', 'asc');
 
-            return DataTables::of($tickets)
-                ->addIndexColumn()
-                ->addColumn('patient', function($ticket){
-                    return $ticket->patient->nom ?? '-' . ' ' . ($ticket->patient->prenom ?? '');
-                })
-                ->addColumn('nombre_prestations', function($ticket){
-                    return $ticket->items->count();
-                })
-                ->addColumn('total', function($ticket){
-                    return number_format($ticket->items->sum('sous_total'), 0, ',', ' ');
-                })
-                ->addColumn('date', function($ticket){
-                    return $ticket->created_at->format('d-m-Y H:i');
-                })
-                ->addColumn('actions', function($ticket){
-                    $btn = '
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="dropdownMenuButton'.$ticket->id.'" data-bs-toggle="dropdown" aria-expanded="false">
-                            ⚙️ Actions
-                          </button>
-                          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton'.$ticket->id.'">
-                            <li><a class="dropdown-item" href="'.route('tickets.show', $ticket->id).'">👁️ Voir</a></li>
-                            <li><a class="dropdown-item" href="'.route('tickets.edit', $ticket->id).'">✏️ Modifier</a></li>
-                            <li><a class="dropdown-item" href="'.route('tickets.print', $ticket->id).'" target="_blank">🖨️ Imprimer</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                              <form action="'.route('tickets.destroy', $ticket->id).'" method="POST" onsubmit="return confirm(\'Supprimer ce ticket ?\');" style="display:inline;">
-                                '.csrf_field().method_field('DELETE').'
-                                <button type="submit" class="dropdown-item text-danger">🗑️ Supprimer</button>
-                              </form>
-                            </li>
-                          </ul>
-                        </div>
-                        ';
-                    return $btn;
-                })
-                ->rawColumns(['actions'])
-                ->make(true);
-        }
+        return DataTables::of($query)
+            ->addIndexColumn()
+            
+            // Patient : Nom et Prénom proprement concaténés
+            ->addColumn('patient', function($ticket){
+                if (!$ticket->patient) return "Inconnu";
+                return strtoupper($ticket->patient->nom) . ' ' . $ticket->patient->prenom;
+            })
 
-        return view('application.ticket.index');
+            // On utilise l'attribut calculé dans ton modèle Ticket
+            ->addColumn('nombre_prestations', function($ticket){
+                return $ticket->nombre_prestations; 
+            })
+
+            // Total formaté (utilise le champ total déjà en base ou l'accesseur)
+            ->addColumn('total', function($ticket){
+                return number_format($ticket->total, 0, ',', ' ') . ' XOF';
+            })
+
+            // Date de création
+            ->addColumn('date', function($ticket){
+                return $ticket->created_at->format('d/m/Y H:i');
+            })
+
+            // Actions (Dropdown Bootstrap 5)
+            ->addColumn('actions', function($ticket) {
+                return '
+                   <a href="'.route('tickets.show', $ticket->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a>
+                   <a href="'.route('tickets.edit', $ticket->id).'" class="btn-sm" title="Modifier"><i class="fa fa-edit text-warning"></i></a>
+                   <a href="'.route('tickets.print', $ticket->id).'" class="btn-sm" title="Imprimer"><i class="fa fa-print text-info"></i></a>
+                   <span type="button" class="btn-sm delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer" style="cursor:pointer;"><i class="fa fa-trash text-danger"></i></span>
+                ';
+            })
+            ->rawColumns(['actions'])
+            ->make(true);
     }
+
+    return view('application.ticket.index');
+}
 
     /**
      * Show the form for creating a new resource.
@@ -89,24 +88,26 @@ class TicketController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'items' => 'required|array|min:1',
-            'items.*.prestation_id' => 'required|exists:prestations,id',
-            'items.*.prix_unitaire' => 'required|integer',
-            'items.*.quantite' => 'required|integer',
-            'items.*.remise' => 'required|numeric',
-            'items.*.sous_total' => 'required|integer',
-            'items.*.service' => 'required|string',
-            'description' => 'nullable|string',
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'patient_id' => 'required|exists:patients,id',
+        'items' => 'required|array|min:1',
+        'items.*.prestation_id' => 'required|exists:prestations,id',
+        'items.*.prix_unitaire' => 'required|numeric',
+        'items.*.quantite' => 'required|integer|min:1',
+        'items.*.remise' => 'required|numeric|min:0|max:100',
+        'items.*.sous_total' => 'required|numeric',
+        'items.*.service' => 'nullable|string', // Changé en nullable
+        'description' => 'nullable|string',
+    ]);
 
-        DB::beginTransaction();
-        try {
-            // --- Création du ticket avec statut et validité
-            $ticket = Ticket::create([
+    DB::beginTransaction();
+    try {
+        // Calcul du total côté serveur (plus fiable)
+        $totalTicket = collect($request->items)->sum('sous_total');
+
+        $ticket = Ticket::create([
                 'patient_id'   => $request->patient_id,
                 'description'  => $request->description,
                 'total'        => collect($request->items)->sum(fn($i) => $i['sous_total']),
@@ -115,38 +116,34 @@ class TicketController extends Controller
                 'user_id' => auth()->id()
             ]);
 
-            // --- Ajout des items
-            foreach($request->items as $item){
-                $ticket->items()->create([
-                    'prestation_id' => $item['prestation_id'],
-                    'service'       => $item['service'],
-                    'prix_unitaire' => $item['prix_unitaire'],
-                    'quantite'      => $item['quantite'],
-                    'remise'        => $item['remise'],
-                    'sous_total'    => $item['sous_total'],
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success'   => true,
-                'message'   => 'Ticket enregistré avec succès !',
-                'ticket_id' => $ticket->id,
-                'total'     => $ticket->total,
-                'statut'    => $ticket->statut,
-                'date_validite' => $ticket->date_validite,
-                'items'     => $ticket->items()->get(),
+        foreach ($request->items as $item) {
+            $ticket->items()->create([
+                'prestation_id' => $item['prestation_id'],
+                'service'       => $item['service'] ?? 'N/A', // Valeur par défaut si vide
+                'prix_unitaire' => $item['prix_unitaire'],
+                'quantite'      => $item['quantite'],
+                'remise'        => $item['remise'],
+                'sous_total'    => $item['sous_total'],
             ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
         }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ticket enregistré avec succès !',
+            'ticket_id' => $ticket->id
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            // On retourne le message d'erreur réel pour débugger
+            'message' => 'Erreur SQL: ' . $e->getMessage() 
+        ], 500);
     }
+}
 
     /**
      * Display the specified resource.

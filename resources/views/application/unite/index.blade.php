@@ -26,6 +26,7 @@
                             <table id="uniteTable" class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>Nom</th>
                                         <th>Date création</th>
                                         <th class="text-center">Actions</th>
@@ -51,11 +52,7 @@
                             <input type="hidden" name="id" id="id">
                             <div class="mb-3">
                                 <label class="form-label">Nom</label>
-                                <input type="text" name="nom" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Symbole</label>
-                                <input type="text" name="symbole" class="form-control" required>
+                                <input type="text" name="nom" id="nom" class="form-control" required>
                             </div>
                             <div class="text-end border-top pt-3">
                                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -78,13 +75,11 @@
                     ajaxUrl: "{{ route('unites.index') }}",
                     tableId: '#uniteTable',
                     columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'nom', name: 'nom' },
                         { data: 'created_at', name: 'created_at' },
                         { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
-                    ],
-                    mapData: function(data) {
-                        $('#nom').val(data.nom);
-                    }
+                    ]
                 });
             });
         </script>

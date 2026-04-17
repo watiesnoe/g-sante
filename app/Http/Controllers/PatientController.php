@@ -18,26 +18,11 @@ class PatientController extends Controller
                 ->addIndexColumn()
                 ->editColumn('created_at', fn($p) => $p->created_at ? Carbon::parse($p->created_at)->format('d-m-Y') : '-')
                 ->addColumn('actions', function($patient) {
-                    $btn = '
-                            <div class="dropdown">
-                              <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="dropdownMenuButton'.$patient->id.'" data-bs-toggle="dropdown" aria-expanded="false">
-                                Actions
-                              </button>
-                              <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton'.$patient->id.'">
-                                <li><a class="dropdown-item" href="'.route('patients.show', $patient).'">Voir</a></li>
-                                <li><a class="dropdown-item" href="'.route('patients.edit', $patient).'">Modifier</a></li>
-                                <li><a class="dropdown-item" href="'.route('patients.medicales', $patient).'" target="_blank">Imprimer</a></li>
-                                <li>
-                                  <form action="'.route('patients.destroy', $patient).'" method="POST" onsubmit="return confirm(\'Supprimer ce patient ?\');">
-                                    '.csrf_field().method_field('DELETE').'
-                                    <button type="submit" class="dropdown-item text-danger">Supprimer</button>
-                                  </form>
-                                </li>
-                              </ul>
-                            </div>
-                            ';
-
-                    return $btn;
+                    $view = '<a href="'.route('patients.show', $patient).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
+                    $edit = '<a href="'.route('patients.edit', $patient).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $print = '<a href="'.route('patients.medicales', $patient).'" target="_blank" class="btn-sm" title="Imprimer"><i class="fa fa-print text-warning"></i></a> ';
+                    $delete = '<form action="'.route('patients.destroy', $patient).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce patient ?\');">'.csrf_field().method_field("DELETE").'<button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer"><i class="fa fa-trash text-danger"></i></button></form>';
+                    return $view.$edit.$print.$delete;
 
                 })
                 ->rawColumns(['actions'])

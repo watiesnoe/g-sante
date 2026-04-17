@@ -1,26 +1,15 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProtocoleTraitement extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'maladie_id',
-        'titre',
-        'signes',
-        'diagnostics',
-        'germes_nourrisson',
-        'germes_adulte',
-        'traitement_principal',
-        'posologie_principale',
-        'traitement_alternatif',
-        'posologie_alternative',
-        'remarques',
+        'maladie_id', 'titre', 'signes', 'diagnostics',
+        'germes_nourrisson', 'germes_adulte', 'remarques',
+        'traitement_principal', 'posologie_principale',
+        'traitement_alternatif', 'posologie_alternative',
     ];
 
     public function maladie()
@@ -28,8 +17,17 @@ class ProtocoleTraitement extends Model
         return $this->belongsTo(Maladie::class);
     }
 
-    public function consultations()
-    {
-        return $this->hasMany(Consultation::class);
-    }
+    // Récupère les médicaments via la table pivot protocole_medicament
+    public function medicaments()
+{
+    return $this->belongsToMany(
+        Medicament::class, 
+        'protocole_medicament', // Nom de la table pivot
+        'protocole_id',         // Ta colonne dans la table pivot (Correction ici)
+        'medicament_id'         // L'autre colonne
+    )
+    ->using(ProtocoleMedicament::class)
+    ->withPivot(['type', 'posologie', 'duree'])
+    ->withTimestamps();
+}
 }

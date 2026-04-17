@@ -23,10 +23,10 @@ class MaladieController extends Controller
                     return $row->symptomes->pluck('nom')->implode(', ');
                 })
                 ->addColumn('actions', function($row){
-                    $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></a> ';
-                    $btn .= '<a href="javascript:void(0)" class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></a> ';
-                    $btn .= '<a href="javascript:void(0)" class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></a>';
-                    return $btn;
+                    $viewBtn = '<span class="btn-sm view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
+                    $editBtn = '<span class="btn-sm edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
+                    $deleteBtn = '<span class="btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
+                    return $viewBtn . $editBtn . $deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

@@ -39,9 +39,7 @@ class ResultatExamenController extends Controller
                     return 'Aucun';
                 })
                 ->addColumn('actions', function($row){
-                    $deleteBtn = '<button data-url="'.route('reponses.destroy', $row->id).'" class="btn btn-sm btn-danger btn-delete">
-                                    🗑️ Supprimer
-                                  </button>';
+                    $deleteBtn = '<span class="btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
                     return $deleteBtn;
                 })
                 ->rawColumns(['fichier','actions'])

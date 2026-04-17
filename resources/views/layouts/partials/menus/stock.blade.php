@@ -8,5 +8,7 @@
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('medicaments.index')}}"><span class="nav-main-link-name">Médicaments</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('commandes.index')}}"><span class="nav-main-link-name">Commandes</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('receptions.index')}}"><span class="nav-main-link-name">Réceptions</span></a></li>
+        <li class="nav-main-item"><a class="nav-main-link" href="{{route('familles.index')}}"><span class="nav-main-link-name">Familles</span></a></li>
+        <li class="nav-main-item"><a class="nav-main-link" href="{{route('unites.index')}}"><span class="nav-main-link-name">Unités</span></a></li>
     </ul>
 </li>

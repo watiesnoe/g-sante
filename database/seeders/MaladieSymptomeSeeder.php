@@ -3,50 +3,91 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Maladie;
-use App\Models\Symptome;
+use Illuminate\Support\Facades\DB;
 
 class MaladieSymptomeSeeder extends Seeder
 {
+    /**
+     * Crée les maladies et symptômes de base et les lie.
+     * Les données avancées (protocoles, médicaments) sont gérées par PathologiesSeeder et InfectiologieSeeder.
+     */
     public function run()
     {
-        // 1️⃣ Création des symptômes
+        $now = now();
+
+        // --- SYMPTÔMES ---
         $symptomes = [
-            ['nom' => 'Fièvre', 'description' => 'Élévation de la température corporelle'],
-            ['nom' => 'Fatigue', 'description' => 'Sensation de faiblesse générale'],
-            ['nom' => 'Maux de tête', 'description' => 'Douleurs au niveau de la tête'],
-            ['nom' => 'Nausée', 'description' => 'Sensation de malaise et envie de vomir'],
-            ['nom' => 'Toux', 'description' => 'Expulsion d’air forcée par les voies respiratoires'],
+            ['nom' => 'Fièvre',             'description' => 'Élévation de la température corporelle au-dessus de 38°C'],
+            ['nom' => 'Fatigue',            'description' => 'Sensation de faiblesse et épuisement généralisé'],
+            ['nom' => 'Céphalées',          'description' => 'Douleurs ou maux de tête'],
+            ['nom' => 'Nausées',            'description' => 'Envie de vomir, malaise gastrique'],
+            ['nom' => 'Vomissements',       'description' => 'Expulsion forcée du contenu gastrique'],
+            ['nom' => 'Toux',               'description' => 'Expulsion brusque d\'air des voies respiratoires'],
+            ['nom' => 'Frissons',           'description' => 'Tremblements involontaires accompagnant la fièvre'],
+            ['nom' => 'Diarrhée',           'description' => 'Selles liquides fréquentes'],
+            ['nom' => 'Courbatures',        'description' => 'Douleurs musculaires diffuses'],
+            ['nom' => 'Perte d\'appétit',  'description' => 'Diminution ou absence de l\'envie de manger'],
+            ['nom' => 'Dyspnée',            'description' => 'Difficulté ou gêne respiratoire'],
+            ['nom' => 'Douleur thoracique', 'description' => 'Douleur ou oppression au niveau de la poitrine'],
+            ['nom' => 'Sueurs nocturnes',   'description' => 'Transpiration excessive pendant le sommeil'],
+            ['nom' => 'Amaigrissement',     'description' => 'Perte de poids involontaire'],
+            ['nom' => 'Ictère',             'description' => 'Jaunissement de la peau et des muqueuses'],
+            ['nom' => 'Prurit',             'description' => 'Démangeaisons cutanées'],
+            ['nom' => 'Éruption cutanée',   'description' => 'Rougeurs ou boutons sur la peau'],
+            ['nom' => 'Hémoptysies',        'description' => 'Crachats de sang d\'origine pulmonaire'],
+            ['nom' => 'Raideur de la nuque','description' => 'Limitation douloureuse des mouvements du cou'],
+            ['nom' => 'Photophobie',        'description' => 'Hypersensibilité à la lumière'],
         ];
 
         foreach ($symptomes as $s) {
-            Symptome::firstOrCreate(['nom' => $s['nom']], $s);
+            DB::table('symptomes')->updateOrInsert(
+                ['nom' => $s['nom']],
+                ['description' => $s['description'], 'created_at' => $now, 'updated_at' => $now]
+            );
         }
 
-        // 2️⃣ Création des maladies
+        $sId = DB::table('symptomes')->pluck('id', 'nom');
+
+        // --- MALADIES COURANTES ---
         $maladies = [
-            ['nom' => 'Paludisme', 'description' => 'Maladie parasitaire transmise par le moustique'],
-            ['nom' => 'Grippe', 'description' => 'Maladie virale saisonnière'],
-            ['nom' => 'Gastro-entérite', 'description' => 'Inflammation de l’estomac et des intestins'],
+            ['nom' => 'Paludisme',      'description' => 'Maladie parasitaire transmise par le moustique Anophèle.'],
+            ['nom' => 'Grippe',         'description' => 'Infection virale respiratoire saisonnière.'],
+            ['nom' => 'Gastro-entérite','description' => 'Inflammation de l\'estomac et des intestins.'],
+            ['nom' => 'Méningites',     'description' => 'Inflammation des méninges d\'origine bactérienne ou virale.'],
+            ['nom' => 'Tuberculose pulmonaire', 'description' => 'Infection bactérienne chronique des poumons.'],
+            ['nom' => 'Candidose systémique',   'description' => 'Infection fongique généralisée par Candida.'],
         ];
 
         foreach ($maladies as $m) {
-            Maladie::firstOrCreate(['nom' => $m['nom']], $m);
+            DB::table('maladies')->updateOrInsert(
+                ['nom' => $m['nom']],
+                ['description' => $m['description'] ?? null, 'created_at' => $now, 'updated_at' => $now]
+            );
         }
 
-        // 3️⃣ Lier maladies et symptômes
-        $paludisme = Maladie::where('nom', 'Paludisme')->first();
-        $grippe = Maladie::where('nom', 'Grippe')->first();
-        $gastro = Maladie::where('nom', 'Gastro-entérite')->first();
+        $mId = DB::table('maladies')->pluck('id', 'nom');
 
-        $fievre = Symptome::where('nom', 'Fièvre')->first();
-        $fatigue = Symptome::where('nom', 'Fatigue')->first();
-        $mauxTete = Symptome::where('nom', 'Maux de tête')->first();
-        $nausee = Symptome::where('nom', 'Nausée')->first();
-        $toux = Symptome::where('nom', 'Toux')->first();
+        // --- LIAISONS MALADIE ↔ SYMPTÔMES ---
+        $liens = [
+            'Paludisme'            => ['Fièvre', 'Frissons', 'Céphalées', 'Courbatures', 'Fatigue', 'Nausées', 'Vomissements'],
+            'Grippe'               => ['Fièvre', 'Fatigue', 'Céphalées', 'Toux', 'Courbatures'],
+            'Gastro-entérite'      => ['Fièvre', 'Nausées', 'Vomissements', 'Diarrhée', 'Douleur thoracique', 'Perte d\'appétit'],
+            'Méningites'           => ['Fièvre', 'Céphalées', 'Raideur de la nuque', 'Photophobie', 'Vomissements', 'Fatigue'],
+            'Tuberculose pulmonaire' => ['Toux', 'Hémoptysies', 'Sueurs nocturnes', 'Amaigrissement', 'Fièvre', 'Fatigue'],
+            'Candidose systémique' => ['Fièvre', 'Fatigue', 'Prurit', 'Éruption cutanée'],
+        ];
 
-        $paludisme->symptomes()->sync([$fievre->id, $fatigue->id, $mauxTete->id]);
-        $grippe->symptomes()->sync([$fievre->id, $fatigue->id, $mauxTete->id, $toux->id]);
-        $gastro->symptomes()->sync([$fievre->id, $fatigue->id, $nausee->id]);
+        foreach ($liens as $maladie => $symptomesList) {
+            if (!isset($mId[$maladie])) continue;
+
+            foreach ($symptomesList as $symptomNom) {
+                if (!isset($sId[$symptomNom])) continue;
+
+                DB::table('maladie_symptome')->updateOrInsert([
+                    'maladie_id' => $mId[$maladie],
+                    'symptome_id' => $sId[$symptomNom],
+                ]);
+            }
+        }
     }
 }

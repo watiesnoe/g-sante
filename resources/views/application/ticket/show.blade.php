@@ -208,7 +208,7 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <!-- Nombre Prestations -->
-                            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
                                 <div class="card border-0 bg-primary bg-opacity-10 h-100">
                                     <div class="card-body text-center py-4">
                                         <div class="mb-3">
@@ -221,7 +221,7 @@
                             </div>
 
                             <!-- Total Ticket -->
-                            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                            {{-- <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
                                 <div class="card border-0 bg-success bg-opacity-10 h-100">
                                     <div class="card-body text-center py-4">
                                         <div class="mb-3">
@@ -233,7 +233,7 @@
                                         </h2>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <!-- Montant Payé -->
                             @if(isset($ticket->montant_paye))
@@ -274,7 +274,7 @@
                                                 <i class="fa fa-exclamation-circle fa-2x text-warning"></i>
                                             </div>
                                             <h6 class="text-muted mb-2">Statut Paiement</h6>
-                                            <h2 class="fw-bold text-warning">À PAYER</h2>
+                                            <h2 class="fw-bold text-warning">PAYER</h2>
                                             <p class="text-muted mb-0">Total: {{ number_format($ticket->total, 0, ',', ' ') }} FCFA</p>
                                         </div>
                                     </div>

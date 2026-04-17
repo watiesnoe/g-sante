@@ -8,413 +8,248 @@ use Carbon\Carbon;
 
 class PathologiesSeeder extends Seeder
 {
-    /**
-     * Seeder complet : Symptômes, Maladies, Pivot maladie_symptome, Protocoles, Médicaments.
-     * Adapté au schéma g-santé existant.
-     */
     public function run()
     {
         $now = Carbon::now();
 
-        // ╔═══════════════════════════════════════════════════════════╗
-        // ║  1. SYMPTÔMES                                            ║
-        // ╚═══════════════════════════════════════════════════════════╝
+        // 1. UNITÉS
+        $unites = [
+            'comprimé', 'ampoule', 'ml', 'goutte', 'sachet', 'tube', 'capsule', 
+            'perfusion', 'gel', 'suppositoire', 'puff', 'patch'
+        ];
+        foreach ($unites as $u) {
+            DB::table('unites')->updateOrInsert(['nom' => $u]);
+        }
+        $uId = DB::table('unites')->pluck('id', 'nom');
+
+        // 2. FAMILLES
+        $familles = [
+            'Antibiotiques', 'Antalgiques', 'Anti-inflammatoires', 'Antipaludiques', 
+            'Antifongiques', 'Antiarythmiques', 'Antihypertenseurs', 'Antidiabétiques',
+            'Antiviraux', 'Antianémiques', 'Corticostéroïdes', 'Bronchodilatateurs'
+        ];
+        foreach ($familles as $f) {
+            DB::table('familles')->updateOrInsert(['nom' => $f]);
+        }
+        $fId = DB::table('familles')->pluck('id', 'nom');
+
+        // 3. SYMPTÔMES
         $symptomesData = [
             // Respiratoires
-            'Toux productive', 'Toux sèche', 'Dyspnée', 'Expectorations purulentes',
-            'Douleur thoracique', 'Hémoptysie', 'Wheezing/Sibilants',
-            // Fièvre / Généraux
-            'Fièvre', 'Frissons', 'Asthénie', 'Anorexie', 'Amaigrissement',
-            'Sueurs nocturnes', 'Altération de la conscience',
-            // Céphalées / Neuro
-            'Céphalées', 'Vertiges', 'Photophobie', 'Raideur de la nuque',
-            'Convulsions', 'Insomnies',
+            'Toux productive', 'Toux sèche', 'Dyspnée', 'Douleur thoracique', 'Râles crépitants', 'Sifflements respiratoires',
+            // Généraux
+            'Fièvre', 'Frissons', 'Asthénie', 'Céphalées', 'Courbatures', 'Sudations nocturnes',
             // Digestifs
-            'Nausées', 'Vomissements', 'Diarrhée', 'Constipation',
-            'Douleurs abdominales', 'Douleur hypochondre droit', 'Ictère',
-            'Selles liquides', 'Selles glairo-sanglantes',
+            'Vomissements', 'Diarrhée liquide', 'Douleurs abdominales', 'Nausées', 'Perte d\'appétit',
             // Urinaires
-            'Brûlures mictionnelles', 'Pollakiurie', 'Dysurie',
-            'Douleurs lombaires', 'Rétention aiguë d\'urine', 'Hématurie',
-            // ORL
-            'Mal de gorge', 'Odynophagie', 'Rhinorrhée', 'Obstruction nasale',
-            'Otalgies', 'Otorrhée', 'Anosmie', 'Epistaxis',
-            // Peau
-            'Eruption cutanée', 'Placard inflammatoire', 'Prurit',
-            'Douleur locale intense', 'Tuméfaction fluctuante', 'Nécrose cutanée',
-            'Vésicules', 'Lésions papuleuses', 'Nodule douloureux',
-            // Ostéo-articulaire
-            'Douleurs articulaires', 'Impotence fonctionnelle',
-            'Tuméfaction articulaire', 'Rachalgies',
-            // Cardio-vasculaire
-            'Tachycardie', 'Hypotension', 'Purpura',
+            'Brûlures mictionnelles', 'Dysurie', 'Ecoulement urétral', 'Hématurie',
+            // Cardiovasculaires
+            'Palpitations', 'Oedèmes des membres inférieurs', 'Vertiges',
             // Autres
-            'Déshydratation', 'Œdèmes', 'Adénopathies',
-            'Ecoulement urétral', 'Ecoulement vaginal', 'Chancre indolore',
-            'Hépatomégalie', 'Masse palpable abdominale',
-            // Pédiatrie
-            'Émaciation sévère', 'Cheveux roux cassants', 'Peau sèche',
+            'Ictère', 'Pâleur cutanéo-muqueuse', 'Prurit', 'Chancre indolore'
         ];
-
-        $symptomeIds = [];
         foreach ($symptomesData as $nom) {
-            DB::table('symptomes')->updateOrInsert(
-                ['nom' => $nom],
-                ['description' => null, 'created_at' => $now, 'updated_at' => $now]
-            );
-            $symptomeIds[$nom] = DB::table('symptomes')->where('nom', $nom)->value('id');
+            DB::table('symptomes')->updateOrInsert(['nom' => $nom], ['created_at' => $now]);
         }
+        $sId = DB::table('symptomes')->pluck('id', 'nom');
 
-        // ╔═══════════════════════════════════════════════════════════╗
-        // ║  2. MÉDICAMENTS (ajout des manquants)                    ║
-        // ╚═══════════════════════════════════════════════════════════╝
-        // unite_id: 5=comprimé, 13=ampoule, 7=ml, 10=goutte, 16=sachet, 22=tube, 6=capsule
-        // famille_id: 1=Antibiotiques, 2=Antalgiques, 3=Anti-inflammatoires, 6=Antipaludiques, 8=Antifongiques
-
-        $medsToAdd = [
-            // Antibiotiques oraux
-            ['nom' => 'Amoxicilline/Acide clavulanique 1g',     'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 800, 'prix_vente' => 1200, 'stock' => 200, 'stock_min' => 50],
-            ['nom' => 'Azithromycine 500mg',                    'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 1500, 'prix_vente' => 2500, 'stock' => 100, 'stock_min' => 30],
-            ['nom' => 'Cotrimoxazole 960mg',                    'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 300, 'prix_vente' => 500, 'stock' => 300, 'stock_min' => 50],
-            ['nom' => 'Doxycycline 100mg',                      'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 200, 'prix_vente' => 400, 'stock' => 250, 'stock_min' => 50],
-            ['nom' => 'Métronidazole 500mg',                    'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 350, 'prix_vente' => 600, 'stock' => 200, 'stock_min' => 50],
-            ['nom' => 'Erythromycine 500mg',                    'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 600, 'prix_vente' => 1000, 'stock' => 100, 'stock_min' => 30],
-            ['nom' => 'Cefixime 200mg',                        'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 1200, 'prix_vente' => 2000, 'stock' => 80, 'stock_min' => 20],
-            ['nom' => 'Ofloxacine 200mg',                      'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 900, 'prix_vente' => 1500, 'stock' => 120, 'stock_min' => 30],
-            ['nom' => 'Nitrofurantoine 100mg',                  'famille_id' => 1, 'unite_id' => 6, 'prix_achat' => 500, 'prix_vente' => 800, 'stock' => 80, 'stock_min' => 20],
-            ['nom' => 'Spiramycine 3 MUI',                      'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 1000, 'prix_vente' => 1800, 'stock' => 60, 'stock_min' => 15],
-            ['nom' => 'Clindamycine 300mg',                     'famille_id' => 1, 'unite_id' => 6, 'prix_achat' => 800, 'prix_vente' => 1500, 'stock' => 60, 'stock_min' => 15],
-            ['nom' => 'Flucloxacilline 500mg',                  'famille_id' => 1, 'unite_id' => 6, 'prix_achat' => 700, 'prix_vente' => 1200, 'stock' => 50, 'stock_min' => 15],
-            ['nom' => 'Pristinamycine 500mg',                   'famille_id' => 1, 'unite_id' => 5, 'prix_achat' => 2500, 'prix_vente' => 4000, 'stock' => 40, 'stock_min' => 10],
-            ['nom' => 'Cefadroxil 500mg',                      'famille_id' => 1, 'unite_id' => 6, 'prix_achat' => 1100, 'prix_vente' => 1800, 'stock' => 60, 'stock_min' => 15],
-
-            // Antibiotiques injectables
-            ['nom' => 'Céfotaxime 1g Injectable',               'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 2000, 'prix_vente' => 3500, 'stock' => 80, 'stock_min' => 20],
-            ['nom' => 'Ceftazidime 1g Injectable',               'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 3000, 'prix_vente' => 5000, 'stock' => 40, 'stock_min' => 10],
-            ['nom' => 'Pipéracilline/Tazobactam 4g Injectable',  'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 5000, 'prix_vente' => 8000, 'stock' => 30, 'stock_min' => 10],
-            ['nom' => 'Vancomycine 500mg Injectable',            'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 4000, 'prix_vente' => 6500, 'stock' => 30, 'stock_min' => 10],
-            ['nom' => 'Imipénème 500mg Injectable',              'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 6000, 'prix_vente' => 9000, 'stock' => 25, 'stock_min' => 10],
-            ['nom' => 'Amikacine 500mg Injectable',              'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 2500, 'prix_vente' => 4000, 'stock' => 50, 'stock_min' => 15],
-            ['nom' => 'Gentamicine 80mg Injectable',             'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 800, 'prix_vente' => 1500, 'stock' => 80, 'stock_min' => 20],
-            ['nom' => 'Pénicilline G 5MUI Injectable',           'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 1000, 'prix_vente' => 1800, 'stock' => 50, 'stock_min' => 15],
-            ['nom' => 'Benzathine Pénicilline 2.4 MUI',          'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 1500, 'prix_vente' => 2500, 'stock' => 40, 'stock_min' => 10],
-            ['nom' => 'Métronidazole 500mg perfusion',           'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 600, 'prix_vente' => 1000, 'stock' => 100, 'stock_min' => 30],
-            ['nom' => 'Ciprofloxacine 400mg perfusion',          'famille_id' => 1, 'unite_id' => 13, 'prix_achat' => 2000, 'prix_vente' => 3500, 'stock' => 50, 'stock_min' => 15],
-
-            // Ophtalmologie
-            ['nom' => 'Gentamicine collyre',                     'famille_id' => 1, 'unite_id' => 10, 'prix_achat' => 1200, 'prix_vente' => 2000, 'stock' => 30, 'stock_min' => 10],
+        // 4. MÉDICAMENTS
+        $meds = [
+            // Antipaludiques
+            ['nom' => 'Artéméther + Luméfantrine (Coartem)', 'f' => 'Antipaludiques', 'u' => 'comprimé', 'p_v' => 3500],
+            ['nom' => 'Artésunate Injectable', 'f' => 'Antipaludiques', 'u' => 'ampoule', 'p_v' => 5000],
+            ['nom' => 'Quinine 600mg', 'f' => 'Antipaludiques', 'u' => 'perfusion', 'p_v' => 2500],
+            
+            // Antibiotiques
+            ['nom' => 'Amoxicilline 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 1000],
+            ['nom' => 'Amoxicilline + Acide Clavulanique (Augmentin)', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 7500],
+            ['nom' => 'Ceftriaxone 1g Injectable', 'f' => 'Antibiotiques', 'u' => 'ampoule', 'p_v' => 4500],
+            ['nom' => 'Azithromycine 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 5000],
+            ['nom' => 'Doxycycline 100mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 2000],
+            ['nom' => 'Métronidazole 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 1500],
+            ['nom' => 'Ciprofloxacine 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 3000],
+            
+            // Antalgiques / AINS
+            ['nom' => 'Paracétamol 500mg', 'f' => 'Antalgiques', 'u' => 'comprimé', 'p_v' => 500],
+            ['nom' => 'Diclofénac 50mg', 'f' => 'Anti-inflammatoires', 'u' => 'comprimé', 'p_v' => 1500],
+            ['nom' => 'Ibuprofène 400mg', 'f' => 'Anti-inflammatoires', 'u' => 'comprimé', 'p_v' => 1200],
+            
+            // Autres
+            ['nom' => 'Furosémide 40mg', 'f' => 'Antihypertenseurs', 'u' => 'comprimé', 'p_v' => 1000],
+            ['nom' => 'Salbutamol Puff', 'f' => 'Bronchodilatateurs', 'u' => 'puff', 'p_v' => 4500],
+            ['nom' => 'Fumarate de Fer', 'f' => 'Antianémiques', 'u' => 'comprimé', 'p_v' => 1500],
         ];
 
-        foreach ($medsToAdd as $med) {
+        foreach ($meds as $m) {
             DB::table('medicaments')->updateOrInsert(
-                ['nom' => $med['nom']],
-                array_merge($med, ['description' => null, 'created_at' => $now, 'updated_at' => $now])
+                ['nom' => $m['nom']],
+                [
+                    'famille_id' => $fId[$m['f']],
+                    'unite_id' => $uId[$m['u']],
+                    'prix_achat' => $m['p_v'] * 0.6, 
+                    'prix_vente' => $m['p_v'], 
+                    'stock' => 500,
+                    'created_at' => $now,
+                    'updated_at' => $now
+                ]
             );
         }
+        $mId = DB::table('medicaments')->pluck('id', 'nom');
 
-        // ╔════════════════════════════════════════════════════════════╗
-        // ║  3. RÉFÉRENTIEL EXPERT : 40+ PATHOLOGIES & PROTOCOLES     ║
-        // ╚════════════════════════════════════════════════════════════╝
+        // 5. PATHOLOGIES & PROTOCOLES
         $pathologies = [
-            // ==================== PNEUMONIES COMMUNAUTAIRES ====================
             [
-                'nom' => 'Pneumonie communautaire non sévère',
-                'description' => 'Pneumonie ambulatoire (traitement oral)',
-                'symptomes' => ['Toux productive', 'Fièvre', 'Frissons', 'Douleur thoracique'],
+                'nom' => 'Paludisme simple',
+                'symptomes' => ['Fièvre', 'Céphalées', 'Frissons', 'Fatigue'],
                 'protocole' => [
-                    'titre' => 'Pneumonie communautaire non sévère',
-                    'signes' => 'Toux productive, fièvre, syndrome de condensation, opacités alvéolaires',
-                    'diagnostics' => 'Radio thorax, ECB expectorations, recherche BK',
-                    'germes_adulte' => 'S. pneumoniae, M. pneumoniae, C. pneumoniae, Legionella',
-                    'germes_nourrisson' => 'S. pneumoniae, H. influenzae',
-                    'traitement_principal' => 'Amoxicilline 500mg',
-                    'posologie_principale' => 'Adulte: 1g 3x/jour (10j) — Enfant: 50mg/kg/jour (10j)',
-                    'traitement_alternatif' => 'Azithromycine 500mg',
-                    'posologie_alternative' => 'Adulte: 500mg/jour (7j) — Enfant: 10-20mg/kg/jour (7j)',
+                    'titre' => 'Protocole Paludisme National',
+                    'signes' => 'Fièvre, test TDR positif',
+                    'traitements' => [
+                        ['nom' => 'Artéméther + Luméfantrine (Coartem)', 'type' => 'principal', 'poso' => '1 cp 2x/j pendant 3j', 'duree' => '3j'],
+                        ['nom' => 'Paracétamol 500mg', 'type' => 'adjuvant', 'poso' => '1 cp 3x/j si fièvre', 'duree' => '3j'],
+                    ]
                 ]
             ],
             [
-                'nom' => 'Pneumonie communautaire (Hospitalisation)',
-                'description' => 'Pneumonie avec comorbidités ou signes de gravité modérés',
-                'symptomes' => ['Toux productive', 'Fièvre', 'Dyspnée', 'Asthénie'],
+                'nom' => 'Paludisme grave',
+                'symptomes' => ['Fièvre', 'Vomissements', 'Asthénie', 'Vertiges', 'Ictère'],
                 'protocole' => [
-                    'titre' => 'Pneumonie communautaire (hospitalisation simple)',
-                    'signes' => 'Comorbidités, dyspnée, fièvre',
-                    'diagnostics' => 'Radio thorax, ECB, Hémocultures',
-                    'germes_adulte' => 'S. pneumoniae, Legionella, Mycoplasma, M. tuberculosis',
-                    'germes_nourrisson' => 'S. pneumoniae, H. influenzae',
-                    'traitement_principal' => 'Amoxicilline/Acide clavulanique 1g',
-                    'posologie_principale' => 'Adulte: 1g toutes les 8h IVD (7j) — Enfant: 40-50mg/kg/j',
-                    'traitement_alternatif' => 'Azithromycine 500mg',
-                    'posologie_alternative' => 'Ajouter Azithromycine 500mg/j si suspicion de germes atypiques',
+                    'titre' => 'Hospitalisation Palu Grave',
+                    'signes' => 'Signes neurologiques, vomissements incoercibles',
+                    'traitements' => [
+                        ['nom' => 'Artésunate Injectable', 'type' => 'principal', 'poso' => '2.4 mg/kg IV à H0, H12, H24', 'duree' => '1j'],
+                        ['nom' => 'Quinine 600mg', 'type' => 'relais', 'poso' => '500mg en perfusion / 8h', 'duree' => '3j'],
+                    ]
                 ]
             ],
             [
-                'nom' => 'Pneumonie communautaire (USI)',
-                'description' => 'Détresse respiratoire ou choc septique d\'origine pulmonaire',
-                'symptomes' => ['Dyspnée', 'Tachycardie', 'Hypotension', 'Altération de la conscience'],
+                'nom' => 'Pneumopathie bactérienne',
+                'symptomes' => ['Toux productive', 'Fièvre', 'Douleur thoracique', 'Dyspnée', 'Râles crépitants'],
                 'protocole' => [
-                    'titre' => 'Pneumonie communautaire grave (USI)',
-                    'signes' => 'FR≥30, TAS≤90, FC≥120, Hypoxie sévère',
-                    'diagnostics' => 'Gaze du sang, Radio, ECB LBA, Hémocultures',
-                    'germes_adulte' => 'S. pneumoniae, S. aureus, BGN, Legionella',
-                    'germes_nourrisson' => 'S. pneumoniae, S. aureus',
-                    'traitement_principal' => 'Céfotaxime 1g Injectable, Azithromycine 500mg',
-                    'posologie_principale' => 'Céfotaxime 100mg/kg/j + Azithromycine 500mg/j (14j)',
-                    'traitement_alternatif' => 'Vancomycine 500mg Injectable',
-                    'posologie_alternative' => 'Si suspicion SARM : 40mg/kg/j en perfusion',
-                ]
-            ],
-
-            // ==================== PNEUMONIES NOSOCOMIALES ====================
-            [
-                'nom' => 'Pneumonie nosocomiale précoce',
-                'description' => 'Apparition < 5 jours après admission',
-                'symptomes' => ['Fièvre', 'Toux productive', 'Dyspnée'],
-                'protocole' => [
-                    'titre' => 'Pneumonie nosocomiale précoce',
-                    'signes' => 'Signes respiratoires apparaissant > 48h après admission',
-                    'diagnostics' => 'Radio thorax, Prélèvement bronchique',
-                    'germes_adulte' => 'S. pneumoniae, S. aureus (Méthi-S), Entérobactéries',
-                    'germes_nourrisson' => 'Entérobactéries',
-                    'traitement_principal' => 'Amoxicilline/Acide clavulanique 1g',
-                    'posologie_principale' => '1g toutes les 8h (10j)',
-                    'traitement_alternatif' => 'Ceftriaxone 1g Injectable',
-                    'posologie_alternative' => '1g/12h ou 2g dose unique',
+                    'titre' => 'Traitement Pneumonie Adulte',
+                    'signes' => 'Expectoration purulente, foyer à la radio',
+                    'traitements' => [
+                        ['nom' => 'Amoxicilline + Acide Clavulanique (Augmentin)', 'type' => 'principal', 'poso' => '1g 2x/j', 'duree' => '7j'],
+                        ['nom' => 'Azithromycine 500mg', 'type' => 'adjuvant', 'poso' => '500mg/j', 'duree' => '3j'],
+                    ]
                 ]
             ],
             [
-                'nom' => 'Pneumonie nosocomiale tardive',
-                'description' => 'Apparition > 5 jours après admission',
-                'symptomes' => ['Fièvre', 'Expectoration purulente', 'Hypoxie'],
+                'nom' => 'Infection Urinaire (Cystite)',
+                'symptomes' => ['Brûlures mictionnelles', 'Dysurie', 'Douleurs abdominales'],
                 'protocole' => [
-                    'titre' => 'Pneumonie nosocomiale tardive (Grave)',
-                    'signes' => 'Sécrétions purulentes massives, choc septique fréquent',
-                    'diagnostics' => 'Scanner pulmonaire, LBA, Hémocultures',
-                    'germes_adulte' => 'P. aeruginosa, Acinetobacter, SARM, Entérobactéries BLSE',
-                    'germes_nourrisson' => 'BGN multirésistants',
-                    'traitement_principal' => 'Pipéracilline/Tazobactam 4g Injectable',
-                    'posologie_principale' => '4g toutes les 8h en perfusion de 3 heures',
-                    'traitement_alternatif' => 'Vancomycine 500mg Injectable, Amikacine 500mg Injectable',
-                    'posologie_alternative' => 'Bi-thérapie pour couvrir P. aeruginosa et SARM',
-                ]
-            ],
-
-            // ==================== SEPTICÉMIES ====================
-            [
-                'nom' => 'Septicémie communautaire cutanée',
-                'description' => 'Sepsis à point de départ cutané',
-                'symptomes' => ['Fièvre', 'Placard inflammatoire', 'Tachycardie', 'Hypotension'],
-                'protocole' => [
-                    'titre' => 'Septicémie d\'origine cutanée',
-                    'signes' => 'Température <36 ou >38, qSOFA ≥ 2',
-                    'diagnostics' => 'Hémocultures x3, Prélèvement local, NFS, CRP',
-                    'germes_adulte' => 'S. aureus, S. pyogenes, P. aeruginosa',
-                    'germes_nourrisson' => 'S. aureus',
-                    'traitement_principal' => 'Amoxicilline/Acide clavulanique 1g, Amikacine 500mg Injectable',
-                    'posologie_principale' => 'Amox/Clav 1g/6h IV + Amikacine 25mg/kg/j (48h)',
-                    'traitement_alternatif' => 'Ceftriaxone 1g Injectable, Gentamicine 80mg Injectable',
-                    'posologie_alternative' => 'Ceftriaxone 2g/24h + Gentamicine 7mg/kg/j',
+                    'titre' => 'Traitement Minute Cystite',
+                    'signes' => 'Bandelette urinaire positive (Leuco/Nitrites)',
+                    'traitements' => [
+                        ['nom' => 'Ciprofloxacine 500mg', 'type' => 'principal', 'poso' => '500mg 2x/j', 'duree' => '5j'],
+                    ]
                 ]
             ],
             [
-                'nom' => 'Septicémie communautaire digestive',
-                'description' => 'Sepsis à point de départ abdominal',
-                'symptomes' => ['Fièvre', 'Douleurs abdominales', 'Frissons', 'Vomissements'],
+                'nom' => 'Gonococcie (IST)',
+                'symptomes' => ['Ecoulement urétral', 'Brûlures mictionnelles'],
                 'protocole' => [
-                    'titre' => 'Septicémie d\'origine digestive',
-                    'signes' => 'Sepsis, défense abdominale ou syndrome occlusif',
-                    'diagnostics' => 'Scanner AP, Hémocultures, Ionogramme',
-                    'germes_adulte' => 'E. coli, Klebsiella, Anaérobies, S. enterica',
-                    'germes_nourrisson' => 'Salmonelle, E. coli',
-                    'traitement_principal' => 'Ceftriaxone 1g Injectable, Métronidazole 500mg perfusion, Amikacine 500mg Injectable',
-                    'posologie_principale' => 'Ceftriaxone 2g + Métronidazole 500mgx3 + Amikacine 25mg/kg',
-                    'traitement_alternatif' => 'Ciprofloxacine 400mg perfusion, Gentamicine 80mg Injectable',
-                    'posologie_alternative' => 'Si allergie aux bétalactamines',
-                ]
-            ],
-
-            // ==================== IST ====================
-            [
-                'nom' => 'Gonococcie',
-                'description' => 'Infection à Neisseria gonorrhoeae',
-                'symptomes' => ['Ecoulement urétral', 'Brûlures mictionnelles', 'Dysurie'],
-                'protocole' => [
-                    'titre' => 'Gonococcies (Urétrite/Cervicite)',
-                    'signes' => 'Ecoulement purulent "chaude-pisse", méat inflammatoire',
-                    'diagnostics' => 'Prélèvement local, recherche Chlamydia associée',
-                    'germes_adulte' => 'Neisseria gonorrhoeae',
-                    'germes_nourrisson' => 'N. gonorrhoeae (conjonctivite)',
-                    'traitement_principal' => 'Ceftriaxone 1g Injectable',
-                    'posologie_principale' => '1g dose unique IV ou IM',
-                    'traitement_alternatif' => 'Doxycycline 100mg',
-                    'posologie_alternative' => '100mg x2/jour pendant 7 jours',
-                ]
-            ],
-            [
-                'nom' => 'Chlamydiose',
-                'description' => 'Infection à Chlamydia trachomatis',
-                'symptomes' => ['Ecoulement urétral', 'Ecoulement vaginal', 'Prurit'],
-                'protocole' => [
-                    'titre' => 'Chlamydiose Urogénitale',
-                    'signes' => 'Souvent peu symptomatique, écoulement clair',
-                    'diagnostics' => 'PCR ou prélèvement local',
-                    'germes_adulte' => 'Chlamydia trachomatis',
-                    'germes_nourrisson' => 'C. trachomatis',
-                    'traitement_principal' => 'Azithromycine 500mg',
-                    'posologie_principale' => '500mg dose unique (Ou 1g selon recommandations local)',
-                    'traitement_alternatif' => 'Doxycycline 100mg',
-                    'posologie_alternative' => '100mg x2/jour pendant 7 jours',
+                    'titre' => 'Protocole National IST',
+                    'signes' => 'Ecoulement meatique purulent',
+                    'traitements' => [
+                        ['nom' => 'Ceftriaxone 1g Injectable', 'type' => 'principal', 'poso' => '1g IM dose unique', 'duree' => '1j'],
+                        ['nom' => 'Azithromycine 500mg', 'type' => 'assos', 'poso' => '1g dose unique (chlamydia)', 'duree' => '1j'],
+                    ]
                 ]
             ],
             [
                 'nom' => 'Syphilis primaire',
-                'description' => 'Infection à Treponema pallidum (Stade 1)',
-                'symptomes' => ['Chancre indolore', 'Adénopathies'],
+                'symptomes' => ['Chancre indolore'],
                 'protocole' => [
-                    'titre' => 'Syphilis primaire',
-                    'signes' => 'Chancre induré, propre, indolore + adénopathie satellite',
-                    'diagnostics' => 'VDRL, TPHA',
-                    'germes_adulte' => 'Treponema pallidum',
-                    'germes_nourrisson' => 'Syphilis congénitale',
-                    'traitement_principal' => 'Benzathine Pénicilline 2.4 MUI',
-                    'posologie_principale' => '2,4 MUI dose unique IM profonde',
-                    'traitement_alternatif' => 'Doxycycline 100mg',
-                    'posologie_alternative' => '100mg x2/jour pendant 14 jours',
-                ]
-            ],
-
-            // ==================== OSTÉOARTICULAIRE ====================
-            [
-                'nom' => 'Arthrite aiguë',
-                'description' => 'Infection articulaire purulente',
-                'symptomes' => ['Douleurs articulaires', 'Impotence fonctionnelle', 'Fièvre', 'Œdèmes'],
-                'protocole' => [
-                    'titre' => 'Arthrite bactérienne aiguë',
-                    'signes' => 'Articulation chaude, tendue, douloureuse, fièvre élevée',
-                    'diagnostics' => 'Ponction articulaire (ECB), Radio, Hémocultures',
-                    'germes_adulte' => 'S. aureus, Streptocoques, N. gonorrhoeae',
-                    'germes_nourrisson' => 'S. aureus, Streptocoque B',
-                    'traitement_principal' => 'Céfotaxime 1g Injectable, Gentamicine 80mg Injectable',
-                    'posologie_principale' => 'Céfotaxime 100mg/kg/j + Gentamicine 7mg/kg/j (48h)',
-                    'traitement_alternatif' => 'Ceftriaxone 1g Injectable, Amikacine 500mg Injectable',
-                    'posologie_alternative' => 'Si allergie ou suspicion de BGN',
-                ]
-            ],
-            
-            // ==================== DIGESTIF ====================
-            [
-                'nom' => 'Fièvre typhoïde',
-                'description' => 'Infection systémique à Salmonelle',
-                'symptomes' => ['Fièvre', 'Céphalées', 'Constipation', 'Diarrhée', 'Insomnies', 'Asthénie'],
-                'protocole' => [
-                    'titre' => 'Fièvre typhoïde',
-                    'signes' => 'Température en "marche d\'escalier", pouls dissocié, tuphos',
-                    'diagnostics' => 'Hémocultures (Sem 1), Widal et Félix, Coproculture (Sem 2)',
-                    'germes_adulte' => 'Salmonella Typhi, Paratyphi A, B, C',
-                    'germes_nourrisson' => 'S. Typhi',
-                    'traitement_principal' => 'Ceftriaxone 1g Injectable',
-                    'posologie_principale' => 'Adulte: 2g/jour IV (7j) — Enfant: 50-75mg/kg/j',
-                    'traitement_alternatif' => 'Cefixime 200mg',
-                    'posologie_alternative' => '200mg x2/jour pendant 7 à 10 jours',
+                    'titre' => 'Traitement Syphilis',
+                    'signes' => 'Chancre induré indolore, adénopathie latérale',
+                    'traitements' => [
+                        ['nom' => 'Ceftriaxone 1g Injectable', 'type' => 'principal', 'poso' => '1g IM/j', 'duree' => '10j'],
+                    ]
                 ]
             ],
             [
-                'nom' => 'Choléra',
-                'description' => 'Diarrhée toxique foudroyante',
-                'symptomes' => ['Diarrhée', 'Selles liquides', 'Vomissements', 'Déshydratation'],
+                'nom' => 'Gastro-entérite aiguë',
+                'symptomes' => ['Diarrhée liquide', 'Vomissements', 'Douleurs abdominales', 'Nausées'],
                 'protocole' => [
-                    'titre' => 'Choléra (Prise en charge)',
-                    'signes' => 'Selles aqueuses "riziformes", déshydratation massive',
-                    'diagnostics' => 'Test rapide, Coproculture',
-                    'germes_adulte' => 'Vibrio cholerae',
-                    'germes_nourrisson' => 'Vibrio cholerae',
-                    'traitement_principal' => 'Doxycycline 100mg',
-                    'posologie_principale' => 'Dose unique de 300mg (Adulte) — Enfant: 6mg/kg',
-                    'traitement_alternatif' => 'Azithromycine 500mg',
-                    'posologie_alternative' => 'Dose unique 1g (Adulte)',
+                    'titre' => 'Réhydratation & Anti-biothérapie GEA',
+                    'signes' => 'Déshydratation clinique possible',
+                    'traitements' => [
+                        ['nom' => 'Métronidazole 500mg', 'type' => 'principal', 'poso' => '500mg 3x/j', 'duree' => '5j'],
+                        ['nom' => 'Paracétamol 500mg', 'type' => 'adjuvant', 'poso' => '1g 3x/j si douleurs', 'duree' => '3j'],
+                    ]
                 ]
             ],
+            [
+                'nom' => 'Crise d\'Asthme simple',
+                'symptomes' => ['Dyspnée', 'Sifflements respiratoires', 'Toux sèche'],
+                'protocole' => [
+                    'titre' => 'Urgence respiratoire Asthme',
+                    'signes' => 'Bradypnée expiratoire sibilante',
+                    'traitements' => [
+                        ['nom' => 'Salbutamol Puff', 'type' => 'principal', 'poso' => '2 bouffées / 15 min pendant 1h', 'duree' => '1j'],
+                    ]
+                ]
+            ],
+            [
+                'nom' => 'Anémie ferriprive',
+                'symptomes' => ['Asthénie', 'Pâleur cutanéo-muqueuse', 'Vertiges', 'Palpitations'],
+                'protocole' => [
+                    'titre' => 'Supplémentation Martiale',
+                    'signes' => 'Taux d\'hémoglobine < 10g/dl',
+                    'traitements' => [
+                        ['nom' => 'Fumarate de Fer', 'type' => 'principal', 'poso' => '1 cp 2x/j', 'duree' => '30j'],
+                    ]
+                ]
+            ]
         ];
 
-        foreach ($pathologies as $data) {
-            // Check if illness already exists
-            $maladieId = DB::table('maladies')->where('nom', $data['nom'])->value('id');
-            
-            if (!$maladieId) {
-                $maladieId = DB::table('maladies')->insertGetId([
-                    'nom' => $data['nom'],
-                    'description' => $data['description'],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-            } else {
-                DB::table('maladies')->where('id', $maladieId)->update([
-                    'description' => $data['description'],
-                    'updated_at' => $now,
-                ]);
-            }
+        foreach ($pathologies as $p) {
+            // 1. Maladie
+            DB::table('maladies')->updateOrInsert(
+                ['nom' => $p['nom']],
+                ['created_at' => $now, 'updated_at' => $now]
+            );
+            $maladieId = DB::table('maladies')->where('nom', $p['nom'])->value('id');
 
-            // Sync Symptoms
-            DB::table('maladie_symptome')->where('maladie_id', $maladieId)->delete();
-            foreach ($data['symptomes'] as $symptomNom) {
-                if (isset($symptomeIds[$symptomNom])) {
-                    DB::table('maladie_symptome')->insert([
+            // 2. Lier Symptômes
+            foreach ($p['symptomes'] as $sName) {
+                if (isset($sId[$sName])) {
+                    DB::table('maladie_symptome')->updateOrInsert([
                         'maladie_id' => $maladieId,
-                        'symptome_id' => $symptomeIds[$symptomNom],
-                        'created_at' => $now,
-                        'updated_at' => $now,
+                        'symptome_id' => $sId[$sName]
                     ]);
                 }
             }
 
-            // Update/Insert Protocol
-            $proto = $data['protocole'];
+            // 3. Protocole
             DB::table('protocole_traitements')->updateOrInsert(
                 ['maladie_id' => $maladieId],
                 [
-                    'titre' => $proto['titre'],
-                    'signes' => $proto['signes'],
-                    'diagnostics' => $proto['diagnostics'],
-                    'germes_nourrisson' => $proto['germes_nourrisson'],
-                    'germes_adulte' => $proto['germes_adulte'],
-                    'traitement_principal' => $proto['traitement_principal'],
-                    'posologie_principale' => $proto['posologie_principale'],
-                    'traitement_alternatif' => $proto['traitement_alternatif'],
-                    'posologie_alternative' => $proto['posologie_alternative'],
-                    'remarques' => null,
+                    'titre' => $p['protocole']['titre'],
+                    'signes' => $p['protocole']['signes'],
                     'created_at' => $now,
-                    'updated_at' => $now,
+                    'updated_at' => $now
                 ]
             );
+            $protocoleId = DB::table('protocole_traitements')->where('maladie_id', $maladieId)->value('id');
 
-            // 🔹 AUTO-CREATE MISSING MEDICAMENTS
-            $medsToEnsure = [];
-            if (!empty($proto['traitement_principal'])) {
-                foreach (explode(',', $proto['traitement_principal']) as $m) $medsToEnsure[] = trim($m);
-            }
-            if (!empty($proto['traitement_alternatif'])) {
-                foreach (explode(',', $proto['traitement_alternatif']) as $m) $medsToEnsure[] = trim($m);
-            }
-
-            foreach ($medsToEnsure as $medName) {
-                if (empty($medName)) continue;
-                $exists = DB::table('medicaments')->where('nom', $medName)->exists();
-                if (!$exists) {
-                    $familleId = 1; // Default: Antibiotics
-                    if (stripos($medName, 'Paracé') !== false) $familleId = 2; // Antalgics
-                    
-                    DB::table('medicaments')->insert([
-                        'nom' => $medName,
-                        'famille_id' => $familleId,
-                        'unite_id' => 5, // Default: Tablet
-                        'prix_achat' => 500,
-                        'prix_vente' => 1000,
-                        'stock' => 50,
-                        'stock_min' => 10,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ]);
+            // 4. Lier Médicaments
+            foreach ($p['protocole']['traitements'] as $t) {
+                if (isset($mId[$t['nom']])) {
+                    DB::table('protocole_medicament')->updateOrInsert(
+                        [
+                            'protocole_id' => $protocoleId,
+                            'medicament_id' => $mId[$t['nom']]
+                        ],
+                        [
+                            'type' => $t['type'],
+                            'posologie' => $t['poso'],
+                            'duree' => $t['duree'],
+                            'created_at' => $now,
+                            'updated_at' => $now
+                        ]
+                    );
                 }
             }
         }

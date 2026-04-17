@@ -26,7 +26,7 @@ class UniteSeeder extends Seeder
         ];
 
         foreach ($unites as $u) {
-            Unite::create(['nom' => $u]);
+            Unite::firstOrCreate(['nom' => $u]);
         }
     }
 }

@@ -23,21 +23,9 @@ class MedicamentController extends Controller
                     return $m->famille?->nom ?? '-';
                 })
                 ->addColumn('actions', function($m) {
-                    return '
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Actions
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="'.route('medicaments.edit', $m->id).'">✏️ Modifier</a></li>
-                        <li>
-                            <form action="'.route('medicaments.destroy', $m->id).'" method="POST" class="delete-form m-0 p-0">
-                                '.csrf_field().method_field("DELETE").'
-                                <button class="dropdown-item text-danger" type="submit">🗑️ Supprimer</button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>';
+                    $edit = '<a href="'.route('medicaments.edit', $m->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $delete = '<form action="'.route('medicaments.destroy', $m->id).'" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm(\'Supprimer ?\');">'.csrf_field().method_field("DELETE").'<button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer"><i class="fa fa-trash text-danger"></i></button></form>';
+                    return $edit.$delete;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

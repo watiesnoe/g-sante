@@ -26,34 +26,8 @@ class Paiement extends Model
         return $this->belongsTo(Hospitalisation::class);
     }
 
-    public function analyse()
+    public function prescriptionExamen()
     {
-        return $this->belongsTo(Analyse::class);
+        return $this->belongsTo(PrescriptionExamen::class, 'prescriptions_examens_id');
     }
-
-    public function paiements()
-    {
-        return $this->hasMany(Paiement::class, 'hospitalisation_id');
-    }
-
-    public function consultation()
-    {
-        return $this->belongsTo(Consultation::class);
-    }
-
-    public function service()
-    {
-        return $this->belongsTo(ServiceMedical::class);
-    }
-
-    public function salle()
-    {
-        return $this->belongsTo(Salle::class, 'salles_id');
-    }
-
-    public function lit()
-    {
-        return $this->belongsTo(Lit::class);
-    }
-
 }

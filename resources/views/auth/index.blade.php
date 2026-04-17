@@ -39,9 +39,7 @@
                             <table id="users-datatable" class="table table-bordered table-striped table-vcenter w-100">
                                 <thead>
                                     <tr>
-                                        <th width="60">Photo</th>
                                         <th>Utilisateur</th>
-                                        <th>Contact</th>
                                         <th>Rôle</th>
                                         <th>Statut</th>
                                         <th>Date création</th>
@@ -169,9 +167,7 @@
                 serverSide: true,
                 ajax: "{{ route('users.index') }}",
                 columns: [
-                    { data: 'photo', name: 'photo', orderable: false, searchable: false },
                     { data: 'utilisateur', name: 'utilisateur' },
-                    { data: 'contact', name: 'contact', orderable: false },
                     { data: 'role', name: 'role' },
                     { data: 'statut', name: 'statut' },
                     { data: 'date_creation', name: 'date_creation' },

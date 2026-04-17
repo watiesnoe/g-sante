@@ -23,13 +23,13 @@ class UserController extends Controller
 
         // Si la requête est AJAX (pour DataTables)
         if ($request->ajax()) {
-            $users = User::latest()->get();
+            $users = User::where('role', '!=', 'superadmin')->latest()->get();
 
             return datatables()->of($users)
                 ->addIndexColumn()
                 ->addColumn('photo', function ($user) {
-                    $photo = $user->photo ? asset('storage/' . $user->photo) : asset('images/default-user.png');
-                    return '<img src="' . $photo . '" class="rounded-circle" width="40" height="40">';
+                    $photo = $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name='.urlencode($user->prenom.' '.$user->nom).'&background=random';
+                    return '<img src="' . $photo . '" class="rounded-circle" width="40" height="40" style="object-fit:cover;">';
                 })
                 ->addColumn('utilisateur', function ($user) {
                     return "<strong>{$user->prenom} {$user->nom}</strong><br><small>{$user->email}</small>";
@@ -40,36 +40,13 @@ class UserController extends Controller
                     $badge = $user->statut === 'actif' ? 'success' : 'danger';
                     return "<span class='badge bg-{$badge} text-uppercase'>{$user->statut}</span>";
                 })
-                ->addColumn('date_creation', fn($user) => $user->created_at->format('d-m-Y'))
+                ->addColumn('date_creation', fn($user) => $user->created_at ? $user->created_at->format('d-m-Y') : '-')
                 ->addColumn('actions', function ($user) {
-                    $statusIcon = $user->statut === 'actif'
-                        ? '<i class="fa fa-toggle-on text-success"></i>'
-                        : '<i class="fa fa-toggle-off text-danger"></i>';
-
-                    return '
-                    <div class="dropdown text-center">
-                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton' . $user->id . '" data-bs-toggle="dropdown" aria-expanded="false">
-                            Actions
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $user->id . '">
-                            <li>
-                                <a class="dropdown-item edit-user" href="#" data-id="' . $user->id . '">
-                                    <i class="fa fa-pencil-alt me-1"></i> Modifier
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item toggle-status" href="#" data-id="' . $user->id . '">
-                                    ' . $statusIcon . ' Changer le statut
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item delete-user" href="#" data-id="' . $user->id . '">
-                                    <i class="fa fa-trash-alt me-1"></i> Supprimer
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    ';
+                    $statusColor = $user->statut === 'actif' ? 'text-success fa-toggle-on' : 'text-warning fa-toggle-off';
+                    $editBtn = '<span class="btn-sm edit-user" data-id="'.$user->id.'" title="Modifier" style="cursor:pointer;"><i class="fa fa-pencil-alt text-info"></i></span> ';
+                    $statusBtn = '<span class="btn-sm toggle-status" data-id="'.$user->id.'" title="Changer statut" style="cursor:pointer;"><i class="fa '.$statusColor.'"></i></span> ';
+                    $deleteBtn = '<span class="btn-sm delete-user" data-id="'.$user->id.'" title="Supprimer" style="cursor:pointer;"><i class="fa fa-trash text-danger"></i></span>';
+                    return $editBtn.$statusBtn.$deleteBtn;
                 })
 
                 ->rawColumns(['photo', 'utilisateur', 'statut', 'actions'])
@@ -77,13 +54,13 @@ class UserController extends Controller
         }
 
         $stats = [
-            'total' => User::count(),
+            'total' => User::where('role', '!=', 'superadmin')->count(),
             'medecins' => User::where('role', 'medecin')->count(),
             'secretaires' => User::where('role', 'secretaire')->count(),
             'admins' => User::where('role', 'admin')->count(),
             'clients' => User::where('role', 'client')->count(),
-            'actifs' => User::where('statut', 'actif')->count(),
-            'inactifs' => User::where('statut', 'inactif')->count(),
+            'actifs' => User::where('role', '!=', 'superadmin')->where('statut', 'actif')->count(),
+            'inactifs' => User::where('role', '!=', 'superadmin')->where('statut', 'inactif')->count(),
         ];
 
         return view('auth.index', compact('stats'));
@@ -91,37 +68,22 @@ class UserController extends Controller
 
     public function getData(Request $request)
     {
-        $users = User::latest()->get();
+        $users = User::where('role', '!=', 'superadmin')->latest()->get();
 
         return datatables()->of($users)
             ->addColumn('photo', function($user){
-                return $user->photo ? '<img src="'.asset('storage/'.$user->photo).'" width="40" class="rounded-circle">' : '';
+                $photo = $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name='.urlencode($user->prenom.' '.$user->nom).'&background=random';
+                return '<img src="' . $photo . '" width="40" height="40" class="rounded-circle" style="object-fit:cover;">';
             })
             ->addColumn('contact', function($user){
                 return $user->email.'<br>'.$user->telephone;
             })
             ->addColumn('actions', function ($user) {
-                // Choix de l'icône de statut
-                $statusIcon = $user->statut === 'actif'
-                    ? '<i class="fa fa-toggle-on text-success"></i>'
-                    : '<i class="fa fa-toggle-off text-danger"></i>';
-
-                return '
-                    <div class="d-flex align-items-center justify-content-center gap-2" role="group">
-                        <!-- Modifier -->
-                        <button type="button" class="btn btn-sm btn-primary editUser" data-id="' . $user->id . '" title="Modifier">
-                            <i class="fa fa-pencil-alt"></i>
-                        </button>
-                        <!-- Changer le statut -->
-                        <button type="button" class="btn btn-sm btn-warning toggleStatus" data-id="' . $user->id . '" title="Changer le statut">
-                            ' . $statusIcon . '
-                        </button>
-                        <!-- Supprimer -->
-                        <button type="button" class="btn btn-sm btn-danger deleteUser" data-id="' . $user->id . '" title="Supprimer">
-                            <i class="fa fa-trash-alt"></i>
-                        </button>
-                    </div>
-                    ';
+                $statusColor = $user->statut === 'actif' ? 'text-success fa-toggle-on' : 'text-warning fa-toggle-off';
+                $editBtn = '<span class="btn-sm editUser" data-id="'.$user->id.'" title="Modifier" style="cursor:pointer;"><i class="fa fa-pencil-alt text-info"></i></span> ';
+                $statusBtn = '<span class="btn-sm toggleStatus" data-id="'.$user->id.'" title="Changer statut" style="cursor:pointer;"><i class="fa '.$statusColor.'"></i></span> ';
+                $deleteBtn = '<span class="btn-sm deleteUser" data-id="'.$user->id.'" title="Supprimer" style="cursor:pointer;"><i class="fa fa-trash text-danger"></i></span>';
+                return $editBtn.$statusBtn.$deleteBtn;
             })->rawColumns(['photo','contact','actions'])
             ->make(true);
     }
@@ -298,6 +260,9 @@ class UserController extends Controller
 
         // Empêcher la suppression de son propre compte
         if ($user->id === auth()->id()) {
+            if (request()->ajax()) {
+                return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 403);
+            }
             return redirect()->back()
                 ->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }
@@ -309,6 +274,10 @@ class UserController extends Controller
 
         $user->delete();
 
+        if (request()->ajax()) {
+            return response()->json(['message' => 'Utilisateur supprimé avec succès.']);
+        }
+        
         return redirect()->route('users.index')
             ->with('success', 'Utilisateur supprimé avec succès.');
     }
@@ -319,7 +288,7 @@ class UserController extends Controller
     public function profile()
     {
         $user = auth()->user();
-        return view('users.profile', compact('user'));
+        return view('profile.edit', compact('user'));
     }
 
     /**

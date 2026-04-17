@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('service_medical_id')->constrained()->onDelete('cascade');
             $table->string('nom');
             $table->text('description')->nullable();
+            $table->boolean('quantifiable')->default(false);  
             $table->decimal('prix', 10, 2)->default(0);
             $table->timestamps();
         });

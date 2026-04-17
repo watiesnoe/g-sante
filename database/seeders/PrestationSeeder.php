@@ -7,49 +7,57 @@ use Illuminate\Support\Facades\DB;
 
 class PrestationSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        $services = DB::table('service_medicals')->pluck('id', 'nom');
+
         $prestations = [
-            // Service 1: Consultations
-            ['service_medical_id' => 1, 'nom' => 'Consultation générale', 'description' => 'Consultation médicale de routine pour diagnostic initial.', 'prix' => 5000],
-            ['service_medical_id' => 1, 'nom' => 'Consultation spécialisée', 'description' => 'Consultation avec un spécialiste selon la pathologie.', 'prix' => 10000],
-            ['service_medical_id' => 1, 'nom' => 'Suivi post-opératoire', 'description' => 'Suivi médical après intervention chirurgicale.', 'prix' => 7000],
+            // Médecine Générale
+            ['s' => 'Médecine Générale', 'nom' => 'Consultation générale', 'q' => false, 'p' => 5000],
+            ['s' => 'Médecine Générale', 'nom' => 'Consultation à domicile', 'q' => false, 'p' => 15000],
 
-            // Service 2: Imagerie
-            ['service_medical_id' => 2, 'nom' => 'Échographie abdominale', 'description' => 'Examen d’imagerie pour évaluation abdominale.', 'prix' => 15000],
-            ['service_medical_id' => 2, 'nom' => 'IRM cérébrale', 'description' => 'Imagerie par résonance magnétique du cerveau.', 'prix' => 40000],
-            ['service_medical_id' => 2, 'nom' => 'Radiographie thoracique', 'description' => 'Radiographie pour examen du thorax.', 'prix' => 8000],
+            // Pédiatrie
+            ['s' => 'Pédiatrie', 'nom' => 'Consultation pédiatrique', 'q' => false, 'p' => 7000],
+            ['s' => 'Pédiatrie', 'nom' => 'Pesée & Vaccination', 'q' => false, 'p' => 3000],
 
-            // Service 3: Injections
-            ['service_medical_id' => 3, 'nom' => 'Injection intramusculaire', 'description' => 'Injection médicamenteuse selon prescription.', 'prix' => 3000],
-            ['service_medical_id' => 3, 'nom' => 'Injection intraveineuse', 'description' => 'Perfusion ou médicament administré par voie IV.', 'prix' => 4000],
-            ['service_medical_id' => 3, 'nom' => 'Vaccination', 'description' => 'Vaccin selon calendrier vaccinal.', 'prix' => 3500],
+            // Radiologie
+            ['s' => 'Radiologie', 'nom' => 'Échographie abdominale', 'q' => false, 'p' => 15000],
+            ['s' => 'Radiologie', 'nom' => 'Radiographie thoracique', 'q' => false, 'p' => 10000],
+            ['s' => 'Radiologie', 'nom' => 'Échographie obstétricale', 'q' => false, 'p' => 12000],
 
-            // Service 4: Analyses
-            ['service_medical_id' => 4, 'nom' => 'Analyse sanguine complète', 'description' => 'Bilan sanguin complet.', 'prix' => 12000],
-            ['service_medical_id' => 4, 'nom' => 'Analyse urinaire', 'description' => 'Examen complet des urines.', 'prix' => 5000],
-            ['service_medical_id' => 4, 'nom' => 'Test de glycémie', 'description' => 'Mesure du taux de sucre dans le sang.', 'prix' => 3000],
+            // Soins Infirmiers
+            ['s' => 'Soins Infirmiers', 'nom' => 'Injection IM', 'q' => true, 'p' => 1000],
+            ['s' => 'Soins Infirmiers', 'nom' => 'Injection IV', 'q' => true, 'p' => 2000],
+            ['s' => 'Soins Infirmiers', 'nom' => 'Pansement simple', 'q' => true, 'p' => 2500],
+            ['s' => 'Soins Infirmiers', 'nom' => 'Prise de tension', 'q' => false, 'p' => 500],
 
-            // Service 5: Examens spécialisés
-            ['service_medical_id' => 5, 'nom' => 'Électrocardiogramme', 'description' => 'Examen du rythme cardiaque.', 'prix' => 10000],
-            ['service_medical_id' => 5, 'nom' => 'Spirométrie', 'description' => 'Mesure de la fonction respiratoire.', 'prix' => 8000],
-            ['service_medical_id' => 5, 'nom' => 'Audiométrie', 'description' => 'Test auditif complet.', 'prix' => 6000],
+            // Laboratoire
+            ['s' => 'Laboratoire d\'Analyses', 'nom' => 'NFS (Hémogramme)', 'q' => false, 'p' => 8000],
+            ['s' => 'Laboratoire d\'Analyses', 'nom' => 'Test Rapide Paludisme (TDR)', 'q' => false, 'p' => 1000],
+            ['s' => 'Laboratoire d\'Analyses', 'nom' => 'Glycémie à jeun', 'q' => false, 'p' => 2000],
+            ['s' => 'Laboratoire d\'Analyses', 'nom' => 'Analyse des urines (ECBU)', 'q' => false, 'p' => 6000],
+            ['s' => 'Laboratoire d\'Analyses', 'nom' => 'Widal (Fièvre typhoïde)', 'q' => false, 'p' => 5000],
 
-            // Service 6: Certificats
-            ['service_medical_id' => 6, 'nom' => 'Certificat médical d’aptitude', 'description' => 'Certificat attestant de l’aptitude à certaines activités.', 'prix' => 5000],
-            ['service_medical_id' => 6, 'nom' => 'Arrêt de travail', 'description' => 'Certificat médical pour congé de maladie.', 'prix' => 4000],
+            // Maternité / Gynéco
+            ['s' => 'Maternité', 'nom' => 'Accouchement normal', 'q' => false, 'p' => 30000],
+            ['s' => 'Maternité', 'nom' => 'Césarienne', 'q' => false, 'p' => 150000],
+            ['s' => 'Maternité', 'nom' => 'Suivi de grossesse (CPN)', 'q' => false, 'p' => 5000],
         ];
 
-        // Ajouter created_at et updated_at automatiquement
-        $now = now();
-        foreach ($prestations as &$prestation) {
-            $prestation['created_at'] = $now;
-            $prestation['updated_at'] = $now;
+        foreach ($prestations as $pre) {
+            if (isset($services[$pre['s']])) {
+                DB::table('prestations')->updateOrInsert(
+                    ['nom' => $pre['nom']],
+                    [
+                        'service_medical_id' => $services[$pre['s']],
+                        'description' => $pre['nom'] . ' au service ' . $pre['s'],
+                        'quantifiable' => $pre['q'],
+                        'prix' => $pre['p'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
         }
-
-        DB::table('prestations')->insert($prestations);
     }
 }

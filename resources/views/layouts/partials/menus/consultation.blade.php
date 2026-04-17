@@ -6,6 +6,6 @@
     <ul class="nav-main-submenu">
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('liste.attente')}}"><span class="nav-main-link-name">Liste d'Attente</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('consultations.index')}}"><span class="nav-main-link-name">Liste des Consultations</span></a></li>
-        <li class="nav-main-item"><a class="nav-main-link" href="{{route('consultations.create')}}"><span class="nav-main-link-name">Nouvelle Consultation</span></a></li>
+        {{-- <li class="nav-main-item"><a class="nav-main-link" href="{{route('consultations.create')}}"><span class="nav-main-link-name">Nouvelle Consultation</span></a></li> --}}
     </ul>
 </li>

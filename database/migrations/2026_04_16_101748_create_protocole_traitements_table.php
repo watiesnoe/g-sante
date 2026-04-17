@@ -13,17 +13,15 @@ return new class extends Migration
     {
         Schema::create('protocole_traitements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('maladie_id')->constrained('maladies')->onDelete('cascade');
-            $table->string('titre')->nullable();
+            $table->foreignId('maladie_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('titre');
             $table->text('signes')->nullable();
             $table->text('diagnostics')->nullable();
             $table->text('germes_nourrisson')->nullable();
             $table->text('germes_adulte')->nullable();
-            $table->text('traitement_principal')->nullable();
-            $table->text('posologie_principale')->nullable();
-            $table->text('traitement_alternatif')->nullable();
-            $table->text('posologie_alternative')->nullable();
-            $table->text('remarques')->nullable();
+
+            $table->text('remarques')->nullable(); // <--- AJOUTE CETTE LIGNE
+
             $table->timestamps();
         });
     }

@@ -26,17 +26,10 @@ class SuiviController extends Controller
                 ->addColumn('resultat', fn($s) => $s->resultat ?? '-')
                 ->addColumn('statut', fn($s) => ucfirst($s->statut))
                 ->addColumn('actions', function($s){
-                    return '
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Actions</button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">👁️ Voir</a></li>
-                        <li><a class="dropdown-item" href="#">✏️ Modifier</a></li>
-                        <li>
-                            <button data-url="'.route('suivis.destroy',$s->id).'" class="dropdown-item text-danger btn-delete">🗑️ Supprimer</button>
-                        </li>
-                    </ul>
-                </div>';
+                    $viewBtn = '<span class="  btn-sm view " data-id="'.$s->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
+                    $editBtn = '<span class="  btn-sm edit" data-id="'.$s->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
+                    $deleteBtn = '<span class="  btn-sm delete" data-id="'.$s->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
+                    return $viewBtn.$editBtn.$deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

@@ -15,6 +15,11 @@
             </a>
         </li>
         <li class="nav-main-item">
+            <a class="nav-main-link" href="{{ route('infectiologie.pathogenes') }}">
+                <span class="nav-main-link-name">Pathogènes</span>
+            </a>
+        </li>
+        <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('infectiologie.protocoles') }}">
                 <span class="nav-main-link-name">Protocoles de Traitement</span>
             </a>

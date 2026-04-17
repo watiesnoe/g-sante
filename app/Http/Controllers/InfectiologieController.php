@@ -16,20 +16,20 @@ class InfectiologieController extends Controller
             ->take(5)
             ->get();
 
-        // Consultations par mois (simulé ou réel si les données existent)
+        // Consultations par mois (pour les maladies infectieuses)
         $monthlyStats = \App\Models\Consultation::selectRaw('COUNT(*) as count, MONTH(date_consultation) as month')
-            ->whereNotNull('protocole_id')
+            ->whereHas('maladies')
             ->groupBy('month')
             ->get();
 
-        // Stock antibiotiques critiques
+        // Stock antibiotiques critiques (colonnes correctes: stock et stock_min)
         $lowStockCount = \App\Models\Medicament::where(function($q) {
                 $q->where('nom', 'like', '%Amoxi%')
                   ->orWhere('nom', 'like', '%Ceftri%')
                   ->orWhere('nom', 'like', '%Cipro%')
                   ->orWhere('nom', 'like', '%Lumef%');
             })
-            ->whereColumn('stock_actuel', '<=', 'stock_mini')
+            ->whereColumn('stock', '<=', 'stock_min')
             ->count();
 
         return view('application.infectiologie.statistiques', compact('topMaladies','monthlyStats', 'lowStockCount'));
@@ -93,8 +93,11 @@ class InfectiologieController extends Controller
 
     public function suivi()
     {
-        $suivis = \App\Models\Consultation::with(['patient', 'protocole', 'maladies'])
-            ->whereNotNull('protocole_id')
+        // Consultations liées à au moins une maladie (via la table pivot)
+        $suivis = \App\Models\Consultation::with(['patient', 'maladies.protocole'])
+            ->whereHas('maladies', function($q) {
+                $q->whereHas('protocole');
+            })
             ->orderBy('date_consultation', 'desc')
             ->get();
 

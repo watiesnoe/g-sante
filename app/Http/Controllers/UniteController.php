@@ -19,15 +19,10 @@ class UniteController extends Controller
                 ->addIndexColumn()
                 ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-m-Y') : '-')
                 ->addColumn('actions', function ($row) {
-                    return '
-                    <button class="btn btn-sm btn-primary view"
-                        data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
-                    <button class="btn btn-sm btn-info edit"
-                        data-id="'.$row->id.'"
-                        data-nom="'.$row->nom.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
-                    <button class="btn btn-sm btn-danger delete"
-                        data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
-                ';
+                    $viewBtn = '<span class="btn-sm view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
+                    $editBtn = '<span class="btn-sm edit" data-id="'.$row->id.'" data-nom="'.$row->nom.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
+                    $deleteBtn = '<span class="btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
+                    return $viewBtn . $editBtn . $deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

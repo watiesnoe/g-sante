@@ -53,4 +53,15 @@ class Medicament extends Model
     {
         return $this->hasMany(CommandeMedicaments::class, 'medicament_id');
     }
+    public function protocoles()
+    {
+        return $this->belongsToMany(
+            ProtocoleTraitement::class,
+            'protocole_medicament',
+            'medicament_id',        // Ta colonne dans la table pivot
+            'protocole_id'          // L'autre colonne (Correction ici)
+        )
+            ->using(ProtocoleMedicament::class)
+            ->withPivot(['type', 'posologie', 'duree']);
+    }
 }

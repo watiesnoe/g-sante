@@ -47,8 +47,10 @@ class ConsultationController extends Controller
                 ->addColumn('actions', function($row){
                     return '
                     <div class="d-flex align-items-center justify-content-center gap-2">
-                        <a href="'.route('consultations.show', $row->id).'" class="btn btn-info btn-sm" title="Voir"><i class="fa fa-eye"></i></a>
-                        <a href="'.route('consultations.edit', $row->id).'" class="btn btn-warning btn-sm" title="Modifier"><i class="fa fa-edit"></i></a>
+                        <a href="'.route('consultations.show', $row->id).'" class="text-info cursor-pointer font-size-16" 
+                        title="Voir"><i class="fa fa-eye text-warning"></i></a>
+                        <a href="'.route('consultations.edit', $row->id).'" class="cursor-pointer ml-1 text font-size-16"
+                         title="Modifier"><i class="fa fa-edit text-primary"></i></a>
                     </div>
                 ';
                 })
@@ -190,6 +192,7 @@ class ConsultationController extends Controller
                  'protocole_id'     => $request->protocole_id, // ✅ track the applied protocol
                  'date_consultation'=> now(),
                  'motif'            => $request->motif,
+                 'maladie_id'       => $request->maladie_id,
                  'taille'           => $request->taille,
                  'diagnostic'       => $request->diagnostic,
                  'notes'            => $request->antecedents,

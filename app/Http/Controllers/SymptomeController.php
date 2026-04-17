@@ -17,7 +17,7 @@ class SymptomeController extends Controller
             return Datatables::of($symptomes)
                 ->addIndexColumn()
                 ->addColumn('actions', function($row){
-                    $viewBtn = '<span class="  btn-sm view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
+                    $viewBtn = '<span class="  btn-sm view " data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
                     $editBtn = '<span class="  btn-sm edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
                     $deleteBtn = '<span class="  btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
                     return $viewBtn.$editBtn.$deleteBtn;

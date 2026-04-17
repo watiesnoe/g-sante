@@ -36,13 +36,13 @@ class OrdonnanceController extends Controller
                     return $html;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="btn btn-sm btn-danger">📄 PDF</a>';
+                   $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'"><i class="fa fa-file-pdf text-danger"></i></a>';
 
                     $paiementBtn = '<a href="'.route('ordonnances.paiement', $ord->id).'"
-                            class="btn btn-sm btn-success ml-1">💳 Paiement</a>';
+                            class=" ml-1"><i class="fa fa-credit-card text-success"></i></a>';
 
-                    $deleteBtn = '<button data-url="'.route('ordonnances.destroy',$ord->id).'"
-                            class="btn btn-sm btn-warning btn-delete ml-1">🗑️ Supprimer</button>';
+                    $deleteBtn = '<span data-url="'.route('ordonnances.destroy',$ord->id).'"
+                            class=" btn-delete ml-1"><i class="fa fa-trash text-danger"></i></span>';
 
                     return $pdfBtn.' '.$paiementBtn.' '.$deleteBtn;
                 })
@@ -190,7 +190,7 @@ class OrdonnanceController extends Controller
                     return $ord->consultation->patient->nom.' '.$ord->consultation->patient->prenom;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="btn btn-sm btn-danger">📄 PDF</a>';
+                    $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="text-danger"><i class="fa fa-file-pdf"></i> PDF</a>';
                     return $pdfBtn;
                 })
                 ->rawColumns(['actions'])

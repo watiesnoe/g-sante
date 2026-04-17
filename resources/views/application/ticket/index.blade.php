@@ -21,7 +21,7 @@
                     <table id="ticketsTable" class="table table-bordered table-striped table-vcenter w-100">
                         <thead>
                             <tr>
-                                <th>#</th>
+
                                 <th>Patient</th>
                                 <th>Nombre de prestations</th>
                                 <th>Total (XOF)</th>
@@ -43,13 +43,35 @@
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('tickets.index') }}",
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'patient', name: 'patient' },
-                    { data: 'nombre_prestations', name: 'nombre_prestations' },
-                    { data: 'total', name: 'total' },
-                    { data: 'date', name: 'date' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'patient',
+                        name: 'patient'
+                    },
+                    {
+                        data: 'nombre_prestations',
+                        name: 'nombre_prestations'
+                    },
+                    {
+                        data: 'total',
+                        name: 'total'
+                    },
+                    {
+                        data: 'date',
+                        name: 'date'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    }
                 ],
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
@@ -58,13 +80,7 @@
                         next: '<i class="fa fa-chevron-right"></i>'
                     }
                 },
-                dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4 text-center'B><'col-sm-12 col-md-4'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
-                pagingType: 'simple_numbers',
-                buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print'
-                ]
+
             });
         });
     </script>

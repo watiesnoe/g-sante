@@ -47,46 +47,12 @@ class HospitalisationController extends Controller
                     return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    return '
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Actions
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" href="' . route('hospitalisations.show', $row->id) . '">
-                                <i class="bx bx-show"></i> Voir
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank">
-                                <i class="bx bx-printer"></i> Imprimer
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="' . route('hospitalisations.edit', $row->id) . '">
-                                <i class="bx bx-edit"></i> Modifier
-                            </a>
-                        </li>
-                        <li>
-                            <button type="button"
-                                    class="dropdown-item btn-paiement"
-                                    data-id="' . $row->id . '"
-                                    data-date="' . $row->date_entree . '"
-                                    data-montant="' . ($row->prix_jour ?? 0) . '">
-                                <i class="bx bx-credit-card"></i> Paiement
-                            </button>
-                        </li>
-                        <li>
-                            <form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">
-                                ' . csrf_field() . method_field('DELETE') . '
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="bx bx-trash"></i> Supprimer
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>';
+                    $view = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn-sm" title="Voir"><i class="bx bx-show text-primary"></i></a> ';
+                    $print = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn-sm" title="Imprimer"><i class="bx bx-printer text-warning"></i></a> ';
+                    $edit = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn-sm" title="Modifier"><i class="bx bx-edit text-info"></i></a> ';
+                    $payment = '<button type="button" class="btn-sm border-0 bg-transparent btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="bx bx-credit-card text-success"></i></button> ';
+                    $delete = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn-sm border-0 bg-transparent text-danger" title="Supprimer"><i class="bx bx-trash"></i></button></form>';
+                    return $view.$print.$edit.$payment.$delete;
                 })
                 ->rawColumns(['etat', 'action'])
                 ->make(true);
@@ -129,38 +95,11 @@ class HospitalisationController extends Controller
                     return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    return '
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Actions
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" href="' . route('hospitalisations.show', $row->id) . '">
-                                <i class="bx bx-show"></i> Voir
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank">
-                                <i class="bx bx-printer"></i> Imprimer
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="' . route('hospitalisations.edit', $row->id) . '">
-                                <i class="bx bx-edit"></i> Modifier
-                            </a>
-                        </li>
-
-                        <li>
-                            <form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">
-                                ' . csrf_field() . method_field('DELETE') . '
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="bx bx-trash"></i> Supprimer
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>';
+                    $view = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn-sm" title="Voir"><i class="bx bx-show text-primary"></i></a> ';
+                    $print = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn-sm" title="Imprimer"><i class="bx bx-printer text-warning"></i></a> ';
+                    $edit = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn-sm" title="Modifier"><i class="bx bx-edit text-info"></i></a> ';
+                    $delete = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn-sm border-0 bg-transparent text-danger" title="Supprimer"><i class="bx bx-trash"></i></button></form>';
+                    return $view.$print.$edit.$delete;
                 })
                 ->rawColumns(['etat', 'action'])
                 ->make(true);

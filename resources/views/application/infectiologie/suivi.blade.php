@@ -90,15 +90,16 @@
                         </td>
                         <td>
                             <div class="badge bg-soft-info text-info mb-1">{{ $s->maladies->first()->nom ?? 'N/A' }}</div>
-                            <div class="small text-muted"><i class="fas fa-file-medical me-1"></i>{{ $s->protocole->titre }}</div>
+                            @php $protocole = $s->maladies->first()->protocole ?? null; @endphp
+                            <div class="small text-muted"><i class="fas fa-file-medical me-1"></i>{{ $protocole->titre ?? 'Sans protocole' }}</div>
                         </td>
                         <td>
                             <div class="text-dark small fw-bold">{{ \Carbon\Carbon::parse($s->date_consultation)->format('d/m/Y') }}</div>
                             <div class="text-muted" style="font-size: 0.7rem;">Il y a {{ \Carbon\Carbon::parse($s->date_consultation)->diffForHumans() }}</div>
                         </td>
                         <td>
-                            <div class="small text-dark fw-semibold">{{ Str::limit($s->protocole->traitement_principal, 40) }}</div>
-                            <div class="small text-muted italic" style="font-size: 0.7rem;">{{ Str::limit($s->protocole->posologie_principale, 50) }}</div>
+                            <div class="small text-dark fw-semibold">{{ Str::limit($protocole->traitement_principal ?? 'Non défini', 40) }}</div>
+                            <div class="small text-muted italic" style="font-size: 0.7rem;">{{ Str::limit($protocole->posologie_principale ?? '', 50) }}</div>
                         </td>
                         <td class="text-center">
                             <span class="badge bg-success rounded-pill">Stable</span>

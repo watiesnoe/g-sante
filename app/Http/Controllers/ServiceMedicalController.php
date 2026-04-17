@@ -49,9 +49,9 @@ class ServiceMedicalController extends Controller
                 ->addIndexColumn() // Numéro de ligne
                 ->addColumn('actions', function ($row) {
                     return '
-                        <button class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
-                        <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
-                        <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
+                        <span class="  btn-sm view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span>
+                        <span class="  btn-sm edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span>
+                        <span class="  btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>
                     ';
                 })
                 ->editColumn('created_at', function ($row) {

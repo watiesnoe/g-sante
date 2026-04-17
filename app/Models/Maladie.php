@@ -1,26 +1,27 @@
 <?php
 namespace App\Models;
 
-use App\Models\Consultation;
-use App\Models\Symptome;
 use Illuminate\Database\Eloquent\Model;
 
 class Maladie extends Model
 {
     protected $fillable = ['nom', 'description'];
 
+    // Récupère tous les symptômes liés à cette maladie
     public function symptomes()
     {
-        return $this->belongsToMany(Symptome::class);
-    }
-    
-    public function consultations()
-    {
-        return $this->belongsToMany(Consultation::class, 'consultation_maladie', 'maladie_id', 'consultation_id');
+        return $this->belongsToMany(Symptome::class, 'maladie_symptome');
     }
 
+    // Récupère le protocole de traitement unique de cette maladie
     public function protocole()
     {
-        return $this->hasOne(ProtocoleTraitement::class, 'maladie_id');
+        return $this->hasOne(ProtocoleTraitement::class);
+    }
+
+    // Récupère les consultations via la table pivot consultation_maladie
+    public function consultations()
+    {
+        return $this->belongsToMany(Consultation::class, 'consultation_maladie');
     }
 }

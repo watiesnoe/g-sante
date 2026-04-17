@@ -42,34 +42,21 @@ class RendezvousController extends Controller
 
                     // Bouton "Marquer comme réalisé" seulement si pas déjà réalisé
                     if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<button data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" class="dropdown-item btn-realise text-success">
-                            ✅ Marquer comme réalisé
-                        </button>';
+                        $realiseBtn = '<span class="  btn-sm btn-realise text-success" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check text-success"></i></span> ';
                     }
 
 
                     // Bouton "Créer un suivi" si consultation existe
                     if ($rdv->consultation) {
-                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="dropdown-item text-primary">
-                        📄 Ajouter un suivi
-                    </a>';
+                        $suiviBtn = '<span class="  btn-sm btn-realise text-success" data-url="'.route('consultations.suivi.create', $rdv->consultation->id).'" title="Marquer comme réalisé"><i class="fa fa-check text-success"></i></span> ';
                     }
 
-                    return '
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="'.route('rendezvous.show', $rdv->id).'">👁️ Voir</a></li>
-                            <li><a class="dropdown-item" href="'.route('rendezvous.edit', $rdv->id).'">✏️ Modifier</a></li>
-                            '.($realiseBtn ? "<li>$realiseBtn</li>" : "").'
-                            '.($suiviBtn ? "<li>$suiviBtn</li>" : "").'
-                            <li>
-                                <button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="dropdown-item text-danger btn-delete">🗑️ Supprimer</button>
-                            </li>
-                        </ul>
-                    </div>';
+                    $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
+                    $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $realiseBtn = $realiseBtn ? '<span class="'.$realiseBtn.'</span> ' : '';
+                    $suiviBtn = $suiviBtn ? '<span class="'.$suiviBtn.'</span> ' : '';
+                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    return $viewBtn.$editBtn.$realiseBtn.$suiviBtn.$deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -122,21 +109,14 @@ class RendezvousController extends Controller
                     </a>';
                     }
 
-                    return '
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="'.route('rendezvous.show', $rdv->id).'">👁️ Voir</a></li>
-                            <li><a class="dropdown-item" href="'.route('rendezvous.edit', $rdv->id).'">✏️ Modifier</a></li>
-                            '.($realiseBtn ? "<li>$realiseBtn</li>" : "").'
-                            '.($suiviBtn ? "<li>$suiviBtn</li>" : "").'
-                            <li>
-                                <button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="dropdown-item text-danger btn-delete">🗑️ Supprimer</button>
-                            </li>
-                        </ul>
-                    </div>';
+                    $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
+                    $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    $out = $viewBtn.$editBtn;
+                    if ($realiseBtn) $out .= '<div class="d-inline">'.$realiseBtn.'</div> ';
+                    if ($suiviBtn) $out .= '<div class="d-inline">'.$suiviBtn.'</div> ';
+                    return $out.$deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -189,21 +169,14 @@ class RendezvousController extends Controller
                     </a>';
                     }
 
-                    return '
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="'.route('rendezvous.show', $rdv->id).'">👁️ Voir</a></li>
-                            <li><a class="dropdown-item" href="'.route('rendezvous.edit', $rdv->id).'">✏️ Modifier</a></li>
-                            '.($realiseBtn ? "<li>$realiseBtn</li>" : "").'
-                            '.($suiviBtn ? "<li>$suiviBtn</li>" : "").'
-                            <li>
-                                <button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="dropdown-item text-danger btn-delete">🗑️ Supprimer</button>
-                            </li>
-                        </ul>
-                    </div>';
+                    $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
+                    $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    $out = $viewBtn.$editBtn;
+                    if ($realiseBtn) $out .= '<div class="d-inline">'.$realiseBtn.'</div> ';
+                    if ($suiviBtn) $out .= '<div class="d-inline">'.$suiviBtn.'</div> ';
+                    return $out.$deleteBtn;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

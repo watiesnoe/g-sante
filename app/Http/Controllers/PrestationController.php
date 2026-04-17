@@ -17,7 +17,7 @@ class PrestationController extends Controller
 
             return DataTables::of($prestations)
                 ->addIndexColumn()
-                ->addColumn('service_medical', function($row){
+                ->addColumn('service_medical', function ($row) {
                     return $row->serviceMedical->nom ?? '';
                 })
                 ->addColumn('actions', function ($row) {
@@ -25,16 +25,10 @@ class PrestationController extends Controller
                     $deleteUrl = route('prestations.destroy', $row->id);
 
                     return '
-            <div class="dropdown">
-                <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    ⚙️ Actions
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="'.$editUrl.'">✏️ Éditer</a></li>
-                    <li><button class="dropdown-item text-danger delete-btn" data-url="'.$deleteUrl.'">🗑 Supprimer</button></li>
-                </ul>
-            </div>';
-                })
+                      <a  href="' . $editUrl . '"><span class="fa fa-edit text-info"></span></a>
+                      <a class=" delete-btn" data-url="' . $deleteUrl . '"><span class="fa fa-trash text-danger"></span></a>
+                       ';
+                }) 
                 ->rawColumns(['actions'])
                 ->make(true);
         }
@@ -61,6 +55,12 @@ class PrestationController extends Controller
 
         return redirect()->route('application.prestation.create')
             ->with('success', 'Prestation créée avec succès.');
+    }
+
+    public function edit(Prestation $prestation)
+    {
+        $services = ServiceMedical::all();
+        return view('application.prestation.create', compact('prestation', 'services'));
     }
 
     public function show(Prestation $prestation)

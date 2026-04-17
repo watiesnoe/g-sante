@@ -28,4 +28,7 @@ class Patient extends Model {
     }
 
     public function rendezVous() { return $this->hasMany(RendezVous::class); }
+    public function tickets() { return $this->hasMany(Ticket::class); }
+    public function ordonnances() { return $this->hasManyThrough(Ordonnance::class, Consultation::class); }
+    public function examens() { return $this->hasManyThrough(PrescriptionExamen::class, Consultation::class); }
 }

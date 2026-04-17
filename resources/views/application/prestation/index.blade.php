@@ -28,9 +28,9 @@
                                     <tr>
                                         <th>Prestation</th>
                                         <th>Service Médical</th>
-                                        <th>Description</th>
-                                        <th>Prix</th>
-                                        <th>Actions</th>
+                                        <th class="text-center col-md">Description</th>
+                                        <th class="text-center">Prix</th>
+                                        <th class="text-center col-md">Actions</th>
                                     </tr>
                                 </thead>
                             </table>
