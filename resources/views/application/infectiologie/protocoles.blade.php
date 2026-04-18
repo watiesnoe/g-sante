@@ -37,13 +37,17 @@
                             <div class="small text-primary"><strong>Dx:</strong> {{ Str::limit($p->diagnostics, 40) }}</div>
                         </td>
                         <td class="text-center">
-                            <div class="btn-group">
-                                <a href="{{ route('infectiologie.protocoles.show', $p->id) }}" class="btn btn-sm btn-alt-primary" title="Voir les détails">
-                                    <i class="fa fa-eye"></i>
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ route('infectiologie.protocoles.show', $p->id) }}" class="btn-sm" title="Voir les détails">
+                                    <i class="fa fa-eye text-primary"></i>
                                 </a>
-                                <button class="btn btn-sm btn-alt-danger">
-                                    <i class="fa fa-trash"></i>
-                                </button>
+                                <form action="{{ route('infectiologie.protocoles.destroy', $p->id) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer">
+                                        <i class="fa fa-trash text-danger"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

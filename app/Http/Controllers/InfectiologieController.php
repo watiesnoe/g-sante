@@ -57,7 +57,7 @@ class InfectiologieController extends Controller
 
     public function showProtocole($id)
     {
-        $protocole = ProtocoleTraitement::with('maladie')->findOrFail($id);
+        $protocole = ProtocoleTraitement::with(['maladie', 'medicaments'])->findOrFail($id);
         return view('application.infectiologie.show', compact('protocole'));
     }
 
@@ -74,6 +74,14 @@ class InfectiologieController extends Controller
         );
 
         return redirect()->back()->with('success', 'Protocole expert enregistré avec succès.');
+    }
+
+    public function destroyProtocole($id)
+    {
+        $protocole = ProtocoleTraitement::findOrFail($id);
+        $protocole->delete();
+
+        return redirect()->back()->with('success', 'Protocole supprimé avec succès.');
     }
 
     public function antibiotiques()

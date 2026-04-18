@@ -10,16 +10,16 @@
     </div>
 
     <div class="row justify-content-center mb-5">
-        <div class="col-lg-8">
+        <div class="col-lg-8 position-relative">
             <div class="card border-0 shadow-lg rounded-pill overflow-hidden">
                 <div class="card-body p-2">
                     <div class="input-group input-group-lg border-0">
                         <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-search text-primary"></i></span>
-                        <input type="text" id="medicalSearch" class="form-control border-0 ps-2" placeholder="Rechercher une maladie, un symptôme ou un antibiotique..." style="box-shadow: none;">
+                        <input type="text" id="medicalSearch" class="form-control border-0 ps-2 bg-white" placeholder="Rechercher une maladie, un symptôme ou un antibiotique..." style="box-shadow: none;">
                     </div>
                 </div>
             </div>
-            <div id="searchResults" class="mt-3 list-group shadow-sm" style="display:none; position: absolute; width: 100%; z-index: 1000; left: 0;">
+            <div id="searchResults" class="list-group shadow-lg border-0 rounded-4 mt-2" style="display:none; position: absolute; width: calc(100% - 30px); z-index: 1000; top: 100%; left: 15px; max-height: 300px; overflow-y: auto; background-color: white;">
                 <!-- Resultats injectés par JS -->
             </div>
         </div>
@@ -111,7 +111,7 @@ $(document).ready(function() {
                 let results = response.filter(m => m.nom.toLowerCase().includes(query.toLowerCase()));
                 
                 results.forEach(m => {
-                    html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action show-protocol" data-id="${m.id}">
+                    html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action show-protocol text-dark pe-auto py-3 border-start-0 border-end-0" data-id="${m.id}">
                         <i class="fas fa-file-medical me-2 text-primary"></i> ${m.nom}
                     </a>`;
                 });
@@ -131,11 +131,11 @@ $(document).ready(function() {
         $('#medicalSearch').val($(this).text().trim());
 
         $.ajax({
-            url: '/api/protocoles/' + id,
+            url: '/infectiologie/api/protocoles/' + id,
             type: 'GET',
             success: function(response) {
-                if (response.success) {
-                    let p = response.protocole;
+                if (response.success && response.protocoles && response.protocoles.length > 0) {
+                    let p = response.protocoles[0];
                     let html = `
                         <div class="p-4 border-bottom bg-light">
                             <div class="d-flex justify-content-between align-items-start">
@@ -173,9 +173,30 @@ $(document).ready(function() {
                     `;
                     $('#protocolContent').html(html);
                     $('#protocolDisplay').fadeIn();
+                } else {
+                    if (typeof Toast !== 'undefined') {
+                        Toast.fire({ icon: 'info', title: 'Aucun protocole défini pour cette pathologie.' });
+                    } else {
+                        alert('Aucun protocole défini pour cette pathologie.');
+                    }
+                }
+            },
+            error: function() {
+                if (typeof Toast !== 'undefined') {
+                    Toast.fire({ icon: 'error', title: 'Erreur de connexion.' });
                 }
             }
         });
+    });
+
+    $('.category-card').click(function() {
+        let cat = $(this).data('category');
+        let searchKeyword = '';
+        if (cat === 'Infections Respiratoires') searchKeyword = 'Grippe';
+        if (cat === 'Fièvres & Parasitoses') searchKeyword = 'Paludisme';
+        if (cat === 'Urogénital & Digestive') searchKeyword = 'Choléra';
+
+        $('#medicalSearch').val(searchKeyword).trigger('input');
     });
 });
 </script>

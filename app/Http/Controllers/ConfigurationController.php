@@ -25,7 +25,7 @@ class ConfigurationController extends Controller
                     $deleteUrl = route('service_medicals.destroy', $row->id);
 
                     $edit = '<a href="'.$editUrl.'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $delete = '<button class="btn-sm border-0 bg-transparent text-danger delete-btn" data-url="'.$deleteUrl.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $delete = '<button class="btn-sm border-0 bg-transparent text-danger delete-btn" data-url="'.$deleteUrl.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
                     return $edit.$delete;
                 })
                 ->editColumn('created_at', function ($row) {

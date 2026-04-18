@@ -64,22 +64,18 @@ class ReceptionController extends Controller
 
                 ->addColumn('actions', function($row){
                     $actions = '<div class="d-flex align-items-center justify-content-center gap-2">
-                        <a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-info">
-                            <i class="fa fa-eye"></i>
-                        </a>';
+                        <a href="'.route('receptions.show', $row->id).'" class="btn-sm" title="Détails"><i class="fa fa-eye text-primary"></i></a>';
 
                     if (!$row->commande || $row->commande->statut !== 'valide') {
-                        $actions .= '<a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-warning">
-                            <i class="fa fa-edit"></i>
-                        </a>';
+                        $actions .= '<a href="'.route('receptions.edit', $row->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a>';
                     } else {
                         $actions .= '<button class="btn btn-sm btn-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;">
-                            <i class="fa fa-edit"></i>
+                            <i class="fa fa-edit text-info"></i>
                         </button>';
                     }
 
-                    $actions .= '<button class="btn btn-sm btn-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')">
-                            <i class="fa fa-trash"></i>
+                    $actions .= '<button class="btn-sm border-0 bg-transparent" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')">
+                            <i class="fa fa-trash text-danger"></i>
                         </button>
                     </div>';
 

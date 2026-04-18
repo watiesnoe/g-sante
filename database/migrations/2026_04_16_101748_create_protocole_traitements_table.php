@@ -20,7 +20,15 @@ return new class extends Migration
             $table->text('germes_nourrisson')->nullable();
             $table->text('germes_adulte')->nullable();
 
-            $table->text('remarques')->nullable(); // <--- AJOUTE CETTE LIGNE
+            // Traitement principal (texte libre)
+            $table->string('traitement_principal')->nullable();
+            $table->text('posologie_principale')->nullable();
+
+            // Traitement alternatif / secours
+            $table->string('traitement_alternatif')->nullable();
+            $table->text('posologie_alternative')->nullable();
+
+            $table->text('remarques')->nullable();
 
             $table->timestamps();
         });

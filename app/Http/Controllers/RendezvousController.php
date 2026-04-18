@@ -55,7 +55,7 @@ class RendezvousController extends Controller
                     $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
                     $realiseBtn = $realiseBtn ? '<span class="'.$realiseBtn.'</span> ' : '';
                     $suiviBtn = $suiviBtn ? '<span class="'.$suiviBtn.'</span> ' : '';
-                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
                     return $viewBtn.$editBtn.$realiseBtn.$suiviBtn.$deleteBtn;
                 })
                 ->rawColumns(['actions'])
@@ -111,7 +111,7 @@ class RendezvousController extends Controller
 
                     $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
                     $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
                     
                     $out = $viewBtn.$editBtn;
                     if ($realiseBtn) $out .= '<div class="d-inline">'.$realiseBtn.'</div> ';
@@ -171,7 +171,7 @@ class RendezvousController extends Controller
 
                     $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
                     $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
                     
                     $out = $viewBtn.$editBtn;
                     if ($realiseBtn) $out .= '<div class="d-inline">'.$realiseBtn.'</div> ';

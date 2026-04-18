@@ -71,7 +71,7 @@ public function index(Request $request)
         <!-- Modifier -->
         <a href="'.route('commandes.edit', $row->id).'" 
            class="text-warning" title="Modifier">
-            <i class="fa fa-edit"></i>
+            <i class="fa fa-edit text-info"></i>
         </a>
 
         <!-- PDF -->
@@ -85,7 +85,7 @@ public function index(Request $request)
               style="cursor:pointer;" 
               data-id="'.$row->id.'" 
               title="Supprimer">
-            <i class="fa fa-trash"></i>
+            <i class="fa fa-trash text-danger"></i>
         </span>
 
     </div>';

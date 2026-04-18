@@ -109,7 +109,14 @@
                         name: 'created_at',
                         className: 'd-none d-md-table-cell',
                         render: function(data) {
-                            return data ? new Date(data).toLocaleDateString('fr-FR') : '';
+                            if (!data) return '';
+                            if (typeof data === 'string' && data.length >= 10) {
+                                // Extract date part to format as DD/MM/YYYY
+                                let matches = data.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                if (matches) return matches[3] + '/' + matches[2] + '/' + matches[1];
+                            }
+                            let d = new Date(data);
+                            return !isNaN(d.getTime()) ? d.toLocaleDateString('fr-FR') : data;
                         }
                     },
                     {

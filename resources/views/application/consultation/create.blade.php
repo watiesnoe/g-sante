@@ -321,7 +321,7 @@
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                                     <label class="fw-semibold mb-0">Examens complémentaires</label>
                                                     <button type="button" id="btnAjouterAnalyse"
-                                                        class="btn btn-warning btn-sm">
+                                                        class="btn-sm">
                                                         <i class="fas fa-plus me-1"></i> Ajouter
                                                     </button>
                                                 </div>
@@ -1067,9 +1067,44 @@
                 }
 
                 $('#protocole_id').val(p.id);
+
+                // 🔹 Génération des examens complémentaires (Diagnostics)
+                if (p.diagnostics) {
+                    let examsSuggested = p.diagnostics.split(/[\,\;]/);
+                    examsSuggested.forEach(exName => {
+                        let name = exName.trim();
+                        // On ignore les termes génériques ou vides
+                        if (!name || name.toLowerCase() === 'clinique' || name.toLowerCase() === 'n/a' || name.length < 2) return;
+
+                        // Anti-doublon
+                        let alreadyExists = false;
+                        $('input[name="examens[]"]').each(function() {
+                            if ($(this).val().toLowerCase().includes(name.toLowerCase())) alreadyExists = true;
+                        });
+
+                        if (!alreadyExists) {
+                            $('#emptyAnalyseRow').remove();
+                            let examRow = $(`
+                                <li class="list-group-item px-0 d-flex gap-2 align-items-center auto-added-exam animate__animated animate__fadeInLeft" style="background-color: #fff9db;">
+                                    <i class="fas fa-flask text-warning"></i>
+                                    <input type="text" name="examens[]" class="form-control form-control-sm flex-grow-1 border-warning" value="${name}" required>
+                                    <button type="button" class="btn btn-link text-danger btn-sm btnSupprimerAnalyse p-0"><i class="fas fa-times"></i></button>
+                                </li>
+                            `);
+                            $('#analyseList').append(examRow);
+                            
+                            // Retrait de la couleur après 3s
+                            setTimeout(() => {
+                                examRow.css('background-color', 'transparent');
+                                examRow.find('input').removeClass('border-warning');
+                            }, 3000);
+                        }
+                    });
+                }
+
                 Toast.fire({
                     icon: 'success',
-                    title: 'Traitement généré !'
+                    title: 'Traitement & Examens générés !'
                 });
                 setTimeout(() => {
                     $('.auto-added-row').removeClass('table-success');

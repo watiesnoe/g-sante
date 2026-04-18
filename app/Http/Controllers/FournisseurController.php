@@ -17,8 +17,8 @@ class FournisseurController extends Controller
                 ->addColumn('actions', function($row) {
                     return '
                     <button class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
-                    <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
-                    <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
+                    <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></button>
+                    <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>
                 ';
                 })
                 ->rawColumns(['actions'])

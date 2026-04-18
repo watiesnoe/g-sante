@@ -76,11 +76,11 @@ class TicketController extends Controller
     {
         $prestations = Prestation::with('serviceMedical')->get();
 
-        // Récupérer tous les patients
-        $patients = Patient::all();
+        // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
+        $assurances = \App\Models\Assurance::all(); // Ajout des assurances
 
         // Passer les données à la vue
-        return view('application.ticket.create', compact('prestations', 'patients'));
+        return view('application.ticket.create', compact('prestations', 'assurances'));
 
         //
     }
@@ -88,62 +88,77 @@ class TicketController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(Request $request)
-{
-    $request->validate([
-        'patient_id' => 'required|exists:patients,id',
-        'items' => 'required|array|min:1',
-        'items.*.prestation_id' => 'required|exists:prestations,id',
-        'items.*.prix_unitaire' => 'required|numeric',
-        'items.*.quantite' => 'required|integer|min:1',
-        'items.*.remise' => 'required|numeric|min:0|max:100',
-        'items.*.sous_total' => 'required|numeric',
-        'items.*.service' => 'nullable|string', // Changé en nullable
-        'description' => 'nullable|string',
-    ]);
-
-    DB::beginTransaction();
-    try {
-        // Calcul du total côté serveur (plus fiable)
-        $totalTicket = collect($request->items)->sum('sous_total');
-
-        $ticket = Ticket::create([
-                'patient_id'   => $request->patient_id,
-                'description'  => $request->description,
-                'total'        => collect($request->items)->sum(fn($i) => $i['sous_total']),
-                'date_validite'=> now()->addWeek(),   // validité = 7 jours
-                'statut'       => 'en_attente',           // statut initial
-                'user_id' => auth()->id()
-            ]);
-
-        foreach ($request->items as $item) {
-            $ticket->items()->create([
-                'prestation_id' => $item['prestation_id'],
-                'service'       => $item['service'] ?? 'N/A', // Valeur par défaut si vide
-                'prix_unitaire' => $item['prix_unitaire'],
-                'quantite'      => $item['quantite'],
-                'remise'        => $item['remise'],
-                'sous_total'    => $item['sous_total'],
-            ]);
-        }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Ticket enregistré avec succès !',
-            'ticket_id' => $ticket->id
+    public function store(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'items' => 'required|array|min:1',
+            'items.*.prestation_id' => 'required|exists:prestations,id',
+            'items.*.prix_unitaire' => 'required|numeric',
+            'items.*.quantite' => 'required|integer|min:1',
+            'items.*.remise' => 'required|numeric|min:0|max:100',
+            'items.*.sous_total' => 'required|numeric',
+            'items.*.service' => 'nullable|string', // Changé en nullable
+            'description' => 'nullable|string',
+            'assurance_id' => 'nullable|exists:assurances,id',
         ]);
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            // On retourne le message d'erreur réel pour débugger
-            'message' => 'Erreur SQL: ' . $e->getMessage() 
-        ], 500);
+        DB::beginTransaction();
+        try {
+            // Calcul du total côté serveur (plus fiable)
+            $totalTicket = collect($request->items)->sum('sous_total');
+
+            $assuranceId = $request->assurance_id;
+            $tauxCouverture = 0;
+            if ($assuranceId) {
+                $assurance = \App\Models\Assurance::find($assuranceId);
+                $tauxCouverture = $assurance ? $assurance->taux : 0;
+            }
+
+            $partAssurance = ($totalTicket * $tauxCouverture) / 100;
+            $partPatient = $totalTicket - $partAssurance;
+
+            $ticket = Ticket::create([
+                    'patient_id'   => $request->patient_id,
+                    'description'  => $request->description,
+                    'total'        => $totalTicket,
+                    'assurance_id' => $assuranceId,
+                    'taux_couverture' => $tauxCouverture,
+                    'part_assurance'  => $partAssurance,
+                    'part_patient'    => $partPatient,
+                    'date_validite'=> now()->addWeek(),   // validité = 7 jours
+                    'statut'       => 'en_attente',           // statut initial
+                    'user_id' => auth()->id()
+                ]);
+
+            foreach ($request->items as $item) {
+                $ticket->items()->create([
+                    'prestation_id' => $item['prestation_id'],
+                    'service'       => $item['service'] ?? 'N/A', // Valeur par défaut si vide
+                    'prix_unitaire' => $item['prix_unitaire'],
+                    'quantite'      => $item['quantite'],
+                    'remise'        => $item['remise'],
+                    'sous_total'    => $item['sous_total'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket enregistré avec succès !',
+                'ticket_id' => $ticket->id
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                // On retourne le message d'erreur réel pour débugger
+                'message' => 'Erreur SQL: ' . $e->getMessage() 
+            ], 500);
+        }
     }
-}
 
     /**
      * Display the specified resource.
@@ -175,12 +190,12 @@ class TicketController extends Controller
     {
         // Récupérer le ticket avec patient et items
         $ticket = Ticket::with(['patient', 'items.prestation.serviceMedical'])->findOrFail($id);
-        // Récupérer tous les patients et prestations pour le formulaire
-        $patients =Patient::orderBy('nom')->get();
+        
         $prestations =Prestation::with('serviceMedical')->orderBy('nom')->get();
+        $assurances = \App\Models\Assurance::all();
 
         // Retourner la même vue que la création, mais avec les données du ticket
-        return view('application.ticket.create', compact('ticket', 'patients', 'prestations'));
+        return view('application.ticket.create', compact('ticket', 'prestations', 'assurances'));
     }
 
 
@@ -207,14 +222,30 @@ class TicketController extends Controller
             'items.*.sous_total' => 'required|integer',
             'items.*.service' => 'required|string',
             'description' => 'nullable|string',
+            'assurance_id' => 'nullable|exists:assurances,id',
         ]);
 
         DB::beginTransaction();
         try {
+            $totalTicket = collect($request->items)->sum(fn($i) => $i['sous_total']);
+            $assuranceId = $request->assurance_id;
+            $tauxCouverture = 0;
+            if ($assuranceId) {
+                $assurance = \App\Models\Assurance::find($assuranceId);
+                $tauxCouverture = $assurance ? $assurance->taux : 0;
+            }
+
+            $partAssurance = ($totalTicket * $tauxCouverture) / 100;
+            $partPatient = $totalTicket - $partAssurance;
+
             // Mise à jour du ticket
             $ticket->update([
                 'description'   => $request->description,
-                'total'         => collect($request->items)->sum(fn($i) => $i['sous_total']),
+                'total'         => $totalTicket,
+                'assurance_id'  => $assuranceId,
+                'taux_couverture' => $tauxCouverture,
+                'part_assurance'  => $partAssurance,
+                'part_patient'    => $partPatient,
                 'date_validite' => now()->addWeek(),  // on prolonge la validité à chaque update
                 'statut'        => 'en_attente', // on remet en attente à chaque update
             ]);

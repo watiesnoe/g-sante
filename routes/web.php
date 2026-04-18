@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('maladies', MaladieController::class);
     Route::resource('symptomes', SymptomeController::class);
     Route::resource('tickets', TicketController::class);
+    Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
     Route::resource('patients', PatientController::class);
     Route::resource('consultations', ConsultationController::class);
     Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
@@ -85,10 +86,8 @@ Route::middleware('auth')->group(function () {
     Route::get('paiement/{ordonnance}/ordonnance', [OrdonnanceController::class, 'paiementForm'])
         ->name('ordonnances.paiement');
     Route::post('/payer/{ordonnance}/ordonnance', [OrdonnanceController::class, 'payer']) ->name('ordonnances.payer');
-    Route::get('/ordonnance/lespayer', [OrdonnanceController::class, 'lespayer'])->name('ordonnances.lespayer');      ;
+    Route::get('/ordonnance/lespayer', [OrdonnanceController::class, 'lespayer'])->name('ordonnances.lespayer');
 
-    Route::get('/patients/search', [PatientController::class, 'search'])
-        ->name('patients.search');
     Route::resource('hospitalisations', HospitalisationController::class);
     Route::post('/paiements/hospitalisation', [PaiementController::class, 'store'])
         ->name('paiements.hospitalisation');
@@ -184,6 +183,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'protocoles'])->name('infectiologie.protocoles');
         Route::get('/protocoles/{id}', [\App\Http\Controllers\InfectiologieController::class, 'showProtocole'])->name('infectiologie.protocoles.show');
         Route::post('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'storeProtocole'])->name('infectiologie.protocoles.store');
+        Route::delete('/protocoles/{id}', [\App\Http\Controllers\InfectiologieController::class, 'destroyProtocole'])->name('infectiologie.protocoles.destroy');
         Route::get('/antibiotiques', [\App\Http\Controllers\InfectiologieController::class, 'antibiotiques'])->name('infectiologie.antibiotiques');
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');

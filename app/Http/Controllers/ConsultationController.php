@@ -325,11 +325,13 @@ class ConsultationController extends Controller
             'patient',
             'medecin',
             'ticket',
+            'protocole.medicaments',
             'ordonnances.medicaments',
             'examens',
             'rendezVous',
             'certificat',
-            'hospitalisation',
+            'hospitalisation.salle',
+            'hospitalisation.lit',
             'symptomes',
             'maladies'
         ]);
@@ -532,7 +534,8 @@ class ConsultationController extends Controller
             'examens',
             'rendezVous',
             'certificat',
-            'hospitalisation',
+            'hospitalisation.salle',
+            'hospitalisation.lit',
             'symptomes',
             'maladies'
         ]);

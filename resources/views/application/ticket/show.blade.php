@@ -21,7 +21,7 @@
                         <a href="{{ route('tickets.print', $ticket->id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
                             <i class="fa fa-print me-1"></i>Imprimer
                         </a>
-                        <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-warning btn-sm">
+                        <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn-sm">
                             <i class="fa fa-edit me-1"></i>Modifier
                         </a>
                         <a href="{{ route('tickets.index') }}" class="btn btn-secondary btn-sm">

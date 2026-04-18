@@ -17,9 +17,9 @@ class AssuranceController extends Controller
                 ->addIndexColumn()
                 ->addColumn('actions', function($row) {
                     return '
-                        <a href="'.route('assurances.show', $row->id).'" class="btn btn-sm btn-primary" title="Détails"><i class="fa fa-eye"></i></a>
-                        <a href="'.route('assurances.edit', $row->id).'" class="btn btn-sm btn-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>
-                        <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>
+                        <a href="'.route('assurances.show', $row->id).'" class="btn-sm" title="Détails"><i class="fa fa-eye text-primary"></i></a>
+                        <a href="'.route('assurances.edit', $row->id).'" class="btn btn-sm btn-info" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a>
+                        <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>
                     ';
                 })
                 ->rawColumns(['actions'])

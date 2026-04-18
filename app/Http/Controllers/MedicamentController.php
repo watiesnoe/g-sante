@@ -23,15 +23,22 @@ class MedicamentController extends Controller
                     return $m->famille?->nom ?? '-';
                 })
                 ->addColumn('actions', function($m) {
-                    $edit = '<a href="'.route('medicaments.edit', $m->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
+                    $show   = '<a href="'.route('medicaments.show', $m->id).'" class="btn-sm" title="Détails"><i class="fa fa-eye text-primary"></i></a> ';
+                    $edit   = '<a href="'.route('medicaments.edit', $m->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
                     $delete = '<form action="'.route('medicaments.destroy', $m->id).'" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm(\'Supprimer ?\');">'.csrf_field().method_field("DELETE").'<button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer"><i class="fa fa-trash text-danger"></i></button></form>';
-                    return $edit.$delete;
+                    return $show.$edit.$delete;
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
         }
 
         return view('application.medicament.index');
+    }
+
+    public function show(Medicament $medicament)
+    {
+        $medicament->load(['unite', 'famille', 'protocoles.maladie']);
+        return view('application.medicament.show', compact('medicament'));
     }
 
     public function create()

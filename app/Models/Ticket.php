@@ -11,7 +11,7 @@ class Ticket extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id', 'description', 'total', 'date_validite', 'statut','user_id'];
+        'patient_id', 'description', 'total', 'date_validite', 'statut', 'assurance_id', 'taux_couverture', 'part_assurance', 'part_patient','user_id'];
 
     protected $dates = ['date_validite'];
 
@@ -33,6 +33,11 @@ class Ticket extends Model
                 $ticket->update(['statut' => 'expire']);
             }
         });
+    }
+
+    public function assurance()
+    {
+        return $this->belongsTo(Assurance::class);
     }
 
     public function estExpire()

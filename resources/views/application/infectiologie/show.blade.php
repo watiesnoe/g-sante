@@ -98,6 +98,51 @@
                     @endif
                 </div>
             </div>
+            {{-- Médicaments du protocole (via pivot) --}}
+            @if($protocole->medicaments->count())
+            <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden border-start border-4 border-info">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center text-info">
+                    <span class="icon-shape bg-soft-info text-info me-3 h5 mb-0">
+                        <i class="fas fa-capsules"></i>
+                    </span>
+                    <h5 class="mb-0">Médicaments du Protocole</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Médicament</th>
+                                <th>Type</th>
+                                <th>Posologie</th>
+                                <th>Durée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($protocole->medicaments as $med)
+                            <tr>
+                                <td><strong>{{ $med->nom }}</strong></td>
+                                <td>
+                                    @php
+                                        $typeColors = [
+                                            'principal'  => 'success',
+                                            'alternatif' => 'warning',
+                                            'adjuvant'   => 'info',
+                                            'relais'     => 'secondary',
+                                            'assos'      => 'primary',
+                                        ];
+                                        $color = $typeColors[$med->pivot->type] ?? 'secondary';
+                                    @endphp
+                                    <span class="badge bg-{{ $color }}">{{ ucfirst($med->pivot->type) }}</span>
+                                </td>
+                                <td class="small">{{ $med->pivot->posologie ?: '-' }}</td>
+                                <td class="small">{{ $med->pivot->duree ?: '-' }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
         </div>
 
         <div class="col-lg-4">

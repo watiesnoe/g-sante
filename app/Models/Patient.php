@@ -13,7 +13,12 @@ class Patient extends Model {
         'ethnie',
         'age',
         'adresse',
-        'groupe_sanguin'];
+        'groupe_sanguin',
+        'assurance_id',
+        'numero_assurance',
+        'fin_validite_assurance'];
+
+    public function assurance() { return $this->belongsTo(Assurance::class); }
 
     public function consultations() { return $this->hasMany(Consultation::class); }
     public function hospitalisations() {

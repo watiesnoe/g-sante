@@ -33,10 +33,10 @@
                     <td>{{ $p->date_paiement }}</td>
                     <td>
                         <a href="{{ route('paiementscommande.show', $p->id) }}" class="btn btn-sm btn-info">Voir</a>
-                        <a href="{{ route('paiementscommande.edit', $p->id) }}" class="btn btn-sm btn-warning">Modifier</a>
+                        <a href="{{ route('paiementscommande.edit', $p->id) }}" class="btn-sm">Modifier</a>
                         <form action="{{ route('paiementscommande.destroy', $p->id) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ce paiement ?')">Supprimer</button>
+                            <button class="btn-sm border-0 bg-transparent" onclick="return confirm('Supprimer ce paiement ?')">Supprimer</button>
                         </form>
                     </td>
                 </tr>

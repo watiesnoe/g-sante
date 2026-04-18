@@ -22,6 +22,10 @@ return new class extends Migration
 
             $table->text('description')->nullable();
             $table->integer('total')->default(0);
+ $table->foreignId('assurance_id')->nullable()->constrained('assurances')->nullOnDelete();
+            $table->decimal('taux_couverture', 5, 2)->nullable()->comment('En pourcentage');
+            $table->decimal('part_assurance', 10, 2)->default(0);
+            $table->decimal('part_patient', 10, 2)->default(0);
 
             // Nouveaux champs
             $table->date('date_validite')->nullable();

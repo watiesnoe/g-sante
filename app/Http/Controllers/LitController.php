@@ -24,8 +24,8 @@ class LitController extends Controller
                     $editUrl = route('lits.edit', $row->id);
                     $deleteUrl = route('lits.destroy', $row->id);
                     return '
-                        <a href="'.$editUrl.'" class="text-warning p-1 hover:text-warning"><i class="fa fa-pencil-alt"></i></a>
-                        <span data-url="'.$deleteUrl.'" class="text-danger p-1 delete hover:text-danger"><i class="fa fa-trash"></i></span>
+                        <a href="'.$editUrl.'" class="text-warning p-1 hover:text-warning"><i class="fa fa-pencil-alt text-info"></i></a>
+                        <span data-url="'.$deleteUrl.'" class="text-danger p-1 delete hover:text-danger"><i class="fa fa-trash text-danger"></i></span>
                     ';
                 })
                 ->rawColumns(['actions'])

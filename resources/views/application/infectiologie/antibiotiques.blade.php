@@ -111,12 +111,12 @@
                             @endif
                         </td>
                         <td class="text-center pe-4">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-alt-secondary" title="Évaluer la résistance">
-                                    <i class="fas fa-microscope"></i>
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn-sm border-0 bg-transparent" title="Évaluer la résistance">
+                                    <i class="fas fa-microscope text-secondary"></i>
                                 </button>
-                                <button class="btn btn-sm btn-alt-primary" title="Historique">
-                                    <i class="fas fa-history"></i>
+                                <button class="btn-sm border-0 bg-transparent" title="Historique">
+                                    <i class="fas fa-history text-primary"></i>
                                 </button>
                             </div>
                         </td>

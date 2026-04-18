@@ -105,8 +105,8 @@
                             <span class="badge bg-success rounded-pill">Stable</span>
                         </td>
                         <td class="text-center pe-4">
-                            <a href="{{ route('consultations.show', $s->id) }}" class="btn btn-sm btn-alt-primary">
-                                <i class="fas fa-eye me-1"></i> Dossier
+                            <a href="{{ route('consultations.show', $s->id) }}" class="btn-sm" title="Dossier">
+                                <i class="fas fa-eye text-primary"></i>
                             </a>
                         </td>
                     </tr>

@@ -1,103 +1,82 @@
 @extends('layouts.app')
 
-@section('titre')
-    ⚙️ Configuration - Système de Santé
-@endsection
+@section('titre', 'Détail Symptôme - ' . $symptome->nom)
 
 @section('content')
-    <div class="content">
-        <div class="row">
-            <!-- Sidebar gauche -->
-            <div class="col-xl-3 col-lg-4">
-                <div class="block block-rounded h-100 mb-0">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Menu</h3>
-                    </div>
-                    <div class="block-content">
-                        <ul class="nav nav-pills flex-column push">
-                            <li class="nav-item mb-1">
-                                <a class="nav-link active" href="#">
-                                    <i class="fa fa-hospital me-1"></i> Structure
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-stethoscope me-1"></i> Services médicaux
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users me-1"></i> Utilisateurs
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-door-open me-1"></i> Salles
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-bed me-1"></i> Lits
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-vials me-1"></i> Examens
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-layer-group me-1"></i> Unités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users-cog me-1"></i> Famille
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-user-md me-1"></i> Spécialités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-id-card me-1"></i> Sécurité sociale
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 fw-bold mb-0">
+                <i class="fa fa-stethoscope me-2 text-warning"></i>{{ $symptome->nom }}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="{{ route('symptomes.index') }}">Symptômes</a></li>
+                    <li class="breadcrumb-item active">{{ $symptome->nom }}</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{{ route('symptomes.index') }}" class="btn btn-sm btn-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        {{-- Infos du symptôme --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0"><i class="fa fa-info-circle text-primary me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th width="160" class="text-muted small text-uppercase">Nom</th>
+                            <td><strong>{{ $symptome->nom }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted small text-uppercase">Description</th>
+                            <td>{{ $symptome->description ?: 'Aucune description disponible' }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted small text-uppercase">Enregistré le</th>
+                            <td>{{ $symptome->created_at->format('d/m/Y') }}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8">
-                <div class="block block-rounded">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Configuration - Structure</h3>
-                    </div>
-                    <div class="block-content">
-                        <form action="" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label">Nom de la structure</label>
-                                <input type="text" class="form-control" placeholder="Ex: Centre de Santé Municipal">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Adresse</label>
-                                <input type="text" class="form-control" placeholder="Adresse complète">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Téléphone</label>
-                                <input type="text" class="form-control" placeholder="+223 70 00 00 00">
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-save me-1"></i> Sauvegarder
-                            </button>
-                        </form>
-                    </div>
+        {{-- Maladies liées --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0">
+                        <i class="fa fa-virus text-danger me-2"></i>Maladies associées
+                        <span class="badge bg-danger ms-2">{{ $symptome->maladies->count() }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @forelse($symptome->maladies as $maladie)
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-soft-danger text-danger border border-danger-subtle px-3 py-2 rounded-pill">
+                                <i class="fa fa-disease me-1"></i>{{ $maladie->nom }}
+                            </span>
+                            @if($maladie->protocole)
+                                <a href="{{ route('infectiologie.protocoles.show', $maladie->protocole->id) }}"
+                                   class="btn btn-xs btn-outline-primary btn-sm" title="Voir protocole">
+                                    <i class="fas fa-book-medical"></i>
+                                </a>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-muted small mb-0">Aucune maladie associée à ce symptôme.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
     </div>
+
+</div>
 @endsection

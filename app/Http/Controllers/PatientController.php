@@ -46,6 +46,9 @@ class PatientController extends Controller
             'telephone' => 'required|string|max:20|unique:patients,telephone',
             'ethnie' => 'required|string|max:255',
             'age' => 'required|integer|min:0',
+            'assurance_id' => 'nullable|exists:assurances,id',
+            'numero_assurance' => 'nullable|string|max:255',
+            'fin_validite_assurance' => 'nullable|date',
         ]);
 
         $patient = Patient::create($validated);
@@ -61,7 +64,7 @@ class PatientController extends Controller
         $patients = Patient::where('nom', 'like', '%'.$request->q.'%')
             ->orWhere('telephone', 'like', '%'.$request->q.'%')
             ->limit(10)
-            ->get(['id','nom','prenom','telephone']);
+            ->get(['id','nom','prenom','telephone','assurance_id','numero_assurance','fin_validite_assurance']);
 
         return response()->json($patients);
     }

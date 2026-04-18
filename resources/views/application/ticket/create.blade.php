@@ -27,14 +27,28 @@
                 <div class="card-body">
                     <div class="row g-3">
                         {{-- Patient --}}
-                        <div class="col-12">
+                        <div class="col-md-8">
                             <label class="form-label fw-bold">Patient</label>
-                            <select class="form-select js-select2" id="patient" name="patient_id">
-                                <option value="">-- Sélectionner un patient --</option>
-                                @foreach($patients as $patient)
-                                    <option value="{{ $patient->id }}"
-                                        {{ isset($ticket) && $ticket->patient_id == $patient->id ? 'selected' : '' }}>
-                                        {{ $patient->nom }} {{ $patient->prenom }} - {{ $patient->telephone }}
+                            <select class="form-select js-select2" id="patient" name="patient_id" required>
+                                @if(isset($ticket) && $ticket->patient)
+                                    <option value="{{ $ticket->patient->id }}" selected>
+                                        {{ $ticket->patient->nom }} {{ $ticket->patient->prenom }} - {{ $ticket->patient->telephone }}
+                                    </option>
+                                @else
+                                    <option value="">-- Sélectionner un patient --</option>
+                                @endif
+                            </select>
+                        </div>
+
+                        {{-- Assurance (Optionnel) --}}
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-success"><i class="fas fa-shield-alt"></i> Assurance</label>
+                            <select class="form-select js-select2" id="assurance" name="assurance_id">
+                                <option value="">-- Aucune assurance --</option>
+                                @foreach($assurances as $assurance)
+                                    <option value="{{ $assurance->id }}"
+                                        {{ isset($ticket) && $ticket->assurance_id == $assurance->id ? 'selected' : '' }}>
+                                        {{ $assurance->nom }} (Couvre à {{ $assurance->taux }}%)
                                     </option>
                                 @endforeach
                             </select>
@@ -146,6 +160,71 @@
     <script>
         $(document).ready(function() {
             
+            // Initialisation de Select2 avec AJAX pour le patient
+            $('#patient').select2({
+                placeholder: "-- Rechercher un patient (nom ou tel) --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ route('patients.search') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term // Le terme recherché
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {
+                                    text: item.nom + ' ' + item.prenom + ' - ' + item.telephone,
+                                    id: item.id,
+                                    assurance_id: item.assurance_id,
+                                    fin_validite_assurance: item.fin_validite_assurance
+                                }
+                            })
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            // Autoremplissage et vérification assurance
+            $('#patient').on('select2:select', function (e) {
+                var data = e.params.data;
+                if (data.assurance_id) {
+                    let dNow = new Date();
+                    dNow.setHours(0,0,0,0);
+                    let valid = true;
+
+                    if (data.fin_validite_assurance) {
+                        let exp = new Date(data.fin_validite_assurance);
+                        if (exp < dNow) {
+                            valid = false;
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Assurance Expirée',
+                                text: 'Les droits à l\'assurance de ce patient ont expiré le ' + data.fin_validite_assurance
+                            });
+                            $('#assurance').val('').trigger('change');
+                        }
+                    }
+
+                    if (valid) {
+                        $('#assurance').val(data.assurance_id).trigger('change');
+                        if (typeof Toast !== 'undefined') {
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Assurance rattachée automatiquement'
+                            });
+                        }
+                    }
+                } else {
+                    $('#assurance').val('').trigger('change');
+                }
+            });
+
             // --- 1. Gestion affichage dynamique Quantité ---
             $('#prestation').on('change', function() {
                 let selected = $(this).find('option:selected');
@@ -364,6 +443,27 @@
                                 <input type="text" class="form-control mt-2 d-none" id="ethnieAutre" placeholder="Précisez l'ethnie">
                             </div>
                             
+                            <div class="row mb-3 border-top pt-3 mt-3">
+                                <h6 class="text-primary fw-bold mb-2"><i class="fas fa-shield-alt"></i> Couverture Maladie (Optionnel)</h6>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold text-muted small">Assurance</label>
+                                    <select class="form-select form-select-sm" id="swal_assurance_id">
+                                        <option value="">Aucune</option>
+                                        @foreach($assurances as $assurance)
+                                            <option value="{{ $assurance->id }}">{{ $assurance->nom }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold text-muted small">Fin Validité</label>
+                                    <input type="date" class="form-control form-control-sm" id="swal_assurance_fin">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="form-label fw-semibold text-muted small">Numéro Assuré</label>
+                                    <input type="text" class="form-control form-control-sm" id="swal_assurance_num" placeholder="Code ou Numéro carte...">
+                                </div>
+                            </div>
+                            
                             <div class="alert alert-info mt-3 py-2 mb-0">
                                 <i class="fa fa-info-circle me-1"></i>
                                 <small>Les champs avec <span class="text-danger">*</span> sont obligatoires</small>
@@ -440,6 +540,9 @@
                             telephone: telephone,
                             ethnie: ethnie || null,
                             age: $('#age').val() || null,
+                            assurance_id: $('#swal_assurance_id').val() || null,
+                            numero_assurance: $('#swal_assurance_num').val() || null,
+                            fin_validite_assurance: $('#swal_assurance_fin').val() || null,
                             _token: $('meta[name="csrf-token"]').attr('content') || "{{ csrf_token() }}"
                         });
                     },

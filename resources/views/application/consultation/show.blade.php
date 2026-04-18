@@ -121,6 +121,39 @@
                     </div>
                 @endif
 
+                {{-- Protocole de traitement appliqué --}}
+                @if($consultation->protocole)
+                    <div class="border-top pt-4 mb-4">
+                        <h5 class="text-success mb-3">
+                            <i class="fas fa-file-medical-alt me-2"></i>Protocole de Traitement Appliqué
+                        </h5>
+                        <div class="alert alert-success border-0 rounded-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ $consultation->protocole->titre }}</strong>
+                                    <p class="mb-1 small text-muted mt-1">
+                                        {{ $consultation->protocole->traitement_principal ?? 'Traitement via médicaments liés' }}
+                                    </p>
+                                </div>
+                                <a href="{{ route('infectiologie.protocoles.show', $consultation->protocole->id) }}" 
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                            </div>
+                            @if($consultation->protocole->medicaments->count())
+                            <div class="mt-2 d-flex flex-wrap gap-1">
+                                @foreach($consultation->protocole->medicaments as $pm)
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">
+                                        {{ $pm->nom }}
+                                        <small class="text-muted">({{ $pm->pivot->type }})</small>
+                                    </span>
+                                @endforeach
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Symptômes et maladies --}}
                 <div class="border-top pt-4 mb-4">
                     <div class="row">
@@ -241,7 +274,6 @@
                     </div>
                 @endif
 
-                {{-- Hospitalisation --}}
                 @if($consultation->hospitalisation)
                     <div class="border-top pt-4">
                         <h5 class="text-danger mb-3">
@@ -254,11 +286,11 @@
                             </div>
                             <div class="col-md-3">
                                 <p class="mb-1"><strong>Salle :</strong></p>
-                                <p>{{ $consultation->hospitalisation->salles_id }}</p>
+                                <p>{{ $consultation->hospitalisation->salle->nom ?? 'N°'.$consultation->hospitalisation->salles_id }}</p>
                             </div>
                             <div class="col-md-3">
                                 <p class="mb-1"><strong>Lit :</strong></p>
-                                <p>{{ $consultation->hospitalisation->lit_id }}</p>
+                                <p>{{ $consultation->hospitalisation->lit->numero ?? 'Lit '.$consultation->hospitalisation->lit_id }}</p>
                             </div>
                             <div class="col-md-3">
                                 <p class="mb-1"><strong>Observations :</strong></p>

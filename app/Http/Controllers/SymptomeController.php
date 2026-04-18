@@ -69,7 +69,7 @@ class SymptomeController extends Controller
     }
 
     public function show($id) {
-        $symptome = Symptome::findOrFail($id);
-        return response()->json($symptome);
+        $symptome = Symptome::with(['maladies.protocole'])->findOrFail($id);
+        return view('application.symptome.show', compact('symptome'));
     }
 }

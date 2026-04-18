@@ -17,7 +17,7 @@ class ExamenController extends Controller
                 ->addIndexColumn()
                 ->addColumn('service', fn($row) => $row->serviceMedical->nom ?? '-')
                 ->addColumn('actions', function($row){
-                    return '<a href="'.route("examens.edit",$row->id).'" class="btn btn-sm btn-warning">✏️</a>
+                    return '<a href="'.route("examens.edit",$row->id).'" class="btn-sm">✏️</a>
                             <button data-url="'.route("examens.destroy",$row->id).'" class="btn btn-sm btn-danger btn-delete">🗑️</button>';
                 })
                 ->rawColumns(['actions'])
