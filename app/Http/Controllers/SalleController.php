@@ -22,13 +22,19 @@ class SalleController extends Controller
                 ->addColumn('service', function ($row) {
                     return $row->serviceMedical->nom ?? 'N/A';
                 })
+                ->addColumn('disponibilite', function ($row) {
+                    $total = $row->lits()->count();
+                    $libres = $row->lits()->where('statut', 'Libre')->count();
+                    $color = $libres > 0 ? 'success' : 'danger';
+                    return '<span class="badge bg-'.$color.'">'.$libres.' / '.$total.' Libres</span>';
+                })
                 ->addColumn('actions', function($row){
                     $viewBtn = '<span class="  btn-sm view " data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
                     $editBtn = '<span class="  btn-sm   edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
                     $deleteBtn = '<span class="  btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
                     return $viewBtn.$editBtn.$deleteBtn;
                 })
-                ->rawColumns(['actions'])
+                ->rawColumns(['actions', 'disponibilite'])
                 ->make(true);
         }
 
@@ -52,7 +58,7 @@ class SalleController extends Controller
 
             // Récupérer uniquement les lits libres avec plus d'informations
             $litsLibres = $salle->lits()
-                ->where('statut', 'libre')
+                ->where('statut', 'Libre')
                 ->get(['id', 'numero', 'statut', 'created_at']);
 
             return response()->json($litsLibres);

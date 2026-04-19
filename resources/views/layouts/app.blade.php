@@ -268,6 +268,9 @@
             .bg-warning-light {
                 background-color: rgba(255, 193, 7, 0.2);
             }
+            .bg-pink-light {
+                background-color: rgba(233, 30, 99, 0.05);
+            }
             .italic { font-style: italic; }
         </style>
 

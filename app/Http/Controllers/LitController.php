@@ -16,7 +16,15 @@ class LitController extends Controller
             $lits = Lit::with('salle')->select('lits.*');
 
             return DataTables::of($lits)
-                ->addIndexColumn()
+                ->editColumn('statut', function ($row) {
+                    $class = match ($row->statut) {
+                        'Libre' => 'success',
+                        'Occupé' => 'warning',
+                        'Maintenance' => 'danger',
+                        default => 'secondary',
+                    };
+                    return '<span class="badge bg-'.$class.'">'.$row->statut.'</span>';
+                })
                 ->addColumn('salle', function ($row) {
                     return $row->salle->nom ?? '-';
                 })
@@ -28,7 +36,7 @@ class LitController extends Controller
                         <span data-url="'.$deleteUrl.'" class="text-danger p-1 delete hover:text-danger"><i class="fa fa-trash text-danger"></i></span>
                     ';
                 })
-                ->rawColumns(['actions'])
+                ->rawColumns(['actions', 'statut'])
                 ->make(true);
         }
 

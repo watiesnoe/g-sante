@@ -84,6 +84,7 @@ class PatientController extends Controller
             'consultations.maladies',
 //            'consultations.paiements',
             'hospitalisations.paiements',
+            'grossesses.cpns',
         ]);
 
         return view('application.patient.show', compact('patient'));

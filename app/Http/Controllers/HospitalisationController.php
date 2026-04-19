@@ -7,6 +7,7 @@ use App\Models\Paiement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class HospitalisationController extends Controller
@@ -51,8 +52,9 @@ class HospitalisationController extends Controller
                     $print = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn-sm" title="Imprimer"><i class="bx bx-printer text-warning"></i></a> ';
                     $edit = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn-sm" title="Modifier"><i class="bx bx-edit text-info"></i></a> ';
                     $payment = '<button type="button" class="btn-sm border-0 bg-transparent btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="bx bx-credit-card text-success"></i></button> ';
+                    $transfer = '<button type="button" class="btn-sm border-0 bg-transparent text-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button> ';
                     $delete = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn-sm border-0 bg-transparent text-danger" title="Supprimer"><i class="bx bx-trash"></i></button></form>';
-                    return $view.$print.$edit.$payment.$delete;
+                    return $view.$print.$edit.$payment.$transfer.$delete;
                 })
                 ->rawColumns(['etat', 'action'])
                 ->make(true);
@@ -98,8 +100,9 @@ class HospitalisationController extends Controller
                     $view = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn-sm" title="Voir"><i class="bx bx-show text-primary"></i></a> ';
                     $print = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn-sm" title="Imprimer"><i class="bx bx-printer text-warning"></i></a> ';
                     $edit = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn-sm" title="Modifier"><i class="bx bx-edit text-info"></i></a> ';
+                    $transfer = '<button type="button" class="btn-sm border-0 bg-transparent text-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button> ';
                     $delete = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn-sm border-0 bg-transparent text-danger" title="Supprimer"><i class="bx bx-trash"></i></button></form>';
-                    return $view.$print.$edit.$delete;
+                    return $view.$print.$edit.$transfer.$delete;
                 })
                 ->rawColumns(['etat', 'action'])
                 ->make(true);
@@ -211,14 +214,18 @@ class HospitalisationController extends Controller
                 'montant_recu'       => $validated['montant_recu'],
                 'montant_restant'    => $montantRestant,
                 'statut'             => $montantRestant > 0 ? 'partiel' : 'payé',
-                'user_id'            => auth()->id(),
+                'user_id'            => Auth::id(),
             ]);
 
-            // 🔹 Mise à jour de l'état de l'hospitalisation
+            // Mise à jour de l'état de l'hospitalisation et libération du lit
             $hospitalisation->update([
                 'statut'      => 'terminé',
                 'date_sortie' => $validated['dateSortie'],
             ]);
+
+            if ($hospitalisation->lit_id) {
+                \App\Models\Lit::where('id', $hospitalisation->lit_id)->update(['statut' => 'Libre']);
+            }
 
             // 🔹 Retour JSON pour AJAX
             return response()->json([

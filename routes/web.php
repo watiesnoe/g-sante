@@ -60,7 +60,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('symptomes', SymptomeController::class);
     Route::resource('tickets', TicketController::class);
     Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
-    Route::resource('patients', PatientController::class);
     Route::resource('consultations', ConsultationController::class);
     Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
     Route::resource('suivis', SuiviController::class);
@@ -139,18 +138,12 @@ Route::middleware('auth')->group(function () {
     // Caisse Globale
     Route::get('/caisse', [\App\Http\Controllers\CaisseController::class, 'index'])->name('caisse.index');
 
+    // Transferts
+    Route::post('/transferts', [App\Http\Controllers\TransfertController::class, 'store'])->name('transferts.store');
+
     // Dossiers Patients
-    Route::prefix('patients')->group(function () {
-        Route::get('/', [PatientController::class, 'index'])->name('patients.index');
-        Route::get('/create', [PatientController::class, 'create'])->name('patients.create');
-        Route::post('/', [PatientController::class, 'store'])->name('patients.store');
-//        Route::get('/{patient}', [PatientController::class, 'show'])->name('patients.show');
-        Route::get('/{patient}/dossier', [PatientController::class, 'print'])->name('patients.medicales');
-//        Route::get('/medicales/print', [PatientController::class, 'medicales'])->name('patients.medicales');
-        Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit');
-        Route::put('/{patient}', [PatientController::class, 'update'])->name('patients.update');
-        Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
-    });
+    Route::resource('patients', PatientController::class);
+    Route::get('/patients/{patient}/dossier', [PatientController::class, 'print'])->name('patients.medicales');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
@@ -188,6 +181,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');
         Route::get('/api/protocoles/{maladie}', [\App\Http\Controllers\InfectiologieController::class, 'getProtocole'])->name('infectiologie.get_protocole');
+    });
+
+    // 🔹 Suivi de Traitement (Evolution clinique)
+    Route::post('/suivi-traitements-store', [\App\Http\Controllers\SuiviTraitementController::class, 'store'])->name('suivi.store');
+    Route::get('/consultation/{id}/suivis', [\App\Http\Controllers\SuiviTraitementController::class, 'getByConsultation'])->name('suivi.get');
+
+    // 🔹 Maternité (Grossesse & CPN)
+    Route::prefix('maternity')->name('maternity.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\MaternityController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\MaternityController::class, 'create'])->name('create');
+        Route::post('/store', [\App\Http\Controllers\MaternityController::class, 'store'])->name('store');
+        Route::get('/{id}', [\App\Http\Controllers\MaternityController::class, 'show'])->name('show');
+        Route::post('/cpn', [\App\Http\Controllers\MaternityController::class, 'storeCpn'])->name('cpn.store');
     });
 
 });

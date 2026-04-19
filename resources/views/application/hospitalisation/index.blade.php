@@ -88,6 +88,7 @@
             </div>
         </div>
     </div>
+    @include('partials.modals.transfert')
 @endsection
 
 @section('scripts')

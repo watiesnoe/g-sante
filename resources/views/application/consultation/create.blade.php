@@ -15,8 +15,9 @@
                 @method('PUT')
             @endif
             <input type="hidden" name="medecin_id" value="{{ auth()->user()->id }}">
-            <input type="hidden" name="patient_id" id="patient_id" value="{{ $consultation->patient_id ?? '' }}">
+            <input type="hidden" name="patient_id" id="patient_id" value="{{ $consultation->patient_id ?? $selectedPatientId ?? '' }}">
             <input type="hidden" name="ticket_id" id="ticket_id" value="{{ $selectedTicketId ?? '' }}">
+            <input type="hidden" name="grossesse_id" value="{{ $selectedGrossesseId ?? '' }}">
             <input type="hidden" name="protocole_id" id="protocole_id" value="">
 
             <div class="row g-4 mb-4">
@@ -52,11 +53,22 @@
                                             <option value="{{ $ticket->patient->id }}" data-ticket="{{ $ticket->id }}"
                                                 @if (
                                                     ($consultation && $consultation->patient_id == $ticket->patient->id) ||
-                                                        (isset($selectedTicketId) && $selectedTicketId == $ticket->id)) selected @endif>
+                                                        (isset($selectedTicketId) && $selectedTicketId == $ticket->id) ||
+                                                        (isset($selectedPatientId) && $selectedPatientId == $ticket->patient->id)) selected @endif>
                                                 {{ $ticket->patient->nom }} {{ $ticket->patient->prenom }} - Ticket N°
                                                 {{ $ticket->id }}
                                             </option>
                                         @endforeach
+
+                                        {{-- Cas où le patient est passé par paramètre mais n'a pas encore de ticket affiché --}}
+                                        @if(isset($selectedPatientId) && !$tickets->pluck('patient_id')->contains($selectedPatientId))
+                                            @php $p = \App\Models\Patient::find($selectedPatientId); @endphp
+                                            @if($p)
+                                                <option value="{{ $p->id }}" selected>
+                                                    {{ $p->nom }} {{ $p->prenom }} (Suivi Maternité - Sans ticket actif)
+                                                </option>
+                                            @endif
+                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -404,7 +416,7 @@
                                 <div class="card-body pt-0">
                                     <div class="row g-3">
                                         <div class="col-12 mt-3">
-                                            <textarea class="form-control mt-2" name="certificat" placeholder="Certificat médical (optionnel)..." rows="2">{{ $consultation->certificat->contenu ?? '' }}</textarea>
+                                            <textarea class="form-control mt-2" name="certificat" placeholder="Certificat médical (optionnel)..." rows="2">{{ $consultation->certificat?->contenu ?? '' }}</textarea>
                                         </div>
                                         <div class="col-12">
                                             <div class="form-check">
@@ -421,7 +433,7 @@
                                                 <div class="col-md-3">
                                                     <label class="form-label small text-secondary">Date d'entrée</label>
                                                     <input type="date" name="date_entree" class="form-control"
-                                                        value="{{ $consultation->hospitalisation->date_entree ?? '' }}">
+                                                        value="{{ $consultation->hospitalisation?->date_entree ?? '' }}">
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label class="form-label small text-secondary">Salle</label>
@@ -430,7 +442,7 @@
                                                         <option value="">-- Sélectionner --</option>
                                                         @foreach ($salles as $salle)
                                                             <option value="{{ $salle->id }}"
-                                                                @if ($consultation && $consultation->hospitalisation && $consultation->hospitalisation->salles_id == $salle->id) selected @endif>
+                                                                @if ($consultation && $consultation->hospitalisation && $consultation->hospitalisation?->salles_id == $salle->id) selected @endif>
                                                                 {{ $salle->nom }} ({{ $salle->type }})
                                                             </option>
                                                         @endforeach
@@ -446,7 +458,7 @@
                                                     <label class="form-label small text-secondary">Observations</label>
                                                     <input type="text" name="observations" class="form-control"
                                                         placeholder="Observations"
-                                                        value="{{ $consultation->hospitalisation->observations ?? '' }}">
+                                                        value="{{ $consultation->hospitalisation?->observations ?? '' }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -792,7 +804,7 @@
                 chargerLitsPourSalle($(this).val());
             });
             let salleInitiale = $('#salleSelect').val();
-            let litInitial = @json($consultation->hospitalisation->lit_id ?? null);
+            let litInitial = @json($consultation->hospitalisation?->lit_id ?? null);
             if (salleInitiale) chargerLitsPourSalle(salleInitiale, litInitial);
 
 
@@ -1374,8 +1386,36 @@
                 });
             });
 
+            // ═══════════════════════════════════════════════════════════
+            // 11. HOSPITALISATION — CHARGEMENT DES LITS
+            // ═══════════════════════════════════════════════════════════
+            $('#salleSelect').on('change', function() {
+                let salleId = $(this).val();
+                let litSelect = $('#litSelect');
+                litSelect.empty().append('<option value="">Chargement...</option>');
+
+                if (!salleId) {
+                    litSelect.html('<option value="">-- Sélectionner une salle --</option>');
+                    return;
+                }
+
+                $.get(`/salle/${salleId}/lits-libres`, function(data) {
+                    litSelect.empty().append('<option value="">-- Sélectionner un lit --</option>');
+                    if (data.length === 0) {
+                        litSelect.append('<option value="" disabled>Aucun lit libre disponible</option>');
+                    } else {
+                        data.forEach(lit => {
+                            litSelect.append(`<option value="${lit.id}">Lit n°${lit.numero}</option>`);
+                        });
+                    }
+                }).fail(function() {
+                    litSelect.html('<option value="">Erreur de chargement</option>');
+                });
+            });
+
             // Init
             if ($('#maladieSelect').val()) $('#maladieSelect').trigger('change');
+            if ($('#salleSelect').val()) $('#salleSelect').trigger('change');
 
         });
     </script>

@@ -11,8 +11,13 @@ class Consultation extends Model {
     protected $fillable = [
         'patient_id','medecin_id','ticket_id','protocole_id','date_consultation',
         'motif','diagnostic','notes','poids','temperature','tension',
-        'taille','imc','groupe_sanguin','adresse_patient','antecedents','maladie_id'
+        'taille','imc','groupe_sanguin','adresse_patient','antecedents','maladie_id',
+        'grossesse_id'
     ];
+
+    public function grossesse() {
+        return $this->belongsTo(Grossesse::class);
+    }
 
     public function protocole() {
         return $this->belongsTo(ProtocoleTraitement::class, 'protocole_id');
@@ -54,11 +59,19 @@ class Consultation extends Model {
         return $this->belongsToMany(Symptome::class, 'consultation_symptome', 'consultation_id', 'symptome_id');
     }
 
+    public function maladie() {
+        return $this->belongsTo(Maladie::class, 'maladie_id');
+    }
+
     public function maladies() {
         return $this->belongsToMany(Maladie::class, 'consultation_maladie', 'consultation_id', 'maladie_id');
     }
 
     public function paiements() {
         return $this->hasMany(OrdonnancePaiement::class);
+    }
+
+    public function suivis() {
+        return $this->hasMany(SuiviTraitement::class);
     }
 }

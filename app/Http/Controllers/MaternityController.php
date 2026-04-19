@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Grossesse;
+use App\Models\ConsultationPrenatale;
+use App\Models\Patient;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
+class MaternityController extends Controller
+{
+    public function index()
+    {
+        $grossesses = Grossesse::with('patient')->where('statut', 'En cours')->get();
+        return view('application.maternity.index', compact('grossesses'));
+    }
+
+    public function create()
+    {
+        // On ne liste que les femmes
+        $patients = Patient::where('genre', 'F')->get();
+        return view('application.maternity.create', compact('patients'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'ddr'        => 'required|date',
+            'parite'     => 'nullable|integer',
+            'gestite'    => 'nullable|integer',
+            'antecedents_particuliers' => 'nullable|string',
+        ]);
+
+        // Calcul DPA (Date Prévue Accouchement = DDR + 9 mois + 7 jours)
+        $ddr = Carbon::parse($validated['ddr']);
+        $validated['dpa'] = $ddr->addMonths(9)->addDays(7);
+
+        Grossesse::create($validated);
+
+        return redirect()->route('maternity.index')->with('success', 'Suivi de grossesse initialisé.');
+    }
+
+    public function show($id)
+    {
+        $grossesse = Grossesse::with(['patient', 'cpns'])->findOrFail($id);
+        return view('application.maternity.show', compact('grossesse'));
+    }
+
+    public function storeCpn(Request $request)
+    {
+        $validated = $request->validate([
+            'grossesse_id' => 'required|exists:grossesses,id',
+            'numero_cpn'   => 'required|integer',
+            'date_cpn'     => 'required|date',
+            'poids'        => 'nullable|numeric',
+            'tension'      => 'nullable|string',
+            'hauteur_uterine' => 'nullable|integer',
+            'bcf'          => 'nullable|string',
+            'observations' => 'nullable|string',
+            'traitement_recu' => 'nullable|string',
+            'prochain_rdv' => 'nullable|date',
+        ]);
+
+        ConsultationPrenatale::create($validated);
+
+        return back()->with('success', 'CPN enregistrée.');
+    }
+}

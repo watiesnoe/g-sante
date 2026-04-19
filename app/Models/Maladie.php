@@ -19,7 +19,13 @@ class Maladie extends Model
         return $this->hasOne(ProtocoleTraitement::class);
     }
 
-    // Récupère les consultations via la table pivot consultation_maladie
+    // Récupère les consultations via maladie_id (1-N)
+    public function consultationsDirectes()
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
+    // Récupère les consultations via la table pivot consultation_maladie (N-N)
     public function consultations()
     {
         return $this->belongsToMany(Consultation::class, 'consultation_maladie');

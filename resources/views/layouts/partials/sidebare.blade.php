@@ -50,6 +50,7 @@
                     @include('layouts.partials.menus.stock')
                     @include('layouts.partials.menus.paiements')
                     @include('layouts.partials.menus.caisse')
+                    @include('layouts.partials.menus.maternity')
                     @include('layouts.partials.menus.infectiologie')
 
                     <!-- Paramètres -->
@@ -74,6 +75,7 @@
                     @include('layouts.partials.menus.ordonnance')
                     @include('layouts.partials.menus.examens')
                     @include('layouts.partials.menus.hospitalisation')
+                    @include('layouts.partials.menus.maternity')
                     @include('layouts.partials.menus.infectiologie')
 
                @elseif(auth()->user()->role === 'pharmacien')

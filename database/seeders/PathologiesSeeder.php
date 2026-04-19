@@ -52,50 +52,9 @@ class PathologiesSeeder extends Seeder
             DB::table('symptomes')->updateOrInsert(['nom' => $nom], ['created_at' => $now]);
         }
         $sId = DB::table('symptomes')->pluck('id', 'nom');
-
-        // 4. MÉDICAMENTS
-        $meds = [
-            // Antipaludiques
-            ['nom' => 'Artéméther + Luméfantrine (Coartem)', 'f' => 'Antipaludiques', 'u' => 'comprimé', 'p_v' => 3500],
-            ['nom' => 'Artésunate Injectable', 'f' => 'Antipaludiques', 'u' => 'ampoule', 'p_v' => 5000],
-            ['nom' => 'Quinine 600mg', 'f' => 'Antipaludiques', 'u' => 'perfusion', 'p_v' => 2500],
-            
-            // Antibiotiques
-            ['nom' => 'Amoxicilline 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 1000],
-            ['nom' => 'Amoxicilline + Acide Clavulanique (Augmentin)', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 7500],
-            ['nom' => 'Ceftriaxone 1g Injectable', 'f' => 'Antibiotiques', 'u' => 'ampoule', 'p_v' => 4500],
-            ['nom' => 'Azithromycine 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 5000],
-            ['nom' => 'Doxycycline 100mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 2000],
-            ['nom' => 'Métronidazole 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 1500],
-            ['nom' => 'Ciprofloxacine 500mg', 'f' => 'Antibiotiques', 'u' => 'comprimé', 'p_v' => 3000],
-            
-            // Antalgiques / AINS
-            ['nom' => 'Paracétamol 500mg', 'f' => 'Antalgiques', 'u' => 'comprimé', 'p_v' => 500],
-            ['nom' => 'Diclofénac 50mg', 'f' => 'Anti-inflammatoires', 'u' => 'comprimé', 'p_v' => 1500],
-            ['nom' => 'Ibuprofène 400mg', 'f' => 'Anti-inflammatoires', 'u' => 'comprimé', 'p_v' => 1200],
-            
-            // Autres
-            ['nom' => 'Furosémide 40mg', 'f' => 'Antihypertenseurs', 'u' => 'comprimé', 'p_v' => 1000],
-            ['nom' => 'Salbutamol Puff', 'f' => 'Bronchodilatateurs', 'u' => 'puff', 'p_v' => 4500],
-            ['nom' => 'Fumarate de Fer', 'f' => 'Antianémiques', 'u' => 'comprimé', 'p_v' => 1500],
-        ];
-
-        foreach ($meds as $m) {
-            DB::table('medicaments')->updateOrInsert(
-                ['nom' => $m['nom']],
-                [
-                    'famille_id' => $fId[$m['f']],
-                    'unite_id' => $uId[$m['u']],
-                    'prix_achat' => $m['p_v'] * 0.6, 
-                    'prix_vente' => $m['p_v'], 
-                    'stock' => 500,
-                    'created_at' => $now,
-                    'updated_at' => $now
-                ]
-            );
-        }
+ 
+        // 4. RÉCUPÉRATION DES MÉDICAMENTS (déjà seedés par MedicamentsSeeder)
         $mId = DB::table('medicaments')->pluck('id', 'nom');
-
         // 5. PATHOLOGIES & PROTOCOLES
         $pathologies = [
             [

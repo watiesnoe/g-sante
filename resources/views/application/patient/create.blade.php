@@ -1,102 +1,118 @@
 @extends('layouts.app')
 
 @section('titre')
-    ⚙️ Configuration - Système de Santé
+    {{ isset($patient) ? 'Modifier' : 'Ajouter' }} un Patient
 @endsection
 
 @section('content')
-    <div class="content">
-        <div class="row">
-            <!-- Sidebar gauche -->
-            @include('layouts.partials.configside')
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8 ">
-                <div class="block block-rounded">
-                    <div class="block-header block-header-default">
-                        <h5 class="mb-0 text-primary fw-bold">📰 Formulaire d'ajout des services</h5>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="content">
+    <div class="block block-rounded shadow-sm">
+        <div class="block-header block-header-default bg-primary-dark">
+            <h3 class="block-title text-white">
+                <i class="fa fa-user-plus me-1"></i> {{ isset($patient) ? 'Modification' : 'Nouveau' }} Patient
+            </h3>
+        </div>
+        <div class="block-content p-4">
+            <form action="{{ isset($patient) ? route('patients.update', $patient->id) : route('patients.store') }}" method="POST">
+                @csrf
+                @if(isset($patient))
+                    @method('PUT')
+                @endif
 
-                            <a href="{{ route('services.index') }}" class="btn btn-success btn-sm rounded-pill shadow-sm">
-                                Voir liste
-                            </a>
+                <div class="row g-4">
+                    <!-- Informations Personnelles -->
+                    <div class="col-md-6">
+                        <div class="block block-rounded block-bordered mb-0">
+                            <div class="block-header block-header-default border-bottom">
+                                <h3 class="block-title small fw-bold">IDENTITÉ DU PATIENT</h3>
+                            </div>
+                            <div class="block-content pb-3">
+                                <div class="mb-3">
+                                    <label class="form-label" for="nom">Nom <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nom" name="nom" value="{{ old('nom', $patient->nom ?? '') }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="prenom">Prénom <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="prenom" name="prenom" value="{{ old('prenom', $patient->prenom ?? '') }}" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label" for="genre">Genre <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="genre" name="genre" required>
+                                                <option value="">Sélectionner...</option>
+                                                <option value="M" {{ (old('genre', $patient->genre ?? '') == 'M') ? 'selected' : '' }}>Masculin</option>
+                                                <option value="F" {{ (old('genre', $patient->genre ?? '') == 'F') ? 'selected' : '' }}>Féminin</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label" for="age">Âge <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="age" name="age" value="{{ old('age', $patient->age ?? '') }}" min="0" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="telephone">Téléphone <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="telephone" name="telephone" value="{{ old('telephone', $patient->telephone ?? '') }}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label" for="ethnie">Ethnie / Origine <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="ethnie" name="ethnie" value="{{ old('ethnie', $patient->ethnie ?? '') }}" required>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="block-content">
-                        @if(session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
 
-                        <form action="{{ route('services.store') }}" id="serviceForm"  class="mb-2" method="POST">
-                            @csrf
-
-                            <div class="mb-3">
-                                <label for="nom" class="form-label">Nom du service</label>
-                                <input type="text" class="form-control @error('nom') is-invalid @enderror"
-                                       id="nom" name="nom" value="{{ old('nom') }}" required>
-                                @error('nom') <div class="text-danger">{{ $message }}</div> @enderror
+                    <!-- Assurance & Localisation -->
+                    <div class="col-md-6">
+                        <div class="block block-rounded block-bordered h-100">
+                            <div class="block-header block-header-default border-bottom">
+                                <h3 class="block-title small fw-bold">ASSURANCE & SANTÉ</h3>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description (optionnelle)</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror"
-                                          id="description" name="description">{{ old('description') }}</textarea>
-                                @error('description') <div class="text-danger">{{ $message }}</div> @enderror
+                            <div class="block-content pb-3">
+                                <div class="mb-3">
+                                    <label class="form-label" for="assurance_id">Assurance</label>
+                                    <select class="form-select" id="assurance_id" name="assurance_id">
+                                        <option value="">Aucune (Cash)</option>
+                                        @foreach(\App\Models\Assurance::all() as $assurance)
+                                            <option value="{{ $assurance->id }}" {{ (old('assurance_id', $patient->assurance_id ?? '') == $assurance->id) ? 'selected' : '' }}>
+                                                {{ $assurance->nom }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="numero_assurance">N° de police d'assurance</label>
+                                    <input type="text" class="form-control" id="numero_assurance" name="numero_assurance" value="{{ old('numero_assurance', $patient->numero_assurance ?? '') }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="groupe_sanguin">Groupe Sanguin</label>
+                                    <select class="form-select" id="groupe_sanguin" name="groupe_sanguin">
+                                        <option value="">Inconnu</option>
+                                        @foreach(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $gs)
+                                            <option value="{{ $gs }}" {{ (old('groupe_sanguin', $patient->groupe_sanguin ?? '') == $gs) ? 'selected' : '' }}>{{ $gs }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="adresse">Adresse de résidence</label>
+                                    <textarea class="form-control" id="adresse" name="adresse" rows="4">{{ old('adresse', $patient->adresse ?? '') }}</textarea>
+                                </div>
                             </div>
-
-                            <button type="submit" class="btn btn-primary">Enregistrer</button>
-                        </form>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="mt-4 pt-3 border-top text-end">
+                    <a href="{{ route('patients.index') }}" class="btn btn-alt-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="fa fa-save me-1"></i> {{ isset($patient) ? 'Mettre à jour' : 'Enregistrer le patient' }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-@endsection
-@section('scripts')
-    <script>
-        $(document).ready(function() {
-            $('#serviceForm').on('submit', function(e) {
-                e.preventDefault(); // Bloque le submit classique
-
-                let formData = $(this).serialize();
-
-                $.ajax({
-                    url: $(this).attr('action'),
-                    method: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        if(response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Succès !',
-                                text: response.message,
-                                confirmButtonText: 'OK'
-                            });
-
-                            // Reset du formulaire
-                            $('#serviceForm')[0].reset();
-
-                            // Optionnel : rafraîchir la table AJAX si tu utilises DataTables
-                            // if($('#services-table').length) {
-                            //     $('#services-table').DataTable().ajax.reload();
-                            // }
-                        }
-                    },
-                    error: function(xhr) {
-                        let errors = xhr.responseJSON.errors;
-                        let errorMessage = '';
-                        $.each(errors, function(key, value) {
-                            errorMessage += value + '\n';
-                        });
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erreur',
-                            text: errorMessage,
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                });
-            });
-        });
-    </script>
+</div>
 @endsection

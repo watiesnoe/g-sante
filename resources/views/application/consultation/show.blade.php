@@ -299,6 +299,131 @@
                         </div>
                     </div>
                 @endif
+                {{-- Évolution & Suivi Clinique --}}
+                <div class="border-top pt-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-primary mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Suivi de l'évolution clinique
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill" data-bs-toggle="collapse" data-bs-target="#collapseSuivi">
+                            <i class="fas fa-plus me-1"></i> Ajouter un suivi
+                        </button>
+                    </div>
+
+                    {{-- Formulaire d'ajout de suivi --}}
+                    <div class="collapse mb-4" id="collapseSuivi">
+                        <div class="card card-body bg-light border-0 shadow-sm">
+                            <form id="formSuivi">
+                                @csrf
+                                <input type="hidden" name="consultation_id" value="{{ $consultation->id }}">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Date de suivi</label>
+                                        <input type="date" name="date_suivi" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Évolution globale</label>
+                                        <select name="evolution" class="form-select" required>
+                                            <option value="Stagnation">Stagnation</option>
+                                            <option value="Amélioration">Amélioration</option>
+                                            <option value="Guérison">Guérison</option>
+                                            <option value="Aggravation">Aggravation</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Température (°C)</label>
+                                        <input type="text" name="temperature" class="form-control" placeholder="37.5">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Tension (TA)</label>
+                                        <input type="text" name="tension" class="form-control" placeholder="12/8">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">Observations (progrès, effets secondaires...)</label>
+                                        <textarea name="observations" class="form-control" rows="2"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">Nouvelles recommandations</label>
+                                        <textarea name="recommandations" class="form-control" rows="2" placeholder="ex: Continuer le repos, augmenter hydratation..."></textarea>
+                                    </div>
+                                    <div class="col-md-12 text-end">
+                                        <button type="submit" class="btn btn-primary px-4 shadow-sm" id="btnSaveSuivi">
+                                            Enregistrer le suivi
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Liste chronologique des suivis --}}
+                    <div class="timeline-suivi mt-3" id="suiviList">
+                        @forelse($consultation->suivis->sortByDesc('date_suivi') as $suivi)
+                            <div class="d-flex mb-3 border-bottom pb-3">
+                                <div class="me-3 text-center" style="width: 80px;">
+                                    <h6 class="mb-0 fw-bold">{{ \Carbon\Carbon::parse($suivi->date_suivi)->format('d M') }}</h6>
+                                    <small class="text-muted">{{ \Carbon\Carbon::parse($suivi->date_suivi)->format('Y') }}</small>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="badge bg-{{ $suivi->evolution == 'Amélioration' || $suivi->evolution == 'Guérison' ? 'success' : ($suivi->evolution == 'Aggravation' ? 'danger' : 'warning') }} mb-2">
+                                            {{ $suivi->evolution }}
+                                        </span>
+                                        <small class="text-muted">
+                                            @if($suivi->temperature) <i class="fas fa-thermometer-half me-1"></i>{{ $suivi->temperature }}°C @endif
+                                            @if($suivi->tension) <i class="fas fa-heartbeat ms-2 me-1"></i>{{ $suivi->tension }} @endif
+                                        </small>
+                                    </div>
+                                    <p class="mb-1"><strong>Observations :</strong> {{ $suivi->observations ?: 'Aucune remarque' }}</p>
+                                    @if($suivi->recommandations)
+                                        <p class="mb-0 text-primary small"><strong>Conseils :</strong> {{ $suivi->recommandations }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-history fa-2x mb-2 opacity-25"></i>
+                                <p>Aucun suivi enregistré pour cette consultation.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <script>
+                    document.getElementById('formSuivi')?.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const btn = document.getElementById('btnSaveSuivi');
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...';
+
+                        const formData = new FormData(this);
+                        
+                        fetch("{{ route('suivi.store') }}", {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if(res.success) {
+                                Swal.fire('Succès', res.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Erreur', 'Une erreur est survenue', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Erreur', 'Connexion au serveur impossible', 'error');
+                        })
+                        .finally(() => {
+                            btn.disabled = false;
+                            btn.innerHTML = 'Enregistrer le suivi';
+                        });
+                    });
+                </script>
             </div>
 
             {{-- Pied de la carte --}}

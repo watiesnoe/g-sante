@@ -51,6 +51,10 @@ class ConsultationController extends Controller
                         title="Voir"><i class="fa fa-eye text-warning"></i></a>
                         <a href="'.route('consultations.edit', $row->id).'" class="cursor-pointer ml-1 text font-size-16"
                          title="Modifier"><i class="fa fa-edit text-primary"></i></a>
+                        <button type="button" class="btn btn-sm border-0 bg-transparent text-success" 
+                                onclick="openTransfertModal('.$row->patient_id.', '.$row->id.', \'\')" title="Transférer">
+                            <i class="fa fa-exchange-alt"></i>
+                        </button>
                     </div>
                 ';
                 })
@@ -105,28 +109,37 @@ class ConsultationController extends Controller
             ->get();
 
         $selectedTicketId = $request->get('ticket_id');
+        $selectedPatientId = $request->get('patient_id');
+        $selectedGrossesseId = $request->get('grossesse_id');
+
+        // Pré-remplissage si un ticket est spécifié
+        if ($selectedTicketId) {
+            $ticket = Ticket::with(['patient', 'items'])->find($selectedTicketId);
+            if ($ticket) {
+                $selectedPatientId = $selectedPatientId ?: $ticket->patient_id;
+                if (!$consultation->motif) {
+                    $consultation->motif = $ticket->items->pluck('libelle')->filter()->implode(', ') ?: $ticket->description;
+                }
+            }
+        }
 
         $patients = Patient::all();
-        $symptomes = Symptome::all();
-        $maladies = Maladie::with('protocole')->get();
+        $symptomes = Symptome::with('maladies')->get();
+        $maladies = Maladie::with(['protocole', 'symptomes'])->get();
         $medicaments = Medicament::all();
         $salles = Salle::all();
         $lits = Lit::all();
 
-        $symptomeMaladieMap = [];
-        foreach ($symptomes as $s) {
-            $symptomeMaladieMap[$s->id] = $s->maladies()->pluck('maladies.id')->toArray();
-        }
+        $symptomeMaladieMap = $symptomes->mapWithKeys(function ($s) {
+            return [$s->id => $s->maladies->pluck('id')->toArray()];
+        });
 
-        $maladieSymptomesDetails = [];
-        foreach ($maladies as $m) {
-            $maladieSymptomesDetails[$m->id] = [
+        $maladieSymptomesDetails = $maladies->mapWithKeys(function ($m) {
+            return [$m->id => [
                 'nom' => $m->nom,
-                'symptomes' => $m->symptomes()->pluck('symptomes.id')->toArray()
-            ];
-        }
-
-        $consultation = null;
+                'symptomes' => $m->symptomes->pluck('id')->toArray()
+            ]];
+        });
 
         return view('application.consultation.create', compact(
             'tickets',
@@ -139,7 +152,9 @@ class ConsultationController extends Controller
             'salles',
             'lits',
             'consultation',
-            'selectedTicketId'
+            'selectedTicketId',
+            'selectedPatientId',
+            'selectedGrossesseId'
         ));
     }
 
@@ -150,7 +165,7 @@ class ConsultationController extends Controller
     {
         // On récupère les lits de la salle qui sont libres
         $lits = Lit::where('salle_id', $salleId)
-            ->where('statut', 'libre')
+            ->where('statut', 'Libre')
             ->get();
 
         return response()->json($lits);
@@ -178,6 +193,7 @@ class ConsultationController extends Controller
                  'adresse_patient' => 'nullable|string',
                  'diagnostic'   => 'required|string',
                  'ticket_id'    => 'nullable|exists:tickets,id',
+                 'grossesse_id' => 'nullable|exists:grossesses,id',
                  'protocole_id' => 'nullable|exists:protocole_traitements,id',
                  'quantites'    => 'array',
                  'suggestions'  => 'nullable|array',
@@ -186,7 +202,8 @@ class ConsultationController extends Controller
 
              // 🔹 Création de la consultation
              $consultation = Consultation::create([
-                 'ticket_id'        => $request->ticket_id, // ✅ ajouté
+                 'ticket_id'        => $request->ticket_id,
+                 'grossesse_id'     => $request->grossesse_id,
                  'patient_id'       => $request->patient_id,
                  'medecin_id'       => $request->medecin_id,
                  'protocole_id'     => $request->protocole_id, // ✅ track the applied protocol
@@ -284,12 +301,13 @@ class ConsultationController extends Controller
                      'consultation_id' => $consultation->id,
                      'salles_id'       => $request->salle_id,
                      'lit_id'          => $request->lit_id,
-                     'date_entree'     => $request->date_entree,
+                     'date_entree'     => $request->date_entree ?: now(),
                      'motif'           => $request->motif ?? 'Hospitalisation suite consultation',
                      'etat'            => 'en cours',
-                     'service_id'      => $request->service_id ?? 1,
+                     'service_id'      => \App\Models\Salle::find($request->salle_id)->service_medical_id ?? 1,
                      'observations'    => $request->observations,
                  ]);
+                 Lit::where('id', $request->lit_id)->update(['statut' => 'Occupé']);
              }
 
              // 🔹 Mettre à jour le statut du ticket (si lié)
@@ -501,12 +519,15 @@ class ConsultationController extends Controller
                         'consultation_id' => $consultation->id,
                         'salles_id'       => $request->salle_id,
                         'lit_id'          => $request->lit_id,
-                        'date_entree'     => $request->date_entree,
+                        'date_entree'     => $request->date_entree ?: now(),
                         'motif'           => $request->motif ?? 'Hospitalisation suite consultation',
                         'etat'            => 'en cours',
-                        'service_id'      => $request->service_id ?? 1,
+                        'service_id'      => \App\Models\Salle::find($request->salle_id)->service_medical_id ?? 1,
                         'observations'    => $request->observations,
                     ]);
+
+                    // 🔹 Mettre à jour le statut du lit
+                    Lit::where('id', $request->lit_id)->update(['statut' => 'Occupé']);
                 }
             }
 

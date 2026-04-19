@@ -30,6 +30,7 @@
                                         <th>Type</th>
                                         <th>Service médical</th>
                                         <th>Capacité</th>
+                                        <th>Disponibilité</th>
                                         <th width="100">Actions</th>
                                     </tr>
                                 </thead>
@@ -105,6 +106,7 @@
                         { data: 'type', name: 'type' },
                         { data: 'service', name: 'service' },
                         { data: 'capacite', name: 'capacite' },
+                        { data: 'disponibilite', name: 'disponibilite' },
                         { data: 'actions', name: 'actions', orderable: false, searchable: false }
                     ],
                     mapData: function(data) {

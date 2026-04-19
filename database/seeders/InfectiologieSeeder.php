@@ -20,38 +20,7 @@ class InfectiologieSeeder extends Seeder
     {
         $now = Carbon::now();
 
-        // Médicaments supplémentaires spécifiques à l'infectiologie
-        $medsInfectio = [
-            ['nom' => 'Chloramphénicol 1g Injectable', 'famille' => 'Antibiotiques', 'unite' => 'ampoule', 'p_v' => 2500],
-            ['nom' => 'Rifampicine 600mg', 'famille' => 'Antibiotiques', 'unite' => 'comprimé', 'p_v' => 3500],
-            ['nom' => 'Isoniazide 300mg', 'famille' => 'Antibiotiques', 'unite' => 'comprimé', 'p_v' => 1500],
-            ['nom' => 'Pyrazinamide 500mg', 'famille' => 'Antibiotiques', 'unite' => 'comprimé', 'p_v' => 2000],
-            ['nom' => 'Ethambutol 400mg', 'famille' => 'Antibiotiques', 'unite' => 'comprimé', 'p_v' => 2000],
-            ['nom' => 'Fluconazole 150mg', 'famille' => 'Antifongiques', 'unite' => 'capsule', 'p_v' => 4000],
-            ['nom' => 'Ampicilline 1g Injectable', 'famille' => 'Antibiotiques', 'unite' => 'ampoule', 'p_v' => 3000],
-            ['nom' => 'Gentamicine 80mg Injectable', 'famille' => 'Antibiotiques', 'unite' => 'ampoule', 'p_v' => 2000],
-            ['nom' => 'Dexaméthasone 8mg Injectable', 'famille' => 'Corticostéroïdes', 'unite' => 'ampoule', 'p_v' => 2500],
-        ];
-
-        $unites  = DB::table('unites')->pluck('id', 'nom');
-        $familles = DB::table('familles')->pluck('id', 'nom');
-
-        foreach ($medsInfectio as $m) {
-            DB::table('medicaments')->updateOrInsert(
-                ['nom' => $m['nom']],
-                [
-                    'famille_id'  => $familles[$m['famille']] ?? 1,
-                    'unite_id'    => $unites[$m['unite']] ?? 1,
-                    'prix_achat'  => $m['p_v'] * 0.6,
-                    'prix_vente'  => $m['p_v'],
-                    'stock'       => 100,
-                    'created_at'  => $now,
-                    'updated_at'  => $now,
-                ]
-            );
-        }
-
-        // Rafraîchir la liste des médicaments
+        // Récupération des médicaments (déjà seedés par MedicamentsSeeder)
         $mId = DB::table('medicaments')->pluck('id', 'nom');
 
         // --- PROTOCOLES INFECTIOLOGIE AVANCÉE ---
