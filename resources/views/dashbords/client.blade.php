@@ -1,129 +1,103 @@
-<!-- Welcome Card -->
+<!-- Welcome Banner -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="block block-rounded bg-info text-white">
-            <div class="block-content block-content-full">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h3 class="h4 mb-2">Bonjour, {{ Auth::user()->prenom ?? Auth::user()->name }} !</h3>
-                        <p class="fs-sm mb-3 opacity-75">
-                            Gestion des rendez-vous et accueil des patients.
-                        </p>
-                        <div class="h2 mb-0">{{ $todayAppointments->count() }} RDV aujourd'hui</div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-calendar-alt fa-4x text-white-50"></i>
-                    </div>
-                </div>
+        <div class="welcome-banner d-flex justify-content-between align-items-center" style="background: var(--success-gradient);">
+            <div>
+                <h1 class="display-5 fw-bold mb-2">Bonjour, {{ Auth::user()->prenom }}</h1>
+                <p class="lead mb-0">Bienvenue dans votre espace santé personnel.</p>
+            </div>
+            <div class="d-none d-md-block">
+                <i class="fas fa-heartbeat fa-5x opacity-25"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Rendez-vous du jour -->
 <div class="row">
+    <!-- Mes Rendez-vous -->
     <div class="col-lg-8">
-        <div class="block block-rounded">
-            <div class="block-header block-header-default">
-                <h3 class="block-title">
-                    <i class="fas fa-calendar-day text-primary me-2"></i>
-                    Rendez-vous d'aujourd'hui
-                </h3>
-                <div class="block-options">
-                    <span class="badge bg-primary">{{ $todayAppointments->count() }} RDV</span>
-                </div>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-primary me-2"></i>Mes Prochains Rendez-vous</h5>
             </div>
-            <div class="block-content">
-                @forelse($todayAppointments as $appointment)
-                    <div class="mb-3 p-3 border-start border-3 border-{{ $appointment->statut == 'prevu' ? 'primary' : ($appointment->statut == 'realise' ? 'success' : 'warning') }}">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <img class="img-avatar img-avatar32" src="{{ asset('assets/media/avatars/avatar0.jpg') }}" alt="">
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="fw-semibold">{{ $appointment->patient->prenom }} {{ $appointment->patient->nom }}</div>
-                                <div class="fs-sm text-muted">
-                                    <i class="far fa-clock me-1"></i>
-                                    {{ \Carbon\Carbon::parse($appointment->date_heure)->format('H:i') }} •
-                                    {{ $appointment->motif }}
-                                </div>
-                                <div class="fs-sm">
-                                    <i class="fas fa-user-md me-1"></i>
-                                    Dr. {{ $appointment->medecin->prenom ?? 'N/A' }}
-                                </div>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <span class="badge bg-{{ $appointment->statut == 'prevu' ? 'primary' : ($appointment->statut == 'realise' ? 'success' : 'warning') }}">
-                                    {{ $appointment->statut }}
-                                </span>
-                            </div>
+            <div class="card-body">
+                @forelse($mesRendezVous as $rdv)
+                    <div class="d-flex align-items-center p-3 mb-3 border rounded-3 hover-lift">
+                        <div class="bg-primary-subtle text-primary p-3 rounded-circle me-3">
+                            <i class="fas fa-calendar-check fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">{{ $rdv->motif }}</h6>
+                            <p class="mb-0 text-muted">
+                                <i class="far fa-clock me-1"></i> {{ \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y à H:i') }}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-user-md me-1"></i> Dr. {{ $rdv->medecin->prenom }} {{ $rdv->medecin->nom }}
+                            </p>
+                        </div>
+                        <div>
+                            <span class="badge bg-{{ $rdv->statut == 'confirmé' ? 'success' : 'warning' }}-subtle text-{{ $rdv->statut == 'confirmé' ? 'success' : 'warning' }} rounded-pill">
+                                {{ ucfirst($rdv->statut) }}
+                            </span>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-4">
-                        <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
-                        <div class="text-muted">Aucun rendez-vous aujourd'hui</div>
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Vous n'avez aucun rendez-vous prévu.</p>
+                        <a href="{{ route('rendezvous.create') }}" class="btn btn-primary rounded-pill">Prendre rendez-vous</a>
                     </div>
                 @endforelse
             </div>
         </div>
+
+        <!-- Dernière Consultation -->
+        @if($derniereConsultation)
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-file-medical text-success me-2"></i>Dernière Consultation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted small">Date</p>
+                            <p class="fw-bold">{{ \Carbon\Carbon::parse($derniereConsultation->date_consultation)->format('d/m/Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted small">Diagnostic</p>
+                            <p class="fw-bold">{{ $derniereConsultation->diagnostic ?? 'Non précisé' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 
+    <!-- Sidebar Info -->
     <div class="col-lg-4">
-        <!-- Statistiques rapides -->
-        <div class="block block-rounded">
-            <div class="block-header block-header-default">
-                <h3 class="block-title">
-                    <i class="fas fa-chart-bar text-success me-2"></i>
-                    Aujourd'hui
-                </h3>
+        <!-- Ordonnances Actives -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-pills text-info me-2"></i>Ordonnances Actives</h5>
             </div>
-            <div class="block-content">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Nouveaux patients</span>
-                        <strong class="text-primary">{{ $stats['new_patients_today'] ?? 0 }}</strong>
+            <div class="card-body">
+                @forelse($ordonnancesActives as $ordo)
+                    <div class="p-3 bg-light rounded-3 mb-2">
+                        <h6 class="mb-1 fw-bold">N° {{ $ordo->numero_ordonnance }}</h6>
+                        <p class="small text-muted mb-0">Délivrée le {{ \Carbon\Carbon::parse($ordo->created_at)->format('d/m/Y') }}</p>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>RDV réalisés</span>
-                        <strong class="text-success">{{ $stats['rdv_realises'] ?? 0 }}</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>RDV en attente</span>
-                        <strong class="text-warning">{{ $stats['rdv_attente'] ?? 0 }}</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Factures à émettre</span>
-                        <strong class="text-danger">{{ $stats['factures_pending'] ?? 0 }}</strong>
-                    </div>
-                </div>
+                @empty
+                    <p class="text-muted text-center py-3">Pas d'ordonnance active.</p>
+                @endforelse
             </div>
         </div>
 
-        <!-- Actions rapides -->
-        <div class="block block-rounded">
-            <div class="block-header block-header-default">
-                <h3 class="block-title">
-                    <i class="fas fa-bolt text-warning me-2"></i>
-                    Actions Rapides
-                </h3>
-            </div>
-            <div class="block-content">
-                <a href="{{ route('rendezvous.create') }}" class="btn btn-primary w-100 mb-2">
-                    <i class="fas fa-calendar-plus me-2"></i>Nouveau RDV
-                </a>
-                <a href="{{ route('patients.create') }}" class="btn btn-success w-100 mb-2">
-                    <i class="fas fa-user-plus me-2"></i>Nouveau Patient
-                </a>
-                <a href="{{ route('factures.create') }}" class="btn btn-warning w-100">
-                    <i class="fas fa-file-invoice me-2"></i>Nouvelle Facture
-                </a>
+        <!-- Contact d'urgence -->
+        <div class="card border-0 shadow-sm bg-danger-subtle text-danger">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-ambulance fa-3x mb-3"></i>
+                <h5 class="fw-bold">Besoin d'aide ?</h5>
+                <p class="mb-3">En cas d'urgence médicale, contactez-nous immédiatement.</p>
+                <h2 class="fw-bold mb-0">15 / 112</h2>
             </div>
         </div>
     </div>

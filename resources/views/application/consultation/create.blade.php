@@ -9,9 +9,9 @@
          FORMULAIRE PRINCIPAL
     ═══════════════════════════════════════════════════════════════ --}}
         <form id="consultationForm" method="POST"
-            action="{{ $consultation ? route('consultations.update', $consultation->id) : route('consultations.store') }}">
+            action="{{ $consultation->exists ? route('consultations.update', $consultation->id) : route('consultations.store') }}">
             @csrf
-            @if ($consultation)
+            @if ($consultation->exists)
                 @method('PUT')
             @endif
             <input type="hidden" name="medecin_id" value="{{ auth()->user()->id }}">
@@ -39,7 +39,7 @@
                                         </div>
                                         <div>
                                             <h4 class="mb-0 fw-bold">
-                                                {{ $consultation ? 'Modifier la consultation' : 'Nouvelle consultation' }}
+                                                {{ $consultation->exists ? 'Modifier la consultation' : 'Nouvelle consultation' }}
                                             </h4>
                                             <p class="mb-0 small opacity-75">Remplissez tous les champs nécessaires</p>
                                         </div>
@@ -52,7 +52,7 @@
                                         @foreach ($tickets as $ticket)
                                             <option value="{{ $ticket->patient->id }}" data-ticket="{{ $ticket->id }}"
                                                 @if (
-                                                    ($consultation && $consultation->patient_id == $ticket->patient->id) ||
+                                                    ($consultation->exists && $consultation->patient_id == $ticket->patient->id) ||
                                                         (isset($selectedTicketId) && $selectedTicketId == $ticket->id) ||
                                                         (isset($selectedPatientId) && $selectedPatientId == $ticket->patient->id)) selected @endif>
                                                 {{ $ticket->patient->nom }} {{ $ticket->patient->prenom }} - Ticket N°
@@ -115,7 +115,7 @@
                                         <div class="col-md-3">
                                             <label class="form-label fw-semibold small text-secondary">IMC (auto)</label>
                                             <input type="text" id="imc" class="form-control bg-light" readonly
-                                                value="{{ $consultation && $consultation->taille > 0 ? number_format($consultation->poids / ($consultation->taille / 100) ** 2, 2) : '' }}">
+                                                value="{{ $consultation->exists && $consultation->taille > 0 ? number_format($consultation->poids / ($consultation->taille / 100) ** 2, 2) : '' }}">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label fw-semibold small text-secondary">Tension
@@ -130,7 +130,7 @@
                                                 <option value="">-- Sélectionner --</option>
                                                 @foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $gs)
                                                     <option value="{{ $gs }}"
-                                                        @if ($consultation && $consultation->groupe_sanguin == $gs) selected @endif>
+                                                        @if ($consultation->exists && $consultation->groupe_sanguin == $gs) selected @endif>
                                                         {{ $gs }}</option>
                                                 @endforeach
                                             </select>
@@ -195,7 +195,7 @@
                                                 <option value="">-- Conclure sur une pathologie --</option>
                                                 @foreach ($maladies as $maladie)
                                                     <option value="{{ $maladie->id }}"
-                                                        @if ($consultation && $consultation->maladies->contains($maladie->id)) selected @endif>
+                                                        @if ($consultation->exists && $consultation->maladies->contains($maladie->id)) selected @endif>
                                                         {{ $maladie->nom }}
                                                     </option>
                                                 @endforeach
@@ -275,7 +275,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @if ($consultation && $consultation->ordonnances->count())
+                                                    @if ($consultation->exists && $consultation->ordonnances->count())
                                                         @foreach ($consultation->ordonnances as $ordonnance)
                                                             @foreach ($ordonnance->medicaments as $medicament)
                                                                 <tr>
@@ -422,13 +422,13 @@
                                             <div class="form-check">
                                                 <input type="checkbox" name="hospitalisation" class="form-check-input"
                                                     id="hospitalisationCheck" value="1"
-                                                    @if ($consultation && $consultation->hospitalisation) checked @endif>
+                                                    @if ($consultation->exists && $consultation->hospitalisation) checked @endif>
                                                 <label class="form-check-label fw-semibold"
                                                     for="hospitalisationCheck">Proposer une hospitalisation</label>
                                             </div>
                                         </div>
                                         <div id="hospitalisationFields" class="col-12"
-                                            style="{{ $consultation && $consultation->hospitalisation ? '' : 'display:none;' }}">
+                                            style="{{ $consultation->exists && $consultation->hospitalisation ? '' : 'display:none;' }}">
                                             <div class="row g-3">
                                                 <div class="col-md-3">
                                                     <label class="form-label small text-secondary">Date d'entrée</label>
@@ -442,7 +442,7 @@
                                                         <option value="">-- Sélectionner --</option>
                                                         @foreach ($salles as $salle)
                                                             <option value="{{ $salle->id }}"
-                                                                @if ($consultation && $consultation->hospitalisation && $consultation->hospitalisation?->salles_id == $salle->id) selected @endif>
+                                                                @if ($consultation->exists && $consultation->hospitalisation && $consultation->hospitalisation?->salles_id == $salle->id) selected @endif>
                                                                 {{ $salle->nom }} ({{ $salle->type }})
                                                             </option>
                                                         @endforeach
@@ -475,7 +475,7 @@
                                     <i class="fas fa-times me-2"></i>Annuler
                                 </a>
                                 <button type="submit" class="btn btn-success px-5 shadow-sm">
-                                    <i class="fas fa-save me-2"></i>{{ $consultation ? 'Mettre à jour' : 'Enregistrer' }}
+                                    <i class="fas fa-save me-2"></i>{{ $consultation->exists ? 'Mettre à jour' : 'Enregistrer' }}
                                 </button>
                             </div>
                         </div>

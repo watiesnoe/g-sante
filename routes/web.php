@@ -139,7 +139,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/caisse', [\App\Http\Controllers\CaisseController::class, 'index'])->name('caisse.index');
 
     // Transferts
-    Route::post('/transferts', [App\Http\Controllers\TransfertController::class, 'store'])->name('transferts.store');
+    Route::resource('transferts', \App\Http\Controllers\TransfertController::class)->only(['index', 'store', 'destroy']);
 
     // Dossiers Patients
     Route::resource('patients', PatientController::class);
@@ -194,6 +194,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/store', [\App\Http\Controllers\MaternityController::class, 'store'])->name('store');
         Route::get('/{id}', [\App\Http\Controllers\MaternityController::class, 'show'])->name('show');
         Route::post('/cpn', [\App\Http\Controllers\MaternityController::class, 'storeCpn'])->name('cpn.store');
+        Route::post('/{id}/close', [\App\Http\Controllers\MaternityController::class, 'close'])->name('close');
     });
 
 });

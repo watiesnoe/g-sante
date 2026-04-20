@@ -11,8 +11,56 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+use Yajra\DataTables\DataTables;
+
 class TransfertController extends Controller
 {
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            $transferts = Transfert::with(['patient', 'sourceMedecin', 'destMedecin', 'sourceService', 'destService', 'user'])->latest();
+
+            return DataTables::of($transferts)
+                ->addColumn('patient', function($row) {
+                    return $row->patient ? $row->patient->prenom.' '.$row->patient->nom : '-';
+                })
+                ->addColumn('type_label', function($row) {
+                    return match($row->type) {
+                        'medecin' => '<span class="badge bg-primary">Médecin</span>',
+                        'service' => '<span class="badge bg-info">Service</span>',
+                        'hopital_externe' => '<span class="badge bg-warning">Hôpital Externe</span>',
+                        default => $row->type
+                    };
+                })
+                ->addColumn('source', function($row) {
+                    if ($row->type === 'medecin') return $row->sourceMedecin ? $row->sourceMedecin->name : '-';
+                    if ($row->type === 'service') return $row->sourceService ? $row->sourceService->nom : '-';
+                    return 'Interne';
+                })
+                ->addColumn('destination', function($row) {
+                    if ($row->type === 'medecin') return $row->destMedecin ? $row->destMedecin->name : '-';
+                    if ($row->type === 'service') return $row->destService ? $row->destService->nom : '-';
+                    return $row->hopital_destination ?? '-';
+                })
+                ->addColumn('date', function($row) {
+                    return \Carbon\Carbon::parse($row->date_transfert)->format('d/m/Y H:i');
+                })
+                ->addColumn('actions', function($row){
+                    return '
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <button type="button" class="btn btn-sm btn-alt-danger" onclick="deleteTransfert('.$row->id.')" title="Supprimer">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                ';
+                })
+                ->rawColumns(['type_label', 'actions'])
+                ->make(true);
+        }
+
+        return view('application.transfert.index');
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -101,6 +149,22 @@ class TransfertController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors du transfert : ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function destroy(Transfert $transfert)
+    {
+        try {
+            $transfert->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'Transfert supprimé avec succès ✅',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression : ' . $e->getMessage(),
             ], 500);
         }
     }

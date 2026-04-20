@@ -138,6 +138,11 @@
                                 <i class="fas fa-microscope me-2"></i>Examens
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link border-0 py-3 fw-bold small text-uppercase" id="transfers-tab" data-bs-toggle="tab" href="#transfers">
+                                <i class="fas fa-exchange-alt me-2"></i>Transferts
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <div class="card-body p-4">
@@ -313,6 +318,62 @@
                                         @empty
                                         <tr>
                                             <td colspan="4" class="text-center py-5 text-muted italic">Aucun examen réalisé.</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab: Transferts -->
+                        <div class="tab-pane fade" id="transfers">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Source</th>
+                                            <th>Destination</th>
+                                            <th>Motif</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($patient->transferts->sortByDesc('date_transfert') as $t)
+                                        <tr>
+                                            <td class="small">{{ \Carbon\Carbon::parse($t->date_transfert)->format('d/m/Y H:i') }}</td>
+                                            <td>
+                                                @if($t->type === 'medecin')
+                                                    <span class="badge bg-soft-primary text-primary">Médecin</span>
+                                                @elseif($t->type === 'service')
+                                                    <span class="badge bg-soft-info text-info">Service</span>
+                                                @else
+                                                    <span class="badge bg-soft-warning text-warning">Externe</span>
+                                                @endif
+                                            </td>
+                                            <td class="small">
+                                                @if($t->type === 'medecin')
+                                                    {{ $t->sourceMedecin->name ?? '-' }}
+                                                @elseif($t->type === 'service')
+                                                    {{ $t->sourceService->nom ?? '-' }}
+                                                @else
+                                                    Interne
+                                                @endif
+                                            </td>
+                                            <td class="small">
+                                                @if($t->type === 'medecin')
+                                                    {{ $t->destMedecin->name ?? '-' }}
+                                                @elseif($t->type === 'service')
+                                                    {{ $t->destService->nom ?? '-' }}
+                                                @else
+                                                    {{ $t->hopital_destination }}
+                                                @endif
+                                            </td>
+                                            <td class="small italic">{{ $t->motif }}</td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted italic">Aucun historique de transfert.</td>
                                         </tr>
                                         @endforelse
                                     </tbody>

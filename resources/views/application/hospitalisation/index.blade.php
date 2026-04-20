@@ -59,6 +59,18 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
+                                <label>Mode de sortie</label>
+                                <select name="statut_sortie" id="statut_sortie" class="form-select" required>
+                                    <option value="Guérison">Guérison</option>
+                                    <option value="Amélioration">Amélioration</option>
+                                    <option value="Décès">Décès</option>
+                                    <option value="Transfert">Transfert</option>
+                                    <option value="Évasion">Évasion</option>
+                                    <option value="Contre avis médical">Contre avis médical</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
                                 <label>Prix / jour</label>
                                 <input type="number" id="montant_jour" class="form-control" readonly>
                             </div>

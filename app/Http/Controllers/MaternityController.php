@@ -67,4 +67,18 @@ class MaternityController extends Controller
 
         return back()->with('success', 'CPN enregistrée.');
     }
+
+    public function close(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'statut'   => 'required|in:Terminée,Interrompue',
+            'issue'    => 'required|string',
+            'date_fin' => 'required|date',
+        ]);
+
+        $grossesse = Grossesse::findOrFail($id);
+        $grossesse->update($validated);
+
+        return redirect()->route('maternity.index')->with('success', 'Le suivi de grossesse a été clôturé avec succès.');
+    }
 }

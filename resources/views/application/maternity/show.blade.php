@@ -79,9 +79,16 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                     <h5 class="mb-0 fw-bold">Consultations Prénatales (CPN)</h5>
-                    <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCpn">
-                        <i class="fa fa-plus me-1"></i> Ajouter une CPN
-                    </button>
+                    <div class="d-flex gap-2">
+                        @if($grossesse->statut == 'En cours')
+                        <button class="btn btn-danger btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCloture">
+                            <i class="fa fa-times-circle me-1"></i> Clôturer le suivi
+                        </button>
+                        @endif
+                        <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCpn">
+                            <i class="fa fa-plus me-1"></i> Ajouter une CPN
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -184,6 +191,48 @@
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-primary px-4">Enregistrer la CPN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Clôturer Suivi -->
+<div class="modal fade" id="modalCloture" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">Clôturer le Suivi de Grossesse</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('maternity.close', $grossesse->id) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Statut de clôture</label>
+                        <select name="statut" class="form-select" required>
+                            <option value="Terminée">Terminée (Accouchement)</option>
+                            <option value="Interrompue">Interrompue (Perte/Fausse couche)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Issue / Résultat</label>
+                        <select name="issue" class="form-select" required>
+                            <option value="Accouchement normal">Accouchement normal</option>
+                            <option value="Césarienne">Césarienne</option>
+                            <option value="Fausse couche">Fausse couche</option>
+                            <option value="Mort-né">Mort-né</option>
+                            <option value="Interruption Médicale de Grossesse (IMG)">Interruption Médicale de Grossesse (IMG)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Date de fin</label>
+                        <input type="date" name="date_fin" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger px-4">Confirmer la clôture</button>
                 </div>
             </form>
         </div>

@@ -15,6 +15,7 @@ class Hospitalisation extends Model
         'date_sortie',
         'motif',
         'etat',
+        'statut_sortie',
         'service_id',
         'observations',
     ];

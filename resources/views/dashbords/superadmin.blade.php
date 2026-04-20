@@ -1,132 +1,75 @@
 
-
-<!-- Accès Rapide -->
+<!-- Welcome Banner -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-rocket me-2 text-primary"></i>
-                    Accès Rapide
-                </h5>
+        <div class="welcome-banner d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold mb-2">Centre de Contrôle</h1>
+                <p class="lead mb-0">Bienvenue, {{ Auth::user()->prenom }}. Voici une vue d'ensemble de l'activité du système.</p>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{{ route('users.index') }}" class="card quick-access-card text-decoration-none">
-                            <div class="card-body text-center">
-                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
-                                <h6 class="mb-1">Utilisateurs</h6>
-                                <small class="text-muted">Gestion des accès</small>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{{ route('patients.index') }}" class="card quick-access-card text-decoration-none">
-                            <div class="card-body text-center">
-                                <i class="fas fa-procedures fa-2x text-success mb-2"></i>
-                                <h6 class="mb-1">Patients</h6>
-                                <small class="text-muted">Dossiers patients</small>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{{ route('consultations.index') }}" class="card quick-access-card text-decoration-none">
-                            <div class="card-body text-center">
-                                <i class="fas fa-stethoscope fa-2x text-info mb-2"></i>
-                                <h6 class="mb-1">Consultations</h6>
-                                <small class="text-muted">Suivi médical</small>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{{ route('rendezvous.index') }}" class="card quick-access-card text-decoration-none">
-                            <div class="card-body text-center">
-                                <i class="fas fa-calendar-check fa-2x text-warning mb-2"></i>
-                                <h6 class="mb-1">Rendez-vous</h6>
-                                <small class="text-muted">Planning</small>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+            <div class="d-none d-md-block">
+                <i class="fas fa-chart-network fa-5x opacity-25"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Statistiques principales avec indicateurs -->
+<!-- Statistiques principales -->
 <div class="row mb-4">
     @php
         $cards = [
             [
-                'title' => 'Utilisateurs Total',
+                'title' => 'Utilisateurs',
                 'value' => $stats['total_users'] ?? 0,
                 'icon' => 'fas fa-users',
                 'color' => 'primary',
-                'trend' => '+12%',
-                'trend_up' => true,
-                'subtitle' => 'Utilisateurs actifs',
+                'gradient' => 'var(--primary-gradient)',
+                'subtitle' => 'Comptes enregistrés',
                 'route' => route('users.index')
-            ],
-            [
-                'title' => 'Médecins',
-                'value' => $stats['total_medecins'] ?? 0,
-                'icon' => 'fas fa-user-md',
-                'color' => 'success',
-                'trend' => '+5%',
-                'trend_up' => true,
-                'subtitle' => 'Dont ' . ($stats['medecins_actifs'] ?? 0) . ' actifs',
-                'route' => route('medecins.index')
             ],
             [
                 'title' => 'Patients',
                 'value' => $stats['total_patients'] ?? 0,
                 'icon' => 'fas fa-procedures',
-                'color' => 'info',
-                'trend' => '+18%',
-                'trend_up' => true,
-                'subtitle' => ($stats['new_patients_today'] ?? 0) . ' nouveaux aujourd\'hui',
+                'color' => 'success',
+                'gradient' => 'var(--success-gradient)',
+                'subtitle' => 'Dossiers médicaux',
                 'route' => route('patients.index')
             ],
             [
                 'title' => 'Consultations',
                 'value' => $stats['total_consultations'] ?? 0,
                 'icon' => 'fas fa-stethoscope',
-                'color' => 'warning',
-                'trend' => '+8%',
-                'trend_up' => true,
-                'subtitle' => 'Ce mois',
+                'color' => 'info',
+                'gradient' => 'var(--info-gradient)',
+                'subtitle' => 'Total général',
                 'route' => route('consultations.index')
+            ],
+            [
+                'title' => 'Rendez-vous',
+                'value' => $stats['total_rendezvou'] ?? 0,
+                'icon' => 'fas fa-calendar-check',
+                'color' => 'warning',
+                'gradient' => 'var(--warning-gradient)',
+                'subtitle' => 'Planifiés',
+                'route' => route('rendezvous.index')
             ]
         ];
     @endphp
 
     @foreach($cards as $card)
         <div class="col-xl-3 col-md-6 mb-4">
-            <a href="{{ $card['route'] }}" class="text-decoration-none">
-                <div class="card card-statistic h-100 border-0 shadow-sm hover-lift">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">{{ $card['title'] }}</h6>
-                                <h2 class="mb-0 fw-bold text-{{ $card['color'] }}">{{ $card['value'] }}</h2>
-                                <small class="text-muted">{{ $card['subtitle'] }}</small>
+            <a href="{{ $card['route'] }}" class="text-decoration-none text-dark">
+                <div class="card card-statistic h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-stat me-3" style="background: {{ $card['gradient'] }}; color: white;">
+                                <i class="{{ $card['icon'] }} fs-5"></i>
                             </div>
-                            <div class="flex-shrink-0">
-                                <div class="avatar avatar-lg bg-{{ $card['color'] }} bg-opacity-10 rounded-circle">
-                                    <i class="{{ $card['icon'] }} text-{{ $card['color'] }} fs-4"></i>
-                                </div>
-                            </div>
+                            <h6 class="card-title text-muted mb-0 fw-bold">{{ $card['title'] }}</h6>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between">
-                                    <span class="badge bg-{{ $card['trend_up'] ? 'success' : 'danger' }}-subtle text-{{ $card['trend_up'] ? 'success' : 'danger' }}">
-                                        <i class="fas fa-arrow-{{ $card['trend_up'] ? 'up' : 'down' }} me-1"></i>
-                                        {{ $card['trend'] }}
-                                    </span>
-                            <span class="text-decoration-none small text-primary">
-                                        Voir détails <i class="fas fa-chevron-right ms-1"></i>
-                                    </span>
-                        </div>
+                        <h2 class="mb-0 fw-bold">{{ $card['value'] }}</h2>
+                        <small class="text-muted">{{ $card['subtitle'] }}</small>
                     </div>
                 </div>
             </a>

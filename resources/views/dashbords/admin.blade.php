@@ -1,72 +1,46 @@
-<!-- Welcome Card -->
+<!-- Welcome Banner -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="block block-rounded bg-primary text-white">
-            <div class="block-content block-content-full">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h3 class="h4 mb-2">Bonjour, Admin {{ Auth::user()->prenom ?? Auth::user()->name }} !</h3>
-                        <p class="fs-sm mb-3 opacity-75">
-                            Gestion administrative de l'établissement médical.
-                        </p>
-                        <div class="h2 mb-0">{{ number_format($stats['revenus_mois'] ?? 0, 0, ',', ' ') }} F CFA</div>
-                        <div class="text-white-75">Revenus ce mois</div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-user-shield fa-4x text-white-50"></i>
-                    </div>
-                </div>
+        <div class="welcome-banner d-flex justify-content-between align-items-center" style="background: var(--primary-gradient);">
+            <div>
+                <h1 class="display-5 fw-bold mb-2">Bonjour, Admin {{ Auth::user()->prenom }}</h1>
+                <p class="lead mb-0">Revenus ce mois : <span class="fw-bold">{{ number_format($stats['revenus_mois'] ?? 0, 0, ',', ' ') }} F CFA</span></p>
+            </div>
+            <div class="d-none d-md-block">
+                <i class="fas fa-coins fa-5x opacity-25"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Statistics Cards -->
+<!-- Statistiques principales -->
 <div class="row mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('personnel.index') }}" class="block block-rounded">
-            <div class="block-content block-content-full bg-primary text-center">
-                <div class="item item-circle bg-primary-lighter text-primary mx-auto my-3">
-                    <i class="fas fa-user-tie"></i>
+    @php
+        $adminStats = [
+            ['title' => 'Personnel', 'value' => $stats['total_personnel'] ?? 0, 'icon' => 'fas fa-user-tie', 'color' => 'primary', 'gradient' => 'var(--primary-gradient)', 'route' => route('users.index')],
+            ['title' => 'Consultations/mois', 'value' => $stats['consultations_mois'] ?? 0, 'icon' => 'fas fa-stethoscope', 'color' => 'success', 'gradient' => 'var(--success-gradient)', 'route' => route('consultations.index')],
+            ['title' => 'Alertes Stock', 'value' => $stats['alertes_stock'] ?? 0, 'icon' => 'fas fa-exclamation-triangle', 'color' => 'danger', 'gradient' => 'var(--danger-gradient)', 'route' => route('medicaments.index')],
+            ['title' => 'Total Patients', 'value' => $stats['total_patients'] ?? 0, 'icon' => 'fas fa-users', 'color' => 'info', 'gradient' => 'var(--info-gradient)', 'route' => route('patients.index')],
+        ];
+    @endphp
+
+    @foreach($adminStats as $stat)
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ $stat['route'] }}" class="text-decoration-none text-dark">
+                <div class="card card-statistic h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-stat me-3" style="background: {{ $stat['gradient'] }}; color: white;">
+                                <i class="{{ $stat['icon'] }} fs-5"></i>
+                            </div>
+                            <h6 class="card-title text-muted mb-0 fw-bold">{{ $stat['title'] }}</h6>
+                        </div>
+                        <h2 class="mb-0 fw-bold">{{ $stat['value'] }}</h2>
+                    </div>
                 </div>
-                <div class="fs-1 fw-bold text-white">{{ $stats['total_personnel'] ?? 0 }}</div>
-                <div class="text-white-75 mb-3">Personnel</div>
-            </div>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('consultations.index') }}" class="block block-rounded">
-            <div class="block-content block-content-full bg-success text-center">
-                <div class="item item-circle bg-success-lighter text-success mx-auto my-3">
-                    <i class="fas fa-stethoscope"></i>
-                </div>
-                <div class="fs-1 fw-bold text-white">{{ $stats['consultations_mois'] ?? 0 }}</div>
-                <div class="text-white-75 mb-3">Consultations/mois</div>
-            </div>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('finances.index') }}" class="block block-rounded">
-            <div class="block-content block-content-full bg-warning text-center">
-                <div class="item item-circle bg-warning-lighter text-warning mx-auto my-3">
-                    <i class="fas fa-money-bill-wave"></i>
-                </div>
-                <div class="fs-1 fw-bold text-white">{{ number_format($stats['revenus_mois'] ?? 0, 0, ',', ' ') }} F</div>
-                <div class="text-white-75 mb-3">Revenus/mois</div>
-            </div>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('medicaments.index') }}" class="block block-rounded">
-            <div class="block-content block-content-full bg-info text-center">
-                <div class="item item-circle bg-info-lighter text-info mx-auto my-3">
-                    <i class="fas fa-pills"></i>
-                </div>
-                <div class="fs-1 fw-bold text-white">{{ $stats['alertes_stock'] ?? 0 }}</div>
-                <div class="text-white-75 mb-3">Alertes Stock</div>
-            </div>
-        </a>
-    </div>
+            </a>
+        </div>
+    @endforeach
 </div>
 
 @if(isset($lowStockMedicaments) && $lowStockMedicaments->count() > 0)

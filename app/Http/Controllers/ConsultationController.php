@@ -400,11 +400,19 @@ class ConsultationController extends Controller
             'certificat'
         ]);
 
+        $maladieSymptomesDetails = $maladies->mapWithKeys(function ($m) {
+            return [$m->id => [
+                'nom' => $m->nom,
+                'symptomes' => $m->symptomes->pluck('id')->toArray()
+            ]];
+        });
+
         return view('application.consultation.create', compact(
             'tickets',
             'symptomes',
             'maladies',
             'symptomeMaladieMap',
+            'maladieSymptomesDetails',
             'medicaments',
             'salles',
             'consultation'

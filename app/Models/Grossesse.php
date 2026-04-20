@@ -8,7 +8,7 @@ class Grossesse extends Model
 {
     protected $fillable = [
         'patient_id', 'ddr', 'dpa', 'parite', 
-        'gestite', 'antecedents_particuliers', 'statut', 'date_fin'
+        'gestite', 'antecedents_particuliers', 'statut', 'issue', 'date_fin'
     ];
 
     public function patient()

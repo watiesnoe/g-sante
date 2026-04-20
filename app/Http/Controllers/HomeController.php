@@ -14,7 +14,7 @@ use App\Models\RendezVous;
 use App\Models\Salle;
 use App\Models\User;
 use App\Models\Ordonnance;
-use App\Models\Facture;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -81,7 +81,7 @@ class HomeController extends Controller
         $stats = [
             'total_personnel' => User::whereIn('role', ['medecin', 'secretaire'])->count(),
             'consultations_mois' => Consultation::whereMonth('created_at', now()->month)->count(),
-            'revenus_mois' => Facture::whereMonth('created_at', now()->month)->sum('montant'),
+            'revenus_mois' => Paiement::whereMonth('created_at', now()->month)->sum('montant_total'),
             'alertes_stock' => Medicament::whereColumn('stock', '<=', 'stock_min')->count(),
             'total_patients' => Patient::count(),
             'new_patients_today' => Patient::whereDate('created_at', today())->count(),
@@ -182,12 +182,12 @@ class HomeController extends Controller
                 ->get();
         }
 
-        return view('dashbords.client', $data);
+        return view('dashboard', $data);
     }
 
     private function defaultDashboard()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Tableau de bord spécifique pour le pharmacien
         if ($user->role === 'pharmacien') {
@@ -246,7 +246,7 @@ class HomeController extends Controller
             'total_rendezvous' => RendezVous::count(),
         ];
 
-        return view('dashboard.default', compact('stats'));
+        return view('dashboard', compact('stats'));
     }
 
 // Méthodes helper pour les données des graphiques

@@ -21,6 +21,7 @@
     <script src="{{ asset('admin/js/plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('admin/js/plugins/jquery-validation/jquery.validate.min.js') }}"></script>
     <script src="{{ asset('admin/js/plugins/jquery-validation/additional-methods.js') }}"></script>
+    <script src="{{ asset('admin/js/plugins/bootstrap-notify/bootstrap-notify.min.js') }}"></script>
 {{--    <script src="assets/js/plugins/jquery-validation/jquery.validate.min.js"></script>--}}
 
     <!-- Page JS Code -->

@@ -52,6 +52,7 @@
                     @include('layouts.partials.menus.caisse')
                     @include('layouts.partials.menus.maternity')
                     @include('layouts.partials.menus.infectiologie')
+                    @include('layouts.partials.menus.transfert')
 
                     <!-- Paramètres -->
                     <li class="nav-main-item">
@@ -77,6 +78,7 @@
                     @include('layouts.partials.menus.hospitalisation')
                     @include('layouts.partials.menus.maternity')
                     @include('layouts.partials.menus.infectiologie')
+                    @include('layouts.partials.menus.transfert')
 
                @elseif(auth()->user()->role === 'pharmacien')
 

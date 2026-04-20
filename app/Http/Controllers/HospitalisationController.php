@@ -219,7 +219,7 @@ class HospitalisationController extends Controller
 
             // Mise à jour de l'état de l'hospitalisation et libération du lit
             $hospitalisation->update([
-                'statut'      => 'terminé',
+                'etat'      => 'terminé',
                 'date_sortie' => $validated['dateSortie'],
             ]);
 

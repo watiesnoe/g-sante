@@ -42,6 +42,7 @@ class PaiementController extends Controller
         'montant_total'      => 'required|numeric|min:0',
         'montant_recu'       => 'required|numeric|min:0',
         'mode_paiement'      => 'nullable|string',
+        'statut_sortie'      => 'required|string',
     ]);
 
     try {
@@ -54,11 +55,26 @@ class PaiementController extends Controller
                 throw new \Exception("Cette hospitalisation est déjà clôturée.");
             }
 
+            // ✅ Mode de sortie
+            $statutSortie = $request->statut_sortie;
+
             // ✅ Mise à jour hospitalisation
             $hospitalisation->update([
                 'date_sortie' => $request->date_sortie,
-                'etat' => 'terminé'
+                'etat' => 'terminé',
+                'statut_sortie' => $statutSortie
             ]);
+
+            // 💀 Si Décès, on marque le patient comme décédé
+            if ($statutSortie === 'Décès') {
+                $patient = $hospitalisation->consultation->patient ?? $hospitalisation->patient;
+                if ($patient) {
+                    $patient->update([
+                        'est_decede' => true,
+                        'date_deces' => now()
+                    ]);
+                }
+            }
 
             // ✅ Calcul paiement
             $montantRestant = $request->montant_total - $request->montant_recu;
@@ -83,7 +99,7 @@ class PaiementController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Paiement enregistré avec succès ✅'
+            'message' => 'Paiement enregistré et hospitalisation clôturée ✅'
         ]);
 
     } catch (\Exception $e) {

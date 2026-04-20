@@ -16,7 +16,10 @@ class Patient extends Model {
         'groupe_sanguin',
         'assurance_id',
         'numero_assurance',
-        'fin_validite_assurance'];
+        'fin_validite_assurance',
+        'est_decede',
+        'date_deces',
+    ];
 
     public function assurance() { return $this->belongsTo(Assurance::class); }
 
@@ -37,4 +40,8 @@ class Patient extends Model {
     public function ordonnances() { return $this->hasManyThrough(Ordonnance::class, Consultation::class); }
     public function examens() { return $this->hasManyThrough(PrescriptionExamen::class, Consultation::class); }
     public function grossesses() { return $this->hasMany(Grossesse::class); }
+    public function transferts() { return $this->hasMany(Transfert::class); }
+    public function getNomCompletAttribute() {
+        return "{$this->prenom} {$this->nom}";
+    }
 }

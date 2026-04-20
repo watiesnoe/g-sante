@@ -1,23 +1,44 @@
-<!-- Welcome Card -->
+<!-- Welcome Banner -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="block block-rounded bg-info text-white">
-            <div class="block-content block-content-full">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h3 class="h4 mb-2">Bonjour, {{ Auth::user()->prenom ?? Auth::user()->name }} !</h3>
-                        <p class="fs-sm mb-3 opacity-75">
-                            Gestion des rendez-vous et accueil des patients.
-                        </p>
-                        <div class="h2 mb-0">{{ $todayAppointments->count() }} RDV aujourd'hui</div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <i class="fas fa-calendar-alt fa-4x text-white-50"></i>
-                    </div>
-                </div>
+        <div class="welcome-banner d-flex justify-content-between align-items-center" style="background: var(--info-gradient);">
+            <div>
+                <h1 class="display-5 fw-bold mb-2">Bonjour, {{ Auth::user()->prenom }}</h1>
+                <p class="lead mb-0">Vous avez <span class="fw-bold">{{ $todayAppointments->count() }} rendez-vous</span> à gérer aujourd'hui.</p>
+            </div>
+            <div class="d-none d-md-block">
+                <i class="fas fa-headset fa-5x opacity-25"></i>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    @php
+        $secretaireStats = [
+            ['title' => 'Nouveaux Patients', 'value' => $stats['new_patients_today'] ?? 0, 'icon' => 'fas fa-user-plus', 'color' => 'primary', 'gradient' => 'var(--primary-gradient)'],
+            ['title' => 'RDV Réalisés', 'value' => $stats['rdv_realises'] ?? 0, 'icon' => 'fas fa-calendar-check', 'color' => 'success', 'gradient' => 'var(--success-gradient)'],
+            ['title' => 'RDV en Attente', 'value' => $stats['rdv_attente'] ?? 0, 'icon' => 'fas fa-clock', 'color' => 'warning', 'gradient' => 'var(--warning-gradient)'],
+            ['title' => 'Total Patients', 'value' => $stats['total_patients'] ?? 0, 'icon' => 'fas fa-users', 'color' => 'info', 'gradient' => 'var(--info-gradient)'],
+        ];
+    @endphp
+
+    @foreach($secretaireStats as $stat)
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-statistic h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-stat me-3" style="background: {{ $stat['gradient'] }}; color: white;">
+                            <i class="{{ $stat['icon'] }} fs-5"></i>
+                        </div>
+                        <h6 class="card-title text-muted mb-0 fw-bold">{{ $stat['title'] }}</h6>
+                    </div>
+                    <h2 class="mb-0 fw-bold">{{ $stat['value'] }}</h2>
+                </div>
+            </div>
+        </div>
+    @endforeach
 </div>
 
 <!-- Rendez-vous du jour -->
@@ -69,61 +90,18 @@
         </div>
     </div>
 
-    <div class="col-lg-4">
-        <!-- Statistiques rapides -->
-        <div class="block block-rounded">
-            <div class="block-header block-header-default">
-                <h3 class="block-title">
-                    <i class="fas fa-chart-bar text-success me-2"></i>
-                    Aujourd'hui
-                </h3>
-            </div>
-            <div class="block-content">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Nouveaux patients</span>
-                        <strong class="text-primary">{{ $stats['new_patients_today'] ?? 0 }}</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>RDV réalisés</span>
-                        <strong class="text-success">{{ $stats['rdv_realises'] ?? 0 }}</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>RDV en attente</span>
-                        <strong class="text-warning">{{ $stats['rdv_attente'] ?? 0 }}</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Factures à émettre</span>
-                        <strong class="text-danger">{{ $stats['factures_pending'] ?? 0 }}</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Actions rapides -->
-        <div class="block block-rounded">
-            <div class="block-header block-header-default">
-                <h3 class="block-title">
-                    <i class="fas fa-bolt text-warning me-2"></i>
-                    Actions Rapides
-                </h3>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-bolt text-warning me-2"></i>Actions Rapides</h5>
             </div>
-            <div class="block-content">
-                <a href="{{ route('rendezvous.create') }}" class="btn btn-primary w-100 mb-2">
+            <div class="card-body">
+                <a href="{{ route('rendezvous.create') }}" class="btn btn-primary w-100 mb-3 py-3">
                     <i class="fas fa-calendar-plus me-2"></i>Nouveau RDV
                 </a>
-                <a href="{{ route('patients.create') }}" class="btn btn-success w-100 mb-2">
+                <a href="{{ route('patients.create') }}" class="btn btn-success w-100 mb-3 py-3">
                     <i class="fas fa-user-plus me-2"></i>Nouveau Patient
                 </a>
-{{--                <a href="{{ route('factures.create') }}" class="btn btn-warning w-100">--}}
-{{--                    <i class="fas fa-file-invoice me-2"></i>Nouvelle Facture--}}
-{{--                </a>--}}
             </div>
         </div>
     </div>
