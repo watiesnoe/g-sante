@@ -25,6 +25,10 @@ return new class extends Migration
             $table->foreignId('assurance_id')->nullable()->constrained('assurances')->nullOnDelete();
             $table->string('numero_assurance')->nullable();
             $table->date('fin_validite_assurance')->nullable();
+
+            $table->boolean('est_decede')->default(false);
+            $table->dateTime('date_deces')->nullable();
+                    
             $table->timestamps();
         });
     }
@@ -35,5 +39,17 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('patients');
+
+         Schema::table('patients', function (Blueprint $table) {
+            $table->dropColumn(['est_decede', 'date_deces']);
+        });
+
+        Schema::table('hospitalisations', function (Blueprint $table) {
+            $table->dropColumn('statut_sortie');
+        });
+
+        Schema::table('grossesses', function (Blueprint $table) {
+            $table->dropColumn('issue');
+        });
     }
 };
