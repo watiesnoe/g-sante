@@ -2,6 +2,7 @@
 
 
 namespace Database\Seeders;
+use Illuminate\Support\Str;
 
 use App\Models\Unite;
 use Illuminate\Database\Seeder;

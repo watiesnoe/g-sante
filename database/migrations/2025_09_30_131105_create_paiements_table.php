@@ -10,6 +10,7 @@ return new class extends Migration
     {
          Schema::create('paiements', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
 
             // Clés relationnelles
             $table->unsignedBigInteger('hospitalisation_id')->nullable();

@@ -6,19 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('consultations', function (Blueprint $table) {
             $table->id();
-
-            // 🔹 Lien avec ticket (nullable car set null au delete)
+            $table->uuid('uuid')->unique();
             $table->foreignId('ticket_id')
-                ->nullable() // 👈 important
+                ->nullable()
                 ->constrained('tickets')
-                ->nullOnDelete(); // équivalent à ->onDelete('set null')
+                ->nullOnDelete();
             $table->foreignId('patient_id')->constrained()->onDelete('cascade');
             $table->foreignId('medecin_id')->constrained('users')->onDelete('cascade');
             $table->dateTime('date_consultation')->useCurrent();
@@ -34,13 +30,11 @@ return new class extends Migration
             $table->string('groupe_sanguin')->nullable();
             $table->string('adresse_patient')->nullable();
             $table->text('antecedents')->nullable();
+            $table->unsignedBigInteger('grossesse_id')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('consultations');

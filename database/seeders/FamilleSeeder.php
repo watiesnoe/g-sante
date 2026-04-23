@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+use Illuminate\Support\Str;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,7 @@ class FamilleSeeder extends Seeder
         foreach ($familles as $famille) {
             DB::table('familles')->updateOrInsert(
                 ['nom' => $famille],
-                ['created_at' => now(), 'updated_at' => now()]
+                ['uuid' => (string) Str::uuid(), 'created_at' => now(), 'updated_at' => now()]
             );
         }
     }

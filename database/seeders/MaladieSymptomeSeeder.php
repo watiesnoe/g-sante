@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+use Illuminate\Support\Str;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +43,7 @@ class MaladieSymptomeSeeder extends Seeder
         foreach ($symptomes as $s) {
             DB::table('symptomes')->updateOrInsert(
                 ['nom' => $s['nom']],
-                ['description' => $s['description'], 'created_at' => $now, 'updated_at' => $now]
+                ['description' => $s['description'], 'uuid' => (string) Str::uuid(), 'created_at' => $now, 'uuid' => (string) Str::uuid(), 'updated_at' => $now]
             );
         }
 
@@ -61,7 +62,7 @@ class MaladieSymptomeSeeder extends Seeder
         foreach ($maladies as $m) {
             DB::table('maladies')->updateOrInsert(
                 ['nom' => $m['nom']],
-                ['description' => $m['description'] ?? null, 'created_at' => $now, 'updated_at' => $now]
+                ['description' => $m['description'] ?? null, 'uuid' => (string) Str::uuid(), 'created_at' => $now, 'uuid' => (string) Str::uuid(), 'updated_at' => $now]
             );
         }
 

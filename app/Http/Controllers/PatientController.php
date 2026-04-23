@@ -12,7 +12,7 @@ class PatientController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $patients = Patient::select(['id', 'nom', 'prenom', 'genre', 'telephone', 'created_at']);
+            $patients = Patient::select(['id', 'uuid', 'nom', 'prenom', 'genre', 'telephone', 'created_at']);
 
             return datatables()->of($patients)
                 ->addIndexColumn()
@@ -64,7 +64,7 @@ class PatientController extends Controller
         $patients = Patient::where('nom', 'like', '%'.$request->q.'%')
             ->orWhere('telephone', 'like', '%'.$request->q.'%')
             ->limit(10)
-            ->get(['id','nom','prenom','telephone','assurance_id','numero_assurance','fin_validite_assurance']);
+            ->get(['id', 'uuid','nom','prenom','telephone','assurance_id','numero_assurance','fin_validite_assurance']);
 
         return response()->json($patients);
     }

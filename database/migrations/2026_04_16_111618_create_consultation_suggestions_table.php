@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('consultation_suggestions', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('consultation_id')->constrained('consultations')->onDelete('cascade');
             $table->foreignId('pathologie_id')->constrained('maladies')->onDelete('cascade');
             $table->integer('score');

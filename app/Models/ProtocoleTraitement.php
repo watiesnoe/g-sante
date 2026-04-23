@@ -1,10 +1,12 @@
 <?php
 namespace App\Models;
+use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 class ProtocoleTraitement extends Model
 {
+    use HasUuid;
     protected $fillable = [
         'maladie_id', 'titre', 'signes', 'diagnostics',
         'germes_nourrisson', 'germes_adulte', 'remarques',

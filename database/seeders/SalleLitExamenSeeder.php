@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+use Illuminate\Support\Str;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,8 @@ class SalleLitExamenSeeder extends Seeder
                         'service_medical_id' => $service->id,
                         'capacite' => 4,
                         'prix' => 10000,
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'uuid' => (string) Str::uuid(), 'created_at' => now(),
+                        'uuid' => (string) Str::uuid(), 'updated_at' => now(),
                     ]
                 );
                 
@@ -36,8 +37,8 @@ class SalleLitExamenSeeder extends Seeder
                         ['numero' => $litNum, 'salle_id' => $salleId],
                         [
                             'statut' => 'Libre',
-                            'created_at' => now(),
-                            'updated_at' => now(),
+                            'uuid' => (string) Str::uuid(), 'created_at' => now(),
+                            'uuid' => (string) Str::uuid(), 'updated_at' => now(),
                         ]
                     );
                 }

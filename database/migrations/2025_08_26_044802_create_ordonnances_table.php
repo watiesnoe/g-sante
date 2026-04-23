@@ -6,25 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('ordonnances', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('consultation_id')->constrained()->onDelete('cascade');
             $table->date('date')->default(now());
             $table->date('date_paiement')->nullable();
-            $table->enum('statutordo', ['impaye', 'paye','partiellement'])->default('impaye');
+            $table->enum('statutordo', ['impaye', 'paye', 'partiellement'])->default('impaye');
             $table->timestamps();
         });
-
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('ordonnances');

@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ProtocoleMedicament extends Pivot
 {
+    use HasUuid;
     /**
      * Indique si la table pivot possède un ID auto-incrémenté.
      * Comme nous avons mis $table->id() dans la migration, on met true.

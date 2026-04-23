@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+use Illuminate\Support\Str;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +50,7 @@ class PathologiesSeeder extends Seeder
             'Ictère', 'Pâleur cutanéo-muqueuse', 'Prurit', 'Chancre indolore'
         ];
         foreach ($symptomesData as $nom) {
-            DB::table('symptomes')->updateOrInsert(['nom' => $nom], ['created_at' => $now]);
+            DB::table('symptomes')->updateOrInsert(['nom' => $nom], ['uuid' => (string) Str::uuid(), 'created_at' => $now]);
         }
         $sId = DB::table('symptomes')->pluck('id', 'nom');
  
@@ -167,7 +168,7 @@ class PathologiesSeeder extends Seeder
             // 1. Maladie
             DB::table('maladies')->updateOrInsert(
                 ['nom' => $p['nom']],
-                ['created_at' => $now, 'updated_at' => $now]
+                ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'uuid' => (string) Str::uuid(), 'updated_at' => $now]
             );
             $maladieId = DB::table('maladies')->where('nom', $p['nom'])->value('id');
 
@@ -187,8 +188,8 @@ class PathologiesSeeder extends Seeder
                 [
                     'titre' => $p['protocole']['titre'],
                     'signes' => $p['protocole']['signes'],
-                    'created_at' => $now,
-                    'updated_at' => $now
+                    'uuid' => (string) Str::uuid(), 'created_at' => $now,
+                    'uuid' => (string) Str::uuid(), 'updated_at' => $now
                 ]
             );
             $protocoleId = DB::table('protocole_traitements')->where('maladie_id', $maladieId)->value('id');
@@ -205,8 +206,8 @@ class PathologiesSeeder extends Seeder
                             'type' => $t['type'],
                             'posologie' => $t['poso'],
                             'duree' => $t['duree'],
-                            'created_at' => $now,
-                            'updated_at' => $now
+                            'uuid' => (string) Str::uuid(), 'created_at' => $now,
+                            'uuid' => (string) Str::uuid(), 'updated_at' => $now
                         ]
                     );
                 }

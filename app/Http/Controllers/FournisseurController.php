@@ -12,7 +12,7 @@ class FournisseurController extends Controller
     {
         // Si c'est une requête AJAX pour DataTable
         if ($request->ajax()) {
-            $fournisseurs = Fournisseur::select(['id', 'nom', 'contact', 'adresse']);
+            $fournisseurs = Fournisseur::select(['id', 'uuid', 'nom', 'contact', 'adresse']);
             return Datatables::of($fournisseurs)
                 ->addColumn('actions', function($row) {
                     return '

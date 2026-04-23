@@ -6,24 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('prescriptions_examens', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('consultation_id')->constrained()->onDelete('cascade');
-            $table->string('examen'); // Ex: Radio thorax, NFS, etc.
-            $table->enum('statut', ['en_cours','realise'])->default('en_cours');
+            $table->string('examen');
+            $table->enum('statut', ['en_cours', 'realise'])->default('en_cours');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('prescriptions_examens');

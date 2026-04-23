@@ -59,7 +59,7 @@ class SalleController extends Controller
             // Récupérer uniquement les lits libres avec plus d'informations
             $litsLibres = $salle->lits()
                 ->where('statut', 'Libre')
-                ->get(['id', 'numero', 'statut', 'created_at']);
+                ->get(['id', 'uuid', 'numero', 'statut', 'created_at']);
 
             return response()->json($litsLibres);
 

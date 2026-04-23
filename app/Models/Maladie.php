@@ -1,10 +1,12 @@
 <?php
 namespace App\Models;
+use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Maladie extends Model
 {
+    use HasUuid;
     protected $fillable = ['nom', 'description'];
 
     // Récupère tous les symptômes liés à cette maladie

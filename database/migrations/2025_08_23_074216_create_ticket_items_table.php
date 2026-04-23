@@ -6,13 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('ticket_items', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('ticket_id')->constrained()->onDelete('cascade');
             $table->foreignId('prestation_id')->constrained('prestations')->onDelete('cascade');
             $table->string('service');
@@ -22,13 +20,8 @@ return new class extends Migration
             $table->integer('sous_total');
             $table->timestamps();
         });
-
-
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('ticket_items');

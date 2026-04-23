@@ -6,13 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('ordonnance_paiements', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('ordonnance_id')->constrained()->onDelete('cascade');
             $table->foreignId('medicament_id')->constrained()->onDelete('cascade');
             $table->integer('quantite')->default(1);
@@ -20,12 +18,8 @@ return new class extends Migration
             $table->enum('statut', ['en_attente', 'payé'])->default('en_attente');
             $table->timestamps();
         });
-
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('ordonnance_paiements');

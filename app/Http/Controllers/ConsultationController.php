@@ -47,12 +47,12 @@ class ConsultationController extends Controller
                 ->addColumn('actions', function($row){
                     return '
                     <div class="d-flex align-items-center justify-content-center gap-2">
-                        <a href="'.route('consultations.show', $row->id).'" class="text-info cursor-pointer font-size-16" 
+                        <a href="'.route('consultations.show', $row).'" class="text-info cursor-pointer font-size-16" 
                         title="Voir"><i class="fa fa-eye text-warning"></i></a>
-                        <a href="'.route('consultations.edit', $row->id).'" class="cursor-pointer ml-1 text font-size-16"
+                        <a href="'.route('consultations.edit', $row).'" class="cursor-pointer ml-1 text font-size-16"
                          title="Modifier"><i class="fa fa-edit text-primary"></i></a>
                         <button type="button" class="btn btn-sm border-0 bg-transparent text-success" 
-                                onclick="openTransfertModal('.$row->patient_id.', '.$row->id.', \'\')" title="Transférer">
+                                onclick="openTransfertModal(\''.$row->patient->uuid.'\', \''.$row->uuid.'\', \'\')" title="Transférer">
                             <i class="fa fa-exchange-alt"></i>
                         </button>
                     </div>
@@ -87,7 +87,7 @@ class ConsultationController extends Controller
                     return $row->items->pluck('libelle')->implode(', ');
                 })
                 ->addColumn('actions', function($row){
-                    return '<a href="'.route('consultations.create', ['ticket_id' => $row->id]).'" class="btn btn-primary btn-sm"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                    return '<a href="'.route('consultations.create', ['ticket_id' => $row->uuid]).'" class="btn btn-primary btn-sm"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -114,7 +114,11 @@ class ConsultationController extends Controller
 
         // Pré-remplissage si un ticket est spécifié
         if ($selectedTicketId) {
-            $ticket = Ticket::with(['patient', 'items'])->find($selectedTicketId);
+            // Check if it's a UUID or ID (for backward compatibility or if some links still use ID)
+            $ticket = Ticket::with(['patient', 'items'])
+                ->where('uuid', $selectedTicketId)
+                ->orWhere('id', $selectedTicketId)
+                ->first();
             if ($ticket) {
                 $selectedPatientId = $selectedPatientId ?: $ticket->patient_id;
                 if (!$consultation->motif) {

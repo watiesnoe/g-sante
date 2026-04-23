@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 class PrescriptionExamen extends Model
 {
+    use HasUuid;
 
     protected $table = 'prescriptions_examens'; // ✅ correction
 

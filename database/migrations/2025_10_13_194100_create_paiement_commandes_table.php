@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('paiement_commandes', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('commande_id')->constrained()->onDelete('cascade');
             $table->decimal('montant', 15, 2);
-            $table->string('mode')->default('espèce'); // espèce, virement, chèque, etc.
-            $table->date('date_paiement')->nullable();
+            $table->date('date_paiement');
+            $table->string('mode');
             $table->string('reference')->unique();
             $table->text('observations')->nullable();
             $table->timestamps();

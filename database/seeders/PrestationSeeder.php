@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+use Illuminate\Support\Str;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -53,8 +54,8 @@ class PrestationSeeder extends Seeder
                         'description' => $pre['nom'] . ' au service ' . $pre['s'],
                         'quantifiable' => $pre['q'],
                         'prix' => $pre['p'],
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'uuid' => (string) Str::uuid(), 'created_at' => now(),
+                        'uuid' => (string) Str::uuid(), 'updated_at' => now(),
                     ]
                 );
             }

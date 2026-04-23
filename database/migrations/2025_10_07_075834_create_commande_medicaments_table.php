@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-
         Schema::create('commande_medicaments', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('commande_id')->constrained()->onDelete('cascade');
-            $table->foreignId('medicament_id')->constrained()->onDelete('cascade');
+            $table->uuid('uuid')->unique();
+            $table->foreignId('commande_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('medicament_id')->constrained()->cascadeOnDelete();
             $table->integer('quantite');
-            $table->integer('quantiterecue')->nullable();
-            $table->decimal('prix_unitaire', 10, 2);
+            $table->integer('quantiterecue')->default(0);
+            $table->decimal('prix_unitaire', 12, 2);
             $table->decimal('total', 12, 2);
             $table->timestamps();
         });

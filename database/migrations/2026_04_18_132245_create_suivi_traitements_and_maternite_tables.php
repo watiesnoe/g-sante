@@ -14,6 +14,7 @@ return new class extends Migration
         // 🔹 Table pour le suivi de l'évolution d'un traitement après consultation
         Schema::create('suivi_traitements', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('consultation_id')->constrained()->onDelete('cascade');
             $table->date('date_suivi');
             $table->enum('evolution', ['Amélioration', 'Stagnation', 'Aggravation', 'Guérison'])->default('Stagnation');
@@ -27,6 +28,7 @@ return new class extends Migration
         // 🔹 Table pour le suivi des grossesses
         Schema::create('grossesses', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('patient_id')->constrained()->onDelete('cascade');
             $table->date('ddr')->comment('Date des dernières règles');
             $table->date('dpa')->comment('Date prévue d\'accouchement');
@@ -41,6 +43,7 @@ return new class extends Migration
         // 🔹 Table pour les Consultations Prénatales (CPN)
         Schema::create('consultations_prenatales', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('grossesse_id')->constrained()->onDelete('cascade');
             $table->integer('numero_cpn')->comment('CPN 1, 2, 3, etc.');
             $table->date('date_cpn');
@@ -54,6 +57,11 @@ return new class extends Migration
             $table->text('traitement_recu')->nullable();
             $table->date('prochain_rdv')->nullable();
             $table->timestamps();
+        });
+
+        // Ajouter la contrainte à la table consultations
+        Schema::table('consultations', function (Blueprint $table) {
+            $table->foreign('grossesse_id')->references('id')->on('grossesses')->onDelete('set null');
         });
     }
 

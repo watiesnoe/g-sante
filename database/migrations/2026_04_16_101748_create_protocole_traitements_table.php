@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('protocole_traitements', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('maladie_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('titre');
             $table->text('signes')->nullable();

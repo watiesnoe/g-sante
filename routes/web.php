@@ -161,10 +161,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/medecins', [UserController::class, 'medecins'])->name('medecins.index');
     Route::get('/users/datatable', [UserController::class, 'datatable'])->name('users.datatable');
     Route::get('/users/data', [UserController::class, 'getData'])->name('users.data');
-    // Routes pour le profil utilisateur
-    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
-    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
-
     // Modules demandés (Infectiologie & Traitements)
     Route::prefix('infectiologie')->group(function () {
         Route::get('/pathologies', [\App\Http\Controllers\InfectiologieController::class, 'pathologies'])->name('infectiologie.pathologies');

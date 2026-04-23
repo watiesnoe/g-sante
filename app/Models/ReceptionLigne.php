@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 class ReceptionLigne extends Model
 {
+    use HasUuid;
     protected $fillable = [
         'reception_id',
         'medicament_id',
