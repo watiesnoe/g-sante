@@ -43,6 +43,11 @@ class TicketController extends Controller
                 return $ticket->nombre_prestations; 
             })
 
+            // Medecin assigné
+            ->addColumn('medecin', function($ticket){
+                return $ticket->medecin_id && $ticket->medecin ? $ticket->medecin->name : 'Non assigné'; 
+            })
+
             // Total formaté (utilise le champ total déjà en base ou l'accesseur)
             ->addColumn('total', function($ticket){
                 return number_format($ticket->total, 0, ',', ' ') . ' XOF';
@@ -78,11 +83,10 @@ class TicketController extends Controller
 
         // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
         $assurances = \App\Models\Assurance::all(); // Ajout des assurances
+        $medecins = \App\Models\User::whereIn('role', ['medecin', 'docteur'])->get();
 
         // Passer les données à la vue
-        return view('application.ticket.create', compact('prestations', 'assurances'));
-
-        //
+        return view('application.ticket.create', compact('prestations', 'assurances', 'medecins'));
     }
 
     /**
@@ -101,6 +105,7 @@ class TicketController extends Controller
             'items.*.service' => 'nullable|string', // Changé en nullable
             'description' => 'nullable|string',
             'assurance_id' => 'nullable|exists:assurances,id',
+            'medecin_id' => 'nullable|exists:users,id',
         ]);
 
         DB::beginTransaction();
@@ -128,7 +133,8 @@ class TicketController extends Controller
                     'part_patient'    => $partPatient,
                     'date_validite'=> now()->addWeek(),   // validité = 7 jours
                     'statut'       => 'en_attente',           // statut initial
-                    'user_id' => auth()->id()
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                    'medecin_id' => $request->medecin_id
                 ]);
 
             foreach ($request->items as $item) {
@@ -193,9 +199,10 @@ class TicketController extends Controller
         
         $prestations =Prestation::with('serviceMedical')->orderBy('nom')->get();
         $assurances = \App\Models\Assurance::all();
+        $medecins = \App\Models\User::whereIn('role', ['medecin', 'docteur'])->get();
 
         // Retourner la même vue que la création, mais avec les données du ticket
-        return view('application.ticket.create', compact('ticket', 'prestations', 'assurances'));
+        return view('application.ticket.create', compact('ticket', 'prestations', 'assurances', 'medecins'));
     }
 
 
@@ -223,6 +230,7 @@ class TicketController extends Controller
             'items.*.service' => 'required|string',
             'description' => 'nullable|string',
             'assurance_id' => 'nullable|exists:assurances,id',
+            'medecin_id' => 'nullable|exists:users,id',
         ]);
 
         DB::beginTransaction();
@@ -248,6 +256,7 @@ class TicketController extends Controller
                 'part_patient'    => $partPatient,
                 'date_validite' => now()->addWeek(),  // on prolonge la validité à chaque update
                 'statut'        => 'en_attente', // on remet en attente à chaque update
+                'medecin_id'    => $request->medecin_id
             ]);
 
             // On supprime les anciens items et on recrée
@@ -283,8 +292,6 @@ class TicketController extends Controller
         return $pdf->stream('ticket_'.$ticket->id.'.pdf');
         // 👉 pour télécharger automatiquement : return $pdf->download('ticket_'.$ticket->id.'.pdf');
     }
-
-
     /**
      * Remove the specified resource from storage.
      */

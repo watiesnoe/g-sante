@@ -54,6 +54,21 @@
                             </select>
                         </div>
 
+                        {{-- Médecin (Optionnel) --}}
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold"><i class="fa fa-user-md"></i> Médecin en charge (Optionnel)</label>
+                            <select class="form-select js-select2" id="medecin" name="medecin_id">
+                                <option value="">-- Assigner un médecin --</option>
+                                @foreach($medecins as $medecin)
+                                    <option value="{{ $medecin->id }}"
+                                        {{ isset($ticket) && $ticket->medecin_id == $medecin->id ? 'selected' : '' }}>
+                                        {{ $medecin->name }} {{ $medecin->prenom ? '('.$medecin->prenom.' '.$medecin->nom.')' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Sélectionnez le médecin traitant lié à la prestation si nécessaire.</small>
+                        </div>
+
                         {{-- Prestation --}}
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Prestation</label>

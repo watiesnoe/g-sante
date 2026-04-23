@@ -13,7 +13,7 @@ class Ticket extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id', 'description', 'total', 'date_validite', 'statut', 'assurance_id', 'taux_couverture', 'part_assurance', 'part_patient','user_id'];
+        'patient_id', 'description', 'total', 'date_validite', 'statut', 'assurance_id', 'taux_couverture', 'part_assurance', 'part_patient','user_id', 'medecin_id'];
 
     protected $dates = ['date_validite'];
 
@@ -65,6 +65,11 @@ class Ticket extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function medecin()
+    {
+        return $this->belongsTo(User::class, 'medecin_id');
     }
 
     // ✅ Accesseur pour le nombre de prestations

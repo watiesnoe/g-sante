@@ -21,12 +21,17 @@ return new class extends Migration
             $table->decimal('part_patient', 10, 2)->default(0);
             $table->date('date_validite')->nullable();
             $table->enum('statut', ['en_attente', 'valide', 'expire'])->default('en_attente');
+            $table->foreignId('medecin_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('tickets');
+       
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->dropForeign(['medecin_id']);
+            $table->dropColumn('medecin_id');
+        });
     }
 };

@@ -17,7 +17,7 @@
                             <tr>
                                 <th>Patient</th>
                                 <th>Âge</th>
-
+                                <th>Médecin assigné</th>
                                 <th>Heure d'arrivée</th>
                                 <th class="text-center" style="width: 150px;">Actions</th>
                             </tr>
@@ -44,6 +44,10 @@
                     {
                         data: 'age',
                         name: 'age'
+                    },
+                    {
+                        data: 'medecin',
+                        name: 'medecin'
                     },
 
                     {

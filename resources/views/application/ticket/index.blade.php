@@ -21,8 +21,9 @@
                     <table id="ticketsTable" class="table table-bordered table-striped table-vcenter w-100">
                         <thead>
                             <tr>
-
+                                <th>#</th>
                                 <th>Patient</th>
+                                <th>Médecin</th>
                                 <th>Nombre de prestations</th>
                                 <th>Total (XOF)</th>
                                 <th>Date</th>
@@ -52,6 +53,10 @@
                     {
                         data: 'patient',
                         name: 'patient'
+                    },
+                    {
+                        data: 'medecin',
+                        name: 'medecin'
                     },
                     {
                         data: 'nombre_prestations',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Connexion - Ges-Santé</title>
+    <title>Connexion - Mali Kènèya Hub</title>
     <!-- On charge Bootstrap 5 et FontAwesome pour être en harmonie avec le reste de l'application -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -145,9 +145,9 @@
     <div class="login-left">
         <div class="illustration-text">
             <div class="mb-4">
-                <i class="fas fa-heartbeat bg-white text-primary p-4 rounded-circle shadow-lg" style="font-size: 3.5rem;"></i>
+                <img src="{{ asset('image/logo/logo3.png') }}" class="shadow-lg" style="max-height: 150px; background-color: white; border-radius: 50%; padding: 10px;" alt="Centre Santé Du Mali">
             </div>
-            <h1>Ges-Santé</h1>
+            <h1>Mali Kènèya Hub</h1>
             <p>Le système de gestion hospitalière intelligent, ultra-sécurisé et innovant conçu pour simplifier votre quotidien clinique.</p>
         </div>
     </div>
@@ -157,7 +157,7 @@
         <div class="form-container">
             <div class="text-center mb-5">
                 <div class="brand-logo">
-                    <i class="fas fa-clinic-medical"></i> HealthCare
+                    <img src="{{ asset('image/logo/logo.png') }}" style="max-height: 80px;" alt="Mali Kènèya Hub">
                 </div>
                 <div class="brand-subtitle">Bienvenue ! Veuillez vous authentifier pour continuer.</div>
             </div>

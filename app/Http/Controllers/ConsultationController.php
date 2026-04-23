@@ -69,7 +69,7 @@ class ConsultationController extends Controller
     public function listeAttente(Request $request)
     {
         $today = Carbon::today();
-        $tickets = Ticket::with(['patient', 'items'])
+        $tickets = Ticket::with(['patient', 'items', 'medecin'])
             ->where('statut', 'en_attente')
             ->where('date_validite', '>=', $today)
             ->orderBy('created_at', 'asc')
@@ -82,6 +82,9 @@ class ConsultationController extends Controller
                 })
                 ->addColumn('age', function($row) {
                     return $row->patient ? $row->patient->age.' ans' : '-';
+                })
+                ->addColumn('medecin', function($row) {
+                    return $row->medecin_id && $row->medecin ? $row->medecin->name : '<span class="badge bg-secondary">Tout médecin</span>';
                 })
                 ->addColumn('motif', function($row) {
                     return $row->items->pluck('libelle')->implode(', ');
