@@ -23,7 +23,8 @@ class UniteSeeder extends Seeder
             'poudre', 'granule', 'sachet', 'dose',
 
             // Divers
-            'patch', 'inhalation', 'puff', 'suppositoire', 'tube', 'spray'
+            'patch', 'inhalation', 'puff', 'suppositoire', 'tube', 'spray', 'gélule', 'suspension', 'boite',
+            'aérosol', 'collyre', 'crème', 'injection', 'pommade', 'solution buvable'
         ];
 
         foreach ($unites as $u) {

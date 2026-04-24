@@ -19,7 +19,10 @@ class PathologiesSeeder extends Seeder
             'perfusion', 'gel', 'suppositoire', 'puff', 'patch'
         ];
         foreach ($unites as $u) {
-            DB::table('unites')->updateOrInsert(['nom' => $u]);
+            DB::table('unites')->updateOrInsert(
+                ['nom' => $u],
+                ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now]
+            );
         }
         $uId = DB::table('unites')->pluck('id', 'nom');
 
@@ -30,7 +33,10 @@ class PathologiesSeeder extends Seeder
             'Antiviraux', 'Antianémiques', 'Corticostéroïdes', 'Bronchodilatateurs'
         ];
         foreach ($familles as $f) {
-            DB::table('familles')->updateOrInsert(['nom' => $f]);
+            DB::table('familles')->updateOrInsert(
+                ['nom' => $f],
+                ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now]
+            );
         }
         $fId = DB::table('familles')->pluck('id', 'nom');
 
@@ -175,10 +181,17 @@ class PathologiesSeeder extends Seeder
             // 2. Lier Symptômes
             foreach ($p['symptomes'] as $sName) {
                 if (isset($sId[$sName])) {
-                    DB::table('maladie_symptome')->updateOrInsert([
-                        'maladie_id' => $maladieId,
-                        'symptome_id' => $sId[$sName]
-                    ]);
+                    DB::table('maladie_symptome')->updateOrInsert(
+                        [
+                            'maladie_id' => $maladieId,
+                            'symptome_id' => $sId[$sName]
+                        ],
+                        [
+                            'uuid' => (string) Str::uuid(),
+                            'created_at' => $now,
+                            'updated_at' => $now
+                        ]
+                    );
                 }
             }
 

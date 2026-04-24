@@ -25,6 +25,17 @@ class FamilleSeeder extends Seeder
             'Antidiabétiques',
             'Vitamines',
             'Vaccins',
+            'Antidouleurs',
+            'AINS',
+            'Corticoïdes',
+            'Antipaludéens',
+            'Antiacides',
+            'Anticonvulsivants',
+            'Antidépresseurs',
+            'Antiparasitaires',
+            'Antipsychotiques',
+            'Antispasmodiques',
+            'Bronchodilatateurs',
         ];
 
         foreach ($familles as $famille) {

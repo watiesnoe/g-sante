@@ -48,16 +48,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('/services', ServiceMedicalController::class);
     Route::resource('prestations', PrestationController::class);
-    Route::resource('lits', LitController::class);
+    Route::resource('lits', LitController::class)->except(['show']);
     Route::resource('salles', SalleController::class);
-    Route::resource('examens', ExamenController::class);
+    Route::resource('examens', ExamenController::class)->except(['show']);
     Route::resource('prescriptions', PrescriptionExamenController::class);
     Route::resource('reponses', ResultatExamenController::class);
     Route::get('reponses/{id}/create', [ResultatExamenController::class,'reponse'])->name('reponse.create');
-    Route::resource('unites', UniteController::class);
-    Route::resource('familles', FamilleController::class);
-    Route::resource('maladies', MaladieController::class);
-    Route::resource('symptomes', SymptomeController::class);
+    Route::resource('unites', UniteController::class)->except(['create']);
+    Route::resource('familles', FamilleController::class)->except(['create']);
+    Route::resource('maladies', MaladieController::class)->except(['create']);
+    Route::resource('symptomes', SymptomeController::class)->except(['create']);
     Route::resource('tickets', TicketController::class);
     Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
     Route::resource('consultations', ConsultationController::class);
@@ -77,7 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/rendezvous/data', [RendezvousController::class, 'getData'])->name('rendezvous.data');
     Route::get('/rendezvous/disponible', [RendezvousController::class, 'disponible'])->name('rendezvous.disponible');
     Route::get('/rendezvous/annuler', [RendezvousController::class, 'annuler'])->name('rendezvous.annuler');
-    Route::resource('rendezvous', RendezvousController::class);
+    Route::resource('rendezvous', RendezvousController::class)->except(['create']);
     Route::post('rendezvous/{rendezvous}/marquer-realise', [RendezvousController::class, 'marquerRealise'])
         ->name('rendezvous.marquerRealise');
     Route::resource('ordonnances', OrdonnanceController::class);

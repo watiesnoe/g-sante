@@ -200,6 +200,7 @@ class RendezvousController extends Controller
     // Optionnel : afficher un rendez-vous
     public function show(RendezVous $rendezvous)
     {
-        return view('rendezvous.show', compact('rendezvous'));
+        $rendezvous->load(['patient', 'medecin', 'consultation']);
+        return view('application.rendezvous.index');
     }
 }

@@ -53,12 +53,18 @@ class OrdonnanceController extends Controller
         return view('application.ordonnance.index');
     }
 
-    // Formulaire de création
     public function create()
     {
-        $consultations = Consultation::with('patient')->get();
-        $medicaments   = Medicament::all();
-        return view('ordonnances.create', compact('consultations', 'medicaments'));
+        // Les ordonnances sont créées depuis une consultation (voir ConsultationController)
+        return redirect()->route('consultations.index')
+            ->with('info', 'Les ordonnances sont créées automatiquement lors d\'une consultation.');
+    }
+
+    // Afficher une ordonnance
+    public function show(Ordonnance $ordonnance)
+    {
+        $ordonnance->load(['consultation.patient', 'consultation.medecin', 'medicaments']);
+        return view('application.ordonnance.index');
     }
 
     // Enregistrer une ordonnance

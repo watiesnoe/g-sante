@@ -52,7 +52,7 @@ class HomeController extends Controller
             'total_ordonnance'=> Ordonnance::count(),
             'total_fournisseur'=> Fournisseur::count(),
             'total_rendezvou'=> RendezVous::count(),
-            'total_ticket'=> Salle::count(),
+            'total_ticket'=> \App\Models\Ticket::count(),
             'total_medicament'=> Medicament::count(),
             'total_examens'=> Examen::count(),
             'total_lits'=> Lit::count(),
@@ -219,8 +219,8 @@ class HomeController extends Controller
                 'patients_hospitalises' => Hospitalisation::where('etat', 'en cours')->count(),
 
                 // Tickets et file d'attente
-                'total_tickets' => Salle::count(),
-                'tickets_today' => Salle::whereDate('created_at', today())->count(),
+                'total_tickets' => \App\Models\Ticket::count(),
+                'tickets_today' => \App\Models\Ticket::whereDate('created_at', today())->count(),
 
                 // Paiements et finances
                 'paiements_today' => Paiement::whereDate('created_at', today())->sum('montant_total'),

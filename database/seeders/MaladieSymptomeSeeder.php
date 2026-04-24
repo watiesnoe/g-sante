@@ -51,12 +51,23 @@ class MaladieSymptomeSeeder extends Seeder
 
         // --- MALADIES COURANTES ---
         $maladies = [
-            ['nom' => 'Paludisme',      'description' => 'Maladie parasitaire transmise par le moustique Anophèle.'],
-            ['nom' => 'Grippe',         'description' => 'Infection virale respiratoire saisonnière.'],
-            ['nom' => 'Gastro-entérite','description' => 'Inflammation de l\'estomac et des intestins.'],
-            ['nom' => 'Méningites',     'description' => 'Inflammation des méninges d\'origine bactérienne ou virale.'],
-            ['nom' => 'Tuberculose pulmonaire', 'description' => 'Infection bactérienne chronique des poumons.'],
-            ['nom' => 'Candidose systémique',   'description' => 'Infection fongique généralisée par Candida.'],
+            ['nom' => 'Paludisme simple',      'description' => 'Paludisme non compliqué.'],
+            ['nom' => 'Paludisme grave',       'description' => 'Paludisme avec signes de gravité.'],
+            ['nom' => 'Grippe',                'description' => 'Infection virale respiratoire saisonnière.'],
+            ['nom' => 'Gastro-entérite',       'description' => 'Inflammation de l\'estomac et des intestins.'],
+            ['nom' => 'Méningite',            'description' => 'Inflammation des méninges d\'origine bactérienne ou virale.'],
+            ['nom' => 'Tuberculose pulmonaire','description' => 'Infection bactérienne chronique des poumons.'],
+            ['nom' => 'Candidose systémique',  'description' => 'Infection fongique généralisée par Candida.'],
+            ['nom' => 'Pneumonie simple',      'description' => 'Infection respiratoire légère.'],
+            ['nom' => 'Pneumonie sévère',      'description' => 'Infection respiratoire grave nécessitant hospitalisation.'],
+            ['nom' => 'Hypertension artérielle', 'description' => 'Pression artérielle supérieure à la normale.'],
+            ['nom' => 'Hypertension gravidique', 'description' => 'Hypertension pendant la grossesse.'],
+            ['nom' => 'Diabète de type 2',     'description' => 'Trouble métabolique caractérisé par une hyperglycémie.'],
+            ['nom' => 'Typhoïde',              'description' => 'Fièvre typhoïde.'],
+            ['nom' => 'Prévention Drépanocytose',         'description' => 'Prévention des infections chez le drépanocytaire.'],
+            ['nom' => 'Crise Drépanocytose',              'description' => 'Traitement de la crise vaso-occlusive drépanocytaire.'],
+            ['nom' => 'VIH/SIDA',              'description' => 'Virus de l\'immunodéfiscience humaine.'],
+            ['nom' => 'Hépatite B',            'description' => 'Infection virale s\'attaquant au foie.'],
         ];
 
         foreach ($maladies as $m) {
@@ -70,10 +81,11 @@ class MaladieSymptomeSeeder extends Seeder
 
         // --- LIAISONS MALADIE ↔ SYMPTÔMES ---
         $liens = [
-            'Paludisme'            => ['Fièvre', 'Frissons', 'Céphalées', 'Courbatures', 'Fatigue', 'Nausées', 'Vomissements'],
-            'Grippe'               => ['Fièvre', 'Fatigue', 'Céphalées', 'Toux', 'Courbatures'],
-            'Gastro-entérite'      => ['Fièvre', 'Nausées', 'Vomissements', 'Diarrhée', 'Douleur thoracique', 'Perte d\'appétit'],
-            'Méningites'           => ['Fièvre', 'Céphalées', 'Raideur de la nuque', 'Photophobie', 'Vomissements', 'Fatigue'],
+            'Paludisme simple'      => ['Fièvre', 'Frissons', 'Céphalées', 'Courbatures', 'Fatigue', 'Nausées', 'Vomissements'],
+            'Paludisme grave'       => ['Fièvre', 'Vomissements', 'Fatigue', 'Ictère', 'Douleur thoracique'],
+            'Grippe'                => ['Fièvre', 'Fatigue', 'Céphalées', 'Toux', 'Courbatures'],
+            'Gastro-entérite'      => ['Fièvre', 'Nausées', 'Vomissements', 'Diarrhée', 'Perte d\'appétit'],
+            'Méningite'           => ['Fièvre', 'Céphalées', 'Raideur de la nuque', 'Photophobie', 'Vomissements', 'Fatigue'],
             'Tuberculose pulmonaire' => ['Toux', 'Hémoptysies', 'Sueurs nocturnes', 'Amaigrissement', 'Fièvre', 'Fatigue'],
             'Candidose systémique' => ['Fièvre', 'Fatigue', 'Prurit', 'Éruption cutanée'],
         ];
@@ -84,10 +96,17 @@ class MaladieSymptomeSeeder extends Seeder
             foreach ($symptomesList as $symptomNom) {
                 if (!isset($sId[$symptomNom])) continue;
 
-                DB::table('maladie_symptome')->updateOrInsert([
-                    'maladie_id' => $mId[$maladie],
-                    'symptome_id' => $sId[$symptomNom],
-                ]);
+                DB::table('maladie_symptome')->updateOrInsert(
+                    [
+                        'maladie_id' => $mId[$maladie],
+                        'symptome_id' => $sId[$symptomNom],
+                    ],
+                    [
+                        'uuid' => (string) Str::uuid(),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]
+                );
             }
         }
     }

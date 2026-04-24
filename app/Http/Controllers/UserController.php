@@ -95,7 +95,7 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $services = ServiceMedical::where('statut', 'actif')->get();
+        $services = ServiceMedical::orderBy('nom')->get();
         $roles = [
             'admin' => 'Administrateur',
             'medecin' => 'Médecin',

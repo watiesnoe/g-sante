@@ -3,8 +3,8 @@
     <div class="bg-header-dark">
         <div class="content-header bg-white-5">
             <a class="fw-semibold text-white tracking-wide d-flex align-items-center" href="{{ route('dashboard') }}">
-                <img src="{{ asset('image/logo/logo.png') }}" class="smini-visible" style="max-height: 30px; border-radius: 50%;" alt="Logo">
-                <img src="{{ asset('image/logo/logo.png') }}" class="smini-hidden ms-2 px-2 py-1 rounded" style="max-height: 50px; background-color: transparent;" alt="Mali Kènèya Hub">
+                <img src="{{ asset('image/logo/logo1.png') }}" class="smini-hidden ms-2 px-2 py-1 rounded"
+                    style="max-height: 50px; background-color: transparent;" alt="Mali Kènèya Hub">
             </a>
             <div class="d-flex align-items-center gap-1">
                 <div class="dropdown">

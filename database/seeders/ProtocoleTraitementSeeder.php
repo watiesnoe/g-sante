@@ -15,7 +15,7 @@ class ProtocoleTraitementSeeder extends Seeder
         $protocoles = [
             // ==================== PALUDISME ====================
             [
-                'maladie_id' => $maladieIds['Paludisme'],
+                'maladie_id' => $maladieIds['Paludisme simple'],
                 'titre' => 'Traitement du paludisme non compliqué à P. falciparum',
                 'signes' => 'Fièvre, céphalées, fatigue, frissons, sueurs, douleurs musculaires et articulaires',
                 'diagnostics' => 'Goutte épaisse ou test de diagnostic rapide (TDR) positif',
@@ -30,7 +30,7 @@ class ProtocoleTraitementSeeder extends Seeder
                 'uuid' => (string) Str::uuid(), 'updated_at' => now()
             ],
             [
-                'maladie_id' => $maladieIds['Paludisme'],
+                'maladie_id' => $maladieIds['Paludisme grave'],
                 'titre' => 'Traitement du paludisme grave (après artésunate IV)',
                 'signes' => 'Altération de la conscience, détresse respiratoire, convulsions, choc, ictère, hémoglobinurie',
                 'diagnostics' => 'Goutte épaisse positive + signes de gravité',
@@ -47,7 +47,7 @@ class ProtocoleTraitementSeeder extends Seeder
             
             // ==================== INFECTIONS RESPIRATOIRES ====================
             [
-                'maladie_id' => $maladieIds['Infection respiratoire'],
+                'maladie_id' => $maladieIds['Pneumonie simple'],
                 'titre' => 'Pneumonie sans signes de gravité',
                 'signes' => 'Toux, fièvre, tachypnée, signes de lutte respiratoire (tirage, gémissements)',
                 'diagnostics' => 'Examen clinique, saturation O2 > 90%, pas de signes de détresse respiratoire sévère',
@@ -62,7 +62,7 @@ class ProtocoleTraitementSeeder extends Seeder
                 'uuid' => (string) Str::uuid(), 'updated_at' => now()
             ],
             [
-                'maladie_id' => $maladieIds['Infection respiratoire'],
+                'maladie_id' => $maladieIds['Pneumonie sévère'],
                 'titre' => 'Pneumonie sévère (hospitalisation)',
                 'signes' => 'Détresse respiratoire sévère, hypoxémie (SpO2 < 90%), cyanose, impossibilité de boire',
                 'diagnostics' => 'Examen clinique + saturation O2, radiographie thoracique',
@@ -94,7 +94,7 @@ class ProtocoleTraitementSeeder extends Seeder
                 'uuid' => (string) Str::uuid(), 'updated_at' => now()
             ],
             [
-                'maladie_id' => $maladieIds['Hypertension artérielle'],
+                'maladie_id' => $maladieIds['Hypertension gravidique'],
                 'titre' => 'Hypertension gravidique / Pré-éclampsie',
                 'signes' => 'PA ≥ 140/90 mmHg après 20 semaines de grossesse, protéinurie, œdèmes',
                 'diagnostics' => 'Mesure TA, bandelette urinaire (protéinurie), bilan biologique',
@@ -162,7 +162,7 @@ class ProtocoleTraitementSeeder extends Seeder
             
             // ==================== DRÉPANOCYTOSE ====================
             [
-                'maladie_id' => $maladieIds['Drépanocytose'],
+                'maladie_id' => $maladieIds['Prévention Drépanocytose'],
                 'titre' => 'Prévention des infections chez le drépanocytaire',
                 'signes' => 'Anémie hémolytique, crises vaso-occlusives douloureuses, asplénie fonctionnelle',
                 'diagnostics' => 'Électrophorèse de l\'hémoglobine (HbS > 50%)',
@@ -177,7 +177,7 @@ class ProtocoleTraitementSeeder extends Seeder
                 'uuid' => (string) Str::uuid(), 'updated_at' => now()
             ],
             [
-                'maladie_id' => $maladieIds['Drépanocytose'],
+                'maladie_id' => $maladieIds['Crise Drépanocytose'],
                 'titre' => 'Traitement de la crise vaso-occlusive drépanocytaire',
                 'signes' => 'Douleurs osseuses, articulaires, abdominales ou thoraciques intenses, fièvre possible',
                 'diagnostics' => 'Examen clinique, NFS, bilan inflammatoire',
@@ -244,6 +244,13 @@ class ProtocoleTraitementSeeder extends Seeder
             ],
         ];
         
-        DB::table('protocole_traitements')->insert($protocoles);
+        foreach ($protocoles as $p) {
+            $mid = $p['maladie_id'];
+            unset($p['maladie_id']);
+            DB::table('protocole_traitements')->updateOrInsert(
+                ['maladie_id' => $mid],
+                $p
+            );
+        }
     }
 }

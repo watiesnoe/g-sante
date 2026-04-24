@@ -171,7 +171,7 @@ class InfectiologieSeeder extends Seeder
         // Protocoles infectiologie
         $protocoles = [
             [
-                'maladie' => 'Méningites',
+                'maladie' => 'Méningite',
                 'description' => 'Infection des méninges d’origine bactérienne ou virale, urgence thérapeutique.',
                 'symptomes' => ['Fièvre', 'Céphalées', 'Photophobie', 'Raideur de la nuque'],
                 'protocole' => [
