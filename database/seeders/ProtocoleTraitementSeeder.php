@@ -162,7 +162,7 @@ class ProtocoleTraitementSeeder extends Seeder
             
             // ==================== DRÉPANOCYTOSE ====================
             [
-                'maladie_id' => $maladieIds['Prévention Drépanocytose'],
+                'maladie_id' => $maladieIds['Drépanocytose'],
                 'titre' => 'Prévention des infections chez le drépanocytaire',
                 'signes' => 'Anémie hémolytique, crises vaso-occlusives douloureuses, asplénie fonctionnelle',
                 'diagnostics' => 'Électrophorèse de l\'hémoglobine (HbS > 50%)',
@@ -177,7 +177,7 @@ class ProtocoleTraitementSeeder extends Seeder
                 'uuid' => (string) Str::uuid(), 'updated_at' => now()
             ],
             [
-                'maladie_id' => $maladieIds['Crise Drépanocytose'],
+                'maladie_id' => $maladieIds['Drépanocytose'],
                 'titre' => 'Traitement de la crise vaso-occlusive drépanocytaire',
                 'signes' => 'Douleurs osseuses, articulaires, abdominales ou thoraciques intenses, fièvre possible',
                 'diagnostics' => 'Examen clinique, NFS, bilan inflammatoire',
@@ -244,13 +244,6 @@ class ProtocoleTraitementSeeder extends Seeder
             ],
         ];
         
-        foreach ($protocoles as $p) {
-            $mid = $p['maladie_id'];
-            unset($p['maladie_id']);
-            DB::table('protocole_traitements')->updateOrInsert(
-                ['maladie_id' => $mid],
-                $p
-            );
-        }
+        DB::table('protocole_traitements')->insert($protocoles);
     }
 }

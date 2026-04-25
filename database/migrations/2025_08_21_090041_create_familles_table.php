@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->string('nom')->unique();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

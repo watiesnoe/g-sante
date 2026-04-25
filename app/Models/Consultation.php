@@ -13,7 +13,7 @@ class Consultation extends Model {
     protected $fillable = [
         'patient_id','medecin_id','ticket_id','protocole_id','date_consultation',
         'motif','diagnostic','notes','poids','temperature','tension',
-        'taille','imc','groupe_sanguin','adresse_patient','antecedents','maladie_id',
+        'taille','imc','groupe_sanguin','adresse_patient','maladie_id',
         'grossesse_id'
     ];
 
@@ -75,5 +75,9 @@ class Consultation extends Model {
 
     public function suivis() {
         return $this->hasMany(SuiviTraitement::class);
+    }
+
+    public function suggestions() {
+        return $this->hasMany(ConsultationSuggestion::class);
     }
 }

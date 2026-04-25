@@ -10,9 +10,15 @@ return new class extends Migration
     {
         Schema::create('consultation_maladie', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique();
             $table->foreignId('consultation_id')->constrained()->onDelete('cascade');
             $table->foreignId('maladie_id')->constrained()->onDelete('cascade');
+            $table->enum('type', ['confirmé', 'suggéré', 'écarté'])->default('suggéré');
+            $table->integer('score')->nullable()->comment('Score de pertinence pour les suggestions');
+            $table->string('niveau_confiance')->nullable()->comment('ex: élevé, moyen, faible');
+            $table->timestamps(); // ✅ AJOUTÉ
+            
+            // Éviter les doublons
+            $table->unique(['consultation_id', 'maladie_id']);
         });
     }
 

@@ -11,12 +11,13 @@ return new class extends Migration
         Schema::create('consultations', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->foreignId('ticket_id')
-                ->nullable()
-                ->constrained('tickets')
-                ->nullOnDelete();
+            $table->foreignId('ticket_id')->nullable()->constrained('tickets')->nullOnDelete();
             $table->foreignId('patient_id')->constrained()->onDelete('cascade');
             $table->foreignId('medecin_id')->constrained('users')->onDelete('cascade');
+            // protocole_id ajouté : FK vers protocole_traitements (créée avant)
+            $table->unsignedBigInteger('protocole_id')->nullable();
+            // maladie_id ajouté : FK dénormalisée (maladie principale de la consultation)
+            $table->unsignedBigInteger('maladie_id')->nullable();
             $table->dateTime('date_consultation')->useCurrent();
             $table->string('motif')->nullable();
             $table->text('diagnostic')->nullable();
@@ -26,10 +27,11 @@ return new class extends Migration
             $table->string('tension')->nullable();
             $table->float('taille')->nullable();
             $table->float('imc')->nullable();
-            $table->foreignId('maladie_id')->constrained()->onDelete('cascade');
             $table->string('groupe_sanguin')->nullable();
             $table->string('adresse_patient')->nullable();
             $table->text('antecedents')->nullable();
+            // grossesse_id déclaré sans FK ici — la contrainte est ajoutée dans la migration maternité
+            // qui crée la table grossesses en premier
             $table->unsignedBigInteger('grossesse_id')->nullable();
             $table->timestamps();
         });

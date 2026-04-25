@@ -66,14 +66,35 @@ class InfectiologieController extends Controller
         $request->validate([
             'maladie_id' => 'required|exists:maladies,id',
             'titre' => 'required|string',
+            'medicaments_ids' => 'nullable|array',
+            'medicaments_ids.*' => 'exists:medicaments,id'
         ]);
 
-        ProtocoleTraitement::updateOrCreate(
+        $protocole = ProtocoleTraitement::updateOrCreate(
             ['maladie_id' => $request->maladie_id],
-            $request->except('_token')
+            $request->except(['_token', 'medicaments_ids'])
         );
 
+        // Synchronisation des médicaments dans la table pivot
+        if ($request->has('medicaments_ids')) {
+            $syncData = [];
+            foreach ($request->medicaments_ids as $medId) {
+                $syncData[$medId] = [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'principal',
+                    'posologie' => $request->posologie_principale ?? 'Selon protocole',
+                    'duree' => '7 jours'
+                ];
+            }
+            $protocole->medicaments()->sync($syncData);
+        }
+
         return redirect()->back()->with('success', 'Protocole expert enregistré avec succès.');
+    }
+
+    public function getMedicaments()
+    {
+        return response()->json(\App\Models\Medicament::select('id', 'nom')->get());
     }
 
     public function destroyProtocole($id)
@@ -114,7 +135,7 @@ class InfectiologieController extends Controller
 
     public function getProtocole($maladieId)
     {
-        $protocoles = ProtocoleTraitement::where('maladie_id', $maladieId)->get();
+        $protocoles = ProtocoleTraitement::with('medicaments')->where('maladie_id', $maladieId)->get();
         if ($protocoles->count() > 0) {
             return response()->json([
                 'success' => true,

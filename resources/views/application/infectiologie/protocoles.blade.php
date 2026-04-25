@@ -141,6 +141,18 @@
                         </div>
 
                         <div class="col-12">
+                            <div class="card border-0 shadow-sm p-3">
+                                <h6 class="text-info border-bottom pb-2 mb-3"><i class="fas fa-capsules me-1"></i> Sélection des médicaments (Stock & Inventaire)</h6>
+                                <label class="form-label small">Choisissez les médicaments enregistrés dans le système</label>
+                                <select name="medicaments_ids[]" class="form-control js-select2" multiple="multiple" data-placeholder="Rechercher des médicaments...">
+                                    @foreach(\App\Models\Medicament::orderBy('nom')->get() as $med)
+                                        <option value="{{ $med->id }}">{{ $med->nom }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
                             <label class="form-label fw-bold">Remarques & Observations particulières</label>
                             <textarea name="remarques" class="form-control" rows="2" placeholder="Contre-indications, durée si terrain particulier..."></textarea>
                         </div>
@@ -159,7 +171,7 @@
         $(document).ready(function() {
             $('#protocoleTable').DataTable({
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
+                
                     paginate: {
                         previous: '<i class="fa fa-chevron-left"></i>',
                         next: '<i class="fa fa-chevron-right"></i>'
@@ -172,6 +184,13 @@
                 pageLength: 10,
                 order: [[0, 'asc']]
             });
+
+            if ($('.js-select2').length) {
+                $('.js-select2').select2({
+                    dropdownParent: $('#modalProtocole'),
+                    width: '100%'
+                });
+            }
         });
     </script>
 @endsection

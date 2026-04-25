@@ -59,14 +59,24 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Ajouter la contrainte à la table consultations
+        // Ajouter les contraintes FK à la table consultations
+        // (grossesses, maladies, protocole_traitements existent maintenant)
         Schema::table('consultations', function (Blueprint $table) {
             $table->foreign('grossesse_id')->references('id')->on('grossesses')->onDelete('set null');
+            $table->foreign('maladie_id')->references('id')->on('maladies')->onDelete('set null');
+            $table->foreign('protocole_id')->references('id')->on('protocole_traitements')->onDelete('set null');
         });
     }
 
     public function down(): void
     {
+        // Supprimer les FK avant de dropper les tables
+        Schema::table('consultations', function (Blueprint $table) {
+            $table->dropForeign(['grossesse_id']);
+            $table->dropForeign(['maladie_id']);
+            $table->dropForeign(['protocole_id']);
+        });
+
         Schema::dropIfExists('consultations_prenatales');
         Schema::dropIfExists('grossesses');
         Schema::dropIfExists('suivi_traitements');

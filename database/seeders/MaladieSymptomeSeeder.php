@@ -64,8 +64,7 @@ class MaladieSymptomeSeeder extends Seeder
             ['nom' => 'Hypertension gravidique', 'description' => 'Hypertension pendant la grossesse.'],
             ['nom' => 'Diabète de type 2',     'description' => 'Trouble métabolique caractérisé par une hyperglycémie.'],
             ['nom' => 'Typhoïde',              'description' => 'Fièvre typhoïde.'],
-            ['nom' => 'Prévention Drépanocytose',         'description' => 'Prévention des infections chez le drépanocytaire.'],
-            ['nom' => 'Crise Drépanocytose',              'description' => 'Traitement de la crise vaso-occlusive drépanocytaire.'],
+            ['nom' => 'Drépanocytose',         'description' => 'Maladie génétique de l\'hémoglobine.'],
             ['nom' => 'VIH/SIDA',              'description' => 'Virus de l\'immunodéfiscience humaine.'],
             ['nom' => 'Hépatite B',            'description' => 'Infection virale s\'attaquant au foie.'],
         ];

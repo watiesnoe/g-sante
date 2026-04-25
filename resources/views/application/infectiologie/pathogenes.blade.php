@@ -184,10 +184,8 @@
         overflow: hidden;
     }
 </style>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+@endsection
+@section('scripts')
 <script>
 $(document).ready(function() {
     if ($.fn.DataTable.isDataTable('#pathogensTable')) {
@@ -196,7 +194,7 @@ $(document).ready(function() {
     
     var table = $('#pathogensTable').DataTable({
         "language": {
-            "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/fr-FR.json"
+//"url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/fr-FR.json"
         },
         "pageLength": 10,
         "dom": '<"d-flex justify-content-between align-items-center mb-3"f>t<"d-flex justify-content-between align-items-center p-4"ip>',
@@ -206,13 +204,7 @@ $(document).ready(function() {
     });
 
     // Custom search implementation
-    if ($('#customSearch').length === 0) {
-        $('<div class="input-group" style="width: 300px;">' +
-            '<span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>' +
-            '<input type="text" class="form-control border-0 bg-light rounded-end" placeholder="Rechercher un germe ou spécialité..." id="customSearch">' +
-          '</div>').appendTo('#table-search-container');
-    }
-
+ 
     $('#customSearch').on('keyup', function() {
         table.search(this.value).draw();
     });

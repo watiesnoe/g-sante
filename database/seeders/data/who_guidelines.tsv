@@ -1,0 +1,180 @@
+N°	Pathologie / Indication	Traitement	Médicament	Posologie (enfant)	Symptômes
+1	Anesthésie générale	Anesthésique général	Halothane (inhalation)	Selon protocole	Perte de conscience, analgésie, amnésie
+2	Anesthésie générale	Anesthésique général	Isoflurane (inhalation)	Selon protocole	Perte de conscience, analgésie, amnésie
+3	Anesthésie générale	Oxygénothérapie	Oxygène (inhalation)	Selon besoin clinique	Détresse respiratoire sévère
+4	Anesthésie générale	Anesthésique général IV	Kétamine (IV/IM)	Selon protocole	Perte de conscience, analgésie, amnésie
+5	Anesthésie locale	Anesthésique local	Lidocaïne 1-2% (injection)	IV: 2 mg/kg; IM: 8-10 mg/kg	Douleur localisée, perte de sensibilité
+6	Prémédication	Anticholinergique	Atropine (IV/IM/SC)	Selon protocole	Bradycardie, hypersalivation
+7	Sédation consciencieuse	Sédatif	Midazolam (oral/buvable)	Selon poids (max 2-3 mg/kg)	Anxiété, agitation
+8	Douleur légère à modérée	Antalgique antipyrétique	Paracétamol (oral)	Selon poids (max 5 mg/kg)	Céphalées, douleurs dentaires, myalgies
+9	Douleur modérée (inflammatoire)	AINS	Ibuprofène (>3 mois) (oral)	Selon protocole dentaire	Douleur inflammatoire, fièvre
+10	Rhumatisme articulaire aigu	Anti-inflammatoire	Acide acétylsalicylique (oral)	0,01-0,02 mg/kg	Arthrite, cardite, chorée, érythème marginé
+11	Maladie de Kawasaki	Anti-inflammatoire	Acide acétylsalicylique (oral)	Oral: 0,3-0,5 mg/kg (max 20 mg)	Fièvre >5j, conjonctivite, éruption, adénopathie
+12	Douleur sévère	Opioïde	Morphine (oral/injection)	0,1-0,2 mg/kg	Douleur intense (cancer, post-op, traumatisme)
+13	Douleur neuropathique	Antidépresseur tricyclique	Amitriptyline (oral)	10-15 mg/kg toutes les 6 heures	Brûlures, décharges électriques, allodynie
+14	Réaction allergique (urticaire)	Antihistaminique	Chlorphénamine (>1 an) (oral/buvable)	5-10 mg/kg toutes les 6-8 h	Urticaire, prurit, érythème
+15	Anaphylaxie (choc)	Sympathomimétique	Épinéphrine (Adrénaline) (IM)	80-100 mg/kg/jour (max 4 g/jour)	Hypotension, dyspnée, œdème de Quincke, urticaire généralisé
+16	Allergie sévère / Œdème cérébral	Corticostéroïde	Dexaméthasone (IV/oral)	Selon protocole (doses élevées puis faibles)	Œdème cérébral, hypertension intracrânienne
+17	Réaction allergique sévère	Corticostéroïde	Hydrocortisone (IV)	Injection: 0,1-0,2 mg/kg/4h; Oral: 0,2-0,5 mg/kg/4h	Bronchospasme, hypotension
+18	Inflammation allergique chronique	Corticostéroïde oral	Prednisolone (oral)	0,5-1 mg/kg toutes les 12 heures	Asthme allergique, dermatite atopique
+19	Intoxication médicamenteuse aiguë	Adsorbant	Charbon activé (oral)	0,5-2 mg/kg/jour (dose unique le soir)	Ingestion de médicament toxique
+20	Intoxication au paracétamol	Antidote	Acétylcystéine (oral/IV)	0,1-0,2 mg/kg toutes les 6-8 h	Nausées, vomissements, douleurs abdominales, hépatotoxicité
+21	Intoxication aux organophosphorés	Anticholinergique	Atropine (IV)	0,01 mg/kg (max 0,5 mg), répéter si besoin	Salivation, larmoiement, diarrhée, convulsions
+22	Intoxication au sulfate de magnésium	Antidote calcique	Gluconate de calcium (IV)	0,15-0,6 mg/kg/jour	Hypotension, dépression respiratoire, aréflexie
+23	Intoxication aux opioïdes	Antagoniste des opioïdes	Naloxone (IV)	4 mg/kg (max 100 mg)	Dépression respiratoire, myosis, coma
+24	Intoxication aux métaux lourds (Pb, As, Hg)	Chélateur	Dimercaprol (BAL) (IM)	0,5-2 mg/kg/jour	Encéphalopathie, neuropathie, douleurs abdominales
+25	Intoxication au plomb	Chélateur oral	Succimer (oral)	1 g/kg (25-50 g chez l'enfant)	Irritabilité, douleurs abdominales, encéphalopathie
+26	Surcharge en fer (thalassémie)	Chélateur du fer	Déféroxamine (SC/IV)	Dose de charge : 150 mg/kg, puis 50 mg/kg/4h x 3	Cardiopathie, hépatopathie, diabète (post-transfusionnel)
+27	Épilepsie (crises partielles)	Antiépileptique	Carbamazépine (oral)	0,02-0,05 mg/kg, répéter jusqu'à atropinisation	Crises focales (motrices, sensorielles, automatismes)
+28	Épilepsie (crises généralisées tonico-cloniques)	Antiépileptique	Phénytoïne (oral)	0,5 ml/kg (max 10 ml) IV lente	Perte de conscience, rigidité, convulsions
+29	Épilepsie (crises généralisées)	Antiépileptique	Phénobarbital (oral)	5-10 microgrammes/kg, répéter si besoin	Crises tonico-cloniques
+30	Épilepsie (absence, myoclonies)	Antiépileptique	Acide valproïque (Valproate) (oral)	3-5 mg/kg toutes les 4-6 h	Absences, myoclonies
+31	Épilepsie (crises d'absence typique)	Antiépileptique	Éthosuximide (oral)	10 mg/kg toutes les 8 h x 5j, puis 10 mg/kg/12h x 14j	Absences brèves (<10s), automatismes simples
+32	État de mal convulsif	Anticonvulsivant (rectal)	Diazépam (gel/solution rectale)	20-40 mg/kg/jour (SC ou IV)	Crises répétées sans reprise de conscience (≥5 min)
+33	État de mal convulsif	Anticonvulsivant (IV)	Lorazépam (IV)	5-10 mg/kg/jour, augmenter jusqu'à 15-20 mg/kg/jour	Convulsions prolongées (>10 min)
+34	Ascaridiose (Ascaris)	Anthelminthique	Albendazole (oral)	4-7 mg/kg/jour (doses ajustées)	Douleurs abdominales, nausées, Loeffler (toux)
+35	Oxyurose (Enterobius)	Anthelminthique	Mebendazole (oral)	2-3 mg/kg/jour (dose unique le soir)	Prurit anal (nocturne), irritabilité
+36	Oxyurose	Anthelminthique	Pyrantel (oral)	10-15 mg/kg/jour, augmenter jusqu'à 30 mg/kg/jour	Prurit anal
+37	Trichocéphalose (Trichuris)	Anthelminthique	Albendazole (oral)	15-20 mg/kg/jour (max 1-1,5 g/jour)	Diarrhée (parfois sanglante), prolapsus rectal
+38	Téniasis (Taenia)	Anticestode	Praziquantel (oral)	0,5 mg/kg (max 10 mg)	Émission de segments du ver, douleurs abdominales
+39	Hyménolépiase (H. nana)	Anticestode	Praziquantel (oral)	0,05-0,1 mg/kg (max 4 mg)	Diarrhée, douleurs abdominales
+40	Filariose lymphatique	Antifilarien	Diéthylcarbamazine (DEC) (oral)	400 mg dose unique (>2 ans)	Lymphœdème, éléphantiasis, hydrocèle
+41	Onchocercose	Antifilarien	Ivermectine (oral)	100 mg dose unique, répéter à 15 jours	Prurit, nodules sous-cutanés, cécité (rivière)
+42	Schistosomiase	Antischistosomal	Praziquantel (oral)	10 mg/kg dose unique	Hématurie (urinaire), hépatosplénomégalie (intestinale)
+43	Fasciolose	Antitrématode	Triclabendazole (oral)	400 mg OD pendant 3 jours	Douleurs abdominales, fièvre, hépatomégalie
+44	Angine streptococcique	Pénicilline	Amoxicilline (oral)	5-10 mg/kg dose unique	Mal de gorge, fièvre, adénopathies cervicales
+45	Angine streptococcique (prophylaxie RAA)	Pénicilline retard	Benzathine benzylpénicilline (IM)	500 mg-2 g selon âge	Antécédents de RAA
+46	Otite moyenne aiguë	Pénicilline	Amoxicilline (oral)	6 mg/kg/jour pendant 12 jours	Otalgie, fièvre, irritabilité
+47	Otite moyenne (échec)	Pénicilline + inhibiteur	Amoxicilline + acide clavulanique (oral)	150 microgrammes/kg dose unique	Persistance des symptômes
+48	Pneumonie (non grave)	Pénicilline	Amoxicilline (oral)	40 mg/kg dose unique	Toux, fièvre, tachypnée
+49	Méningite bactérienne	Céphalosporine 3G	Ceftriaxone (IV)	10 mg/kg dose unique	Fièvre, céphalées, raideur de nuque, troubles de conscience
+50	Méningite néonatale	Aminoside + Pénicilline	Ampicilline + Gentamicine (IV)	25-50 mg/kg/jour pendant 10 jours	Fièvre ou hypothermie, léthargie, refus de téter, convulsions
+51	Septicémie néonatale	Bithérapie IV	Ampicilline + Gentamicine (IV)	<30 kg: 600 000 UI; >30 kg: 1,2 MUI	Signes non spécifiques (léthargie, instabilité thermique, bradycardie)
+52	Infection urinaire (fille)	Sulfamide	Co-trimoxazole (SMX+TMP) (oral)	40-50 mg/kg/jour pendant 7-10 jours	Brûlures mictionnelles, pollakiurie, fièvre
+53	Cystite aiguë	Nitrofurane	Nitrofurantoïne (oral)	20-40 mg/kg/jour (amoxicilline)	Dysurie, pollakiurie, urines troubles
+54	Impétigo	Antibiotique topique	Mupirocine (pommade)	30-40 mg/kg/jour pendant 5-7 jours	Vésicules puis croûtes jaune miel (visage, membres)
+55	Infection staphylococcique cutanée	Pénicilline anti-staphylococcique	Cloxacilline (oral/IV)	50-100 mg/kg/jour (max 4 g)	Furoncles, abcès, cellulite
+56	Infection à Clostridium (anaérobie)	Nitro-imidazolé	Métronidazole (oral/IV)	Ampicilline: 100-200 mg/kg/jour; Gentamicine: 5-7,5 mg/kg/jour	Diarrhée post-antibiotique (C. difficile), gangrène gazeuse
+57	Choléra	Cycline (>8 ans)	Doxycycline (oral)	100 mg/kg dose unique	Diarrhée aqueuse profuse (eau de riz), déshydratation rapide
+58	Peste	Aminoside	Gentamicine (IV/IM)	Selon poids et âge	Fièvre élevée, adénopathies douloureuses (bubon), septicémie
+59	Brucellose	Cycline + Rifamycine	Doxycycline + Rifampicine (oral)	8-10 mg/kg/jour (TMP)	Fièvre ondulante, sueurs, arthralgies, hépatosplénomégalie
+60	Typhoïde (fièvre typhoïde)	Fluoroquinolone	Ciprofloxacine (oral)	5-7 mg/kg/jour pendant 5-7 jours	Fièvre progressive, syndrome abdominal, roséole
+61	Shigellose	Fluoroquinolone	Ciprofloxacine (oral)	3 applications/jour pendant 5-7 jours	Diarrhée sanglante (dysenterie), ténesme, fièvre
+62	Coqueluche	Macrolide	Érythromycine (oral)	Oral: 50-100 mg/kg/jour; IV: 50-100 mg/kg/jour	"Quintes de toux, reprise inspiratoire ""coq"", vomissements"
+63	Diphtérie	Macrolide + Antitoxine	Érythromycine + Antitoxine diphtérique (IV)	15-30 mg/kg/jour (en 2-3 prises)	"Fausse membrane pharyngée, dysphonie, adénopathies ""cou taureau"")"
+64	Trachome (conjonctivite chronique)	Macrolide (oral)	Azithromycine (oral)	2-4 mg/kg dose unique	Conjonctivite folliculaire, évolution vers cécité
+65	Syphilis	Pénicilline retard	Benzathine benzylpénicilline (IM)	Gentamicine: 5-7,5 mg/kg/jour	Chancre (primaire), rash (secondaire), lésions tardives
+66	Infections nosocomiales (SARM)	Glycopeptide	Vancomycine (IV)	Doxycycline: 4 mg/kg/jour; Rifampicine: 15-20 mg/kg/jour	Infections à staphylocoque résistant, septicémie
+67	Lèpre paucibacillaire (PB)	Blister OMS (multithérapie)	Dapsone + Rifampicine (oral)	15-20 mg/kg/jour pendant 7-14 jours	Hypopigmentation (ou érythémateuse), anesthésie de la plaque
+68	Lèpre multibacillaire (MB)	Blister OMS (multithérapie)	Dapsone + Rifampicine + Clofazimine (oral)	15-20 mg/kg/jour pendant 3-5 jours	Nombreuses lésions, nodules, infiltration diffuse
+69	Tuberculose (pulmonaire)	Quadrithérapie (associations fixes)	Isoniazide + Rifampicine + Pyrazinamide + Éthambutol (oral)	40-50 mg/kg/jour pendant 14 jours	Toux >3 semaines, fièvre, sueurs nocturnes, amaigrissement
+70	Tuberculose latente	Monothérapie (préventive)	Isoniazide (oral)	Selon protocole	Asymptomatique, IDR positive
+71	Tuberculose multirésistante (MDR-TB)	2ème ligne (selon antibiogramme)	Amikacine, Ofloxacine, Éthionamide, Cyclosérine (oral/IV)	20 mg/kg dose unique	Non-réponse au traitement de 1ère ligne
+72	Candidose oropharyngée (muguet)	Antifongique topique	Nystatine (suspension buvable)	1 application x 2/jour x 7 jours	Plaques blanches buccales, douleur, dysphagie
+73	Candidose œsophagienne	Antifongique systémique	Fluconazole (oral)	Dose unique selon âge et stade	Dysphagie, odynophagie, douleurs rétrosternales
+74	Cryptococcose (neuroméningée)	Amphotéricine B + Flucytosine (IV puis oral)	Ampho B + Flucytosine (induction); Fluconazole (entretien)	50 000 UI/kg/12h x 10 jours	Méningite subaiguë, céphalées, fièvre, troubles visuels
+75	Teignes (tinea capitis)	Antifongique systémique	Griséofulvine (oral)	125-250 mg dose unique	Alopécie, squames, plaques (sur cuir chevelu)
+76	Dermatophytose cutanée	Antifongique topique	Terbinafine (crème)	40-60 mg/kg/jour en 3-4 perfusions	Lésions annulaires, prurit, squames
+77	Leishmaniose viscérale (Kala-azar)	Antimonié ou Amphotéricine B	Amphotéricine B liposomale (IV)	Dapsone: 1-2 mg/kg/jour; Rifampicine: 10-15 mg/kg/mois	Fièvre prolongée, splénomégalie, amaigrissement, anémie
+78	Sporotrichose	Antifongique oral	Iodure de potassium (solution saturée)	Selon blister pédiatrique	Nodules sous-cutanés, adénopathies (lymphatique)
+79	Herpès simplex (HSV)	Antiviral	Aciclovir (oral)	H: 10 mg/kg; R: 15 mg/kg; Z: 35 mg/kg; E: 20 mg/kg (quotidien)	Vésicules douloureuses (lèvres, génitales), récurrences
+80	Zona (Herpès zoster)	Antiviral	Aciclovir (oral)	10 mg/kg/jour pendant 6-9 mois	Rash vésiculaire douloureux (métamérique), névralgie post-zostérienne
+81	Grippe (H1N1)	Antiviral	Oseltamivir (oral)	Selon protocole spécialisé	Fièvre, toux, myalgies, asthénie, signes respiratoires
+82	VIH (nourrisson)	ART 2 NRTI + 1 NNRTI	Zidovudine (AZT) + Lamivudine (3TC) + Névirapine (NVP) (oral)	100 000 UI/ml: 2-5 ml 4x/jour	Infections opportunistes, retard de croissance
+83	VIH (enfant >3 ans ou >10 kg)	ART 2 NRTI + 1 NNRTI	Éfavirenz (EFZ) (oral)	1,25-2,5 ml 4x/jour	Immunodéficience, infections opportunistes
+84	VIH (boosté par IP)	ART (2 NRTI + IP boosté)	Atazanavir + Ritonavir (oral)	3-6 mg/kg/jour (1x/jour)	Échec 1ère ligne, résistance aux NNRTI
+85	VIH (association fixe)	ART (association fixe)	Lopinavir + Ritonavir (LPV/r) (oral)	Ampho B: 0,7-1 mg/kg/jour; Flucytosine: 100 mg/kg/jour	Simplification de l'ART
+86	PTME (prévention mère-enfant)	ART postnatal	Zidovudine (AZT) (oral)	6-12 mg/kg/jour	Nouveau-né de mère VIH+
+87	Amibiase intestinale	Nitro‑imidazolé + Amibiocides	Métronidazole + Diloxanide (oral)	10-20 mg/kg/jour (min 6 semaines)	Diarrhée glairo‑sanglante, douleurs abdominales, ténesme
+88	Giardiase	Nitro‑imidazolé	Métronidazole (oral)	1-2 applications/jour x 1-2 semaines	Diarrhée aqueuse, ballonnement, douleurs épigastriques
+89	Paludisme non compliqué (P. falciparum)	ACT	Artéméther + Luméfantrine (AL) (oral)	15-30 mg/kg (dose totale)	Fièvre, céphalées, courbatures, anémie
+90	Paludisme grave (pré-hospitalier)	Artésunate rectal (pré‑transfert)	Artésunate (capsule rectale)	Solution saturée : 1-5 ml 3x/jour	Prostration, troubles de conscience, convulsions, anémie sévère
+91	Paludisme grave (hospitalier)	Artésunate IV	Artésunate (IV)	80 mg/kg/jour (max 3,2 g) en 4 prises x 5-7 jours	Paludisme grave documenté
+92	Paludisme grave (alternative)	Quinine IV	Quinine (perfusion)	80 mg/kg/jour (max 3,2 g) en 4 prises x 7 jours	Idem (si artésunate non disponible)
+93	Paludisme à P. vivax	Chloroquine (traitement)	Chloroquine (oral)	<15 kg: 30 mg 2x/jour; 15-23 kg: 45 mg 2x/jour; >23 kg: 60 mg 2x/jour	Fièvre, accès paroxystiques (48h)
+94	P. vivax / P. ovale (guérison radicale)	Primaquine	Primaquine (oral)	Selon tableaux de posologies (mg/kg selon poids)	Risque de rechute hépatique
+95	Prophylaxie paludisme (>5 kg)	Méfloquine	Méfloquine (oral)	15-25 kg: 200 mg/jour; 25-35 kg: 300 mg/jour; >35 kg: 400-600 mg/jour	Prévention chez le voyageur
+96	Leucémie lymphoblastique aiguë (LLA)	Chimiothérapie	Vincristine (IV)	8 mg/kg 2x/jour	Pâleur, asthénie, fièvre, purpura, hépatosplénomégalie
+97	LLA	Chimiothérapie	Méthotrexate (oral)	300 mg + 100 mg 1x/jour	Idem
+98	Lymphome de Burkitt	Polychimiothérapie	Cyclophosphamide (IV)	Selon tableau (mg/kg selon poids)	Tumeur abdominale/maxillo‑faciale, fièvre
+99	Tumeur de Wilms (néphroblastome)	Chimiothérapie	Dactinomycine (IV)	Nouveau-né : 2 mg/kg 4x/jour x 6 semaines	Masse abdominale (indolore)
+100	Hyperuricémie (post-chimiothérapie)	Hypo‑uricémiant	Allopurinol (oral)	Métro: 30-50 mg/kg/jour x 7-10j; Dilox: 20 mg/kg/jour x 10j	Taux d'urate élevé, risque d'IRA
+101	Cystite hémorragique (post-cyclophosphamide)	Uroprotecteur	Mesna (oral/IV)	15-30 mg/kg/jour x 5-7 jours	Hématurie, douleurs pelviennes
+102	Anémie ferriprive	Fer oral	Sels ferreux (Fer) (oral)	Selon poids : 1-4 comprimés/prise (2 prises/jour x 3 jours)	Pâleur, asthénie, koïlonychie, tachycardie
+103	Anémie mégaloblastique (carence B9)	Folates	Acide folique (oral)	Selon poids : 1-4 cp/prise (1x/jour x 3 jours)	Pâleur, glossite, troubles digestifs
+104	Anémie pernicieuse (carence B12)	Vitamine B12	Hydroxocobalamine (Vit B12) (IM)	10 mg/kg dose unique	Pâleur, neuropathie, ataxie (corde latérale)
+105	Hémorragie du nouveau-né (MK)	Vitamine K1	Phytoménadione (Vitamine K1) (IM)	2,4 mg/kg à H0, H12, H24 puis 1x/jour	Purpura, hémorragies (digestives, cérébrales)
+106	Drépanocytose	Hydroxycarbamide	Hydroxycarbamide (oral)	Dose charge: 20 mg/kg/4h; Entretien: 10 mg/kg/8h	Crises vaso‑occlusives, anémie, susceptibilité infectieuse
+107	Hypertension artérielle (HTA)	IEC	Énalapril (oral)	10 mg base/kg J1, 10 mg/kg J2, 5 mg/kg J3	Pression artérielle élevée, souvent asymptomatique
+108	Insuffisance cardiaque	Digitalique	Digoxine (oral)	0,5 mg base/kg/jour x 14 jours	Dyspnée, orthopnée, œdèmes
+109	Œdèmes aigus	Diurétique de l'anse	Furosémide (oral/IV)	5 mg/kg/semaine (max 250 mg)	Œdème pulmonaire, œdèmes généralisés
+110	Choc cardiogénique	Catécholamine	Dopamine (IV)	1,5-2 mg/m² (max 2 mg)	Hypotension, signes de bas débit
+111	Crise d'asthme	β2‑agoniste (inhalation)	Salbutamol (aérosol)	6 000-10 000 UI/m²	Dyspnée expiratoire, sibilants, toux, oppression thoracique
+112	Crise d'asthme sévère	Épinéphrine SC (si accès aigu IV non disponible)	Épinéphrine (Adrénaline) (SC)	20 mg/m²/semaine	Crise d'asthme sévère (distress, SpO₂ bas)
+113	Asthme chronique (entretien)	Corticostéroïde inhalé	Budésonide (inhalation)	500-1000 mg/m²	Asthme chronique (entretien)
+114	Kératite herpétique	Antiviral topique	Aciclovir pommade 3%	15 microgrammes/kg/jour x 5 jours	Lésions dendritiques cornéennes douloureuses
+115	Conjonctivite bactérienne	Antibiotique topique	Tétracycline pommade 1%	10 mg/kg/jour	Œil rouge, sécrétions purulentes
+116	Glaucome chronique	Parasympathomimétique	Pilocarpine collyre 2%	60-100% de la dose de cyclophosphamide	Hypertonie oculaire, baisse de vision
+117	Anesthésie de la cornée	Anesthésique local	Tétracaïne collyre 0,5%	3-6 mg fer élément/kg/jour	Douleur oculaire (corps étranger, suture)
+118	Gale (scabiose)	Scabicide	Perméthrine 5% crème	250-500 microgrammes/jour	Prurit intense (nocturne), sillons, lésions des espaces interdigitaux
+119	Poux (pédiculose du cuir chevelu)	Pédiculicide	Perméthrine 1% lotion	1000 microgrammes initial, puis 100 microgrammes/mois	Prurit du cuir chevelu, lentes (villains) collées aux cheveux
+120	Gale (alternative >2 ans)	Scabicide (alternative)	Benzoate de benzyle 25% lotion	1 mg (≥1,5 kg) ou 0,5 mg (<1,5 kg) dose unique	Idem (scabicide à effet plus irritant)
+121	Eczéma atopique	Anti‑inflammatoire topique	Hydrocortisone 1% crème	50-100 UI/kg/4-6h (IV) ou 50 UI/kg/12h (SC)	Érythème, squames, prurit (visage, plis)
+122	Brûlures (superficielles)	Antibactérien topique	Sulfadiazine argentique 1% crème (>2 mois)	Dose ajustée sur INR (2-3)	Plaie brûlée, risque infectieux
+123	Impétigo (superficiel)	Antibiotique topique	Mupirocine 2% pommade	20-40 mg/kg/jour (SC sur 8-12h)	Vésicules puis croûtes jaune miel
+124	Acné (vulgaris)	Kératolytique	Peroxyde de benzoyle 5% gel	10-20 mg/kg/jour	Comédons (ouverts/fermés), papules, pustules (visage, tronc)
+125	Psoriasis (chronique)	Kératolytique	Acide salicylique 5% solution	0,1-0,5 mg/kg/jour (max 20 mg)	Plaques érythémato‑squameuses
+126	Condylomes (anogénitaux)	Cytolytique topique	Résine de podophylle 10‑25%	Dose de charge: 10-15 microgrammes/kg; Entretien: 2-5 microgrammes/kg/12h	"Végétations molles (""verrues génitales"")"
+127	Ulcère gastroduodénal	IPP	Oméprazole (oral)	Oral: 1-2 mg/kg/prise; IV: 0,5-1 mg/kg/prise	Douleur épigastrique (brûlure), régurgitations acides
+128	Nausées / vomissements (post-chimiothérapie)	Anti‑5‑HT3	Ondansétron (>1 mois) (oral/IV)	5-10 microgrammes/kg/min	Nausées et vomissements
+129	Nausées / vomissements (communs)	Antiémétique	Métoclopramide (sauf nouveau‑né) (oral/IV)	2-10 bouffées (100 µg/bouffée) à répéter	Nausées, vomissements
+130	Constipation (fonctionnelle)	Osmotique	Lactulose (oral)	0,01 mg/kg (max 0,5 mg)	Selles dures, rares (≤3/semaine)
+131	Déshydratation (diarrhée aiguë)	SRO	Sels de réhydratation orale (SRO) (oral)	100-400 microgrammes 2x/jour	Soif, sécheresse des muqueuses, pli cutané, oligurie
+132	Diarrhée aiguë (adjuvant)	Zinc	Sulfate de zinc (oral)	1-2 gouttes	Diarrhée (durée réduite)
+133	Diabète de type 1	Insuline SC	Insuline soluble + intermédiaire (SC)	1-2 gouttes	Polyurie, polydipsie, amaigrissement, hyperglycémie
+134	Diabète de type 2 (>10 ans)	Biguanide	Metformine (oral)	5 applications/jour	Hyperglycémie chronique, résistance à l'insuline
+135	Hypoglycémie sévère	Glucagon	Glucagon (IM/SC)	2 applications/jour x 7 jours	Sueurs, tremblements, troubles de conscience, coma
+136	Insuffisance surrénale (cortisol)	Corticostéroïde	Hydrocortisone (oral)	1 goutte 4x/jour	Asthénie, hypotension, hyponatrémie
+137	Insuffisance surrénale (aldostérone)	Minéralocorticoïde	Fludrocortisone (oral)	1-2 gouttes	Hyponatrémie, hyperkaliémie, hypotension
+138	Hypothyroïdie	Hormone thyroïdienne	Lévothyroxine (oral)	Application unique (8h de contact), renouveler à J7	Fatigue, frilosité, constipation, retard staturopondéral
+139	Apnée du prématuré	Méthylxanthine	Citrate de caféine (oral/IV)	1-2 applications (24h de contact)	Pauses respiratoires (>20s), bradycardie, désaturation
+140	Persistance du canal artériel	AINS (IV)	Ibuprofène (IV)	Application 10 minutes, renouveler à J7	Signes d'insuffisance cardiaque, souffle continu
+141	Détresse respiratoire du prématuré	Surfactant	Surfactant (intratrachéal)	1-2 applications/jour x 7 jours max	Tachypnée, tirage, cyanose, hyaline
+142	Rachitisme (carence Vitamine D)	Vitamine D3	Cholécalciférol (Vitamine D3) (oral)	Application quotidienne	Douleurs osseuses, hypotonie, bossing frontal, genu varum/valgum
+143	Scorbut (carence Vitamine C)	Vitamine C	Acide ascorbique (Vitamine C) (oral)	3 applications/jour x 5-7 jours	Asthénie, gingivite hémorragique, hématomes, douleurs des jambes
+144	Béribéri (carence Vitamine B1)	Vitamine B1	Thiamine (Vitamine B1) (oral/IM/IV)	1-2 applications/jour	Neuropathie, insuffisance cardiaque (wet), œdèmes
+145	Neuropathie (isoniazide)	Vitamine B6 (prophylaxie)	Pyridoxine (Vitamine B6) (oral)	1-2 applications/jour	Paresthésies (mains, pieds)
+146	Xérophtalmie (carence Vitamine A)	Vitamine A	Rétinol (Vitamine A) (oral)	1 application/semaine x 4 semaines	Cécité crépusculaire (nyctalopie), sécheresse conjonctivale & cornée
+147	Goitre endémique (carence iode)	Iode retard	Iode (huile iodée) (oral)	0,7-1,4 mg/kg/jour (1x/jour)	Goitre (augmentation du volume thyroïdien) (parfois mixœdème)
+148	Otite externe (aiguë)	Fluoroquinolone topique	Ciprofloxacine 0,3% (gouttes auriculaires)	0,1-0,15 mg/kg 3x/jour	Douleur/pression du pavillon (tragus), écoulement
+149	Rhinite allergique (persistante)	Corticostéroïde nasal	Budésonide (spray nasal)	0,15 mg/kg (max 16 mg)	Éternuements, rhinorrhée claire, prurit nasal/oculaire, obstruction nasale
+150	Congestion nasale (rhume)	Décongestionnant local (vasoconstricteur)	Xylométazoline 0,05% (>3 mois) (spray nasal)	0,5-1 ml/kg/jour	Obstruction nasale, gène respiratoire
+151	Choc hypovolémique (urgences)	Remplissage vasculaire (cristalloïde)	Ringer lactate ou NaCl 0,9% (perfusion IV)	50-100 ml/kg sur 4 heures	Hypotension, tachycardie, extrémités froides, marbrures
+152	Hypokaliémie modérée (≤ 3 mEq/L)	Potassium oral	KCl (poudre/solution) (oral)	<6 mois: 10 mg/jour x 10j; ≥6 mois: 20 mg/jour x 10j	Faiblesse musculaire, troubles du rythme
+153	Hypokaliémie sévère (arythmique)	Potassium IV	KCl 15% (2 mmol/ml) (perfusion IV diluée)	Selon glycémie: 0,5-1 UI/kg/jour	Arythmies, paralysie, alcalose
+154	Hypoglycémie (sévière, symptomatique)	Glucose hypertonique	Glucose 10% ou 50% (IV)	500 mg 1x/jour, augmenter jusqu'à 2000 mg/jour	Sueurs, confusion, convulsions, coma
+155	Acidose métabolique sévère (pH <7,1)	Alcalin (buffer)	Bicarbonate de sodium 8,4% (IV dilué)	<25 kg: 0,5 mg; >25 kg: 1 mg	Hyperpnée (Kussmaul), fatigue, troubles hémodynamiques
+156	Déshydratation hypernatrémique (perdus)	Réhydratation progressive (IV)	Glucose 5% + chlorure de sodium (perfusion)	10-20 mg/m²/jour (en 2-3 prises)	Perte hydrique ≥ eau → hypernatrémie, soif, signes neurologiques
+157	Insuffisance surrénale (aldostérone)	Oral	Fludrocortisone	50-100 microgrammes/jour	
+158	Hypothyroïdie	Oral	Lévothyroxine	2-4 microgrammes/kg/jour (dose à ajuster)	
+159	Hypothyroïdie	Oral	Iodure de potassium	1-2 mg/kg/jour	
+160	Apnée du prématuré	Oral/injection	Citrate de caféine	Dose charge: 20 mg/kg (base); Entretien: 5-10 mg/kg/jour	
+161	Persistance du canal artériel	Injection IV	Ibuprofène	10 mg/kg J1, puis 5 mg/kg J2-J3	
+162	Détresse respiratoire du prématuré	Intratrachéal	Surfactant	100-200 mg/kg (1-2 doses)	
+163	Rachitisme (carence Vitamine D)	Oral	Cholécalciférol (Vitamine D3)	1000-2000 UI/jour x 3 mois	
+164	Scorbut (carence Vitamine C)	Oral	Acide ascorbique (Vitamine C)	100-300 mg/jour	
+165	Béribéri (carence Vitamine B1)	Oral/injection	Thiamine (Vitamine B1)	Injection: 25-50 mg; Oral: 10-25 mg/jour	
+166	Neuropathie (isoniazide)	Oral	Pyridoxine (Vitamine B6)	5-10 mg/jour	
+167	Xérophtalmie (carence Vitamine A)	Oral	Rétinol (Vitamine A)	<6 mois: 50 000 UI; 6-12 mois: 100 000 UI; >12 mois: 200 000 UI (à J1, J2, J8)	
+168	Goitre endémique (carence iode)	Oral	Acide folique	5 mg/jour	
+169	Rachitisme (carence Vitamine D)	Injection	Gluconate de calcium	0,5 ml/kg (max 10 ml) IV lente	
+170	Goitre endémique (carence iode)	Oral (capsule)	Iode (huile iodée)	<1 an: 190 mg/an; 1-6 ans: 380 mg/an; >6 ans: 570 mg/an	
+171	Otite externe (aiguë)	Gouttes auriculaires	Ciprofloxacine 0,3%	3-4 gouttes 2x/jour x 7 jours	
+172	Rhinite allergique (persistante)	Spray nasal	Budésonide	1-2 pulvérisations/narine x 1-2x/jour	
+173	Congestion nasale (rhume)	Spray nasal	Xylométazoline 0,05% (>3 mois)	1 pulvérisation/narine x 2-3x/jour x 3-5 jours max	
+174	Choc hypovolémique (urgences)	Perfusion IV	Ringer lactate ou NaCl 0,9%	20-40 ml/kg (bolus de 10 ml/kg sur 15 min)	
+175	Déshydratation hypernatrémique (perdus)	Perfusion IV	Glucose 5% + NaCl 0,9%	Calcul du déficit (remplacement sur 48h)	
+176	Hypokaliémie modérée (≤ 3 mEq/L)	Oral	KCl poudre (solution)	1-3 mmol/kg/jour	
+177	Hypokaliémie sévère (arythmique)	Perfusion IV (dilué)	KCl 15% (2 mmol/ml)	0,2-0,3 mmol/kg/heure (max 10 mmol/h)	
+178	Hypoglycémie (sévière, symptomatique)	Injection IV	Glucose 10% ou 50%	Nouveau-né: 2 ml/kg (G10%); Enfant: 1 ml/kg (G50%)	
+179	Acidose métabolique sévère (pH <7,1)	Perfusion IV	Bicarbonate de sodium 8,4%	1-2 mmol/kg (dilué)	

@@ -184,6 +184,19 @@
                                         </div>
                                         <div id="diagnosticAssistantContent"></div>
                                     </div>
+                                    
+                                    {{-- Suggestions de questions pour affiner --}}
+                                    <div id="followUpContainer" class="mb-3 d-none">
+                                        <div class="alert alert-info border-0 shadow-sm py-2 px-3 d-flex align-items-center gap-3">
+                                            <div class="bg-info text-white rounded-circle p-2 shadow-sm">
+                                                <i class="fas fa-question-circle"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold small text-uppercase">Questions suggérées pour affiner</div>
+                                                <div id="followUpQuestions" class="d-flex flex-wrap gap-2 mt-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div id="suggestionsInputs" style="display:none;"></div>
 
                                     {{-- Ligne 2 : Diagnostic final + Observations --}}
@@ -856,15 +869,19 @@
                 let selectedSymptomes = ($(this).val() || []).map(id => parseInt(id));
                 let emptyState = $('#diagnosticAssistantEmpty');
                 let content = $('#diagnosticAssistantContent');
+                let followUpContainer = $('#followUpContainer');
+                let followUpQuestions = $('#followUpQuestions');
 
                 if (selectedSymptomes.length === 0) {
                     emptyState.show();
                     content.hide();
+                    followUpContainer.addClass('d-none');
                     return;
                 }
                 emptyState.hide();
                 content.show();
 
+                // 1. Calcul des scores (Local pour réactivité immédiate)
                 let scores = [];
                 for (let maladieId in maladieSymptomesDetails) {
                     let maladie = maladieSymptomesDetails[maladieId];
@@ -885,42 +902,58 @@
                 if (scores.length > 0) {
                     scores.sort((a, b) => b.score - a.score);
                     let html = '<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">';
-                    scores.forEach(function(s) {
-                        let color = s.score >= 70 ? 'success' : (s.score >= 40 ? 'warning' :
-                            'secondary');
-                        let prog = s.score >= 70 ? 'bg-success' : (s.score >= 40 ? 'bg-warning' :
-                            'bg-secondary');
+                    scores.slice(0, 6).forEach(function(s) {
+                        let color = s.score >= 70 ? 'success' : (s.score >= 40 ? 'warning' : 'secondary');
+                        let prog = s.score >= 70 ? 'bg-success' : (s.score >= 40 ? 'bg-warning' : 'bg-secondary');
                         html += `
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm select-suggested-maladie" style="cursor:pointer; transition: transform 0.2s;" data-id="${s.id}">
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6 class="fw-bold text-dark mb-0 small">${s.nom}</h6>
-                                <span class="badge bg-${color} rounded-pill" style="font-size: 0.65rem;">${s.score}%</span>
-                            </div>
-                            <div class="progress mb-2" style="height:5px;"><div class="progress-bar ${prog} progress-bar-striped progress-bar-animated" style="width:${s.score}%"></div></div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted" style="font-size: 0.7rem;">${s.matchedCount}/${s.totalCount} signes</small>
-                                <small class="text-primary fw-bold" style="font-size: 0.7rem;">Détails <i class="fas fa-chevron-right ms-1"></i></small>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
+                            <div class="col">
+                                <div class="card h-100 border-0 shadow-sm select-suggested-maladie animate__animated animate__fadeIn" style="cursor:pointer;" data-id="${s.id}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="fw-bold text-dark mb-0 small">${s.nom}</h6>
+                                            <span class="badge bg-${color} rounded-pill" style="font-size: 0.65rem;">${s.score}%</span>
+                                        </div>
+                                        <div class="progress mb-2" style="height:5px;"><div class="progress-bar ${prog} progress-bar-striped progress-bar-animated" style="width:${s.score}%"></div></div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted" style="font-size: 0.7rem;">${s.matchedCount}/${s.totalCount} signes</small>
+                                            <small class="text-primary fw-bold" style="font-size: 0.7rem;">Sélect. <i class="fas fa-check-circle ms-1"></i></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
                     });
                     html += '</div>';
                     content.html(html);
 
+                    // 2. Appel API pour suggestions de perfectionnement (Follow-up)
+                    $.get('{{ route('clinical.suggest_symptoms') }}', { symptomes: selectedSymptomes }, function(data) {
+                        if (data && data.length > 0) {
+                            let qHtml = '';
+                            data.slice(0, 8).forEach(s => {
+                                qHtml += `<span class="badge bg-white text-info border border-info py-2 px-3 cursor-pointer suggest-badge animate__animated animate__pulse" data-id="${s.id}" style="cursor:pointer;">
+                                    ${s.nom} ?
+                                </span>`;
+                            });
+                            followUpQuestions.html(qHtml);
+                            followUpContainer.removeClass('d-none');
+                        } else {
+                            followUpContainer.addClass('d-none');
+                        }
+                    });
+
                     if (scores[0].score >= 80 && $('#maladieSelect').val() != scores[0].id) {
-                        Toast.fire({
-                            icon: 'info',
-                            title: `Forte suspicion de ${scores[0].nom}`
-                        });
+                        // Optionnel : Notification discrète
                     }
                 } else {
-                    content.html(
-                        '<div class="text-center py-5 text-muted small">Aucune correspondance trouvée.</div>'
-                        );
+                    content.html('<div class="text-center py-5 text-muted small">Aucune correspondance trouvée.</div>');
+                    followUpContainer.addClass('d-none');
                 }
+            });
+
+            // Clic sur suggestion de symptôme
+            $(document).on('click', '.suggest-badge', function() {
+                let sId = $(this).data('id');
+                $(`#s_check_${sId}`).prop('checked', true).trigger('change');
             });
 
             // Clic sur suggestion IA → sélection pathologie
@@ -1017,7 +1050,44 @@
                 }
 
                 // Génération ordonnance
-                if (p.traitement_principal) {
+                if (p.medicaments && p.medicaments.length > 0) {
+                    if ($('#ordonnanceTable tbody tr').length <= 1 && $('#emptyOrdonnanceRow').length > 0) {
+                        $('#ordonnanceTable tbody').empty();
+                    }
+
+                    p.medicaments.forEach(med => {
+                        // Anti-doublon
+                        let alreadyExists = false;
+                        $('.selectMedicament').each(function() {
+                            if ($(this).val() == med.id) alreadyExists = true;
+                        });
+
+                        if (!alreadyExists) {
+                            $('#emptyOrdonnanceRow').remove();
+                            $('#ordonnanceFooter').removeClass('d-none');
+
+                            // Create options with medicament already selected
+                            let opts = `<option value="${med.id}" data-prix="${med.prix_vente}" data-stock="${med.stock}" selected>${med.nom}</option>`;
+                            // Add other medicines for choice
+                            medicamentsList.forEach(m => {
+                                if (m.id != med.id) {
+                                    opts += `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}">${m.nom}</option>`;
+                                }
+                            });
+
+                            let row = `<tr class="table-success auto-added-row">
+                                <td><select name="medicaments[]" class="form-select js-select2 form-select-sm selectMedicament" required>${opts}</select></td>
+                                <td><input type="text" name="posologies[]" class="form-control form-control-sm" value="${med.pivot.posologie || p.posologie_principale || ''}" required></td>
+                                <td><input type="number" name="duree_jours[]" class="form-control form-control-sm" min="1" value="${parseInt(med.pivot.duree) || 7}"></td>
+                                <td><input type="number" name="quantites[]" class="form-control form-control-sm input-qty" min="1" value="1"></td>
+                                <td class="text-center"><button type="button" class="btn btn-link text-danger btn-sm btnSupprimer p-0"><i class="fas fa-trash-alt"></i></button></td>
+                            </tr>`;
+                            let newRow = $(row);
+                            $('#ordonnanceTable tbody').append(newRow);
+                            if ($.fn.select2) newRow.find('.js-select2').select2({ width: '100%', allowClear: true });
+                        }
+                    });
+                } else if (p.traitement_principal) {
                     if ($('#ordonnanceTable tbody tr').length <= 1 && $('#emptyOrdonnanceRow').length > 0) {
                         $('#ordonnanceTable tbody').empty();
                     }
@@ -1416,6 +1486,7 @@
             // Init
             if ($('#maladieSelect').val()) $('#maladieSelect').trigger('change');
             if ($('#salleSelect').val()) $('#salleSelect').trigger('change');
+            if ($('#symptomes').val() && $('#symptomes').val().length > 0) $('#symptomes').trigger('change');
 
         });
     </script>

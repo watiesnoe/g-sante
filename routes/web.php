@@ -177,7 +177,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');
         Route::get('/api/protocoles/{maladie}', [\App\Http\Controllers\InfectiologieController::class, 'getProtocole'])->name('infectiologie.get_protocole');
+        Route::get('/api/medicaments-list', [\App\Http\Controllers\InfectiologieController::class, 'getMedicaments'])->name('api.medicaments.list');
     });
+
+    // 🔹 Diagnostic Intelligent
+    Route::get('/api/clinical/interrogation', [\App\Http\Controllers\DiagnosticController::class, 'interrogate'])->name('clinical.interrogation');
+    Route::get('/api/clinical/suggest-symptoms', [\App\Http\Controllers\DiagnosticController::class, 'suggestFollowUp'])->name('clinical.suggest_symptoms');
 
     // 🔹 Suivi de Traitement (Evolution clinique)
     Route::post('/suivi-traitements-store', [\App\Http\Controllers\SuiviTraitementController::class, 'store'])->name('suivi.store');
