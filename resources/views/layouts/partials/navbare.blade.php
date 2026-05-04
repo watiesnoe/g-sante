@@ -16,6 +16,31 @@
                 <i class="fa fa-fw opacity-50 fa-search"></i> <span class="ms-1 d-none d-sm-inline-block">Search</span>
             </button>
             <!-- END Open Search Section -->
+
+            <!-- Sélecteur d'Année (Exercice) -->
+            <div class="d-inline-block ms-2">
+                <form action="{{ route('exercice.set') }}" method="POST" id="form-exercice-nav">
+                    @csrf
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-alt-secondary border-0">
+                            <i class="fa fa-calendar-alt"></i>
+                        </span>
+                        <select name="year" class="form-select form-select-sm bg-alt-secondary border-0 fw-bold" 
+                                onchange="document.getElementById('form-exercice-nav').submit();"
+                                style="cursor: pointer; min-width: 140px;">
+                            @php
+                                $currentYear = date('Y');
+                                $selectedYear = session('exercice_year', $currentYear);
+                            @endphp
+                            @for ($i = $currentYear + 1; $i >= 2024; $i--)
+                                <option value="{{ $i }}" {{ $selectedYear == $i ? 'selected' : '' }}>
+                                    Exercice {{ $i }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                </form>
+            </div>
         </div>
         <!-- END Left Section -->
 

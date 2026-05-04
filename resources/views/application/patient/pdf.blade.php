@@ -1,65 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <meta charset="utf-8">
-    <title>Dossier Patient</title>
+    <meta charset="UTF-8">
+    <title>Dossier Médical - {{ $patient->nom }} {{ $patient->prenom }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-        h2 { text-align: center; }
-        .section { margin-bottom: 20px; }
-        .section h3 { background-color: #eee; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+        @page { margin: 1.5cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.5; }
+        
+        .section-title { background: #0665d0; color: white; padding: 8px 12px; font-weight: bold; text-transform: uppercase; margin: 20px 0 10px; border-radius: 4px; font-size: 10px; }
+        
+        .grid-container { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .grid-container td { border: 1px solid #eee; padding: 10px; vertical-align: top; width: 33.33%; }
+        .label { font-weight: bold; color: #666; font-size: 9px; text-transform: uppercase; display: block; margin-bottom: 3px; }
+        .value { font-size: 11px; color: #000; }
+        
+        .item-box { border-left: 3px solid #0665d0; padding-left: 15px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f8f9fa; }
+        .item-date { font-weight: bold; color: #0665d0; font-size: 10px; margin-bottom: 5px; display: block; }
+        
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
 </head>
 <body>
-<h2>Dossier Patient : {{ $patient->nom }} {{ $patient->prenom }}</h2>
+    @include('layouts.pdf_header', ['docNumber' => 'DOS-' . date('Ymd') . '-' . $patient->id])
 
-<div class="section">
-    <h3>Informations personnelles</h3>
-    <p><strong>Nom :</strong> {{ $patient->nom }}</p>
-    <p><strong>Prénom :</strong> {{ $patient->prenom }}</p>
-    <p><strong>Genre :</strong> {{ $patient->genre }}</p>
-    <p><strong>Age :</strong> {{ $patient->age }} ans</p>
-    <p><strong>Ethnie :</strong> {{ $patient->ethnie }}</p>
-    <p><strong>Téléphone :</strong> {{ $patient->telephone }}</p>
-    <p><strong>Adresse :</strong> {{ $patient->adresse ?? '-' }}</p>
-    <p><strong>Groupe Sanguin :</strong> {{ $patient->groupe_sanguin ?? '-' }}</p>
-</div>
+    <h2 style="text-align: center; color: #0665d0; text-transform: uppercase; margin: 10px 0;">Dossier Médical Complet</h2>
 
-<div class="section">
-    <h3>Consultations</h3>
-    @foreach($patient->consultations as $c)
-        <p><strong>Date :</strong> {{ $c->date_consultation }}</p>
-        <p><strong>Motif :</strong> {{ $c->motif }}</p>
-        <p><strong>Diagnostic :</strong> {{ $c->diagnostic }}</p>
-        @if($c->ordonnances->count())
-            <p><strong>Ordonnances :</strong></p>
-            <ul>
-                @foreach($c->ordonnances as $o)
-                    <li>{{ $o->description ?? '-' }} ({{ $o->statut ?? '-' }})</li>
-                @endforeach
-            </ul>
-        @endif
-        <hr>
-    @endforeach
-</div>
+    <div class="section-title">Informations Personnelles</div>
+    <table class="grid-container">
+        <tr>
+            <td>
+                <span class="label">Nom & Prénom</span>
+                <span class="value" style="font-size: 13px; font-weight: bold;">{{ $patient->nom }} {{ $patient->prenom }}</span>
+            </td>
+            <td>
+                <span class="label">Genre / Âge</span>
+                <span class="value">{{ $patient->genre }} | {{ $patient->age }} ans</span>
+            </td>
+            <td>
+                <span class="label">Groupe Sanguin</span>
+                <span class="value" style="color: #d9534f; font-weight: bold;">{{ $patient->groupe_sanguin ?? 'Non renseigné' }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Téléphone</span>
+                <span class="value">{{ $patient->telephone }}</span>
+            </td>
+            <td>
+                <span class="label">Adresse</span>
+                <span class="value">{{ $patient->adresse ?? '-' }}</span>
+            </td>
+            <td>
+                <span class="label">Ethnie / Origine</span>
+                <span class="value">{{ $patient->ethnie ?? '-' }}</span>
+            </td>
+        </tr>
+    </table>
 
-<div class="section">
-    <h3>Hospitalisations</h3>
-    @foreach($patient->hospitalisations as $h)
-        <p><strong>Du :</strong> {{ $h->date_entree }} <strong>Au :</strong> {{ $h->date_sortie ?? 'En cours' }}</p>
-        <p><strong>Etat :</strong> {{ $h->etat }}</p>
-        <hr>
-    @endforeach
-</div>
+    <div class="section-title">Historique des Consultations</div>
+    @forelse($patient->consultations as $c)
+        <div class="item-box">
+            <span class="item-date">Consultation du {{ \Carbon\Carbon::parse($c->date_consultation)->format('d/m/Y') }}</span>
+            <div style="margin-bottom: 5px;"><strong>Motif:</strong> {{ $c->motif }}</div>
+            <div style="margin-bottom: 5px;"><strong>Diagnostic:</strong> {{ $c->diagnostic }}</div>
+            @if($c->ordonnances->count())
+                <div style="font-size: 9px; color: #666;">
+                    <strong>Traitements prescrits:</strong> 
+                    @foreach($c->ordonnances as $o)
+                        {{ $o->description ?? 'Ordonnance' }}{{ !$loop->last ? ',' : '' }}
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @empty
+        <p style="color: #999; text-align: center;">Aucune consultation enregistrée</p>
+    @endforelse
 
-<div class="section">
-    <h3>Rendez-vous</h3>
-    @foreach($patient->rendezVous as $rdv)
-        <p>{{ $rdv->date }} - {{ $rdv->motif ?? '-' }} ({{ $rdv->statut ?? '-' }})</p>
-    @endforeach
-</div>
+    <div class="section-title">Historique des Hospitalisations</div>
+    @forelse($patient->hospitalisations as $h)
+        <div class="item-box" style="border-left-color: #f0ad4e;">
+            <span class="item-date" style="color: #f0ad4e;">Séjour du {{ \Carbon\Carbon::parse($h->date_entree)->format('d/m/Y') }} au {{ $h->date_sortie ? \Carbon\Carbon::parse($h->date_sortie)->format('d/m/Y') : 'En cours' }}</span>
+            <div><strong>État à l'entrée/sortie:</strong> {{ $h->etat }}</div>
+        </div>
+    @empty
+        <p style="color: #999; text-align: center;">Aucune hospitalisation enregistrée</p>
+    @endforelse
 
+    <div class="section-title">Rendez-vous à venir</div>
+    @forelse($patient->rendezVous as $rdv)
+        <div style="padding: 5px 10px; border-bottom: 1px solid #eee;">
+            <strong>{{ \Carbon\Carbon::parse($rdv->date)->format('d/m/Y') }}</strong> - {{ $rdv->motif ?? 'Consultation de suivi' }} 
+            <span style="float: right; color: #666; font-size: 9px;">Statut: {{ $rdv->statut }}</span>
+        </div>
+    @empty
+        <p style="color: #999; text-align: center;">Aucun rendez-vous prévu</p>
+    @endforelse
+
+    <div class="footer">
+        G-SANTÉ - Dossier Médical Informatisé | Page 1/1 | Généré le {{ now()->format('d/m/Y H:i') }}
+    </div>
 </body>
 </html>

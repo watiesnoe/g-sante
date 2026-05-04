@@ -1,109 +1,62 @@
 @extends('layouts.app')
 
-@section('title', 'Gestion de Caisse')
-
 @section('content')
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h3 mb-0 text-gray-800"><i class="fas fa-cash-register me-2"></i> Gestion de Caisse</h2>
-    </div>
+<main id="main-container">
+    <div class="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h3 fw-bold mb-0">Supervision des Caisses</h2>
+        </div>
 
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Entrées (Global)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($totalEntre, 0, ',', ' ') }} FCFA</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-arrow-up fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="block block-rounded">
+            <div class="block-header block-header-default">
+                <h3 class="block-title">Toutes les Sessions de Caisse</h3>
             </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Sorties (Global)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($totalSortie, 0, ',', ' ') }} FCFA</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-arrow-down fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Solde</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($solde, 0, ',', ' ') }} FCFA</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-wallet fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2 bg-info text-white">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Aujourd'hui</div>
-                            <div class="mb-0 small">Entrées: {{ number_format($jEntre, 0, ',', ' ') }} F</div>
-                            <div class="mb-0 small">Sorties: {{ number_format($jSortie, 0, ',', ' ') }} F</div>
-                            <div class="h6 mb-0 font-weight-bold text-white mt-1">Net: {{ number_format($jSolde, 0, ',', ' ') }} F</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-day fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- DataTales Example -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Tous les Mouvements de Caisse</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
+            <div class="block-content block-content-full">
+                <table class="table table-bordered table-striped table-vcenter" id="sessions-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Provenance</th>
-                            <th>Description</th>
-                            <th>Montant</th>
+                            <th>Responsable</th>
+                            <th>Ouverture</th>
+                            <th>Fonds Initial</th>
+                            <th>Solde Théorique</th>
+                            <th>Solde Réel</th>
+                            <th>Écart</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($transactions as $t)
+                        @foreach($sessions as $s)
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($t['date'])->format('d/m/Y H:i') }}</td>
+                            <td class="fw-semibold">{{ $s->user->name }}</td>
+                            <td>{{ $s->opened_at->format('d/m/Y H:i') }}</td>
+                            <td>{{ number_format($s->solde_initial, 0, ',', ' ') }} F</td>
+                            <td>{{ number_format($s->solde_theorique, 0, ',', ' ') }} F</td>
+                            <td>{{ $s->solde_reel ? number_format($s->solde_reel, 0, ',', ' ') . ' F' : '-' }}</td>
                             <td>
-                                <span class="badge bg-{{ $t['badge'] }}">{{ $t['type'] }}</span>
+                                @if($s->statut == 'fermee')
+                                    @if($s->ecart == 0)
+                                        <span class="text-success fw-bold">0 F</span>
+                                    @elseif($s->ecart > 0)
+                                        <span class="text-success fw-bold">+{{ number_format($s->ecart, 0, ',', ' ') }} F</span>
+                                    @else
+                                        <span class="text-danger fw-bold">{{ number_format($s->ecart, 0, ',', ' ') }} F</span>
+                                    @endif
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
                             </td>
-                            <td>{{ $t['provenance'] }}</td>
-                            <td>{{ $t['description'] }}</td>
-                            <td class="font-weight-bold text-{{ $t['badge'] }} text-end">
-                                {{ number_format($t['montant'], 0, ',', ' ') }} FCFA
+                            <td>
+                                @if($s->statut == 'ouverte')
+                                    <span class="badge bg-success">Ouverte</span>
+                                @else
+                                    <span class="badge bg-secondary">Fermée</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="javascript:void(0)" class="btn-sm" title="Voir détails">
+                                    <i class="fa fa-eye text-primary"></i>
+                                </a>
                             </td>
                         </tr>
                         @endforeach
@@ -112,20 +65,18 @@
             </div>
         </div>
     </div>
-</div>
+</main>
 @endsection
 
 @section('scripts')
 <script>
     $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('#dataTable')) {
-            $('#dataTable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
-                },
-                "order": [[0, "desc"]]
-            });
-        }
+        $('#sessions-table').DataTable({
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+            },
+            "order": [[1, "desc"]]
+        });
     });
 </script>
 @endsection

@@ -9,21 +9,23 @@ use Illuminate\Http\Request;
 
 class PatientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        if (request()->ajax()) {
-            $patients = Patient::select(['id', 'uuid', 'nom', 'prenom', 'genre', 'telephone', 'created_at']);
+        if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
+            $patients = Patient::select(['id', 'uuid', 'nom', 'prenom', 'genre', 'telephone', 'created_at'])
+                ->whereYear('created_at', $year);
 
             return datatables()->of($patients)
                 ->addIndexColumn()
                 ->editColumn('created_at', fn($p) => $p->created_at ? Carbon::parse($p->created_at)->format('d-m-Y') : '-')
                 ->addColumn('actions', function($patient) {
-                    $view = '<a href="'.route('patients.show', $patient).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
-                    $edit = '<a href="'.route('patients.edit', $patient).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $print = '<a href="'.route('patients.medicales', $patient).'" target="_blank" class="btn-sm" title="Imprimer"><i class="fa fa-print text-warning"></i></a> ';
-                    $delete = '<form action="'.route('patients.destroy', $patient).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce patient ?\');">'.csrf_field().method_field("DELETE").'<button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer"><i class="fa fa-trash text-danger"></i></button></form>';
-                    return $view.$edit.$print.$delete;
-
+                    $view   = '<a href="'.route('patients.show', $patient).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $edit   = '<a href="'.route('patients.edit', $patient).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $print  = '<a href="'.route('patients.medicales', $patient).'" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                    $delete = '<form action="'.route('patients.destroy', $patient).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce patient ?\');">'.csrf_field().method_field('DELETE').'<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $print . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

@@ -23,7 +23,7 @@ class UserController extends Controller
 
         // Si la requête est AJAX (pour DataTables)
         if ($request->ajax()) {
-            $users = User::where('role', '!=', 'superadmin')->latest()->get();
+            $users = User::whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))->latest()->get();
 
             return datatables()->of($users)
                 ->addIndexColumn()
@@ -35,18 +35,24 @@ class UserController extends Controller
                     return "<strong>{$user->prenom} {$user->nom}</strong><br><small>{$user->email}</small>";
                 })
                 ->addColumn('contact', fn($user) => $user->telephone ?? '-')
-                ->addColumn('role', fn($user) => ucfirst($user->role))
+                ->addColumn('role', function ($user) {
+                    $role = $user->roles->first();
+                    return $role ? ucfirst($role->libelle ?? $role->name) : '-';
+                })
                 ->addColumn('statut', function ($user) {
                     $badge = $user->statut === 'actif' ? 'success' : 'danger';
                     return "<span class='badge bg-{$badge} text-uppercase'>{$user->statut}</span>";
                 })
                 ->addColumn('date_creation', fn($user) => $user->created_at ? $user->created_at->format('d-m-Y') : '-')
                 ->addColumn('actions', function ($user) {
-                    $statusColor = $user->statut === 'actif' ? 'text-success fa-toggle-on' : 'text-warning fa-toggle-off';
-                    $editBtn = '<span class="btn-sm edit-user" data-id="'.$user->id.'" title="Modifier" style="cursor:pointer;"><i class="fa fa-pencil-alt text-info"></i></span> ';
-                    $statusBtn = '<span class="btn-sm toggle-status" data-id="'.$user->id.'" title="Changer statut" style="cursor:pointer;"><i class="fa '.$statusColor.'"></i></span> ';
-                    $deleteBtn = '<span class="btn-sm delete-user" data-id="'.$user->id.'" title="Supprimer" style="cursor:pointer;"><i class="fa fa-trash text-danger"></i></span>';
-                    return $editBtn.$statusBtn.$deleteBtn;
+                    $statusIcon  = $user->statut === 'actif' ? 'fa-toggle-on' : 'fa-toggle-off';
+                    $statusClass = $user->statut === 'actif' ? 'btn-outline-success' : 'btn-outline-warning';
+                    
+                    $edit   = '<a href="'.route('users.edit', $user->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $status = '<button type="button" class="btn btn-sm '.$statusClass.' toggle-status" data-id="'.$user->uuid.'" title="Changer statut"><i class="fa '.$statusIcon.'"></i></button>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete-user" data-id="'.$user->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $status . $delete . '</div>';
                 })
 
                 ->rawColumns(['photo', 'utilisateur', 'statut', 'actions'])
@@ -54,21 +60,22 @@ class UserController extends Controller
         }
 
         $stats = [
-            'total' => User::where('role', '!=', 'superadmin')->count(),
-            'medecins' => User::where('role', 'medecin')->count(),
-            'secretaires' => User::where('role', 'secretaire')->count(),
-            'admins' => User::where('role', 'admin')->count(),
-            'clients' => User::where('role', 'client')->count(),
-            'actifs' => User::where('role', '!=', 'superadmin')->where('statut', 'actif')->count(),
-            'inactifs' => User::where('role', '!=', 'superadmin')->where('statut', 'inactif')->count(),
+            'total' => User::count(),
+            'actifs' => User::where('statut', 'actif')->count(),
+            'inactifs' => User::where('statut', 'inactif')->count(),
         ];
 
-        return view('auth.index', compact('stats'));
+        $roles = \Spatie\Permission\Models\Role::all();
+        $permissions = \Spatie\Permission\Models\Permission::all()->groupBy(function($perm) {
+            return explode('.', $perm->name)[0];
+        });
+
+        return view('auth.index', compact('stats', 'roles', 'permissions'));
     }
 
     public function getData(Request $request)
     {
-        $users = User::where('role', '!=', 'superadmin')->latest()->get();
+        $users = User::whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))->latest()->get();
 
         return datatables()->of($users)
             ->addColumn('photo', function($user){
@@ -79,29 +86,24 @@ class UserController extends Controller
                 return $user->email.'<br>'.$user->telephone;
             })
             ->addColumn('actions', function ($user) {
-                $statusColor = $user->statut === 'actif' ? 'text-success fa-toggle-on' : 'text-warning fa-toggle-off';
-                $editBtn = '<span class="btn-sm editUser" data-id="'.$user->id.'" title="Modifier" style="cursor:pointer;"><i class="fa fa-pencil-alt text-info"></i></span> ';
-                $statusBtn = '<span class="btn-sm toggleStatus" data-id="'.$user->id.'" title="Changer statut" style="cursor:pointer;"><i class="fa '.$statusColor.'"></i></span> ';
-                $deleteBtn = '<span class="btn-sm deleteUser" data-id="'.$user->id.'" title="Supprimer" style="cursor:pointer;"><i class="fa fa-trash text-danger"></i></span>';
-                return $editBtn.$statusBtn.$deleteBtn;
+                $statusIcon  = $user->statut === 'actif' ? 'fa-toggle-on' : 'fa-toggle-off';
+                $statusClass = $user->statut === 'actif' ? 'btn-outline-success' : 'btn-outline-warning';
+                
+                $edit   = '<a href="'.route('users.edit', $user->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                $status = '<button type="button" class="btn btn-sm '.$statusClass.' toggleStatus" data-id="'.$user->uuid.'" title="Changer statut"><i class="fa '.$statusIcon.'"></i></button>';
+                $delete = '<button type="button" class="btn btn-sm btn-outline-danger deleteUser" data-id="'.$user->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                
+                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $status . $delete . '</div>';
             })->rawColumns(['photo','contact','actions'])
             ->make(true);
     }
 
-    /**
-     * Afficher le formulaire de création
-     */
     public function create()
     {
         $this->authorize('create', User::class);
 
         $services = ServiceMedical::orderBy('nom')->get();
-        $roles = [
-            'admin' => 'Administrateur',
-            'medecin' => 'Médecin',
-            'secretaire' => 'Secrétaire',
-            'client' => 'Client'
-        ];
+        $roles = \Spatie\Permission\Models\Role::all();
 
         return view('users.create', compact('services', 'roles'));
     }
@@ -118,7 +120,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:500',
-            'role' => 'required|in:admin,medecin,secretaire,client',
+            'role' => 'required|exists:roles,name',
             'service_medical_id' => 'nullable|exists:service_medicals,id',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -137,17 +139,20 @@ class UserController extends Controller
             'email' => $validated['email'],
             'telephone' => $validated['telephone'] ?? null,
             'adresse' => $validated['adresse'] ?? null,
-            'role' => $validated['role'],
             'service_medical_id' => $validated['service_medical_id'] ?? null,
             'password' => Hash::make($validated['password']),
             'photo' => $validated['photo'] ?? null,
             'statut' => 'actif', // valeur par défaut
         ]);
 
-        return response()->json([
-            'message' => 'Utilisateur créé avec succès',
-            'user' => $user
-        ]);
+        $user->assignRole($validated['role']);
+
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        }
+
+        return redirect()->route('users.index')
+            ->with('success', 'Utilisateur créé avec succès');
     }
 
     /**
@@ -164,22 +169,22 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $roles = [
-            'admin' => 'Administrateur',
-            'medecin' => 'Médecin',
-            'secretaire' => 'Secrétaire',
-            'client' => 'Client'
-        ];
+        $roles = \Spatie\Permission\Models\Role::all();
 
         $statuts = [
             'actif' => 'Actif',
             'inactif' => 'Inactif',
             'suspendu' => 'Suspendu'
         ];
-        if (request()->ajax()) {
-            return view('auth.users_edit', compact('user', 'roles', 'statuts'))->render();
-        }
-        return view('users.index');
+        
+        $permissions = \Spatie\Permission\Models\Permission::all()->groupBy(function($perm) {
+            return explode('.', $perm->name)[0];
+        });
+        
+        $userRole = $user->roles->first()?->name;
+        $userPermissions = $user->getDirectPermissions()->pluck('name')->toArray();
+        
+        return view('users.edit', compact('user', 'roles', 'statuts', 'permissions', 'userRole', 'userPermissions'));
     }
 
     public function update(Request $request, User $user)
@@ -192,12 +197,26 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'telephone' => 'nullable|string|max:50',
             'adresse' => 'nullable|string|max:255',
-            'role' => 'required|in:admin,medecin,secretaire,client',
+            'role' => 'required|exists:roles,name',
             'statut' => 'required|in:actif,inactif,suspendu',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'permissions' => 'nullable|array'
         ]);
 
-        $user->update($request->except('photo'));
+        // Mise à jour classique
+        $data = $request->except(['photo', 'role', 'permissions']);
+        
+        $user->update($data);
+
+        // Update role
+        $user->syncRoles([$request->role]);
+        
+        // Update direct permissions
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        } else {
+            $user->syncPermissions([]);
+        }
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('users', 'public');
@@ -205,10 +224,8 @@ class UserController extends Controller
             $user->save();
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => "Utilisateur {$user->prenom} {$user->nom} mis à jour avec succès !"
-        ]);
+        return redirect()->route('users.index')
+            ->with('success', "Utilisateur {$user->prenom} {$user->nom} mis à jour avec succès !");
     }
 
 
@@ -341,7 +358,7 @@ class UserController extends Controller
      */
     public function medecins(Request $request)
     {
-        $query = User::where('role', 'medecin')->where('statut', 'actif');
+        $query = User::role('medecin')->where('statut', 'actif');
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;

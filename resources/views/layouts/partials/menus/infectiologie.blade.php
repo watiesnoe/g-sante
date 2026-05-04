@@ -25,7 +25,10 @@
             </a>
         </li>
         <li class="nav-main-item">
-            <a class="nav-main-link" href="{{ route('infectiologie.antibiotiques') }}">
+            @php
+                $atbFamille = \App\Models\Famille::where('nom', 'like', 'Antibiotique%')->first();
+            @endphp
+            <a class="nav-main-link" href="{{ route('medicaments.index', ['famille_id' => $atbFamille?->id]) }}">
                 <span class="nav-main-link-name">Gestion Antibiotiques</span>
             </a>
         </li>

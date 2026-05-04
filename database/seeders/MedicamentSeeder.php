@@ -71,19 +71,23 @@ class MedicamentSeeder extends Seeder
             // Contraceptifs (3)
             'Éthinylestradiol/Lévonorgestrel', 'Lévonorgestrel', 'Médroxyprogestérone injectable',
         ];
-        
+
         foreach ($medicamentsList as $medicament) {
-            $medicaments[] = [
-                'uuid' => (string) Str::uuid(),
-                'nom' => $medicament,
-                'description' => 'Médicament essentiel selon la liste OMS et le guide MSF',
-                'unite_id' => $uniteId,
-                'famille_id' => $familleId,
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
+            $prixAchat = rand(5, 50) * 100; // de 500 à 5000 CFA
+            $prixVente = ceil(($prixAchat * 1.4) / 25) * 25; // Marge 40% arrondie au 25 CFA sup
+            
+            \App\Models\Medicament::updateOrCreate(
+                ['nom' => $medicament],
+                [
+                    'description' => 'Médicament essentiel selon la liste OMS et le guide MSF',
+                    'stock' => rand(20, 200),
+                    'stock_min' => 10,
+                    'prix_achat' => $prixAchat,
+                    'prix_vente' => $prixVente,
+                    'unite_id' => $uniteId,
+                    'famille_id' => $familleId,
+                ]
+            );
         }
-        
-        DB::table('medicaments')->insert($medicaments);
     }
 }

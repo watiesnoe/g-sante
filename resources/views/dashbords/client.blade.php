@@ -44,7 +44,7 @@
                     <div class="text-center py-5">
                         <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Vous n'avez aucun rendez-vous prévu.</p>
-                        <a href="{{ route('rendezvous.create') }}" class="btn btn-primary rounded-pill">Prendre rendez-vous</a>
+                        <a href="{{ route('rendezvous.index') }}" class="btn btn-primary rounded-pill">Prendre rendez-vous</a>
                     </div>
                 @endforelse
             </div>

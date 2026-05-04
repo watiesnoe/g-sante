@@ -9,14 +9,13 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de Bord</a></li>
                     <li class="breadcrumb-item active">
-                        @switch(auth()->user()->role)
-                            @case('superadmin') Super Admin @break
-                            @case('admin') Admin @break
-                            @case('secretaire') Secrétaire @break
-                            @case('medecin') Médecin @break
-                            @case('client') Patient @break
-                            @default Accueil
-                        @endswitch
+                        @hasrole('super_admin') Super Admin
+                        @elsehasrole('admin') Admin
+                        @elsehasrole('secretaire') Secrétaire
+                        @elsehasrole('medecin') Médecin
+                        @elsehasrole('client') Patient
+                        @else Accueil
+                        @endhasrole
                     </li>
                 </ol>
             </div>
@@ -33,35 +32,24 @@
                 <i class="fas fa-user-shield"></i>
             </div>
             <div>
-                Vous êtes connecté en tant que <strong class="text-uppercase">{{ auth()->user()->role }}</strong>.
+                Vous êtes connecté en tant que <strong class="text-uppercase">{{ auth()->user()->getRoleNames()->first() ?? 'Utilisateur' }}</strong>.
                 Bienvenue dans votre espace sécurisé.
             </div>
         </div>
 
-        @switch(auth()->user()->role)
-            @case('superadmin')
-                @include('dashbords.superadmin')
-                @break
-
-            @case('admin')
-                @include('dashbords.admin')
-                @break
-
-            @case('secretaire')
-                @include('dashbords.secretaire')
-                @break
-
-            @case('medecin')
-                @include('dashbords.medecin')
-                @break
-
-            @case('client')
-                @include('dashbords.client')
-                @break
-
-            @default
-                @include('dashbords.default')
-        @endswitch
+        @hasrole('super_admin')
+            @include('dashbords.superadmin')
+        @elsehasrole('admin')
+            @include('dashbords.admin')
+        @elsehasrole('secretaire')
+            @include('dashbords.secretaire')
+        @elsehasrole('medecin')
+            @include('dashbords.medecin')
+        @elsehasrole('client')
+            @include('dashbords.client')
+        @else
+            @include('dashbords.default')
+        @endhasrole
     </div>
 @endsection
 
@@ -149,7 +137,7 @@
                 });
             }
 
-            @if(auth()->user()->role == 'superadmin')
+            @hasrole('super_admin')
                 const activityCtx = document.getElementById('activityChart');
                 if (activityCtx) {
                     new Chart(activityCtx, {
@@ -208,9 +196,9 @@
                         }
                     });
                 }
-            @endif
+            @endhasrole
 
-            @if(auth()->user()->role == 'medecin')
+            @hasrole('medecin')
                 const ctx = document.getElementById('consultations-chart');
                 if (ctx) {
                     new Chart(ctx, {
@@ -234,7 +222,7 @@
                         }
                     });
                 }
-            @endif
+            @endhasrole
         });
     </script>
 @endsection

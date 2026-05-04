@@ -17,8 +17,10 @@ class ExamenController extends Controller
                 ->addIndexColumn()
                 ->addColumn('service', fn($row) => $row->serviceMedical->nom ?? '-')
                 ->addColumn('actions', function($row){
-                    return '<a href="'.route("examens.edit",$row->id).'" class="btn-sm">✏️</a>
-                            <button data-url="'.route("examens.destroy",$row->id).'" class="btn btn-sm btn-danger btn-delete">🗑️</button>';
+                    $edit   = '<a href="'.route("examens.edit",$row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route("examens.destroy",$row->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

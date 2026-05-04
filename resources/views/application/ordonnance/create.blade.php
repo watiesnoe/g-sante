@@ -296,7 +296,7 @@
                 <select name="medicaments[]" class="form-control selectMedicament" required>
                     <option value="">-- Sélectionner --</option>
                     @foreach($medicaments as $med)
-                <option value="{{ $med->id }}">{{ $med->nom }}</option>
+                        <option value="{{ $med->id }}">{{ $med->nom }} (Stock: {{ $med->stock }})</option>
                     @endforeach
                 </select>
             </td>

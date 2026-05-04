@@ -42,7 +42,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Rôle</strong></td>
-                                <td><span class="badge bg-primary">{{ ucfirst($user->role) }}</span></td>
+                                <td><span class="badge bg-primary">{{ ucfirst($user->roles->first()?->libelle ?? $user->roles->first()?->name ?? '-') }}</span></td>
                             </tr>
                             <tr>
                                 <td><strong>Statut</strong></td>

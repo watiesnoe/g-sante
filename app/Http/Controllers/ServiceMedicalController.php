@@ -48,11 +48,11 @@ class ServiceMedicalController extends Controller
             return DataTables::of($services)
                 ->addIndexColumn() // Numéro de ligne
                 ->addColumn('actions', function ($row) {
-                    return '
-                        <span class="  btn-sm view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span>
-                        <span class="  btn-sm edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span>
-                        <span class="  btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>
-                    ';
+                    $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
+                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
                 })
                 ->editColumn('created_at', function ($row) {
                     return Carbon::parse($row->created_at)->format('d-m-Y H:i');

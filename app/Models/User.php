@@ -2,28 +2,29 @@
 
 namespace App\Models;
 use App\Traits\HasUuid;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasUuid;
+    use HasUuid,HasRoles;
     use HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
+        'modules_access',
         'prenom',
         'nom',
         'telephone',
         'adresse',
         'service_medical_id',
-        'statut', // Ajout du statut
-        'photo',  // Ajout de la photo
+        'statut',
+        'photo',
     ];
 
     protected $hidden = [
@@ -36,6 +37,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'modules_access' => 'array',
         ];
     }
 
@@ -60,7 +62,7 @@ class User extends Authenticatable
      */
     public function scopeOfRole($query, $role)
     {
-        return $query->where('role', $role);
+        return $query->role($role);
     }
 
     /**
@@ -87,12 +89,38 @@ class User extends Authenticatable
         return $this->statut === 'suspendu';
     }
 
-    public function hasRole($roles)
+
+    /**
+     * Vérifie si l'utilisateur a accès à un module spécifique.
+     * Les super_admin et admin ont toujours accès à tout, peu importe modules_access.
+     * Pour les autres rôles : si modules_access est défini, on l'utilise ; sinon fallback par rôle.
+     */
+    public function hasModuleAccess($module)
     {
-        if (is_array($roles)) {
-            return in_array($this->role, $roles);
+        // Super admin et admin : accès total, toujours
+        if ($this->hasRole(['super_admin', 'superadmin', 'admin'])) {
+            return true;
         }
-        return $this->role === $roles;
+
+        // Pour les autres : utiliser modules_access si défini
+        if (is_array($this->modules_access) && !empty($this->modules_access)) {
+            return in_array($module, $this->modules_access);
+        }
+
+        // Fallback basé sur les rôles Spatie
+        if ($this->hasRole('gestionnaire_stock')) {
+            return true;
+        }
+        if ($this->hasRole('secretaire')) {
+            return in_array($module, ['patient', 'ticket', 'rendezvous', 'hospitalisation']);
+        }
+        if ($this->hasRole('medecin')) {
+            return in_array($module, ['patient', 'consultation', 'ordonnance', 'examens', 'hospitalisation', 'maternity', 'infectiologie', 'transfert', 'rendezvous']);
+        }
+        if ($this->hasRole('pharmacien')) {
+            return in_array($module, ['ordonnance', 'hospitalisation', 'stock', 'paiements', 'caisse']);
+        }
+        return false;
     }
 
     public function service()

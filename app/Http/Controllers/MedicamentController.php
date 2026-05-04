@@ -15,7 +15,14 @@ class MedicamentController extends Controller
         if ($request->ajax()) {
             $query = Medicament::with(['unite','famille']);
 
+            if ($request->filled('famille_id')) {
+                $query->where('famille_id', $request->famille_id);
+            }
+
             return DataTables::of($query)
+                ->addColumn('checkbox', function($m) {
+                    return '<input type="checkbox" class="form-check-input medicament-checkbox" value="'.$m->uuid.'">';
+                })
                 ->addColumn('unite', function($m) {
                     return $m->unite?->nom ?? '-';
                 })
@@ -23,16 +30,23 @@ class MedicamentController extends Controller
                     return $m->famille?->nom ?? '-';
                 })
                 ->addColumn('actions', function($m) {
-                    $show   = '<a href="'.route('medicaments.show', $m->id).'" class="btn-sm" title="Détails"><i class="fa fa-eye text-primary"></i></a> ';
-                    $edit   = '<a href="'.route('medicaments.edit', $m->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $delete = '<form action="'.route('medicaments.destroy', $m->id).'" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm(\'Supprimer ?\');">'.csrf_field().method_field("DELETE").'<button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer"><i class="fa fa-trash text-danger"></i></button></form>';
-                    return $show.$edit.$delete;
+                    $show   = '<a href="'.route('medicaments.show', $m).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                    $edit   = '<a href="'.route('medicaments.edit', $m).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<form action="'.route('medicaments.destroy', $m).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce médicament ?\');">'.csrf_field().method_field('DELETE').'<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $show . $edit . $delete . '</div>';
                 })
-                ->rawColumns(['actions'])
+                ->rawColumns(['actions', 'checkbox'])
                 ->make(true);
         }
 
-        return view('application.medicament.index');
+        $familles = Famille::orderBy('nom')->get();
+        
+        // Stats
+        $totalMolecules = Medicament::count();
+        $stockCritique = Medicament::whereColumn('stock', '<=', 'stock_min')->count();
+
+        return view('application.medicament.index', compact('familles', 'totalMolecules', 'stockCritique'));
     }
 
     public function show(Medicament $medicament)

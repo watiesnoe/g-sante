@@ -13,9 +13,11 @@ class PrescriptionExamenController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-    $examens = PrescriptionExamen::with('consultation.patient')
-        ->where('statut', '!=', 'realise') // ✅ exclure les réalisés
-        ->latest();
+            $year = session('exercice_year', date('Y'));
+            $examens = PrescriptionExamen::with('consultation.patient')
+                ->whereYear('created_at', $year)
+                ->where('statut', '!=', 'realise') // ✅ exclure les réalisés
+                ->latest();
 
     return datatables()->of($examens)
         ->addColumn('patient', function($row){
@@ -25,17 +27,10 @@ class PrescriptionExamenController extends Controller
             return $row->examen;
         })
         ->addColumn('actions', function($row){
-            // Bouton pour accéder à la page de résultat / réponse
-            $reponseBtn = '<a href="'.route('reponse.create', $row->id).'" class="btn btn-sm btn-primary me-1">
-                             📝 Réponse
-                           </a>';
+            $reponse = '<a href="'.route('reponse.create', $row->id).'" class="btn btn-sm btn-outline-primary" title="Réponse"><i class="fa fa-edit"></i> Réponse</a>';
+            $delete  = '<button type="button" data-url="'.route('examens.destroy', $row->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
 
-            // Bouton supprimer
-            $deleteBtn = '<button data-url="'.route('examens.destroy', $row->id).'" class="btn btn-sm btn-danger btn-delete">
-                             🗑️ Supprimer
-                          </button>';
-
-            return $reponseBtn . $deleteBtn;
+            return '<div class="d-flex align-items-center justify-content-center gap-1">' . $reponse . $delete . '</div>';
         })
         ->rawColumns(['actions'])
         ->make(true);

@@ -13,7 +13,9 @@ class RendezvousController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
             $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
+                ->whereYear('date_heure', $year)
                 ->whereNotIn('statut', ['annule', 'realise']) // 🔹 Exclure annulé et réalisé
                 ->select('rendezvous.*');
 
@@ -37,26 +39,21 @@ class RendezvousController extends Controller
 
                 // Actions
                 ->addColumn('actions', function($rdv) {
+                    $view   = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $edit   = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
                     $realiseBtn = '';
-                    $suiviBtn   = '';
-
-                    // Bouton "Marquer comme réalisé" seulement si pas déjà réalisé
                     if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<span class="  btn-sm btn-realise text-success" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check text-success"></i></span> ';
+                        $realiseBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
                     }
 
-
-                    // Bouton "Créer un suivi" si consultation existe
+                    $suiviBtn = '';
                     if ($rdv->consultation) {
-                        $suiviBtn = '<span class="  btn-sm btn-realise text-success" data-url="'.route('consultations.suivi.create', $rdv->consultation->id).'" title="Marquer comme réalisé"><i class="fa fa-check text-success"></i></span> ';
+                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
                     }
 
-                    $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
-                    $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $realiseBtn = $realiseBtn ? '<span class="'.$realiseBtn.'</span> ' : '';
-                    $suiviBtn = $suiviBtn ? '<span class="'.$suiviBtn.'</span> ' : '';
-                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
-                    return $viewBtn.$editBtn.$realiseBtn.$suiviBtn.$deleteBtn;
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $realiseBtn . $suiviBtn . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -91,32 +88,21 @@ class RendezvousController extends Controller
 
                 // Actions
                 ->addColumn('actions', function($rdv) {
-                    $realiseBtn = '';
-                    $suiviBtn   = '';
-
-                    // Bouton "Marquer comme réalisé" seulement si pas déjà réalisé
-                    if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<button data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" class="dropdown-item btn-realise text-success">
-                            ✅ Marquer comme réalisé
-                        </button>';
-                    }
-
-
-                    // Bouton "Créer un suivi" si consultation existe
-                    if ($rdv->consultation) {
-                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="dropdown-item text-primary">
-                        📄 Ajouter un suivi
-                    </a>';
-                    }
-
-                    $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
-                    $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
+                    $view   = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $edit   = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     
-                    $out = $viewBtn.$editBtn;
-                    if ($realiseBtn) $out .= '<div class="d-inline">'.$realiseBtn.'</div> ';
-                    if ($suiviBtn) $out .= '<div class="d-inline">'.$suiviBtn.'</div> ';
-                    return $out.$deleteBtn;
+                    $realiseBtn = '';
+                    if ($rdv->statut !== 'realise') {
+                        $realiseBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                    }
+
+                    $suiviBtn = '';
+                    if ($rdv->consultation) {
+                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $realiseBtn . $suiviBtn . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -151,32 +137,21 @@ class RendezvousController extends Controller
 
                 // Actions
                 ->addColumn('actions', function($rdv) {
-                    $realiseBtn = '';
-                    $suiviBtn   = '';
-
-                    // Bouton "Marquer comme réalisé" seulement si pas déjà réalisé
-                    if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<button data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" class="dropdown-item btn-realise text-success">
-                            ✅ Marquer comme réalisé
-                        </button>';
-                    }
-
-
-                    // Bouton "Créer un suivi" si consultation existe
-                    if ($rdv->consultation) {
-                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="dropdown-item text-primary">
-                        📄 Ajouter un suivi
-                    </a>';
-                    }
-
-                    $viewBtn = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a> ';
-                    $editBtn = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $deleteBtn = '<button data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn-sm border-0 bg-transparent text-danger btn-delete" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
+                    $view   = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $edit   = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     
-                    $out = $viewBtn.$editBtn;
-                    if ($realiseBtn) $out .= '<div class="d-inline">'.$realiseBtn.'</div> ';
-                    if ($suiviBtn) $out .= '<div class="d-inline">'.$suiviBtn.'</div> ';
-                    return $out.$deleteBtn;
+                    $realiseBtn = '';
+                    if ($rdv->statut !== 'realise') {
+                        $realiseBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                    }
+
+                    $suiviBtn = '';
+                    if ($rdv->consultation) {
+                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $realiseBtn . $suiviBtn . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

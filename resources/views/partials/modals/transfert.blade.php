@@ -33,7 +33,7 @@
                             <label class="form-label" for="dest_medecin_id">Sélectionner le Médecin</label>
                             <select class="form-select" id="dest_medecin_id" name="dest_medecin_id" style="width: 100%;">
                                 <option value="">Choisir...</option>
-                                @foreach(\App\Models\User::where('role', 'medecin')->where('statut', 'actif')->get() as $medecin)
+                                @foreach(\App\Models\User::role('medecin')->where('statut', 'actif')->get() as $medecin)
                                     <option value="{{ $medecin->id }}">
                                         {{ $medecin->prenom ? $medecin->prenom . ' ' . $medecin->nom : $medecin->name }}
                                     </option>

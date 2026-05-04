@@ -11,7 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'module_access' => \App\Http\Middleware\EnsureModuleAccess::class,
+            'caisse.ouverte' => \App\Http\Middleware\EnsureCaisseOuverte::class,
+            'exercice.year' => \App\Http\Middleware\EnsureExerciceYear::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureExerciceYear::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

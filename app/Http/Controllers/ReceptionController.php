@@ -31,7 +31,7 @@ class ReceptionController extends Controller
 
                 ->addColumn('commande', function($row){
                     if ($row->commande) {
-                        return '<a href="'.route('commandes.show', $row->commande->id).'">'.
+                        return '<a href="'.route('commandes.show', $row->commande).'">'.
                             ($row->commande->reference ?? 'CMD-'.$row->commande->id).
                             '</a>';
                     }
@@ -63,25 +63,18 @@ class ReceptionController extends Controller
                 })
 
                 ->addColumn('actions', function($row){
-                    $actions = '<div class="d-flex align-items-center justify-content-center gap-2">
-                        <a href="'.route('receptions.show', $row->id).'" class="btn-sm" title="Détails"><i class="fa fa-eye text-primary"></i></a>';
-
+                    $view   = '<a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                    
                     if (!$row->commande || $row->commande->statut !== 'valide') {
-                        $actions .= '<a href="'.route('receptions.edit', $row->id).'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a>';
+                        $edit = '<a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     } else {
-                        $actions .= '<button class="btn btn-sm btn-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;">
-                            <i class="fa fa-edit text-info"></i>
-                        </button>';
+                        $edit = '<button type="button" class="btn btn-sm btn-outline-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;"><i class="fa fa-pencil-alt"></i></button>';
                     }
 
-                    $actions .= '<button class="btn-sm border-0 bg-transparent" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')">
-                            <i class="fa fa-trash text-danger"></i>
-                        </button>
-                    </div>';
-
-                    $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">
-                        '.csrf_field().method_field('DELETE').'
-                    </form>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    $actions = '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
+                    $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">'.csrf_field().method_field('DELETE').'</form>';
                     
                     return $actions;
                 })
@@ -259,9 +252,9 @@ class ReceptionController extends Controller
     //        ]);
     //    }
 
-    public function getProduits($id)
+    public function getProduits(Commande $commande)
     {
-        $commande = Commande::with(['fournisseur', 'lignes.medicament'])->findOrFail($id);
+        $commande->load(['fournisseur', 'lignes.medicament']);
 
         // Produits non complètement reçus
         $produits = $commande->lignes

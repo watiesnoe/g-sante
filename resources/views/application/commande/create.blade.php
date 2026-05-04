@@ -62,19 +62,19 @@
                         <option value="">-- Choisir un médicament --</option>
                         @foreach($medicaments as $m)
                             <option value="{{ $m->id }}" data-prix="{{ $m->prix_achat }}">
-                                {{ $m->nom }}
-                        </option>
-                    @endforeach
+                                {{ $m->nom }} (Stock: {{ $m->stock }} | {{ number_format($m->prix_achat, 0, ',', ' ') }} FCFA)
+                            </option>
+                        @endforeach
                 </select>
                 </div>
                 <table class="table table-bordered" id="table-panier">
                     <thead>
                         <tr>
                             <th>Médicament</th>
-                            <th width="20%">Qté</th>
-                            <th width="20%">Prix</th>
-                            <th>Total</th>
-                            <th></th>
+                            <th width="15%">Qté</th>
+                            <th width="20%">P.U (FCFA)</th>
+                            <th width="20%">Total (FCFA)</th>
+                            <th width="50"></th>
                         </tr>
                     </thead>
 
@@ -103,6 +103,10 @@
 <script>
 $(function(){
 
+    $.ajaxSetup({
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+    });
+
     $('.js-select2').select2({ width:'100%' });
 
     let panier = {};
@@ -118,7 +122,7 @@ $(function(){
         };
         @endforeach
     @else
-        panier = {!! json_encode(session('panier', [])) !!};
+        panier = {!! json_encode(session('commande_panier', [])) !!};
     @endif
 
     renderTable();
@@ -128,42 +132,40 @@ $(function(){
         let id = $(this).val();
         if(!id) return;
 
-        let nom = $(this).find('option:selected').text();
-        let prix = parseFloat($(this).find('option:selected').data('prix'));
-
-        if(panier[id]){
-            panier[id].quantite++;
-        } else {
-            panier[id] = {id, nom, quantite:1, prix_unitaire:prix};
-        }
-
-        renderTable();
-        $(this).val(null).trigger('change');
+        $.post("{{ route('commandes.panier.ajouter') }}", { medicament_id: id }, function(data){
+            panier = data;
+            renderTable();
+            $('#selectMedicament').val(null).trigger('change');
+        });
     });
 
     // SUPPRIMER
     $('#table-panier').on('click','.remove',function(){
-        delete panier[$(this).data('id')];
-        renderTable();
+        let id = $(this).data('id');
+        $.post("{{ route('commandes.panier.supprimer') }}", { medicament_id: id }, function(data){
+            panier = data;
+            renderTable();
+        });
     });
 
     // MODIFIER (SANS RELOAD)
     $('#table-panier').on('input','.quantite, .prix',function(){
-
         let tr = $(this).closest('tr');
         let id = tr.data('id');
-
         let qte = parseInt(tr.find('.quantite').val()) || 1;
         let prix = parseFloat(tr.find('.prix').val()) || 0;
 
-        panier[id].quantite = qte;
-        panier[id].prix_unitaire = prix;
-
-        // update ligne
-        let total = qte * prix;
-        tr.find('.total').text(total.toFixed(2));
-
-        calculTotal();
+        $.post("{{ route('commandes.panier.modifier') }}", { 
+            medicament_id: id, 
+            quantite: qte, 
+            prix_unitaire: prix 
+        }, function(data){
+            panier = data;
+            // update ligne
+            let total = qte * prix;
+            tr.find('.total').text(Math.round(total));
+            calculTotal();
+        });
     });
 
     function renderTable(){
@@ -171,27 +173,30 @@ $(function(){
         tbody.empty();
 
         Object.values(panier).forEach(item=>{
+            let pUnit = parseFloat(item.prix_unitaire) || 0;
             tbody.append(`
                 <tr data-id="${item.id}">
                     <td>
                         <input type="hidden" name="medicament_id[]" value="${item.id}">
-                        ${item.nom}
+                        <div class="fw-bold">${item.nom}</div>
                     </td>
 
                     <td>
                         <input type="number" name="quantite[]" class="form-control quantite"
-                               value="${item.quantite}" min="1">
+                                value="${item.quantite}" min="1">
                     </td>
 
                     <td>
                         <input type="number" name="prix_unitaire[]" class="form-control prix"
-                               value="${item.prix_unitaire}" step="0.01">
+                                value="${Math.round(pUnit)}" step="1">
                     </td>
 
-                    <td class="total">${(item.quantite * item.prix_unitaire).toFixed(2)}</td>
+                    <td class="total text-end fw-bold">${Math.round(item.quantite * pUnit)}</td>
 
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm remove" data-id="${item.id}">X</button>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm remove" data-id="${item.id}">
+                            <i class="fa fa-times"></i>
+                        </button>
                     </td>
                 </tr>
             `);
@@ -203,12 +208,12 @@ $(function(){
     function calculTotal(){
         let total = 0;
         Object.values(panier).forEach(i=>{
-            total += i.quantite * i.prix_unitaire;
+            total += i.quantite * (parseFloat(i.prix_unitaire) || 0);
         });
 
-        $('#total_general').text(total.toFixed(2));
+        $('#total_general').text(Math.round(total).toLocaleString('fr-FR') + ' FCFA');
     }
 
 });
 </script>
-@endsection 
+@endsection

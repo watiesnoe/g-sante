@@ -58,38 +58,14 @@ public function index(Request $request)
             })
 
             // Actions
-           ->addColumn('actions', function ($row) {
-    return '
-    <div class="d-flex justify-content-center gap-2">
+            ->addColumn('actions', function ($row) {
+                $view   = '<a href="'.route('commandes.show', $row).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                $edit   = '<a href="'.route('commandes.edit', $row).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                $pdf    = '<a href="'.route('commandes.pdf', $row).'" target="_blank" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i></a>';
+                $delete = '<button type="button" class="btn btn-sm btn-outline-danger btnSupprimer" data-id="'.$row->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
 
-        <!-- Voir -->
-        <a href="'.route('commandes.show', $row->id).'" 
-           class="text-primary" title="Voir">
-            <i class="fa fa-eye"></i>
-        </a>
-
-        <!-- Modifier -->
-        <a href="'.route('commandes.edit', $row->id).'" 
-           class="text-warning" title="Modifier">
-            <i class="fa fa-edit text-info"></i>
-        </a>
-
-        <!-- PDF -->
-        <a href="'.route('commandes.pdf', $row->id).'" 
-           target="_blank" class="text-info" title="Imprimer PDF">
-            <i class="fa fa-file-pdf"></i>
-        </a>
-
-        <!-- Supprimer -->
-        <span class="text-danger btnSupprimer" 
-              style="cursor:pointer;" 
-              data-id="'.$row->id.'" 
-              title="Supprimer">
-            <i class="fa fa-trash text-danger"></i>
-        </span>
-
-    </div>';
-})
+                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $pdf . $delete . '</div>';
+            })
             ->rawColumns(['reference', 'statut', 'actions'])
 
             ->make(true);
@@ -105,48 +81,74 @@ public function index(Request $request)
         $medicaments = Medicament::all();
         $panier = session()->get('commande_panier', []);
 
+        // Assurer la présence des prix pour les anciens paniers en session
+        foreach($panier as $id => &$item) {
+            if(!isset($item['prix_unitaire']) || $item['prix_unitaire'] <= 0) {
+                $m = Medicament::find($id);
+                if($m) $item['prix_unitaire'] = $m->prix_achat;
+            }
+        }
+        session(['commande_panier' => $panier]);
+
         return view('application.commande.create', compact('fournisseurs', 'medicaments', 'panier'));
     }
 
     // Ajouter un médicament au panier (session)
-//    public function ajouterAuPanier($id)
-//    {
-//        // Charger la commande avec ses produits et le fournisseur
-//        $commande = Commande::with(['fournisseur', 'medicaments'])->findOrFail($id);
-//
-//        // Récupérer les produits liés à la commande
-//        $produits = $commande->medicaments->map(function ($medicament) {
-//            return [
-//                'medicament_id' => $medicament->id,
-//                'nom' => $medicament->nom,
-//                'quantite_commandee' => $medicament->pivot->quantite,
-//                'prix_unitaire' => $medicament->pivot->prix_unitaire,
-//                'stock_ancien' => $medicament->stock ?? 0, // si tu as une colonne stock
-//            ];
-//        });
-//
-//
-//    }
+    public function ajouterAuPanier(Request $request)
+    {
+        $id = $request->medicament_id;
+        $medicament = Medicament::findOrFail($id);
+        
+        $panier = session()->get('commande_panier', []);
+        
+        if(isset($panier[$id])) {
+            $panier[$id]['quantite']++;
+        } else {
+            $panier[$id] = [
+                'id' => $id,
+                'nom' => $medicament->nom,
+                'quantite' => 1,
+                'prix_unitaire' => $medicament->prix_achat,
+            ];
+        }
+        
+        session()->put('commande_panier', $panier);
+        return response()->json($panier);
+    }
 
+    // Modifier un item dans le panier
+    public function modifierPanier(Request $request)
+    {
+        $id = $request->medicament_id;
+        $panier = session()->get('commande_panier', []);
 
-// Supprimer du panier
+        if(isset($panier[$id])){
+            $panier[$id]['quantite'] = $request->quantite;
+            $panier[$id]['prix_unitaire'] = $request->prix_unitaire;
+            session(['commande_panier' => $panier]);
+        }
+
+        return response()->json($panier);
+    }
+
+    // Supprimer du panier
     public function supprimerDuPanier(Request $request)
     {
-        $panier = session('panier', []);
+        $panier = session('commande_panier', []);
         $id = $request->medicament_id;
 
         if(isset($panier[$id])){
             unset($panier[$id]);
         }
 
-        session(['panier' => $panier]);
+        session(['commande_panier' => $panier]);
         return response()->json($panier);
     }
 
-// Vider le panier si nécessaire
+    // Vider le panier
     public function viderPanier()
     {
-        session()->forget('panier');
+        session()->forget('commande_panier');
         return response()->json([]);
     }
 
@@ -202,23 +204,121 @@ public function index(Request $request)
         $commande->update(['total' => $total_commande]);
 
         // Vider le panier de session
-        session()->forget('panier');
+        session()->forget('commande_panier');
 
         return redirect()
             ->route('commandes.index')
             ->with('success', 'Commande enregistrée avec succès !');
     }
 
-    public function show($id)
+    public function bulkAjouterAuPanier(Request $request)
     {
-        $commande = Commande::with(['fournisseur', 'lignes.medicament'])->findOrFail($id);
+        $ids = $request->medicament_ids;
+        if(!$ids || !is_array($ids)) {
+            return redirect()->back()->with('error', 'Aucun médicament sélectionné.');
+        }
 
+        $medicaments = Medicament::whereIn('uuid', $ids)->get();
+        
+        $panier = session()->get('commande_panier', []);
+
+        foreach($medicaments as $m) {
+            if(isset($panier[$m->id])) {
+                $panier[$m->id]['quantite']++;
+            } else {
+                $panier[$m->id] = [
+                    'id' => $m->id,
+                    'nom' => $m->nom,
+                    'quantite' => 1,
+                    'prix_unitaire' => $m->prix_achat,
+                ];
+            }
+        }
+
+        session(['commande_panier' => $panier]);
+
+        return redirect()->route('commandes.create');
+    }
+
+    public function edit(Commande $commande)
+    {
+        $commande->load('lignes.medicament');
+        $fournisseurs = Fournisseur::all();
+        $medicaments = Medicament::all();
+
+        // Charger les lignes dans le panier de session
+        $panier = [];
+        foreach($commande->lignes as $ligne) {
+            $panier[$ligne->medicament_id] = [
+                'id' => $ligne->medicament_id,
+                'nom' => $ligne->medicament->nom ?? 'Inconnu',
+                'quantite' => $ligne->quantite,
+                'prix_unitaire' => $ligne->prix_unitaire,
+            ];
+        }
+        session(['commande_panier' => $panier]);
+
+        return view('application.commande.create', compact('commande', 'fournisseurs', 'medicaments', 'panier'));
+    }
+
+    public function update(Request $request, Commande $commande)
+    {
+        $request->validate([
+            'reference' => 'required|string',
+            'date_commande' => 'required|date',
+            'fournisseur_id' => 'required|exists:fournisseurs,id',
+            'medicament_id' => 'required|array',
+            'quantite' => 'required|array',
+            'prix_unitaire' => 'required|array',
+        ]);
+
+        $medicaments = $request->medicament_id;
+        $quantites = $request->quantite;
+        $prix_unitaires = $request->prix_unitaire;
+
+        $commande->update([
+            'reference' => $request->reference,
+            'date_commande' => $request->date_commande,
+            'fournisseur_id' => $request->fournisseur_id,
+        ]);
+
+        // Supprimer les anciennes lignes
+        $commande->lignes()->delete();
+
+        $total_commande = 0;
+        foreach ($medicaments as $index => $med_id) {
+            $quantite = (int) $quantites[$index];
+            $prix = (float) $prix_unitaires[$index];
+            $total = $quantite * $prix;
+
+            $commande->lignes()->create([
+                'medicament_id' => $med_id,
+                'quantite' => $quantite,
+                'prix_unitaire' => $prix,
+                'total' => $total,
+            ]);
+
+            $total_commande += $total;
+        }
+
+        $commande->update(['total' => $total_commande]);
+
+        session()->forget('commande_panier');
+
+        return redirect()
+            ->route('commandes.index')
+            ->with('success', 'Commande mise à jour avec succès !');
+    }
+
+    public function show(Commande $commande)
+    {
+        $commande->load(['fournisseur', 'lignes.medicament']);
         return view('application.commande.show', compact('commande'));
     }
 
-    public function pdf($id)
+    public function pdf(Commande $commande)
     {
-        $commande = Commande::with(['fournisseur', 'lignes.medicament'])->findOrFail($id);
+        $commande->load(['fournisseur', 'lignes.medicament']);
 
         $pdf = PDF::loadView('application.commande.pdf', compact('commande'))
             ->setPaper('A4', 'portrait');
@@ -226,4 +326,11 @@ public function index(Request $request)
         return $pdf->download('Commande_'.$commande->reference.'.pdf');
     }
 
+    public function destroy(Commande $commande)
+    {
+        $commande->lignes()->delete();
+        $commande->delete();
+
+        return response()->json(['success' => true]);
+    }
 }

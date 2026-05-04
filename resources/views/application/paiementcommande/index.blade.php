@@ -150,15 +150,15 @@
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-2">
                                             <a href="{{ route('paiementscommande.create', ['commande_id' => $commande->id]) }}"
-                                               class="btn btn-sm btn-primary"
+                                               class="btn-sm"
                                                title="Payer">
-                                                <i class="fa fa-money-bill"></i>
+                                                <i class="fa fa-money-bill text-primary"></i>
                                             </a>
 
                                             <a href="{{ route('paiementscommande.history', $commande->id) }}"
-                                               class="btn btn-sm btn-info"
+                                               class="btn-sm"
                                                title="Historique paiements">
-                                                <i class="fa fa-history"></i>
+                                                <i class="fa fa-history text-info"></i>
                                             </a>
                                         </div>
                                     </td>

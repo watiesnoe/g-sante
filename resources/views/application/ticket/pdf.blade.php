@@ -5,43 +5,32 @@
     <title>Ticket #{{ $ticket->id }}</title>
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: 'Helvetica', 'Arial', sans-serif;
             margin: 0;
             padding: 0;
+            background: #fff;
         }
         .page {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
             width: 100%;
+            padding: 20px;
         }
         .ticket {
-            border: 1px dashed #000;
-            padding-right: 20px;
-            padding-left: 20px;
-            padding-top: 10px;
-            margin-top: 50px;
-            padding-bottom: 20px;
-            box-sizing: border-box;
+            border: 1px solid #dee2e6;
+            padding: 25px;
+            margin-bottom: 40px;
+            border-radius: 10px;
+            position: relative;
+            background: #fff;
         }
-        h2, h3 {
-            margin: 0;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: left;
-        }
-        .footer {
-            text-align: right;
-            margin-top: 10px;
+        .ticket:after {
+            content: "Coupure - Garder cette partie";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #ccc;
+            text-transform: uppercase;
         }
     </style>
 </head>
@@ -53,7 +42,7 @@
     </div>
 
     {{-- 🔹 Deuxième ticket A5 (identique) --}}
-    <div class="ticket">
+    <div class="ticket" style="border-style: dashed;">
         @include('application.ticket.ticket_content', ['ticket' => $ticket])
     </div>
 </div>

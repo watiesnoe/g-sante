@@ -21,12 +21,10 @@ class ConfigurationController extends Controller
             return DataTables::of($services)
                 ->addIndexColumn() // Numéro de ligne
                 ->addColumn('actions', function ($row) {
-                    $editUrl = route('service_medicals.edit', $row->id);
-                    $deleteUrl = route('service_medicals.destroy', $row->id);
-
-                    $edit = '<a href="'.$editUrl.'" class="btn-sm" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></a> ';
-                    $delete = '<button class="btn-sm border-0 bg-transparent text-danger delete-btn" data-url="'.$deleteUrl.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>';
-                    return $edit.$delete;
+                    $edit   = '<a href="'.route('service_medicals.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-url="'.route('service_medicals.destroy', $row->id).'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $delete . '</div>';
                 })
                 ->editColumn('created_at', function ($row) {
                     return Carbon::parse($row->created_at)->format('d-m-Y H:i');

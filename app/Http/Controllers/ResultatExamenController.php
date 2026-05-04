@@ -39,8 +39,9 @@ class ResultatExamenController extends Controller
                     return 'Aucun';
                 })
                 ->addColumn('actions', function($row){
-                    $deleteBtn = '<span class="btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
-                    return $deleteBtn;
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $delete . '</div>';
                 })
                 ->rawColumns(['fichier','actions'])
                 ->make(true);

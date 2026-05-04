@@ -198,7 +198,7 @@
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ route('rendezvous.create') }}" class="btn btn-lg btn-info text-white w-100 py-3">
+                        <a href="" class="btn btn-lg btn-info text-white w-100 py-3">
                             <i class="fas fa-calendar-plus me-2"></i> Rendez-vous
                         </a>
                     </div>

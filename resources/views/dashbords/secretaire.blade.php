@@ -90,13 +90,14 @@
         </div>
     </div>
 
+    <div class="col-lg-4">
         <!-- Actions rapides -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h5 class="mb-0 fw-bold"><i class="fas fa-bolt text-warning me-2"></i>Actions Rapides</h5>
             </div>
             <div class="card-body">
-                <a href="{{ route('rendezvous.create') }}" class="btn btn-primary w-100 mb-3 py-3">
+                <a href="{{ route('rendezvous.index') }}" class="btn btn-primary w-100 mb-3 py-3">
                     <i class="fas fa-calendar-plus me-2"></i>Nouveau RDV
                 </a>
                 <a href="{{ route('patients.create') }}" class="btn btn-success w-100 mb-3 py-3">

@@ -26,10 +26,11 @@ class SuiviController extends Controller
                 ->addColumn('resultat', fn($s) => $s->resultat ?? '-')
                 ->addColumn('statut', fn($s) => ucfirst($s->statut))
                 ->addColumn('actions', function($s){
-                    $viewBtn = '<span class="  btn-sm view " data-id="'.$s->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
-                    $editBtn = '<span class="  btn-sm edit" data-id="'.$s->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
-                    $deleteBtn = '<span class="  btn-sm delete" data-id="'.$s->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
-                    return $viewBtn.$editBtn.$deleteBtn;
+                    $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$s->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
+                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$s->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$s->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

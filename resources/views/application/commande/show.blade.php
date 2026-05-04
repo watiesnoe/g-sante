@@ -37,7 +37,7 @@
                             @endif
                         </p>
                         <p><strong>Montant total :</strong>
-                            <span class="text-success fw-bold">{{ number_format($commande->montant_total, 0, ',', ' ') }} F CFA</span>
+                            <span class="text-success fw-bold">{{ number_format($commande->total, 0, ',', ' ') }} F CFA</span>
                         </p>
                     </div>
                 </div>

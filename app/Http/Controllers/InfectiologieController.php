@@ -105,15 +105,7 @@ class InfectiologieController extends Controller
         return redirect()->back()->with('success', 'Protocole supprimé avec succès.');
     }
 
-    public function antibiotiques()
-    {
-        $famillesIds = \App\Models\Famille::whereIn('nom', ['Antibiotiques', 'Antipaludiques'])->pluck('id');
-        $antibiotiques = \App\Models\Medicament::with(['unite', 'famille'])
-            ->whereIn('famille_id', $famillesIds)
-            ->get();
 
-        return view('application.infectiologie.antibiotiques', compact('antibiotiques'));
-    }
 
     public function aidePrescription()
     {

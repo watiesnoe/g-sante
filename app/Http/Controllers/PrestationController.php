@@ -21,13 +21,10 @@ class PrestationController extends Controller
                     return $row->serviceMedical->nom ?? '';
                 })
                 ->addColumn('actions', function ($row) {
-                    $editUrl = route('prestations.edit', $row->id);
-                    $deleteUrl = route('prestations.destroy', $row->id);
-
-                    return '
-                      <a  href="' . $editUrl . '"><span class="fa fa-edit text-info"></span></a>
-                      <a class=" delete-btn" data-url="' . $deleteUrl . '"><span class="fa fa-trash text-danger"></span></a>
-                       ';
+                    $edit   = '<a href="'.route('prestations.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route('prestations.destroy', $row->id).'" class="btn btn-sm btn-outline-danger delete-btn" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $delete . '</div>';
                 }) 
                 ->rawColumns(['actions'])
                 ->make(true);

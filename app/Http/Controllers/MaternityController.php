@@ -12,7 +12,11 @@ class MaternityController extends Controller
 {
     public function index()
     {
-        $grossesses = Grossesse::with('patient')->where('statut', 'En cours')->get();
+        $year = session('exercice_year', date('Y'));
+        $grossesses = Grossesse::with('patient')
+            ->whereYear('created_at', $year)
+            ->where('statut', 'En cours')
+            ->get();
         return view('application.maternity.index', compact('grossesses'));
     }
 

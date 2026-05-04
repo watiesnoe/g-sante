@@ -14,7 +14,9 @@ class PaiementController extends Controller
      */
     public function index()
     {
+        $year = session('exercice_year', date('Y'));
         $paiements = Paiement::with(['hospitalisation.patient'])
+            ->whereYear('created_at', $year)
             ->latest()
             ->paginate(10);
 
@@ -46,6 +48,14 @@ class PaiementController extends Controller
     ]);
 
     try {
+        // 🔹 Vérifier si la caisse est ouverte
+        if (!\App\Models\CaisseSession::hasOpenSession()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Votre caisse est fermée. Veuillez l\'ouvrir pour encaisser le paiement.'
+            ], 403);
+        }
+
         DB::transaction(function () use ($request) {
 
             $hospitalisation = Hospitalisation::findOrFail($request->hospitalisation_id);
@@ -95,6 +105,16 @@ class PaiementController extends Controller
                 'mode_paiement'      => $request->mode_paiement ?? 'non précisé',
                 'date_paiement'      => now(),
             ]);
+
+            // Enregistrement dans la caisse
+            if ($request->montant_recu > 0) {
+                \App\Models\CaisseSession::enregistrerMouvement(
+                    $request->montant_recu,
+                    'Paiement Hospitalisation #' . $hospitalisation->id,
+                    'entree',
+                    $hospitalisation
+                );
+            }
         });
 
         return response()->json([

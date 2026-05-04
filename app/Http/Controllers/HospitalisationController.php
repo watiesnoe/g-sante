@@ -19,12 +19,14 @@ class HospitalisationController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
             $hospitalisations = Hospitalisation::with([
                 'consultation.patient',
                 'salle',
                 'lit',
                 'service'
             ])
+                ->whereYear('created_at', $year)
                 ->where('etat', 'en cours') // 🔹 Filtre ajouté ici
                 ->latest();
 
@@ -48,13 +50,14 @@ class HospitalisationController extends Controller
                     return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $view = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn-sm" title="Voir"><i class="bx bx-show text-primary"></i></a> ';
-                    $print = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn-sm" title="Imprimer"><i class="bx bx-printer text-warning"></i></a> ';
-                    $edit = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn-sm" title="Modifier"><i class="bx bx-edit text-info"></i></a> ';
-                    $payment = '<button type="button" class="btn-sm border-0 bg-transparent btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="bx bx-credit-card text-success"></i></button> ';
-                    $transfer = '<button type="button" class="btn-sm border-0 bg-transparent text-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button> ';
-                    $delete = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn-sm border-0 bg-transparent text-danger" title="Supprimer"><i class="bx bx-trash"></i></button></form>';
-                    return $view.$print.$edit.$payment.$transfer.$delete;
+                    $view     = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $print    = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                    $edit     = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $payment  = '<button type="button" class="btn btn-sm btn-outline-success btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="fa fa-credit-card"></i></button>';
+                    $transfer = '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    $delete   = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $print . $edit . $payment . $transfer . $delete . '</div>';
                 })
                 ->rawColumns(['etat', 'action'])
                 ->make(true);
@@ -69,12 +72,15 @@ class HospitalisationController extends Controller
 
 
         if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
             $hospitalisations = Hospitalisation::with([
                 'consultation.patient',
                 'salle',
                 'lit',
                 'service'
-            ])->where('etat', 'terminé') // 🔹 Filtre ajouté ici
+            ])
+                ->whereYear('created_at', $year)
+                ->where('etat', 'terminé') // 🔹 Filtre ajouté ici
                 ->get();
 
             return DataTables::of($hospitalisations)
@@ -97,12 +103,13 @@ class HospitalisationController extends Controller
                     return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $view = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn-sm" title="Voir"><i class="bx bx-show text-primary"></i></a> ';
-                    $print = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn-sm" title="Imprimer"><i class="bx bx-printer text-warning"></i></a> ';
-                    $edit = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn-sm" title="Modifier"><i class="bx bx-edit text-info"></i></a> ';
-                    $transfer = '<button type="button" class="btn-sm border-0 bg-transparent text-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button> ';
-                    $delete = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn-sm border-0 bg-transparent text-danger" title="Supprimer"><i class="bx bx-trash"></i></button></form>';
-                    return $view.$print.$edit.$transfer.$delete;
+                    $view     = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $print    = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                    $edit     = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $transfer = '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    $delete   = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $print . $edit . $transfer . $delete . '</div>';
                 })
                 ->rawColumns(['etat', 'action'])
                 ->make(true);
@@ -113,21 +120,6 @@ class HospitalisationController extends Controller
     }
 
     // Paiement AJAX
-//    public function paiement(Request $request)
-//    {
-//        $request->validate([
-//            'hospitalisation_id' => 'required|exists:hospitalisations,id',
-//            'dateSortie'         => 'required|date',
-//            'montantTotal'       => 'required|numeric|min:0',
-//            'montantRecu'        => 'required|numeric|min:0',
-//        ]);
-//
-//        $hospitalisation = Hospitalisation::findOrFail($request->hospitalisation_id);
-//
-//        // Mettre à jour la sortie
-//        $hospitalisation->date_sortie = $request->dateSortie;
-//        $hospitalisation->etat = 'terminée';
-//        $hospitalisation->save();
 //
 //        // Créer un paiement
 //        Paiement::create([
@@ -177,6 +169,14 @@ class HospitalisationController extends Controller
     public function store(Request $request)
     {
         try {
+            // 🔹 Vérifier si la caisse est ouverte
+            if (!\App\Models\CaisseSession::hasOpenSession()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Votre caisse est fermée. Veuillez l\'ouvrir pour encaisser le paiement.'
+                ], 403);
+            }
+
             // 🔹 Validation des données
             $validated = $request->validate([
                 'hospitalisation_id' => 'required|exists:hospitalisations,id',
@@ -225,6 +225,16 @@ class HospitalisationController extends Controller
 
             if ($hospitalisation->lit_id) {
                 \App\Models\Lit::where('id', $hospitalisation->lit_id)->update(['statut' => 'Libre']);
+            }
+
+            // 🔹 Enregistrement dans la caisse
+            if ($validated['montant_recu'] > 0) {
+                \App\Models\CaisseSession::enregistrerMouvement(
+                    $validated['montant_recu'],
+                    'Paiement Hospitalisation #' . $hospitalisation->id . ' (Patient: ' . ($hospitalisation->consultation->patient->nom ?? $hospitalisation->patient->nom ?? 'Inconnu') . ')',
+                    'entree',
+                    $paiement
+                );
             }
 
             // 🔹 Retour JSON pour AJAX

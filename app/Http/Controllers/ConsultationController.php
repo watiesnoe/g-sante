@@ -32,7 +32,10 @@ class ConsultationController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $consultations = Consultation::with(['patient', 'medecin', 'ticket'])->latest();
+            $year = session('exercice_year', date('Y'));
+            $consultations = Consultation::with(['patient', 'medecin', 'ticket'])
+                ->whereYear('created_at', $year)
+                ->latest();
 
             return DataTables::of($consultations)
                 ->addColumn('patient', function($row) {
@@ -45,18 +48,11 @@ class ConsultationController extends Controller
                     return $row->ticket ? $row->ticket->id : '-';
                 })
                 ->addColumn('actions', function($row){
-                    return '
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                        <a href="'.route('consultations.show', $row).'" class="text-info cursor-pointer font-size-16" 
-                        title="Voir"><i class="fa fa-eye text-warning"></i></a>
-                        <a href="'.route('consultations.edit', $row).'" class="cursor-pointer ml-1 text font-size-16"
-                         title="Modifier"><i class="fa fa-edit text-primary"></i></a>
-                        <button type="button" class="btn btn-sm border-0 bg-transparent text-success" 
-                                onclick="openTransfertModal(\''.$row->patient->uuid.'\', \''.$row->uuid.'\', \'\')" title="Transférer">
-                            <i class="fa fa-exchange-alt"></i>
-                        </button>
-                    </div>
-                ';
+                    $view     = '<a href="'.route('consultations.show', $row).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $edit     = '<a href="'.route('consultations.edit', $row).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $transfer = '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal(\''.$row->patient->uuid.'\', \''.$row->uuid.'\', \'\')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $transfer . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -90,7 +86,7 @@ class ConsultationController extends Controller
                     return $row->items->pluck('libelle')->implode(', ');
                 })
                 ->addColumn('actions', function($row){
-                    return '<a href="'.route('consultations.create', ['ticket_id' => $row->uuid]).'" class="btn btn-primary btn-sm"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                    return '<a href="'.route('consultations.create', ['ticket_id' => $row->uuid]).'" class="btn btn-sm btn-outline-primary"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

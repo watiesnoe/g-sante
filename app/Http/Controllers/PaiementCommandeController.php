@@ -107,17 +107,32 @@ class PaiementCommandeController extends Controller
         }
 
         try {
+            // Vérifier si la caisse est ouverte
+            if (!\App\Models\CaisseSession::hasOpenSession()) {
+                return back()->withErrors([
+                    'error' => 'Votre caisse est fermée. Veuillez l\'ouvrir pour effectuer un paiement fournisseur.'
+                ])->withInput();
+            }
+
             // Démarrer une transaction pour garantir l'intégrité des données
             DB::beginTransaction();
 
             // Créer le paiement
-            PaiementCommande::create([
+            $paiement = PaiementCommande::create([
                 'commande_id' => $request->commande_id,
                 'montant' => $request->montant,
                 'mode' => $request->mode,
                 'date_paiement' => $request->date_paiement,
                 'observations' => $request->observations
             ]);
+
+            // Enregistrement dans la caisse (Sortie)
+            \App\Models\CaisseSession::enregistrerMouvement(
+                $request->montant,
+                'Paiement Fournisseur (Commande #' . $request->commande_id . ')',
+                'sortie',
+                $paiement
+            );
 
             // Mettre à jour le StatutPaiement de la commande
             $this->updateStatutPaiement($commande);

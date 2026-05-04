@@ -3,105 +3,134 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Ticket;
-use App\Models\Paiement;
-use App\Models\OrdonnancePaiement;
-use App\Models\PaiementCommande;
+use App\Models\CaisseSession;
+use App\Models\CaisseMouvement;
 use Carbon\Carbon;
 
 class CaisseController extends Controller
 {
+    /**
+     * Admin overview: lists all caisse sessions
+     */
     public function index(Request $request)
     {
-        $transactions = collect();
-        $debutMois = Carbon::now()->startOfMonth();
-        $finMois = Carbon::now()->endOfMonth();
-
-        // 1. Entrées Tickets (Consultations etc.)
-        $tickets = Ticket::whereNotIn('statut', ['annulé'])->get();
-        foreach ($tickets as $ticket) {
-            if ($ticket->total > 0) {
-                $transactions->push([
-                    'date' => $ticket->created_at,
-                    'type' => 'Entrée',
-                    'provenance' => 'Ticket (Caisse)',
-                    'description' => $ticket->description ?: 'Prestation Caisse',
-                    'montant' => $ticket->total,
-                    'badge' => 'success'
-                ]);
-            }
+        // View all sessions for admin, or redirect normal users to their active session
+        if (!auth()->user()->hasRole(['admin', 'super_admin'])) {
+            return redirect()->route('caisse.my_session');
         }
 
-        // 2. Entrées Paiements (Hosp, Examens)
-        $paiements = Paiement::all();
-        foreach ($paiements as $p) {
-            if ($p->montant_recu > 0) {
-                $desc = 'Paiement Service';
-                if ($p->hospitalisation_id) $desc = 'Hospitalisation #' . $p->hospitalisation_id;
-                if ($p->prescriptions_examens_id) $desc = 'Examen Labo #' . $p->prescriptions_examens_id;
+        $year = session('exercice_year', date('Y'));
+        $sessions = CaisseSession::with('user')
+            ->whereYear('created_at', $year)
+            ->latest()
+            ->get();
+        return view('application.caisse.index', compact('sessions'));
+    }
 
-                $transactions->push([
-                    'date' => $p->date_paiement ? Carbon::parse($p->date_paiement) : $p->created_at,
-                    'type' => 'Entrée',
-                    'provenance' => 'Hôpital / Services',
-                    'description' => $desc,
-                    'montant' => $p->montant_recu,
-                    'badge' => 'success'
-                ]);
-            }
+    /**
+     * Show form to open a caisse session
+     */
+    public function open()
+    {
+        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        if ($session) {
+            return redirect()->route('caisse.my_session')->with('info', 'Vous avez déjà une caisse ouverte.');
+        }
+        return view('application.caisse.open');
+    }
+
+    /**
+     * Store opening of a caisse session
+     */
+    public function storeOpen(Request $request)
+    {
+        $request->validate([
+            'solde_initial' => 'required|numeric|min:0'
+        ]);
+
+        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        if ($session) {
+            return redirect()->route('caisse.my_session')->with('info', 'Vous avez déjà une caisse ouverte.');
         }
 
-        // 3. Entrées Pharmacie
-        if (class_exists(OrdonnancePaiement::class)) {
-            $ordoPaiements = OrdonnancePaiement::with('medicament')->get();
-            foreach ($ordoPaiements as $op) {
-                if ($op->prix_total > 0) {
-                    $medName = $op->medicament ? $op->medicament->nom : 'Medicament ID:'.$op->medicament_id;
-                    $transactions->push([
-                        'date' => $op->created_at,
-                        'type' => 'Entrée',
-                        'provenance' => 'Pharmacie',
-                        'description' => 'Vente: ' . $medName . ' (Qté: '.$op->quantite.')',
-                        'montant' => $op->prix_total,
-                        'badge' => 'success'
-                    ]);
-                }
-            }
+        CaisseSession::create([
+            'user_id' => auth()->id(),
+            'solde_initial' => $request->solde_initial,
+            'solde_theorique' => $request->solde_initial,
+            'statut' => 'ouverte',
+            'opened_at' => now(),
+        ]);
+
+        return redirect()->route('caisse.my_session')->with('success', 'Votre caisse a été ouverte avec succès.');
+    }
+
+    /**
+     * Show form to close the caisse session
+     */
+    public function close()
+    {
+        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        if (!$session) {
+            return redirect()->route('caisse.open')->with('error', 'Vous n\'avez pas de caisse ouverte à clôturer.');
         }
 
-        // 4. Sorties Transactions Fournisseurs
-        $pmtCommandes = PaiementCommande::all();
-        foreach ($pmtCommandes as $pc) {
-            if ($pc->montant > 0) {
-                $transactions->push([
-                    'date' => $pc->date_paiement ? Carbon::parse($pc->date_paiement) : $pc->created_at,
-                    'type' => 'Sortie',
-                    'provenance' => 'Achat / Commande',
-                    'description' => 'Paiement Fournisseur (Ref: ' . $pc->reference . ')',
-                    'montant' => $pc->montant,
-                    'badge' => 'danger'
-                ]);
-            }
+        // Recalculate theorique just in case
+        $totalEntrees = $session->mouvements()->where('type', 'entree')->sum('montant');
+        $totalSorties = $session->mouvements()->where('type', 'sortie')->sum('montant');
+        $session->solde_theorique = $session->solde_initial + $totalEntrees - $totalSorties;
+        $session->save();
+
+        return view('application.caisse.close', compact('session', 'totalEntrees', 'totalSorties'));
+    }
+
+    /**
+     * Store closing of a caisse session
+     */
+    public function storeClose(Request $request)
+    {
+        $request->validate([
+            'solde_reel' => 'required|numeric|min:0'
+        ]);
+
+        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        if (!$session) {
+            return redirect()->route('caisse.open')->with('error', 'Vous n\'avez pas de caisse ouverte.');
         }
 
-        // Tri décroissant par date
-        $transactions = $transactions->sortByDesc('date');
+        // Final theorique calculation
+        $totalEntrees = $session->mouvements()->where('type', 'entree')->sum('montant');
+        $totalSorties = $session->mouvements()->where('type', 'sortie')->sum('montant');
+        $session->solde_theorique = $session->solde_initial + $totalEntrees - $totalSorties;
 
-        // Totaux Globaux
-        $totalEntre = $transactions->where('type', 'Entrée')->sum('montant');
-        $totalSortie = $transactions->where('type', 'Sortie')->sum('montant');
-        $solde = $totalEntre - $totalSortie;
+        $session->solde_reel = $request->solde_reel;
+        $session->ecart = $request->solde_reel - $session->solde_theorique;
+        $session->statut = 'fermee';
+        $session->closed_at = now();
+        $session->save();
 
-        // Totaux du Jour
-        $today = Carbon::today();
-        $jTransactions = $transactions->filter(function($item) use ($today) {
-            return Carbon::parse($item['date'])->startOfDay()->equalTo($today);
-        });
+        return redirect()->route('caisse.index')->with('success', 'Votre caisse a été clôturée avec succès.');
+    }
+
+    /**
+     * Dashboard for the currently logged in user's open session
+     */
+    public function mySession()
+    {
+        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        if (!$session) {
+            return redirect()->route('caisse.open')->with('info', 'Veuillez ouvrir votre caisse pour commencer.');
+        }
+
+        $mouvements = $session->mouvements()->latest()->get();
         
-        $jEntre = $jTransactions->where('type', 'Entrée')->sum('montant');
-        $jSortie = $jTransactions->where('type', 'Sortie')->sum('montant');
-        $jSolde = $jEntre - $jSortie;
+        $totalEntrees = $mouvements->where('type', 'entree')->sum('montant');
+        $totalSorties = $mouvements->where('type', 'sortie')->sum('montant');
+        
+        // Update theorique dynamically
+        $session->update([
+            'solde_theorique' => $session->solde_initial + $totalEntrees - $totalSorties
+        ]);
 
-        return view('application.caisse.index', compact('transactions', 'totalEntre', 'totalSortie', 'solde', 'jEntre', 'jSortie', 'jSolde'));
+        return view('application.caisse.my_session', compact('session', 'mouvements', 'totalEntrees', 'totalSorties'));
     }
 }

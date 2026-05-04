@@ -16,8 +16,10 @@ class OrdonnanceController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
             $ordonnances = Ordonnance::with(['consultation.patient','medicaments'])
                 ->select('ordonnances.*')
+                ->whereYear('ordonnances.created_at', $year)
                 ->whereNotIn('statutordo', ['paye', 'partiellement']) // 🔥 exclure ces statuts
                 ->distinct()
                 ->orderBy('ordonnances.created_at','desc');
@@ -36,15 +38,11 @@ class OrdonnanceController extends Controller
                     return $html;
                 })
                 ->addColumn('actions', function($ord){
-                   $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'"><i class="fa fa-file-pdf text-danger"></i></a>';
+                    $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="btn btn-sm btn-outline-danger" title="PDF"><i class="fa fa-file-pdf"></i></a>';
+                    $paiementBtn = '<a href="'.route('ordonnances.paiement', $ord->id).'" class="btn btn-sm btn-outline-success" title="Payer"><i class="fa fa-credit-card"></i></a>';
+                    $deleteBtn = '<button type="button" data-url="'.route('ordonnances.destroy',$ord->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
 
-                    $paiementBtn = '<a href="'.route('ordonnances.paiement', $ord->id).'"
-                            class=" ml-1"><i class="fa fa-credit-card text-success"></i></a>';
-
-                    $deleteBtn = '<span data-url="'.route('ordonnances.destroy',$ord->id).'"
-                            class=" btn-delete ml-1"><i class="fa fa-trash text-danger"></i></span>';
-
-                    return $pdfBtn.' '.$paiementBtn.' '.$deleteBtn;
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $pdfBtn . ' ' . $paiementBtn . ' ' . $deleteBtn . '</div>';
                 })
                 ->rawColumns(['medicaments','actions'])
                 ->make(true);
@@ -135,7 +133,15 @@ class OrdonnanceController extends Controller
         ]);
 
         $montantTotal = 0;
-
+        
+        // Vérifier si la caisse est ouverte
+        if (!\App\Models\CaisseSession::hasOpenSession()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Votre caisse est fermée. Veuillez l\'ouvrir pour encaisser le paiement de l\'ordonnance.'
+            ], 403);
+        }
+        
         DB::transaction(function() use ($request, $ordonnance, &$montantTotal) {
             foreach ($request->medicaments as $medId => $qteDemandee) {
                 $med = Medicament::findOrFail($medId);
@@ -174,6 +180,16 @@ class OrdonnanceController extends Controller
                 'montant' => $montantTotal,
                 'statutordo' => 'paye',
             ]);
+
+            // Enregistrement dans la caisse
+            if ($montantTotal > 0) {
+                \App\Models\CaisseSession::enregistrerMouvement(
+                    $montantTotal,
+                    'Paiement Ordonnance #' . $ordonnance->id,
+                    'entree',
+                    $ordonnance
+                );
+            }
         });
 
         return response()->json([
@@ -196,8 +212,9 @@ class OrdonnanceController extends Controller
                     return $ord->consultation->patient->nom.' '.$ord->consultation->patient->prenom;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="text-danger"><i class="fa fa-file-pdf"></i> PDF</a>';
-                    return $pdfBtn;
+                    $pdf = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $pdf . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

@@ -25,39 +25,39 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        switch ($user->role) {
-            case 'superadmin':
-                return $this->superadminDashboard();
-            case 'admin':
-                return $this->adminDashboard();
-            case 'secretaire':
-                return $this->secretaireDashboard();
-            case 'medecin':
-                return $this->medecinDashboard();
-            case 'client':
-                return $this->clientDashboard();
-            default:
-                return $this->defaultDashboard();
+        if ($user->hasRole('super_admin') || $user->hasRole('superadmin')) {
+            return $this->superadminDashboard();
+        } elseif ($user->hasRole('admin')) {
+            return $this->adminDashboard();
+        } elseif ($user->hasRole('secretaire')) {
+            return $this->secretaireDashboard();
+        } elseif ($user->hasRole('medecin')) {
+            return $this->medecinDashboard();
+        } elseif ($user->hasRole('client')) {
+            return $this->clientDashboard();
+        } else {
+            return $this->defaultDashboard();
         }
     }
 
     private function superadminDashboard()
     {
+        $year = session('exercice_year', date('Y'));
         $stats = [
             'total_users' => User::count(),
-            'total_medecins' => User::where('role', 'medecin')->count(),
-            'total_secretaires' => User::where('role', 'secretaire')->count(),
-            'total_admins' => User::where('role', 'admin')->count(),
-            'total_patients' => Patient::count(),
-            'total_ordonnance'=> Ordonnance::count(),
+            'total_medecins' => User::role('medecin')->count(),
+            'total_secretaires' => User::role('secretaire')->count(),
+            'total_admins' => User::role('admin')->count(),
+            'total_patients' => Patient::whereYear('created_at', $year)->count(),
+            'total_ordonnance'=> Ordonnance::whereYear('created_at', $year)->count(),
             'total_fournisseur'=> Fournisseur::count(),
-            'total_rendezvou'=> RendezVous::count(),
-            'total_ticket'=> \App\Models\Ticket::count(),
+            'total_rendezvou'=> RendezVous::whereYear('created_at', $year)->count(),
+            'total_ticket'=> \App\Models\Ticket::whereYear('created_at', $year)->count(),
             'total_medicament'=> Medicament::count(),
             'total_examens'=> Examen::count(),
             'total_lits'=> Lit::count(),
-            'new_patients_today' => Patient::whereDate('created_at', today())->count(),
-            'total_consultations' => Consultation::count(),
+            'new_patients_today' => Patient::whereYear('created_at', $year)->whereDate('created_at', today())->count(),
+            'total_consultations' => Consultation::whereYear('created_at', $year)->count(),
         ];
 
         // Préparer les données pour le graphique
@@ -78,13 +78,14 @@ class HomeController extends Controller
 
     private function adminDashboard()
     {
+        $year = session('exercice_year', date('Y'));
         $stats = [
-            'total_personnel' => User::whereIn('role', ['medecin', 'secretaire'])->count(),
-            'consultations_mois' => Consultation::whereMonth('created_at', now()->month)->count(),
-            'revenus_mois' => Paiement::whereMonth('created_at', now()->month)->sum('montant_total'),
+            'total_personnel' => User::role(['medecin', 'secretaire'])->count(),
+            'consultations_mois' => Consultation::whereYear('created_at', $year)->whereMonth('created_at', now()->month)->count(),
+            'revenus_mois' => Paiement::whereYear('created_at', $year)->whereMonth('created_at', now()->month)->sum('montant_total'),
             'alertes_stock' => Medicament::whereColumn('stock', '<=', 'stock_min')->count(),
-            'total_patients' => Patient::count(),
-            'new_patients_today' => Patient::whereDate('created_at', today())->count(),
+            'total_patients' => Patient::whereYear('created_at', $year)->count(),
+            'new_patients_today' => Patient::whereYear('created_at', $year)->whereDate('created_at', today())->count(),
         ];
 
         $lowStockMedicaments = Medicament::whereColumn('stock', '<=', 'stock_min')
@@ -190,7 +191,7 @@ class HomeController extends Controller
         $user = Auth::user();
 
         // Tableau de bord spécifique pour le pharmacien
-        if ($user->role === 'pharmacien') {
+        if ($user->hasRole('pharmacien')) {
             $stats = [
                 // Statistiques principales pour le pharmacien
                 'total_ordonnances' => Ordonnance::count(),
@@ -239,11 +240,22 @@ class HomeController extends Controller
 
         // Tableau de bord par défaut pour les autres rôles
         $stats = [
-            'total_patients' => Patient::count(),
-            'total_consultations' => Consultation::count(),
-            'total_ordonnances' => Ordonnance::count(),
-            'total_medecins' => User::where('role', 'medecin')->count(),
-            'total_rendezvous' => RendezVous::count(),
+            'total_patients'          => Patient::count(),
+            'total_consultations'     => Consultation::count(),
+            'total_ordonnances'       => Ordonnance::count(),
+            'ordonnances_today'       => Ordonnance::whereDate('created_at', today())->count(),
+            'ordonnances_pending'     => Ordonnance::where('statutordo', 'impaye')->count(),
+            'ordonnances_processed'   => Ordonnance::where('statutordo', 'paye')->count(),
+            'total_medecins'          => User::role('medecin')->count(),
+            'total_rendezvous'        => RendezVous::count(),
+            'total_medicaments'       => Medicament::count(),
+            'medicaments_low_stock'   => Medicament::where('stock', '<=', 10)->where('stock', '>', 0)->count(),
+            'medicaments_out_of_stock'=> Medicament::where('stock', '<=', 0)->count(),
+            'total_fournisseurs'      => Fournisseur::count(),
+            'patients_today'          => Patient::whereDate('created_at', today())->count(),
+            'total_lits'              => Lit::count(),
+            'lits_occupes'            => Lit::where('statut', 'occupé')->count(),
+            'total_tickets'           => \App\Models\Ticket::count(),
         ];
 
         return view('dashboard', compact('stats'));

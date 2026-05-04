@@ -11,34 +11,34 @@ class UserPolicy
 
     public function before(User $user, $ability)
     {
-        if ($user->role === 'superadmin') {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
     }
 
     public function viewAny(User $user)
     {
-        return in_array($user->role, ['admin', 'secretaire']);
+        return $user->hasRole(['admin', 'secretaire']);
     }
 
     public function view(User $user, User $model)
     {
         return $user->id === $model->id
-            || in_array($user->role, ['admin', 'secretaire']);
+            || $user->hasRole(['admin', 'secretaire']);
     }
 
     public function create(User $user)
     {
-        return in_array($user->role, ['admin', 'superadmin']);
+        return $user->hasRole(['admin', 'super_admin']);
     }
 
     public function update(User $user, User $model)
     {
-        if ($user->role === 'admin' && $model->role !== 'superadmin') {
+        if ($user->hasRole('admin') && !$model->hasRole('super_admin')) {
             return true;
         }
 
-        if (in_array($user->role, ['medecin', 'secretaire'])) {
+        if ($user->hasRole(['medecin', 'secretaire'])) {
             return $user->id === $model->id;
         }
 
@@ -47,11 +47,11 @@ class UserPolicy
 
     public function delete(User $user, User $model)
     {
-        if ($user->role === 'superadmin') {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
-        if ($user->role === 'admin' && $model->role !== 'superadmin') {
+        if ($user->hasRole('admin') && !$model->hasRole('super_admin')) {
             return true;
         }
 
@@ -60,11 +60,11 @@ class UserPolicy
 
     public function restore(User $user, User $model)
     {
-        return $user->role === 'superadmin';
+        return $user->hasRole('super_admin');
     }
 
     public function forceDelete(User $user, User $model)
     {
-        return $user->role === 'superadmin';
+        return $user->hasRole('super_admin');
     }
 }

@@ -46,13 +46,9 @@ class TransfertController extends Controller
                     return \Carbon\Carbon::parse($row->date_transfert)->format('d/m/Y H:i');
                 })
                 ->addColumn('actions', function($row){
-                    return '
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                        <button type="button" class="btn btn-sm btn-alt-danger" onclick="deleteTransfert('.$row->id.')" title="Supprimer">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </div>
-                ';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTransfert('.$row->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $delete . '</div>';
                 })
                 ->rawColumns(['type_label', 'actions'])
                 ->make(true);

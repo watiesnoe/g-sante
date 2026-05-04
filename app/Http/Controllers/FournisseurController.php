@@ -15,11 +15,11 @@ class FournisseurController extends Controller
             $fournisseurs = Fournisseur::select(['id', 'uuid', 'nom', 'contact', 'adresse']);
             return Datatables::of($fournisseurs)
                 ->addColumn('actions', function($row) {
-                    return '
-                    <button class="btn btn-sm btn-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>
-                    <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></button>
-                    <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></button>
-                ';
+                    $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
+                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

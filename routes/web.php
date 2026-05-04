@@ -29,6 +29,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UniteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssuranceController;
+use App\Http\Controllers\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 
 // Quand on arrive sur la racine "/", on redirige vers le login
@@ -42,6 +43,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::post('/exercice/set', [\App\Http\Controllers\ExerciceController::class, 'setYear'])->name('exercice.set');
     Route::get('/parametre', [ConfigurationController::class, 'index'])->name('configuration');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -58,7 +60,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('familles', FamilleController::class)->except(['create']);
     Route::resource('maladies', MaladieController::class)->except(['create']);
     Route::resource('symptomes', SymptomeController::class)->except(['create']);
-    Route::resource('tickets', TicketController::class);
+    Route::middleware('caisse.ouverte')->group(function() {
+        Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+        Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store');
+    });
+    Route::resource('tickets', TicketController::class)->except(['create', 'store']);
     Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
     Route::resource('consultations', ConsultationController::class);
     Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
@@ -84,12 +90,12 @@ Route::middleware('auth')->group(function () {
     Route::get('ordonnances/{ordonnance}/pdf', [OrdonnanceController::class, 'pdf'])->name('ordonnances.pdf');
     Route::get('paiement/{ordonnance}/ordonnance', [OrdonnanceController::class, 'paiementForm'])
         ->name('ordonnances.paiement');
-    Route::post('/payer/{ordonnance}/ordonnance', [OrdonnanceController::class, 'payer']) ->name('ordonnances.payer');
+    Route::post('/payer/{ordonnance}/ordonnance', [OrdonnanceController::class, 'payer']) ->name('ordonnances.payer')->middleware('caisse.ouverte');
     Route::get('/ordonnance/lespayer', [OrdonnanceController::class, 'lespayer'])->name('ordonnances.lespayer');
 
     Route::resource('hospitalisations', HospitalisationController::class);
     Route::post('/paiements/hospitalisation', [PaiementController::class, 'store'])
-        ->name('paiements.hospitalisation');
+        ->name('paiements.hospitalisation')->middleware('caisse.ouverte');
 
     Route::get('/hospitalisations/{id}/pdf', [HospitalisationController::class, 'generatePDF'])->name('hospitalisations.pdf');
     Route::get('/paiement/{id}/hospitalisations', [HospitalisationController::class, 'getPaiementData'])
@@ -101,10 +107,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('medicaments', MedicamentController::class);
     Route::resource('commandes', CommandeController::class);
     Route::post('/commandes/panier/ajouter', [CommandeController::class, 'ajouterAuPanier'])->name('commandes.panier.ajouter');
+    Route::post('/commandes/panier/bulk-ajouter', [CommandeController::class, 'bulkAjouterAuPanier'])->name('commandes.panier.bulk-ajouter');
+    Route::post('/commandes/panier/modifier', [CommandeController::class, 'modifierPanier'])->name('commandes.panier.modifier');
+    Route::post('/commandes/panier/supprimer', [CommandeController::class, 'supprimerDuPanier'])->name('commandes.panier.supprimer');
     Route::get('/commandes/{id}/pdf', [CommandeController::class, 'pdf'])->name('commandes.pdf');
 
 // Supprimer un médicament du panier (AJAX)
-    Route::post('/commandes/panier/supprimer', [CommandeController::class, 'supprimerDuPanier'])->name('commandes.panier.supprimer');
     Route::get('/consultations/{consultation}/print', [ConsultationController::class, 'print'])->name('consultations.print');
 
 // Vider le panier
@@ -129,14 +137,20 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('paiementscommande')->group(function () {
         Route::get('/dashboard', [PaiementCommandeController::class, 'dashboard'])->name('paiementscommande.dashboard');
-        Route::get('/create', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create');
-        Route::post('/store', [PaiementCommandeController::class, 'store'])->name('paiementscommande.store');
+        Route::get('/create', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create')->middleware('caisse.ouverte');
+        Route::post('/store', [PaiementCommandeController::class, 'store'])->name('paiementscommande.store')->middleware('caisse.ouverte');
         Route::get('/history/{commande}', [PaiementCommandeController::class, 'history'])->name('paiementscommande.history');
         Route::delete('/{id}', [PaiementCommandeController::class, 'destroy'])->name('paiementscommande.destroy');
     });
 
     // Caisse Globale
+    // Routes Caisse
     Route::get('/caisse', [\App\Http\Controllers\CaisseController::class, 'index'])->name('caisse.index');
+    Route::get('/caisse/ma-session', [\App\Http\Controllers\CaisseController::class, 'mySession'])->name('caisse.my_session');
+    Route::get('/caisse/ouvrir', [\App\Http\Controllers\CaisseController::class, 'open'])->name('caisse.open');
+    Route::post('/caisse/ouvrir', [\App\Http\Controllers\CaisseController::class, 'storeOpen'])->name('caisse.storeOpen');
+    Route::get('/caisse/cloturer', [\App\Http\Controllers\CaisseController::class, 'close'])->name('caisse.close');
+    Route::post('/caisse/cloturer', [\App\Http\Controllers\CaisseController::class, 'storeClose'])->name('caisse.storeClose');
 
     // Transferts
     Route::resource('transferts', \App\Http\Controllers\TransfertController::class)->only(['index', 'store', 'destroy']);
@@ -173,7 +187,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/protocoles/{id}', [\App\Http\Controllers\InfectiologieController::class, 'showProtocole'])->name('infectiologie.protocoles.show');
         Route::post('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'storeProtocole'])->name('infectiologie.protocoles.store');
         Route::delete('/protocoles/{id}', [\App\Http\Controllers\InfectiologieController::class, 'destroyProtocole'])->name('infectiologie.protocoles.destroy');
-        Route::get('/antibiotiques', [\App\Http\Controllers\InfectiologieController::class, 'antibiotiques'])->name('infectiologie.antibiotiques');
+
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');
         Route::get('/api/protocoles/{maladie}', [\App\Http\Controllers\InfectiologieController::class, 'getProtocole'])->name('infectiologie.get_protocole');
@@ -198,6 +212,27 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/close', [\App\Http\Controllers\MaternityController::class, 'close'])->name('close');
     });
 
+});
+
+// Routes pour la gestion des rôles et permissions
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Gestion des rôles
+    Route::resource('roles', RolePermissionController::class);
+    
+    // Gestion des permissions des rôles
+    Route::put('roles/{role}/permissions', [RolePermissionController::class, 'updatePermissions'])
+        ->name('roles.permissions.update');
+    
+    // Gestion des permissions globales
+    Route::get('permissions', [RolePermissionController::class, 'permissions'])
+        ->name('permissions.index');
+    
+    // Gestion des permissions des utilisateurs (API)
+    Route::get('users/{user}/permissions', [RolePermissionController::class, 'getUserPermissions'])
+        ->name('users.permissions');
+    Route::post('users/{user}/permissions', [RolePermissionController::class, 'assignUserPermissions'])
+        ->name('users.permissions.assign');
 });
 
 // Auth routes générées par Breeze ou Jetstream

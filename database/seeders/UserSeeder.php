@@ -25,17 +25,17 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Pédiatrie'] ?? null,
             ],
             [
-                'name' => 'Pharmacien', 'nom' => 'Ndiaye', 'prenom' => 'Moussa', 'telephone' => '773456789',
+                'name' => 'moussa_pharmacien', 'nom' => 'Ndiaye', 'prenom' => 'Moussa', 'telephone' => '773456789',
                 'adresse' => 'Dakar', 'role' => 'pharmacien', 'email' => 'pharmacy@example.com',
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
             ],
             [
-                'name' => 'Gestionnaire', 'nom' => 'Fall', 'prenom' => 'Aissatou', 'telephone' => '774567890',
+                'name' => 'aissatou_gestionnaire', 'nom' => 'Fall', 'prenom' => 'Aissatou', 'telephone' => '774567890',
                 'adresse' => 'Dakar', 'role' => 'gestionnaire', 'email' => 'manager@example.com',
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
             ],
             [
-                'name' => 'SuperAdmin', 'nom' => 'Admin', 'prenom' => 'System', 'telephone' => '775678901',
+                'name' => 'admin_systeme', 'nom' => 'Admin', 'prenom' => 'System', 'telephone' => '775678901',
                 'adresse' => 'Dakar', 'role' => 'superadmin', 'email' => 'admin@example.com',
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
             ],
@@ -44,18 +44,35 @@ class UserSeeder extends Seeder
                 'adresse' => 'Dakar', 'role' => 'superadmin', 'email' => 'siabaneotraore@gmail.com',
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
             ],
+            [
+                'name' => 'Amadou', 'nom' => 'TRAORE', 'prenom' => 'Amadou', 'telephone' => '77000000',
+                'adresse' => 'Dakar', 'role' => 'secretaire', 'email' => 'amadou@gmail.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
+            ],
         ];
 
-        foreach ($users as $user) {
-            $user['uuid'] = (string) Str::uuid();
-            $user['email_verified_at'] = now();
-            $user['created_at'] = now();
-            $user['updated_at'] = now();
+        foreach ($users as $userData) {
+            $roleName = $userData['role'];
+            unset($userData['role']);
+            
+            // Map legacy role names to new Spatie role names
+            if ($roleName === 'superadmin') $roleName = 'super_admin';
+            if ($roleName === 'gestionnaire') $roleName = 'gestionnaire_stock';
 
-            DB::table('users')->updateOrInsert(
-                ['email' => $user['email']],
-                $user
+            $userData['uuid'] = (string) Str::uuid();
+            $userData['email_verified_at'] = now();
+
+            $user = \App\Models\User::updateOrCreate(
+                ['email' => $userData['email']],
+                $userData
             );
+            
+            // Assign role if it exists (requires Spatie Permission)
+            try {
+                $user->assignRole($roleName);
+            } catch (\Exception $e) {
+                // Role might not exist if PermissionRoleSeeder wasn't run yet
+            }
         }
     }
 }

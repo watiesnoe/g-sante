@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             
             // 2. Infrastructures et Personnel (Dépendent des services)
             SalleLitExamenSeeder::class,
+            PermissionRoleSeeder::class,
             UserSeeder::class,
             
             // 3. Données de soins (Dépendent des référentiels)
@@ -33,6 +34,7 @@ class DatabaseSeeder extends Seeder
             // 4. Protocoles et Spécialisations
             // ProtocoleTraitementSeeder::class,  // Désactivé : noms de maladies différents
             // InfectiologieSeeder::class,
+            PrestationSeeder::class,
             WhoGuidelinesSeeder::class,
             ProtocoleEnrichmentSeeder::class,  // ✅ Enrichit les protocoles avec germes + traitements
             SignesDiagnosticsSeeder::class,    // ✅ Enrichit les signes cliniques et examens diagnostics

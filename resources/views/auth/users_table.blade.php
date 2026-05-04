@@ -26,8 +26,9 @@
                 <small class="text-muted">{{ $user->adresse ? Str::limit($user->adresse, 30) : '-' }}</small>
             </td>
             <td>
-                    <span class="badge bg-{{ $user->role == 'admin' ? 'primary' : ($user->role == 'medecin' ? 'success' : ($user->role == 'secretaire' ? 'info' : 'secondary')) }}">
-                        {{ ucfirst($user->role) }}
+                    @php $role = $user->roles->first(); @endphp
+                    <span class="badge bg-{{ $role?->name == 'admin' ? 'primary' : ($role?->name == 'medecin' ? 'success' : ($role?->name == 'secretaire' ? 'info' : 'secondary')) }}">
+                        {{ ucfirst($role?->libelle ?? $role?->name ?? '-') }}
                     </span>
             </td>
             <td>

@@ -7,9 +7,9 @@
         <div class="row">
             <!-- Action Button Area -->
             <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <a href="{{ route('users.create') }}" class="btn btn-sm btn-primary">
                     <i class="fa fa-plus me-1"></i> Nouvel Utilisateur
-                </button>
+                </a>
             </div>
 
             <!-- Sidebar gauche -->
@@ -55,84 +55,7 @@
         </div>
     </div>
 
-    <!-- Modal Création -->
-    <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Créer un nouvel utilisateur</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label>Prénom</label>
-                                <input type="text" name="prenom" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Nom</label>
-                                <input type="text" name="nom" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Email</label>
-                                <input type="email" name="email" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Téléphone</label>
-                                <input type="text" name="telephone" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label>Adresse</label>
-                                <input type="text" name="adresse" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label>Rôle</label>
-                                <select name="role" class="form-select" required>
-                                    <option value="admin">Administrateur</option>
-                                    <option value="medecin">Médecin</option>
-                                    <option value="secretaire">Secrétaire</option>
-                                    <option value="client">Client</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Mot de passe</label>
-                                <input type="password" name="password" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Confirmation mot de passe</label>
-                                <input type="password" name="password_confirmation" class="form-control" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label>Photo</label>
-                                <input type="file" name="photo" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-sm btn-primary">Créer</button>
-                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal Edition -->
-    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Modifier l'utilisateur</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="edit-user-form">
-
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal Suppression -->
     <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
@@ -186,79 +109,8 @@
                 pagingType: 'simple_numbers'
             });
 
-            // ---------------------------
-            // Création d'utilisateur
-            // ---------------------------
-            $('#createUserModal form').submit(function(e) {
-                e.preventDefault();
-                var form = $(this);
-
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: new FormData(this),
-                    processData: false,
-                    contentType: false,
-                    success: function(res) {
-                        $('#createUserModal').modal('hide');
-                        form[0].reset();
-                        table.ajax.reload();
-                        alert(res.message || 'Utilisateur créé avec succès !');
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseJSON.message || 'Erreur lors de la création.');
-                    }
-                });
-            });
-
-            // ---------------------------
-            // Edition d'utilisateur
-            // ---------------------------
-            // Clique sur le bouton Edit
-// Ouverture du modal avec AJAX
-            $(document).on('click', '.edit-user', function(e) {
-                e.preventDefault();
-                var id = $(this).data('id');
-
-                console.log('Tentative de chargement utilisateur ID:', id); // Debug
-                $.ajax({
-                    url: "{{ route('users.edit', ':id') }}".replace(':id', id),
-                    type: "GET",
-                    success: function(res) {
-                        console.log('✅ Contenu du modal reçu :', res);
-                        $('#edit-user-form').html(res);
-                        $('#editUserModal').modal('show');
-                    },
-                    error: function(xhr) {
-                        console.error('❌ Erreur AJAX:', xhr.status, xhr.responseText);
-                    }
-                });
-
-            });
-
-// Soumission du formulaire d'édition via AJAX
-            $('#editUserModal').on('submit', '#editUserForm', function(e) {
-                e.preventDefault();
-                var form = $(this);
-
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: new FormData(this),
-                    processData: false,
-                    contentType: false,
-                    success: function(res) {
-                        $('#editUserModal').modal('hide'); // ferme le modal
-                        $('#users-datatable').DataTable().ajax.reload(); // recharge le tableau
-                        Swal.fire('Succès', res.message, 'success');
-                    },
-                    error: function(xhr) {
-                        Swal.fire('Erreur', xhr.responseJSON?.message || 'Une erreur est survenue.', 'error');
-                    }
-                });
-            });
-
-
+            // Les anciens scripts de soumission AJAX des modales de création et d'édition ont été supprimés.
+            // L'édition et la création se font maintenant sur des pages dédiées.
             // ---------------------------
             // Toggle statut
             // ---------------------------

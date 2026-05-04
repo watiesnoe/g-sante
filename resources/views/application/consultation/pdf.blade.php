@@ -1,105 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+    <meta charset="UTF-8">
     <title>Détail Consultation #{{ $consultation->id }}</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 14px; }
-        h2 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        table, th, td { border: 1px solid #000; padding: 8px; }
-        th { background-color: #f0f0f0; }
+        @page { margin: 1.5cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.5; }
+        
+        .section-title { background: #0665d0; color: white; padding: 8px 12px; font-weight: bold; text-transform: uppercase; margin: 20px 0 10px; border-radius: 4px; font-size: 10px; }
+        
+        .grid-container { width: 100%; border-collapse: collapse; }
+        .grid-container td { border: 1px solid #eee; padding: 10px; vertical-align: top; width: 50%; }
+        .label { font-weight: bold; color: #666; font-size: 9px; text-transform: uppercase; display: block; margin-bottom: 3px; }
+        .value { font-size: 11px; color: #000; }
+        
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        table.data-table th { background-color: #f8f9fa; color: #333; padding: 8px; text-align: left; font-size: 9px; text-transform: uppercase; border: 1px solid #dee2e6; }
+        table.data-table td { padding: 8px; border: 1px solid #dee2e6; }
+        
+        .imc-box { display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .imc-normal { background: #d4edda; color: #155724; }
+        
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
 </head>
 <body>
-<h2>Détail Consultation</h2>
+    @include('layouts.pdf_header', ['docNumber' => 'CONS-' . date('Ymd') . '-' . $consultation->id])
 
-<h3>Patient</h3>
-<p>Nom : {{ $consultation->patient->nom }} {{ $consultation->patient->prenom }}</p>
-<p>Téléphone : {{ $consultation->patient->telephone }}</p>
-<p>Adresse : {{ $consultation->adresse_patient }}</p>
-<p>Ticket : {{ $consultation->ticket_id }}</p>
+    <h2 style="text-align: center; color: #0665d0; text-transform: uppercase; margin: 10px 0;">Rapport de Consultation</h2>
 
-<h3>Consultation</h3>
-<p>Medecin : {{ $consultation->medecin->name }}</p>
-<p>Date : {{ $consultation->date_consultation ?? now()->format('d/m/Y') }}</p>
-<p>Motif : {{ $consultation->motif }}</p>
-<p>Diagnostic : {{ $consultation->diagnostic }}</p>
-<p>Notes / Antécédents : {{ $consultation->notes }}</p>
+    <div class="section-title">Informations Générales</div>
+    <table class="grid-container">
+        <tr>
+            <td>
+                <span class="label">Patient</span>
+                <span class="value" style="font-size: 14px; font-weight: bold;">{{ $consultation->patient->nom }} {{ $consultation->patient->prenom }}</span>
+                <span class="value">{{ $consultation->patient->age }} ans | Sexe: {{ $consultation->patient->genre }}</span>
+                <span class="value">Tél: {{ $consultation->patient->telephone }}</span>
+            </td>
+            <td>
+                <span class="label">Médecin Prescripteur</span>
+                <span class="value" style="font-weight: bold;">Dr. {{ $consultation->medecin->name }}</span>
+                <span class="label" style="margin-top: 10px;">Date de consultation</span>
+                <span class="value">{{ $consultation->date_consultation ?? now()->format('d/m/Y') }}</span>
+            </td>
+        </tr>
+    </table>
 
-<h3>Constantes</h3>
-<p>Poids : {{ $consultation->poids }} kg</p>
-<p>Taille : {{ $consultation->taille }} cm</p>
-<p>IMC : {{ $consultation->taille > 0 ? number_format($consultation->poids/(($consultation->taille/100)**2),2) : '-' }}</p>
-<p>Tension : {{ $consultation->tension }}</p>
-<p>Groupe sanguin : {{ $consultation->groupe_sanguin }}</p>
+    <div class="section-title">Paramètres Vitaux (Constantes)</div>
+    <table class="grid-container">
+        <tr>
+            <td style="width: 25%;">
+                <span class="label">Poids</span>
+                <span class="value">{{ $consultation->poids }} kg</span>
+            </td>
+            <td style="width: 25%;">
+                <span class="label">Taille</span>
+                <span class="value">{{ $consultation->taille }} cm</span>
+            </td>
+            <td style="width: 25%;">
+                <span class="label">IMC</span>
+                <span class="value">{{ $consultation->taille > 0 ? number_format($consultation->poids/(($consultation->taille/100)**2),2) : '-' }}</span>
+            </td>
+            <td style="width: 25%;">
+                <span class="label">Tension</span>
+                <span class="value">{{ $consultation->tension }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <span class="label">Groupe Sanguin</span>
+                <span class="value" style="font-weight: bold; color: #d9534f;">{{ $consultation->groupe_sanguin }}</span>
+            </td>
+        </tr>
+    </table>
 
-<h3>Symptômes</h3>
-<ul>
-    @foreach($consultation->symptomes as $symptome)
-        <li>{{ $symptome->nom }}</li>
-    @endforeach
-</ul>
+    <div class="section-title">Anamnèse & Diagnostic</div>
+    <table class="grid-container">
+        <tr>
+            <td colspan="2">
+                <span class="label">Motif de consultation</span>
+                <span class="value">{{ $consultation->motif }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Symptômes identifiés</span>
+                <ul style="margin: 5px 0; padding-left: 15px;">
+                    @foreach($consultation->symptomes as $symptome)
+                        <li class="value">{{ $symptome->nom }}</li>
+                    @endforeach
+                </ul>
+            </td>
+            <td>
+                <span class="label">Pathologie suspectée</span>
+                <ul style="margin: 5px 0; padding-left: 15px;">
+                    @foreach($consultation->maladies as $maladie)
+                        <li class="value" style="font-weight: bold;">{{ $maladie->nom }}</li>
+                    @endforeach
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <span class="label">Diagnostic final</span>
+                <span class="value" style="font-style: italic;">{{ $consultation->diagnostic }}</span>
+            </td>
+        </tr>
+    </table>
 
-<h3>Maladie</h3>
-<ul>
-    @foreach($consultation->maladies as $maladie)
-        <li>{{ $maladie->nom }}</li>
-    @endforeach
-</ul>
-
-<h3>Ordonnances / Médicaments</h3>
-<table>
-    <thead>
-    <tr>
-        <th>Médicament</th>
-        <th>Posologie</th>
-        <th>Durée (jours)</th>
-        <th>Quantité</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach($consultation->ordonnances as $ordonnance)
-        @foreach($ordonnance->medicaments as $med)
+    @if($consultation->ordonnances->count() > 0)
+    <div class="section-title">Ordonnance & Traitements</div>
+    <table class="data-table">
+        <thead>
             <tr>
-                <td>{{ $med->nom }}</td>
-                <td>{{ $med->pivot->posologie }}</td>
-                <td>{{ $med->pivot->duree_jours }}</td>
-                <td>{{ $med->pivot->quantite }}</td>
+                <th>Médicament</th>
+                <th>Posologie</th>
+                <th width="60" style="text-align: center;">Durée</th>
+                <th width="60" style="text-align: center;">Qté</th>
             </tr>
+        </thead>
+        <tbody>
+            @foreach($consultation->ordonnances as $ordonnance)
+                @foreach($ordonnance->medicaments as $med)
+                    <tr>
+                        <td style="font-weight: bold;">{{ $med->nom }}</td>
+                        <td>{{ $med->pivot->posologie }}</td>
+                        <td style="text-align: center;">{{ $med->pivot->duree_jours }} j</td>
+                        <td style="text-align: center;">{{ $med->pivot->quantite }}</td>
+                    </tr>
+                @endforeach
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    @if($consultation->examens->count() > 0)
+    <div class="section-title">Examens Complémentaires</div>
+    <ul style="margin: 5px 0; padding-left: 20px;">
+        @foreach($consultation->examens as $ex)
+            <li class="value">{{ $ex->examen }}</li>
         @endforeach
-    @endforeach
-    </tbody>
-</table>
+    </ul>
+    @endif
 
-<h3>Examens</h3>
-<ul>
-    @foreach($consultation->examens as $ex)
-        <li>{{ $ex->examen }}</li>
-    @endforeach
-</ul>
+    @if($consultation->hospitalisation)
+    <div class="section-title">Hospitalisation</div>
+    <table class="grid-container">
+        <tr>
+            <td>
+                <span class="label">Salle / Lit</span>
+                <span class="value">{{ $consultation->hospitalisation->salles_id }} / Lit: {{ $consultation->hospitalisation->lit_id }}</span>
+            </td>
+            <td>
+                <span class="label">Date d'entrée</span>
+                <span class="value">{{ $consultation->hospitalisation->date_entree }}</span>
+            </td>
+        </tr>
+    </table>
+    @endif
 
-<h3>Rendez-vous</h3>
-<ul>
-    @foreach($consultation->rendezVous as $r)
-        <li>{{ \Carbon\Carbon::parse($r->date_heure)->format('d/m/Y H:i') }} - {{ $r->motif }}</li>
-    @endforeach
-</ul>
-
-<h3>Certificat</h3>
-<p>{{ $consultation->certificat->contenu ?? '-' }}</p>
-
-<h3>Hospitalisation</h3>
-@if($consultation->hospitalisation)
-    <p>Date entrée : {{ $consultation->hospitalisation->date_entree }}</p>
-    <p>Salle : {{ $consultation->hospitalisation->salles_id }}</p>
-    <p>Lit : {{ $consultation->hospitalisation->lit_id }}</p>
-    <p>Observations : {{ $consultation->hospitalisation->observations }}</p>
-@else
-    <p>Aucune hospitalisation</p>
-@endif
-
-<script>
-    window.onload = function() { window.print(); };
-</script>
+    <div class="footer">
+        G-SANTÉ - Rapport Médical Confidentiel | Page 1/1 | Généré le {{ now()->format('d/m/Y H:i') }}
+    </div>
 </body>
 </html>

@@ -19,13 +19,15 @@ class TicketController extends Controller
 
     public function index(Request $request)
 {
-    if ($request->ajax()) {
-        $today = \Carbon\Carbon::today();
+        if ($request->ajax()) {
+            $year = session('exercice_year', date('Y'));
+            $today = \Carbon\Carbon::today();
 
-        // On utilise Eloquent avec Eager Loading
-        // Utilise select('tickets.*') pour éviter les conflits de colonnes avec DataTables
-        $query = Ticket::with(['patient']) 
-            ->where('statut', 'en_attente')
+            // On utilise Eloquent avec Eager Loading
+            // Utilise select('tickets.*') pour éviter les conflits de colonnes avec DataTables
+            $query = Ticket::with(['patient']) 
+                ->whereYear('created_at', $year)
+                ->where('statut', 'en_attente')
             ->whereDate('date_validite', '>=', $today) // Utilise whereDate pour plus de précision
             ->orderBy('created_at', 'asc');
 
@@ -60,12 +62,12 @@ class TicketController extends Controller
 
             // Actions (Dropdown Bootstrap 5)
             ->addColumn('actions', function($ticket) {
-                return '
-                   <a href="'.route('tickets.show', $ticket->id).'" class="btn-sm" title="Voir"><i class="fa fa-eye text-primary"></i></a>
-                   <a href="'.route('tickets.edit', $ticket->id).'" class="btn-sm" title="Modifier"><i class="fa fa-edit text-warning"></i></a>
-                   <a href="'.route('tickets.print', $ticket->id).'" class="btn-sm" title="Imprimer"><i class="fa fa-print text-info"></i></a>
-                   <span type="button" class="btn-sm delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer" style="cursor:pointer;"><i class="fa fa-trash text-danger"></i></span>
-                ';
+                $view  = '<a href="'.route('tickets.show', $ticket->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                $edit  = '<a href="'.route('tickets.edit', $ticket->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                $print = '<a href="'.route('tickets.print', $ticket->id).'" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                
+                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $print . $delete . '</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -83,7 +85,7 @@ class TicketController extends Controller
 
         // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
         $assurances = \App\Models\Assurance::all(); // Ajout des assurances
-        $medecins = \App\Models\User::whereIn('role', ['medecin', 'docteur'])->get();
+        $medecins = \App\Models\User::role('medecin')->get();
 
         // Passer les données à la vue
         return view('application.ticket.create', compact('prestations', 'assurances', 'medecins'));
@@ -110,6 +112,14 @@ class TicketController extends Controller
 
         DB::beginTransaction();
         try {
+            // Vérifier si la caisse est ouverte
+            if (!\App\Models\CaisseSession::hasOpenSession()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Votre caisse est fermée. Veuillez l\'ouvrir pour encaisser des paiements.'
+                ], 403);
+            }
+
             // Calcul du total côté serveur (plus fiable)
             $totalTicket = collect($request->items)->sum('sous_total');
 
@@ -146,6 +156,16 @@ class TicketController extends Controller
                     'remise'        => $item['remise'],
                     'sous_total'    => $item['sous_total'],
                 ]);
+            }
+
+            // Enregistrement dans la caisse
+            if ($partPatient > 0) {
+                \App\Models\CaisseSession::enregistrerMouvement(
+                    $partPatient,
+                    'Paiement Ticket (Patient: ' . ($ticket->patient ? $ticket->patient->nom : $request->patient_id) . ')',
+                    'entree',
+                    $ticket
+                );
             }
 
             DB::commit();
@@ -199,7 +219,7 @@ class TicketController extends Controller
         
         $prestations =Prestation::with('serviceMedical')->orderBy('nom')->get();
         $assurances = \App\Models\Assurance::all();
-        $medecins = \App\Models\User::whereIn('role', ['medecin', 'docteur'])->get();
+        $medecins = \App\Models\User::role('medecin')->get();
 
         // Retourner la même vue que la création, mais avec les données du ticket
         return view('application.ticket.create', compact('ticket', 'prestations', 'assurances', 'medecins'));

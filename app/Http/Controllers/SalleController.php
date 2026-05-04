@@ -29,10 +29,11 @@ class SalleController extends Controller
                     return '<span class="badge bg-'.$color.'">'.$libres.' / '.$total.' Libres</span>';
                 })
                 ->addColumn('actions', function($row){
-                    $viewBtn = '<span class="  btn-sm view " data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye text-primary"></i></span> ';
-                    $editBtn = '<span class="  btn-sm   edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt text-info"></i></span> ';
-                    $deleteBtn = '<span class="  btn-sm delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash text-danger"></i></span>';
-                    return $viewBtn.$editBtn.$deleteBtn;
+                    $viewBtn   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
+                    $editBtn   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                    $deleteBtn = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $viewBtn . $editBtn . $deleteBtn . '</div>';
                 })
                 ->rawColumns(['actions', 'disponibilite'])
                 ->make(true);

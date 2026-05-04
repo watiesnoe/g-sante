@@ -29,12 +29,10 @@ class LitController extends Controller
                     return $row->salle->nom ?? '-';
                 })
                 ->addColumn('actions', function ($row) {
-                    $editUrl = route('lits.edit', $row->id);
-                    $deleteUrl = route('lits.destroy', $row->id);
-                    return '
-                        <a href="'.$editUrl.'" class="text-warning p-1 hover:text-warning"><i class="fa fa-pencil-alt text-info"></i></a>
-                        <span data-url="'.$deleteUrl.'" class="text-danger p-1 delete hover:text-danger"><i class="fa fa-trash text-danger"></i></span>
-                    ';
+                    $edit = '<a href="'.route('lits.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route('lits.destroy', $row->id).'" class="btn btn-sm btn-outline-danger delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $delete . '</div>';
                 })
                 ->rawColumns(['actions', 'statut'])
                 ->make(true);
