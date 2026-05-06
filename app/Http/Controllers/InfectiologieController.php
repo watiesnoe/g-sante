@@ -22,12 +22,10 @@ class InfectiologieController extends Controller
             ->groupBy('month')
             ->get();
 
-        // Stock antibiotiques critiques (colonnes correctes: stock et stock_min)
-        $lowStockCount = \App\Models\Medicament::where(function($q) {
-                $q->where('nom', 'like', '%Amoxi%')
-                  ->orWhere('nom', 'like', '%Ceftri%')
-                  ->orWhere('nom', 'like', '%Cipro%')
-                  ->orWhere('nom', 'like', '%Lumef%');
+        // Stock antibiotiques critiques (utilisation de la famille 'Antibiotiques')
+        $atbFamille = \App\Models\Famille::where('nom', 'like', 'Antibiotique%')->first();
+        $lowStockCount = \App\Models\Medicament::when($atbFamille, function($q) use ($atbFamille) {
+                $q->where('famille_id', $atbFamille->id);
             })
             ->whereColumn('stock', '<=', 'stock_min')
             ->count();

@@ -42,11 +42,19 @@ class MedicamentController extends Controller
 
         $familles = Famille::orderBy('nom')->get();
         
+        $pageTitle = '🩺 Gestion des Médicaments';
+        if ($request->filled('famille_id')) {
+            $famille = $familles->find($request->famille_id);
+            if ($famille) {
+                $pageTitle = '💊 Gestion des ' . $famille->nom;
+            }
+        }
+
         // Stats
         $totalMolecules = Medicament::count();
         $stockCritique = Medicament::whereColumn('stock', '<=', 'stock_min')->count();
 
-        return view('application.medicament.index', compact('familles', 'totalMolecules', 'stockCritique'));
+        return view('application.medicament.index', compact('familles', 'totalMolecules', 'stockCritique', 'pageTitle'));
     }
 
     public function show(Medicament $medicament)

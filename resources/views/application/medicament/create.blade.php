@@ -75,7 +75,7 @@
                     </div>
 
                     <!-- Boutons -->
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between p-3">
                         <a href="{{ route('medicaments.index') }}" class="btn btn-secondary">↩️ Annuler</a>
                         <button type="submit" class="btn btn-success">
                             {{ isset($medicament) ? '💾 Mettre à jour' : '✅ Enregistrer' }}

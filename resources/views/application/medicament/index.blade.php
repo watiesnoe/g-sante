@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titre', '🩺 Gestion des Médicaments')
+@section('titre', $pageTitle ?? '🩺 Gestion des Médicaments')
 
 @section('content')
     <div class="container-fluid mt-4">

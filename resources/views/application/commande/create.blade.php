@@ -88,11 +88,13 @@
                         </tr>
                     </tfoot>
                 </table>
-
-                <button class="btn btn-primary">
-                    {{ isset($commande) ? 'Mettre à jour' : 'Valider' }}
-                </button>
-
+                <div class="d-flex justify-content-between p-3">
+                    <a href="{{ route('commandes.index') }}" class="btn btn-secondary"> Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        {{ isset($commande) ? 'Mettre à jour' : 'Enregistrer' }}
+                    </button>
+                </div>
+     
             </div>
         </div>
     </form>
