@@ -38,9 +38,9 @@ class OrdonnanceController extends Controller
                     return $html;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdfBtn = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="btn btn-sm btn-outline-danger" title="PDF"><i class="fa fa-file-pdf"></i></a>';
-                    $paiementBtn = '<a href="'.route('ordonnances.paiement', $ord->id).'" class="btn btn-sm btn-outline-success" title="Payer"><i class="fa fa-credit-card"></i></a>';
-                    $deleteBtn = '<button type="button" data-url="'.route('ordonnances.destroy',$ord->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $pdfBtn     = '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="PDF"><i class="fa fa-file-pdf"></i></a>';
+                    $paiementBtn = '<a href="'.route('ordonnances.paiement', $ord).'" class="btn btn-sm btn-outline-success" title="Payer"><i class="fa fa-credit-card"></i></a>';
+                    $deleteBtn  = '<button type="button" data-url="'.route('ordonnances.destroy', $ord).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $pdfBtn . ' ' . $paiementBtn . ' ' . $deleteBtn . '</div>';
                 })
@@ -95,16 +95,16 @@ class OrdonnanceController extends Controller
     }
 
     // Exporter en PDF
-    public function pdf($id)
+    public function pdf(Ordonnance $ordonnance)
     {
-        $ordonnance = Ordonnance::with(['consultation.patient','consultation.medecin','medicaments'])->findOrFail($id);
+        $ordonnance->load(['consultation.patient', 'consultation.medecin', 'medicaments']);
         $patient = (object)[
-            'nom_patient'=>$ordonnance->consultation->patient->nom,
-            'prenom_patient'=>$ordonnance->consultation->patient->prenom,
-            'age_patient'=>$ordonnance->consultation->patient->age,
-            'genre'=>$ordonnance->consultation->patient->genre,
-            'nom_medecin'=>$ordonnance->consultation->medecin->name ?? '',
-            'prenom_medecin'=>$ordonnance->consultation->medecin->prenom ?? '',
+            'nom_patient'    => $ordonnance->consultation->patient->nom,
+            'prenom_patient' => $ordonnance->consultation->patient->prenom,
+            'age_patient'    => $ordonnance->consultation->patient->age,
+            'genre'          => $ordonnance->consultation->patient->genre,
+            'nom_medecin'    => $ordonnance->consultation->medecin->name ?? '',
+            'prenom_medecin' => $ordonnance->consultation->medecin->prenom ?? '',
         ];
         $medicaments = $ordonnance->medicaments;
 
@@ -113,7 +113,7 @@ class OrdonnanceController extends Controller
         });
 
         $pdf = Pdf::loadView('application.ordonnance.pdf', compact('patient','medicaments','totale'));
-        return $pdf->download('ordonnance_'.$ordonnance->id.'.pdf');
+        return $pdf->download('ordonnance_'.$ordonnance->uuid.'.pdf');
     }
     public function paiementForm(Ordonnance $ordonnance)
     {
@@ -212,7 +212,7 @@ class OrdonnanceController extends Controller
                     return $ord->consultation->patient->nom.' '.$ord->consultation->patient->prenom;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdf = '<a href="'.route('ordonnances.pdf',$ord->id).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
+                    $pdf = '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
                     
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $pdf . '</div>';
                 })

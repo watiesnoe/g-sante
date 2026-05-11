@@ -18,10 +18,10 @@
                         </p>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('tickets.print', $ticket->id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <a href="{{ route('tickets.print', $ticket) }}" class="btn btn-outline-primary btn-sm" target="_blank">
                             <i class="fa fa-print me-1"></i>Imprimer
                         </a>
-                        <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn-sm">
+                        <a href="{{ route('tickets.edit', $ticket) }}" class="btn-sm">
                             <i class="fa fa-edit me-1"></i>Modifier
                         </a>
                         <a href="{{ route('tickets.index') }}" class="btn btn-secondary btn-sm">
@@ -288,10 +288,10 @@
                 <div class="card border-0 bg-light">
                     <div class="card-body text-center py-3">
                         <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <a href="{{ route('tickets.print', $ticket->id) }}" class="btn btn-primary px-4" target="_blank">
+                            <a href="{{ route('tickets.print', $ticket) }}" class="btn btn-primary px-4" target="_blank">
                                 <i class="fa fa-print me-2"></i>Imprimer le Ticket
                             </a>
-                            <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-warning px-4">
+                            <a href="{{ route('tickets.edit', $ticket) }}" class="btn btn-warning px-4">
                                 <i class="fa fa-edit me-2"></i>Modifier
                             </a>
                             <a href="{{ route('tickets.index') }}" class="btn btn-outline-secondary px-4">

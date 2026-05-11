@@ -62,9 +62,9 @@ class TicketController extends Controller
 
             // Actions (Dropdown Bootstrap 5)
             ->addColumn('actions', function($ticket) {
-                $view  = '<a href="'.route('tickets.show', $ticket->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                $edit  = '<a href="'.route('tickets.edit', $ticket->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                $print = '<a href="'.route('tickets.print', $ticket->id).'" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                $view  = '<a href="'.route('tickets.show', $ticket).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                $edit  = '<a href="'.route('tickets.edit', $ticket).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                $print = '<a href="'.route('tickets.print', $ticket).'" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
                 $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
                 
                 return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $print . $delete . '</div>';
@@ -86,9 +86,10 @@ class TicketController extends Controller
         // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
         $assurances = \App\Models\Assurance::all(); // Ajout des assurances
         $medecins = \App\Models\User::role('medecin')->get();
+        $services = \App\Models\ServiceMedical::orderBy('nom')->get();
 
         // Passer les données à la vue
-        return view('application.ticket.create', compact('prestations', 'assurances', 'medecins'));
+        return view('application.ticket.create', compact('prestations', 'assurances', 'medecins', 'services'));
     }
 
     /**
@@ -212,17 +213,14 @@ class TicketController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(Ticket $ticket)
     {
-        // Récupérer le ticket avec patient et items
-        $ticket = Ticket::with(['patient', 'items.prestation.serviceMedical'])->findOrFail($id);
-        
-        $prestations =Prestation::with('serviceMedical')->orderBy('nom')->get();
-        $assurances = \App\Models\Assurance::all();
-        $medecins = \App\Models\User::role('medecin')->get();
-
-        // Retourner la même vue que la création, mais avec les données du ticket
-        return view('application.ticket.create', compact('ticket', 'prestations', 'assurances', 'medecins'));
+        $ticket->load(['patient', 'items.prestation.serviceMedical']);
+        $prestations = Prestation::with('serviceMedical')->orderBy('nom')->get();
+        $assurances  = \App\Models\Assurance::all();
+        $medecins    = \App\Models\User::role('medecin')->get();
+        $services    = \App\Models\ServiceMedical::orderBy('nom')->get();
+        return view('application.ticket.create', compact('ticket', 'prestations', 'assurances', 'medecins', 'services'));
     }
 
 
@@ -300,17 +298,12 @@ class TicketController extends Controller
             ], 500);
         }
     }
-    public function print($id)
+    public function print(Ticket $ticket)
     {
-        $ticket = Ticket::with(['patient', 'consultation', 'user'])->findOrFail($id);
-
-        // 🔹 Vue PDF personnalisée
+        $ticket->load(['patient', 'consultation', 'user']);
         $pdf = Pdf::loadView('application.ticket.pdf', compact('ticket'))
             ->setPaper('a4', 'portrait');
-
-        // 🔹 Soit on télécharge, soit on affiche dans un nouvel onglet
-        return $pdf->stream('ticket_'.$ticket->id.'.pdf');
-        // 👉 pour télécharger automatiquement : return $pdf->download('ticket_'.$ticket->id.'.pdf');
+        return $pdf->stream('ticket_'.$ticket->uuid.'.pdf');
     }
     /**
      * Remove the specified resource from storage.

@@ -135,7 +135,7 @@
                                         {{ $consultation->protocole->traitement_principal ?? 'Traitement via médicaments liés' }}
                                     </p>
                                 </div>
-                                <a href="{{ route('infectiologie.protocoles.show', $consultation->protocole->id) }}" 
+                                <a href="{{ route('infectiologie.protocoles.show', $consultation->protocole) }}" 
                                    class="btn btn-sm btn-outline-success">
                                     <i class="fas fa-eye me-1"></i>Voir
                                 </a>

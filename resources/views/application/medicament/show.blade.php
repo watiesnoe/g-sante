@@ -18,7 +18,7 @@
             </nav>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('medicaments.edit', $medicament->id) }}" class="btn btn-sm btn-outline-primary">
+            <a href="{{ route('medicaments.edit', $medicament) }}" class="btn btn-sm btn-outline-primary">
                 <i class="fa fa-pencil-alt me-1"></i> Modifier
             </a>
             <a href="{{ route('medicaments.index') }}" class="btn btn-sm btn-secondary">

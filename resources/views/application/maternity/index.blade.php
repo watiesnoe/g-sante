@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-white border-0">
-                    <a href="{{ route('maternity.show', $g->id) }}" class="btn btn-outline-primary w-100">
+                    <a href="{{ route('maternity.show', $g) }}" class="btn btn-outline-primary w-100">
                         Voir le dossier <i class="fa fa-arrow-right ms-1"></i>
                     </a>
                 </div>

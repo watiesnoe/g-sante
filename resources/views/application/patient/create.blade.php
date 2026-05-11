@@ -13,7 +13,7 @@
             </h3>
         </div>
         <div class="block-content p-4">
-            <form action="{{ isset($patient) ? route('patients.update', $patient->id) : route('patients.store') }}" method="POST">
+            <form action="{{ isset($patient) ? route('patients.update', $patient) : route('patients.store') }}" method="POST">
                 @csrf
                 @if(isset($patient))
                     @method('PUT')

@@ -54,13 +54,27 @@
                             </select>
                         </div>
 
+                        {{-- Structure (Service Médical) --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="fa fa-hospital"></i> Structure / Service (Optionnel)</label>
+                            <select class="form-select js-select2" id="service_medical" name="service_medical_id">
+                                <option value="">-- Tous les services --</option>
+                                @foreach($services as $service)
+                                    <option value="{{ $service->id }}">
+                                        {{ $service->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Filtre les médecins par service.</small>
+                        </div>
+
                         {{-- Médecin (Optionnel) --}}
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold"><i class="fa fa-user-md"></i> Médecin en charge (Optionnel)</label>
                             <select class="form-select js-select2" id="medecin" name="medecin_id">
                                 <option value="">-- Assigner un médecin --</option>
                                 @foreach($medecins as $medecin)
-                                    <option value="{{ $medecin->id }}"
+                                    <option value="{{ $medecin->id }}" data-service-id="{{ $medecin->service_medical_id }}"
                                         {{ isset($ticket) && $ticket->medecin_id == $medecin->id ? 'selected' : '' }}>
                                         {{ $medecin->name }} {{ $medecin->prenom ? '('.$medecin->prenom.' '.$medecin->nom.')' : '' }}
                                     </option>
@@ -239,6 +253,45 @@
                     $('#assurance').val('').trigger('change');
                 }
             });
+
+            // --- 0. Filtrage des médecins par service ---
+            var allMedecinsOptions = $('#medecin option').clone();
+
+            $('#service_medical').on('change', function() {
+                var serviceId = $(this).val();
+                var currentMedecin = $('#medecin').val();
+
+                // Vider le select
+                $('#medecin').empty();
+
+                // Ajouter les options filtrées
+                allMedecinsOptions.each(function() {
+                    var optionServiceId = $(this).data('service-id');
+                    
+                    if (!serviceId || !optionServiceId || optionServiceId == serviceId || $(this).val() == '') {
+                        $('#medecin').append($(this).clone());
+                    }
+                });
+
+                // Restaurer la sélection si possible
+                if ($('#medecin option[value="' + currentMedecin + '"]').length) {
+                    $('#medecin').val(currentMedecin);
+                } else {
+                    $('#medecin').val('');
+                }
+                
+                // Mettre à jour Select2
+                $('#medecin').trigger('change');
+            });
+            
+            // Initialisation au chargement si édition
+            @if(isset($ticket) && $ticket->medecin)
+                var medServiceId = "{{ $ticket->medecin->service_medical_id }}";
+                if(medServiceId) {
+                    $('#service_medical').val(medServiceId).trigger('change');
+                    $('#medecin').val("{{ $ticket->medecin_id }}").trigger('change');
+                }
+            @endif
 
             // --- 1. Gestion affichage dynamique Quantité ---
             $('#prestation').on('change', function() {

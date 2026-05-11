@@ -70,7 +70,7 @@
                 e.preventDefault();
 
                 $.ajax({
-                    url: "{{ route('ordonnances.payer', $ordonnance->id) }}",
+                    url: "{{ route('ordonnances.payer', $ordonnance) }}",
                     type: "POST",
                     data: $(this).serialize(),
                     success: function(res){

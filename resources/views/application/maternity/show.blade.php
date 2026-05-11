@@ -205,7 +205,7 @@
                 <h5 class="modal-title fw-bold">Clôturer le Suivi de Grossesse</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('maternity.close', $grossesse->id) }}" method="POST">
+            <form action="{{ route('maternity.close', $grossesse) }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">

@@ -7,7 +7,7 @@
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white d-flex justify-content-between">
                 <h5>Facture Hospitalisation #{{ $hospitalisation->id }}</h5>
-                <a href="{{ route('hospitalisations.pdf', $hospitalisation->id) }}" class="btn btn-light btn-sm">
+                <a href="{{ route('hospitalisations.pdf', $hospitalisation) }}" class="btn btn-light btn-sm">
                     <i class="fa fa-file-pdf"></i> Télécharger PDF
                 </a>
             </div>

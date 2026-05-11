@@ -9,7 +9,7 @@
          FORMULAIRE PRINCIPAL
     ═══════════════════════════════════════════════════════════════ --}}
         <form id="consultationForm" method="POST"
-            action="{{ $consultation->exists ? route('consultations.update', $consultation->id) : route('consultations.store') }}">
+            action="{{ $consultation->exists ? route('consultations.update', $consultation) : route('consultations.store') }}">
             @csrf
             @if ($consultation->exists)
                 @method('PUT')

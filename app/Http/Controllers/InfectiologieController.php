@@ -53,9 +53,9 @@ class InfectiologieController extends Controller
         return view('application.infectiologie.protocoles');
     }
 
-    public function showProtocole($id)
+    public function showProtocole(ProtocoleTraitement $protocole)
     {
-        $protocole = ProtocoleTraitement::with(['maladie', 'medicaments'])->findOrFail($id);
+        $protocole->load(['maladie', 'medicaments']);
         return view('application.infectiologie.show', compact('protocole'));
     }
 
@@ -95,11 +95,9 @@ class InfectiologieController extends Controller
         return response()->json(\App\Models\Medicament::select('id', 'nom')->get());
     }
 
-    public function destroyProtocole($id)
+    public function destroyProtocole(ProtocoleTraitement $protocole)
     {
-        $protocole = ProtocoleTraitement::findOrFail($id);
         $protocole->delete();
-
         return redirect()->back()->with('success', 'Protocole supprimé avec succès.');
     }
 

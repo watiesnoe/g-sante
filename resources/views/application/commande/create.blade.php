@@ -10,7 +10,7 @@
 
 @section('content')
 <div class="container-fluid">
-    <form method="POST" action="{{ isset($commande) ? route('commandes.update', $commande->id) : route('commandes.store') }}">
+    <form method="POST" action="{{ isset($commande) ? route('commandes.update', $commande) : route('commandes.store') }}">
         @csrf
         @if(isset($commande)) @method('PUT') @endif
 

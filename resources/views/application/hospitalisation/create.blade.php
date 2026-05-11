@@ -9,7 +9,7 @@
                 <h4>📝 {{ isset($commande) ? 'Modifier la commande' : 'Nouvelle commande' }}</h4>
             </div>
             <div class="card-body">
-                <form action="{{ isset($commande) ? route('commandes.update', $commande->id) : route('commandes.store') }}"
+                <form action="{{ isset($commande) ? route('commandes.update', $commande) : route('commandes.store') }}"
                       method="POST" id="commandeForm">
                     @csrf
                     @if(isset($commande))

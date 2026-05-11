@@ -184,9 +184,9 @@ Route::middleware('auth')->group(function () {
         })->name('infectiologie.pathologies.api');
         Route::get('/statistiques', [\App\Http\Controllers\InfectiologieController::class, 'statistiques'])->name('infectiologie.statistiques');
         Route::get('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'protocoles'])->name('infectiologie.protocoles');
-        Route::get('/protocoles/{id}', [\App\Http\Controllers\InfectiologieController::class, 'showProtocole'])->name('infectiologie.protocoles.show');
+        Route::get('/protocoles/{protocole}', [\App\Http\Controllers\InfectiologieController::class, 'showProtocole'])->name('infectiologie.protocoles.show');
         Route::post('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'storeProtocole'])->name('infectiologie.protocoles.store');
-        Route::delete('/protocoles/{id}', [\App\Http\Controllers\InfectiologieController::class, 'destroyProtocole'])->name('infectiologie.protocoles.destroy');
+        Route::delete('/protocoles/{protocole}', [\App\Http\Controllers\InfectiologieController::class, 'destroyProtocole'])->name('infectiologie.protocoles.destroy');
 
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');
@@ -207,9 +207,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [\App\Http\Controllers\MaternityController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\MaternityController::class, 'create'])->name('create');
         Route::post('/store', [\App\Http\Controllers\MaternityController::class, 'store'])->name('store');
-        Route::get('/{id}', [\App\Http\Controllers\MaternityController::class, 'show'])->name('show');
+        Route::get('/{grossesse}', [\App\Http\Controllers\MaternityController::class, 'show'])->name('show');
         Route::post('/cpn', [\App\Http\Controllers\MaternityController::class, 'storeCpn'])->name('cpn.store');
-        Route::post('/{id}/close', [\App\Http\Controllers\MaternityController::class, 'close'])->name('close');
+        Route::post('/{grossesse}/close', [\App\Http\Controllers\MaternityController::class, 'close'])->name('close');
     });
 
 });
