@@ -1,152 +1,116 @@
-<div class="row">
-    <!-- Ordonnances -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Ordonnances Total</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_ordonnances'] }}</div>
+<!-- Statistiques principales -->
+<div class="row mb-4">
+    @php
+        $defaultStats = [
+            [
+                'title' => 'Total Ordonnances',
+                'value' => $stats['total_ordonnances'] ?? 0,
+                'icon' => 'fas fa-prescription-bottle',
+                'color' => 'primary',
+                'gradient' => 'var(--primary-gradient)',
+                'subtitle' => 'Aujourd\'hui: ' . ($stats['ordonnances_today'] ?? 0)
+            ],
+            [
+                'title' => 'Stock Médicaments',
+                'value' => $stats['total_medicaments'] ?? 0,
+                'icon' => 'fas fa-pills',
+                'color' => 'success',
+                'gradient' => 'var(--success-gradient)',
+                'subtitle' => 'Faible: ' . ($stats['medicaments_low_stock'] ?? 0)
+            ],
+            [
+                'title' => 'Total Patients',
+                'value' => $stats['total_patients'] ?? 0,
+                'icon' => 'fas fa-user-injured',
+                'color' => 'info',
+                'gradient' => 'var(--info-gradient)',
+                'subtitle' => 'Nouveaux: ' . ($stats['patients_today'] ?? 0)
+            ],
+            [
+                'title' => 'Salle d\'Attente',
+                'value' => $stats['total_tickets'] ?? 0,
+                'icon' => 'fas fa-ticket-alt',
+                'color' => 'warning',
+                'gradient' => 'var(--warning-gradient)',
+                'subtitle' => 'Tickets en cours'
+            ],
+        ];
+    @endphp
+
+    @foreach($defaultStats as $stat)
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-statistic h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-stat me-3" style="background: {{ $stat['gradient'] }}; color: white;">
+                            <i class="{{ $stat['icon'] }} fs-5"></i>
+                        </div>
+                        <h6 class="card-title text-muted mb-0 fw-bold">{{ $stat['title'] }}</h6>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-prescription-bottle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs text-muted">
-                    Aujourd'hui: {{ $stats['ordonnances_today'] }}
+                    <h2 class="mb-0 fw-bold">{{ $stat['value'] }}</h2>
+                    <small class="text-muted">{{ $stat['subtitle'] }}</small>
                 </div>
             </div>
         </div>
-    </div>
+    @endforeach
+</div>
 
-    <!-- Médicaments -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Médicaments</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_medicaments'] }}</div>
+<!-- Deuxième ligne de statistiques -->
+<div class="row mb-4">
+    <!-- Hospitalisation -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-stat bg-secondary-subtle text-secondary me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                        <i class="fas fa-bed fs-5"></i>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-pills fa-2x text-gray-300"></i>
-                    </div>
+                    <h6 class="card-title text-muted mb-0 fw-bold">Occupation Lits</h6>
                 </div>
-                <div class="mt-2">
-                    <span class="badge badge-warning">Stock faible: {{ $stats['medicaments_low_stock'] }}</span>
-                    <span class="badge badge-danger">Rupture: {{ $stats['medicaments_out_of_stock'] }}</span>
+                <h2 class="mb-0 fw-bold">{{ $stats['lits_occupes'] }}/{{ $stats['total_lits'] }}</h2>
+                <div class="progress mt-3" style="height: 8px;">
+                    <div class="progress-bar bg-secondary" role="progressbar" 
+                         style="width: {{ round(($stats['lits_occupes'] / max($stats['total_lits'], 1)) * 100) }}%" 
+                         aria-valuenow="{{ $stats['lits_occupes'] }}" aria-valuemin="0" aria-valuemax="{{ $stats['total_lits'] }}"></div>
                 </div>
+                <small class="text-muted d-block mt-2">Taux d'occupation: {{ round(($stats['lits_occupes'] / max($stats['total_lits'], 1)) * 100) }}%</small>
             </div>
         </div>
     </div>
 
     <!-- Fournisseurs -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Fournisseurs</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_fournisseurs'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-truck fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Patients -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Patients</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_patients'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-user-injured fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs text-muted">
-                    Nouveaux aujourd'hui: {{ $stats['patients_today'] }}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Deuxième ligne de statistiques -->
-<div class="row">
-    <!-- Hospitalisation -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-secondary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                            Lits Hospitalisation</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ $stats['lits_occupes'] }}/{{ $stats['total_lits'] }}
-                        </div>
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-stat bg-info-subtle text-info me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                        <i class="fas fa-truck fs-5"></i>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-bed fa-2x text-gray-300"></i>
-                    </div>
+                    <h6 class="card-title text-muted mb-0 fw-bold">Fournisseurs</h6>
                 </div>
-                <div class="mt-2 text-xs text-muted">
-                    Taux d'occupation: {{ round(($stats['lits_occupes'] / max($stats['total_lits'], 1)) * 100) }}%
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tickets -->
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-dark shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
-                            Tickets Salle d'Attente</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_tickets'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
-                    </div>
-                </div>
+                <h2 class="mb-0 fw-bold">{{ $stats['total_fournisseurs'] }}</h2>
+                <small class="text-muted">Partenaires actifs</small>
             </div>
         </div>
     </div>
 
     <!-- Alertes Stock -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Alertes Stock</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ $stats['medicaments_low_stock'] + $stats['medicaments_out_of_stock'] }}
-                        </div>
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-stat bg-danger-subtle text-danger me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                        <i class="fas fa-exclamation-triangle fs-5"></i>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                    </div>
+                    <h6 class="card-title text-muted mb-0 fw-bold">Alertes Stock</h6>
                 </div>
+                <h2 class="mb-0 fw-bold text-danger">{{ $stats['medicaments_low_stock'] + $stats['medicaments_out_of_stock'] }}</h2>
                 <div class="mt-2">
                     @if($stats['medicaments_out_of_stock'] > 0)
-                        <span class="badge badge-danger">Ruptures: {{ $stats['medicaments_out_of_stock'] }}</span>
+                        <span class="badge bg-danger rounded-pill">Ruptures: {{ $stats['medicaments_out_of_stock'] }}</span>
                     @endif
                     @if($stats['medicaments_low_stock'] > 0)
-                        <span class="badge badge-warning">Faible: {{ $stats['medicaments_low_stock'] }}</span>
+                        <span class="badge bg-warning text-dark rounded-pill">Faible: {{ $stats['medicaments_low_stock'] }}</span>
                     @endif
                 </div>
             </div>
@@ -155,33 +119,28 @@
 </div>
 
 <!-- Menu d'actions rapides -->
-<div class="row mt-4">
+<div class="row">
     <div class="col-12">
-        <div class="card shadow">
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Actions Rapides</h6>
+                <h5 class="mb-0 fw-bold"><i class="fas fa-bolt text-warning me-2"></i>Actions Rapides</h5>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ route('ordonnances.index') }}" class="btn btn-primary btn-block">
-                            <i class="fas fa-prescription-bottle mr-2"></i>Gérer Ordonnances
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{{ route('ordonnances.index') }}" class="btn btn-lg btn-primary w-100 py-3">
+                            <i class="fas fa-prescription-bottle me-2"></i> Gérer Ordonnances
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ route('medicaments.index') }}" class="btn btn-success btn-block">
-                            <i class="fas fa-pills mr-2"></i>Stock Médicaments
+                    <div class="col-md-4">
+                        <a href="{{ route('medicaments.index') }}" class="btn btn-lg btn-success w-100 py-3">
+                            <i class="fas fa-pills me-2"></i> Stock Médicaments
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ route('fournisseurs.index') }}" class="btn btn-info btn-block">
-                            <i class="fas fa-truck mr-2"></i>Fournisseurs
+                    <div class="col-md-4">
+                        <a href="{{ route('fournisseurs.index') }}" class="btn btn-lg btn-info text-white w-100 py-3">
+                            <i class="fas fa-truck me-2"></i> Gérer Fournisseurs
                         </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        {{-- <a href="{{ route('paiements.index') }}" class="btn btn-warning btn-block">
-                            <i class="fas fa-money-bill-wave mr-2"></i>Paiements
-                        </a> --}}
                     </div>
                 </div>
             </div>

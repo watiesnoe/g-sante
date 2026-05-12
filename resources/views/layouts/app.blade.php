@@ -119,7 +119,7 @@
                 padding: 10px 15px !important;
                 border-bottom: none !important;
             }
-            .card-header h1, .card-header h2, .card-header h3, .card-header h4, .card-header h5, .card-header h6, .card-title, .card-header .card-title,
+            .card-header h1, .card-header h2, .card-header h3, .card-header h4, .card-header h5, .card-header h6, .card-header .card-title,
             .block-header h1, .block-header h2, .block-header h3, .block-header h4, .block-header h5, .block-header h6, .block-title, .block-header .block-title {
                 color: #fff !important;
                 font-size: 0.875rem !important; /* text-sm equivalent */
@@ -896,6 +896,7 @@
             }
         }
     </style>
+    @yield('styles')
 </head>
 
 <body>
