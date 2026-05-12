@@ -2,11 +2,11 @@
 @section('titre', isset($fournisseur) ? 'Modifier Fournisseur' : 'Ajouter Fournisseur')
 
 @section('content')
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
-                {{ isset($fournisseur) ? '✏️ Modifier Fournisseur' : '➕ Ajouter Fournisseur' }}
+                {{ isset($fournisseur) ? 'Modifier Fournisseur' : 'Ajouter Fournisseur' }}
             </h5>
         </div>
         <div class="card-body">

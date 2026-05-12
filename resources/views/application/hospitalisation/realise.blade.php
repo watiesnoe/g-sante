@@ -3,13 +3,15 @@
 @section('title_page', 'Gestion des hospitalisations')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="card shadow mt-3">
+    <div class="container-fluid mt-3">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ route('hospitalisations.create') }}" class="btn btn-sm btn-primary">
+                <i class="fa fa-plus me-1"></i> Ajouter
+            </a>
+        </div>
+        <div class="card shadow">
             <div class="card-header bg-primary text-white d-flex justify-content-between">
                 <h5 class="mb-0">Liste des hospitalisations</h5>
-                <a href="{{ route('hospitalisations.create') }}" class="btn btn-light btn-sm">
-                    <i class="bx bx-plus"></i> Nouvelle hospitalisation
-                </a>
             </div>
 
             <div class="card-body">

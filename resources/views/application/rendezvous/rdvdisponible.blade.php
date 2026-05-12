@@ -3,11 +3,15 @@
 @section('titre', 'Liste des Rendez-vous')
 
 @section('content')
-    <div class="container mt-4">
-        <h2 class="mb-4">📅 Liste des Rendez-vous</h2>
-
-        <!-- Bouton Ajouter -->
-        <button class="btn btn-primary mb-3" id="addRdvBtn">➕ Nouveau</button>
+    <div class="container-fluid mt-3">
+         <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" id="addRdvBtn"><i class="fa fa-plus me-1"></i> Ajouter</button>
+        </div>
+        <div class="card shadow-lg">
+            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                <h4 class="m-0"><i class="fa fa-calendar me-2"></i>Liste des Rendez-vous</h4>
+            </div>
+            <div class="card-body">
 
         <!-- Tableau -->
         <table class="table table-bordered" id="rendezvous-table">

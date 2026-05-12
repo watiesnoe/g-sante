@@ -3,7 +3,7 @@
 @section('title_page', 'Gestion des hospitalisations')
 
 @section('content')
-    <div class="container mt-4">
+    <div class="container-fluid mt-3">
         <div class="d-flex justify-content-end mb-3">
             <a href="{{ route('hospitalisations.create') }}" class="btn btn-sm btn-primary">
                 <i class="fa fa-plus me-1"></i> Ajouter
