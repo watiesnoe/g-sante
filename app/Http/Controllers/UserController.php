@@ -349,7 +349,7 @@ class UserController extends Controller
             ]);
         }
 
-        return redirect()->route('profile')
+        return redirect()->route('profile.edit')
             ->with('success', 'Profil mis à jour avec succès.');
     }
 

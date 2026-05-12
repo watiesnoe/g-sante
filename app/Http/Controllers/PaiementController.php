@@ -163,7 +163,7 @@ class PaiementController extends Controller
 
         $paiement->update($data);
 
-        return redirect()->route('paiements.index')
+        return redirect()->route('hospitalisations.index')
             ->with('success', 'Paiement mis à jour.');
     }
 
@@ -174,7 +174,7 @@ class PaiementController extends Controller
     {
         $paiement->delete();
 
-        return redirect()->route('paiements.index')
+        return redirect()->route('hospitalisations.index')
             ->with('success', 'Paiement supprimé.');
     }
 

@@ -50,7 +50,7 @@ class PrestationController extends Controller
 
         Prestation::create($request->all());
 
-        return redirect()->route('application.prestation.create')
+        return redirect()->route('prestations.index')
             ->with('success', 'Prestation créée avec succès.');
     }
 

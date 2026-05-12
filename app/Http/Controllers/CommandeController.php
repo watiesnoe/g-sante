@@ -333,4 +333,24 @@ public function index(Request $request)
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Retourner les médicaments d'une commande (AJAX).
+     */
+    public function medicaments(Commande $commande)
+    {
+        $commande->load('lignes.medicament');
+
+        $medicaments = $commande->lignes->map(function ($ligne) {
+            return [
+                'id'            => $ligne->medicament_id,
+                'nom'           => $ligne->medicament->nom ?? 'Inconnu',
+                'quantite'      => $ligne->quantite,
+                'prix_unitaire' => $ligne->prix_unitaire,
+                'total'         => $ligne->total,
+            ];
+        });
+
+        return response()->json($medicaments);
+    }
 }
