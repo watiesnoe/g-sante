@@ -1,214 +1,166 @@
+@php
+    $hour = now()->hour;
+    $greeting = $hour < 12 ? 'Bonjour' : ($hour < 18 ? 'Bon après-midi' : 'Bonsoir');
+    $consToday = $stats['consultations_today'] ?? 0;
+@endphp
 
-<!-- Welcome Banner -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="welcome-banner d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="display-5 fw-bold mb-2">Bonjour, Dr. {{ Auth::user()->prenom }}</h1>
-                <p class="lead mb-0">Vous avez <span class="fw-bold">{{ $stats['consultations_today'] ?? 0 }} consultations</span> prévues aujourd'hui.</p>
+{{-- HERO BANNER --}}
+<div class="gs-banner mb-4" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 60%, #164e63 100%);">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div style="position:relative;z-index:2">
+            <div class="gs-time-badge">
+                <i class="fas fa-heartbeat" style="color:#f43f5e"></i>
+                <span>Espace Clinique</span>
+                <span class="pulse-dot success" style="width:7px;height:7px;margin-left:.25rem"></span>
             </div>
-            <div class="d-none d-md-block">
-                <i class="fas fa-user-md fa-5x opacity-25"></i>
+            <div class="gs-banner-title">{{ $greeting }}, Dr. {{ Auth::user()->prenom }}</div>
+            <div class="gs-banner-subtitle">
+                @if($consToday > 0)
+                    <strong>{{ $consToday }} consultation{{ $consToday > 1 ? 's' : '' }}</strong> planifiée{{ $consToday > 1 ? 's' : '' }} aujourd'hui
+                @else
+                    Aucune consultation planifiée aujourd'hui
+                @endif
             </div>
+            <div class="mt-3 d-flex gap-3 flex-wrap">
+                <div><div style="font-size:.7rem;opacity:.65;font-weight:600;text-transform:uppercase">Aujourd'hui</div><div style="font-size:1.75rem;font-weight:800">{{ $consToday }}</div></div>
+                <div style="border-left:1px solid rgba(255,255,255,.25);margin:0 .5rem"></div>
+                <div><div style="font-size:.7rem;opacity:.65;font-weight:600;text-transform:uppercase">Total consultations</div><div style="font-size:1.75rem;font-weight:800">{{ $stats['total_consultations'] ?? 0 }}</div></div>
+                <div style="border-left:1px solid rgba(255,255,255,.25);margin:0 .5rem"></div>
+                <div><div style="font-size:.7rem;opacity:.65;font-weight:600;text-transform:uppercase">Hospitalisés</div><div style="font-size:1.75rem;font-weight:800">{{ $stats['active_hospitalisations'] ?? 0 }}</div></div>
+            </div>
+        </div>
+        <div class="text-end d-none d-md-block" style="position:relative;z-index:2">
+            <div id="gs-clock"></div><div id="gs-date"></div>
         </div>
     </div>
+    <i class="fas fa-user-md gs-banner-icon"></i>
 </div>
 
-<!-- Statistiques principales -->
-<div class="row mb-4">
+{{-- KPI CARDS --}}
+<div class="row g-3 mb-4">
     @php
-        $mainCards = [
-            [
-                'title' => 'Consultations Aujourd\'hui',
-                'value' => $stats['consultations_today'] ?? 0,
-                'icon' => 'fas fa-stethoscope',
-                'color' => 'primary',
-                'gradient' => 'var(--primary-gradient)',
-                'subtitle' => 'Patients en attente',
-                'route' => route('consultations.index')
-            ],
-            [
-                'title' => 'Patients Suivis',
-                'value' => $stats['total_patients'] ?? 0,
-                'icon' => 'fas fa-procedures',
-                'color' => 'success',
-                'gradient' => 'var(--success-gradient)',
-                'subtitle' => 'Dossiers actifs',
-                'route' => route('patients.index')
-            ],
-            [
-                'title' => 'Hospitalisations',
-                'value' => $stats['active_hospitalisations'] ?? 0,
-                'icon' => 'fas fa-bed',
-                'color' => 'warning',
-                'gradient' => 'var(--warning-gradient)',
-                'subtitle' => 'Patients hospitalisés',
-                'route' => route('hospitalisations.index')
-            ],
-            [
-                'title' => 'Alertes Stock',
-                'value' => $stats['low_stock_medicaments'] ?? 0,
-                'icon' => 'fas fa-exclamation-triangle',
-                'color' => 'danger',
-                'gradient' => 'var(--danger-gradient)',
-                'subtitle' => 'Médicaments critiques',
-                'route' => route('medicaments.index')
-            ]
-        ];
+    $kpis = [
+        ['label'=>"Consultations Auj.", 'value'=>$stats['consultations_today']??0, 'sub'=>'Patients reçus',        'icon'=>'fa-stethoscope',        'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('consultations.index'),    'alert'=>false],
+        ['label'=>'Patients Totaux',    'value'=>$stats['total_patients']??0,      'sub'=>'Dossiers actifs',       'icon'=>'fa-user-injured',       'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('patients.index'),          'alert'=>false],
+        ['label'=>'Hospitalisés',       'value'=>$stats['active_hospitalisations']??0,'sub'=>'En cours',           'icon'=>'fa-procedures',         'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('hospitalisations.index'), 'alert'=>($stats['active_hospitalisations']??0) > 0],
+        ['label'=>'Alertes Stock',      'value'=>$stats['low_stock_medicaments']??0, 'sub'=>'Médicaments critiques','icon'=>'fa-exclamation-triangle','bg'=>'var(--grad-rose)',  'bar'=>'#f43f5e', 'route'=>route('medicaments.index'),      'alert'=>($stats['low_stock_medicaments']??0) > 0],
+    ];
     @endphp
-
-    @foreach($mainCards as $card)
-        <div class="col-xl-3 col-md-6 mb-4">
-            <a href="{{ $card['route'] }}" class="text-decoration-none text-dark">
-                <div class="card card-statistic h-100 border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-stat me-3" style="background: {{ $card['gradient'] }}; color: white;">
-                                <i class="{{ $card['icon'] }} fs-5"></i>
-                            </div>
-                            <h6 class="card-title text-muted mb-0 fw-bold">{{ $card['title'] }}</h6>
-                        </div>
-                        <h2 class="mb-0 fw-bold">{{ $card['value'] }}</h2>
-                        <small class="text-muted">{{ $card['subtitle'] }}</small>
-                    </div>
-                </div>
-            </a>
-        </div>
+    @foreach($kpis as $k)
+    <div class="col-xl-3 col-md-6">
+        <a href="{{ $k['route'] }}" class="gs-kpi h-100">
+            @if($k['alert'])<span class="gs-kpi-trend" style="background:var(--med-rose-light);color:var(--med-rose)"><span class="pulse-dot danger" style="width:7px;height:7px;margin-right:.3rem"></span>Alerte</span>@endif
+            <div class="gs-kpi-icon" style="background:{{ $k['bg'] }};color:#fff"><i class="fas {{ $k['icon'] }}"></i></div>
+            <div class="gs-kpi-label">{{ $k['label'] }}</div>
+            <div class="gs-kpi-value"><span class="counter-val" data-target="{{ $k['value'] }}">{{ $k['value'] }}</span></div>
+            <div class="gs-kpi-sub">{{ $k['sub'] }}</div>
+            <div class="gs-kpi-bar" style="background:{{ $k['bar'] }}"></div>
+        </a>
+    </div>
     @endforeach
 </div>
 
-<!-- Contenu Principal -->
-<div class="row">
-    <!-- Graphique des Consultations -->
-    <div class="col-lg-8 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-chart-line text-primary me-2"></i>Activité des Consultations</h5>
-                <a href="{{ route('consultations.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Historique Complet</a>
+{{-- CHART + RDV --}}
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="gs-card h-100">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-teal-light);color:var(--med-teal);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-bar" style="font-size:.85rem"></i></span>Mes consultations — 6 derniers mois</h6>
+                <a href="{{ route('consultations.index') }}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size:.78rem">Voir tout</a>
             </div>
-            <div class="card-body">
-                <canvas id="consultations-chart" height="300"></canvas>
-            </div>
+            <div class="gs-card-body"><canvas id="consultations-chart" height="220"></canvas></div>
         </div>
     </div>
-
-    <!-- Rendez-vous du Jour -->
-    <div class="col-lg-4 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-day text-info me-2"></i>Aujourd'hui</h5>
+    <div class="col-lg-4">
+        <div class="gs-card h-100">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-violet-light);color:#7c3aed;display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-day" style="font-size:.85rem"></i></span>RDV d'aujourd'hui</h6>
+                <span class="badge rounded-pill" style="background:var(--med-violet-light);color:#7c3aed">{{ $todayAppointments->count() }}</span>
             </div>
-            <div class="card-body p-0">
-                @forelse($todayAppointments as $appointment)
-                    <div class="p-3 border-bottom d-flex align-items-center hover-bg">
-                        <div class="avatar-stat bg-info-subtle text-info me-3">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0 fw-bold">{{ $appointment->patient->nom_complet ?? 'Patient' }}</h6>
-                            <small class="text-muted">{{ \Carbon\Carbon::parse($appointment->date_heure)->format('H:i') }} - {{ $appointment->motif }}</small>
-                        </div>
-                        <span class="badge bg-info-subtle text-info rounded-pill">RDV</span>
+            <div class="gs-scroll-list" style="max-height:280px">
+                @forelse($todayAppointments as $appt)
+                @php $initials = strtoupper(substr($appt->patient->prenom??'P',0,1).substr($appt->patient->nom??'',0,1)); $colors=['#0891b2','#10b981','#7c3aed','#f59e0b','#f43f5e']; $color=$colors[$loop->index%5]; @endphp
+                <div class="gs-appt-item">
+                    <div class="gs-appt-avatar" style="background:{{ $color }}20;color:{{ $color }}">{{ $initials }}</div>
+                    <div class="flex-grow-1">
+                        <div style="font-size:.85rem;font-weight:600;color:#0f172a">{{ $appt->patient->prenom??'' }} {{ $appt->patient->nom??'Patient' }}</div>
+                        <div class="gs-appt-time"><i class="fas fa-clock me-1" style="font-size:.65rem"></i>{{ \Carbon\Carbon::parse($appt->date_heure)->format('H:i') }} <span style="color:#94a3b8;font-weight:400">· {{ Str::limit($appt->motif??'',18) }}</span></div>
                     </div>
+                    @php $sbg=$appt->statut==='realise'?'#d1fae5':($appt->statut==='annule'?'#ffe4e6':'#e0f2fe'); $sc=$appt->statut==='realise'?'#059669':($appt->statut==='annule'?'#e11d48':'#0891b2'); @endphp
+                    <span style="background:{{ $sbg }};color:{{ $sc }};font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:50px">{{ ucfirst($appt->statut) }}</span>
+                </div>
                 @empty
-                    <div class="text-center py-5">
-                        <i class="fas fa-calendar-check fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Aucun rendez-vous pour le moment.</p>
-                    </div>
+                <div class="text-center py-5"><div style="font-size:2.5rem">📅</div><div style="font-size:.85rem;color:#94a3b8;font-weight:500">Aucun rendez-vous aujourd'hui</div></div>
                 @endforelse
             </div>
         </div>
     </div>
 </div>
 
-<!-- Deuxième Ligne : Alertes et Hospitalisations -->
-<div class="row">
-    <!-- Médicaments en alerte -->
-    <div class="col-lg-6 mb-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-danger text-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-pills me-2"></i>Stock Critique</h5>
+{{-- STOCK + HOSPITALISATIONS --}}
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="gs-card">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-rose-light);color:var(--med-rose);display:flex;align-items:center;justify-content:center"><i class="fas fa-pills" style="font-size:.85rem"></i></span>Stock Critique @if(($stats['low_stock_medicaments']??0)>0)<span class="pulse-dot danger ms-2" style="width:8px;height:8px"></span>@endif</h6>
+                <a href="{{ route('medicaments.index') }}" class="btn btn-sm" style="background:var(--med-rose-light);color:var(--med-rose);border-radius:50px;font-size:.75rem">Gérer</a>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-3 border-0 small text-uppercase">Médicament</th>
-                                <th class="border-0 small text-uppercase">Stock</th>
-                                <th class="border-0 small text-uppercase text-end pe-3">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($lowStockMedicaments->take(5) as $med)
-                                <tr>
-                                    <td class="ps-3 fw-bold">{{ $med->nom }}</td>
-                                    <td><span class="badge bg-danger-subtle text-danger">{{ $med->stock }} unités</span></td>
-                                    <td class="text-end pe-3">
-                                        <a href="{{ route('commandes.index') }}" class="btn btn-sm btn-primary">Commander</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="3" class="text-center py-4">Stock optimal <i class="fas fa-check text-success ms-1"></i></td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+            <div class="gs-scroll-list" style="max-height:260px">
+                @forelse($lowStockMedicaments->take(8) as $med)
+                @php $pct=$med->stock_min>0?min(100,round(($med->stock/$med->stock_min)*100)):0; $isCritical=$med->stock<=5; @endphp
+                <div class="gs-stock-item {{ $isCritical?'critical':'low' }}">
+                    <div class="flex-grow-1">
+                        <div style="font-size:.83rem;font-weight:600;color:#0f172a">{{ $med->nom }}</div>
+                        <div class="gs-stock-progress" style="width:100px;margin-top:.4rem"><div class="gs-stock-progress-bar" style="width:{{ $pct }}%;background:{{ $isCritical?'#f43f5e':'#f59e0b' }}"></div></div>
+                    </div>
+                    <span style="font-size:.82rem;font-weight:700;color:{{ $isCritical?'#f43f5e':'#f59e0b' }}">{{ $med->stock }} u.</span>
                 </div>
+                @empty
+                <div class="text-center py-4"><div style="font-size:2rem">✅</div><div style="font-size:.82rem;color:#10b981;font-weight:600;margin-top:.5rem">Stock optimal</div></div>
+                @endforelse
             </div>
         </div>
     </div>
-
-    <!-- Hospitalisations Actives -->
-    <div class="col-lg-6 mb-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-warning text-dark py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-procedures me-2"></i>Hospitalisations Actives</h5>
+    <div class="col-lg-6">
+        <div class="gs-card">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-amber-light);color:var(--med-amber);display:flex;align-items:center;justify-content:center"><i class="fas fa-procedures" style="font-size:.85rem"></i></span>Hospitalisations Actives</h6>
+                <span class="badge rounded-pill" style="background:var(--med-amber-light);color:var(--med-amber)">{{ $activeHospitalisations->count() }}</span>
             </div>
-            <div class="card-body p-0">
-                @forelse($activeHospitalisations->take(5) as $hosp)
-                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-0 fw-bold">{{ $hosp->consultation->patient->nom_complet ?? 'N/A' }}</h6>
-                            <small class="text-muted">Salle : {{ $hosp->salle->nom }} | Service : {{ $hosp->service->nom }}</small>
-                        </div>
-                        <a href="{{ route('hospitalisations.show', $hosp->id) }}" class="btn btn-sm btn-outline-warning">Gérer</a>
+            <div class="gs-scroll-list" style="max-height:260px">
+                @forelse($activeHospitalisations->take(6) as $hosp)
+                @php $patient=$hosp->consultation->patient??null; $nom=$patient?($patient->prenom.' '.$patient->nom):'N/A'; $initials=$patient?strtoupper(substr($patient->prenom??'H',0,1).substr($patient->nom??'',0,1)):'HO'; @endphp
+                <div class="gs-appt-item">
+                    <div class="gs-appt-avatar" style="background:var(--med-amber-light);color:var(--med-amber)">{{ $initials }}</div>
+                    <div class="flex-grow-1">
+                        <div style="font-size:.85rem;font-weight:600;color:#0f172a">{{ $nom }}</div>
+                        <div style="font-size:.75rem;color:#64748b">{{ $hosp->salle->nom??'N/A' }} · {{ $hosp->service->nom??'N/A' }}</div>
                     </div>
+                    <a href="{{ route('hospitalisations.show', $hosp->id) }}" style="background:var(--med-amber-light);color:var(--med-amber);font-size:.72rem;font-weight:600;padding:.3rem .75rem;border-radius:50px;text-decoration:none">Gérer</a>
+                </div>
                 @empty
-                    <div class="text-center py-4">Aucune hospitalisation en cours</div>
+                <div class="text-center py-4"><div style="font-size:2rem">🛏️</div><div style="font-size:.82rem;color:#94a3b8;margin-top:.5rem">Aucune hospitalisation en cours</div></div>
                 @endforelse
             </div>
         </div>
     </div>
 </div>
 
-<!-- Actions Rapides -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <a href="{{ route('consultations.create') }}" class="btn btn-lg btn-primary w-100 py-3">
-                            <i class="fas fa-stethoscope me-2"></i> Nouvelle Consultation
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="{{ route('ordonnances.create') }}" class="btn btn-lg btn-success w-100 py-3">
-                            <i class="fas fa-file-medical me-2"></i> Ordonnance
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="" class="btn btn-lg btn-info text-white w-100 py-3">
-                            <i class="fas fa-calendar-plus me-2"></i> Rendez-vous
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="{{ route('patients.create') }}" class="btn btn-lg btn-dark w-100 py-3">
-                            <i class="fas fa-user-plus me-2"></i> Nouveau Patient
-                        </a>
-                    </div>
-                </div>
+{{-- QUICK ACTIONS --}}
+<div class="gs-card">
+    <div class="gs-card-header"><h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center"><i class="fas fa-bolt" style="font-size:.85rem"></i></span>Actions Rapides</h6></div>
+    <div class="gs-card-body">
+        <div class="row g-2">
+            @php $actions=[['icon'=>'fa-stethoscope','label'=>'Nouvelle Consultation','desc'=>'Ouvrir un dossier','route'=>route('consultations.create'),'bg'=>'var(--grad-teal)'],['icon'=>'fa-file-medical','label'=>'Ordonnance','desc'=>'Prescrire un traitement','route'=>route('ordonnances.create'),'bg'=>'var(--grad-green)'],['icon'=>'fa-calendar-plus','label'=>'Rendez-vous','desc'=>'Planifier un suivi','route'=>route('rendezvous.index'),'bg'=>'var(--grad-violet)'],['icon'=>'fa-user-plus','label'=>'Nouveau Patient','desc'=>'Enregistrer','route'=>route('patients.create'),'bg'=>'var(--grad-amber)'],['icon'=>'fa-procedures','label'=>'Hospitalisation','desc'=>'Admettre','route'=>route('hospitalisations.create'),'bg'=>'var(--grad-rose)'],['icon'=>'fa-clock','label'=>"File d'attente",'desc'=>'Patients en attente','route'=>route('liste.attente'),'bg'=>'var(--grad-dark)']]; @endphp
+            @foreach($actions as $a)
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ $a['route'] }}" class="gs-module-btn">
+                    <div class="gs-module-icon" style="background:{{ $a['bg'] }};color:#fff;width:52px;height:52px;border-radius:16px"><i class="fas {{ $a['icon'] }}" style="font-size:1.1rem"></i></div>
+                    <span style="font-size:.78rem;font-weight:700;color:#374151">{{ $a['label'] }}</span>
+                    <span style="font-size:.68rem;color:#94a3b8">{{ $a['desc'] }}</span>
+                </a>
             </div>
+            @endforeach
         </div>
     </div>
 </div>
