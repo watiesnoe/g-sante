@@ -99,6 +99,7 @@ class OrdonnanceController extends Controller
     {
         $ordonnance->load(['consultation.patient', 'consultation.medecin', 'medicaments']);
         $patient = (object)[
+            'id'             => $ordonnance->consultation->patient->id,
             'nom_patient'    => $ordonnance->consultation->patient->nom,
             'prenom_patient' => $ordonnance->consultation->patient->prenom,
             'age_patient'    => $ordonnance->consultation->patient->age,
@@ -112,7 +113,7 @@ class OrdonnanceController extends Controller
             return ($m->pivot->quantite ?? 1) * ($m->prix_vente ?? 0);
         });
 
-        $pdf = Pdf::loadView('application.ordonnance.pdf', compact('patient','medicaments','totale'));
+        $pdf = Pdf::loadView('application.ordonnance.pdf', compact('patient','medicaments','totale','ordonnance'));
         return $pdf->download('ordonnance_'.$ordonnance->uuid.'.pdf');
     }
     public function paiementForm(Ordonnance $ordonnance)

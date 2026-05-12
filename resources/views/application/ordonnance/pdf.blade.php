@@ -28,7 +28,7 @@
     </style>
 </head>
 <body>
-    @include('layouts.pdf_header', ['docNumber' => 'ORD-' . date('Ymd') . '-' . $patient->id])
+    @include('layouts.pdf_header', ['docNumber' => 'ORD-' . date('Ymd') . '-' . ($ordonnance->id ?? $patient->id ?? '0')])
 
     <div class="doc-title">
         <h2>Ordonnance Médicale</h2>
@@ -69,7 +69,7 @@
                         @if(empty($med->pivot->statut_vente) || $med->pivot->statut_vente === 'non_disponible')
                             <span style="color: #999;">-</span>
                         @else
-                            {{ number_format(($med->prix_vente ?? 0) * ($med->pivot->quantite_prescite ?? 1), 0, ',', ' ') }} FCFA
+                            {{ number_format(($med->prix_vente ?? 0) * ($med->pivot->quantite ?? 1), 0, ',', ' ') }} FCFA
                         @endif
                     </td>
                 </tr>
