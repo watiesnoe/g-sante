@@ -1,108 +1,185 @@
-<!-- Welcome Banner -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="welcome-banner d-flex justify-content-between align-items-center" style="background: var(--info-gradient);">
-            <div>
-                <h1 class="display-5 fw-bold mb-2">Bonjour, {{ Auth::user()->prenom }}</h1>
-                <p class="lead mb-0">Vous avez <span class="fw-bold">{{ $todayAppointments->count() }} rendez-vous</span> à gérer aujourd'hui.</p>
-            </div>
-            <div class="d-none d-md-block">
-                <i class="fas fa-headset fa-5x opacity-25"></i>
-            </div>
-        </div>
-    </div>
-</div>
+@php
+    $hour = now()->hour;
+    $greeting = $hour < 12 ? 'Bonjour' : ($hour < 18 ? 'Bon après-midi' : 'Bonsoir');
+    $apptCount = $todayAppointments->count();
+@endphp
 
-<!-- Statistiques rapides -->
-<div class="row mb-4">
-    @php
-        $secretaireStats = [
-            ['title' => 'Nouveaux Patients', 'value' => $stats['new_patients_today'] ?? 0, 'icon' => 'fas fa-user-plus', 'color' => 'primary', 'gradient' => 'var(--primary-gradient)'],
-            ['title' => 'RDV Réalisés', 'value' => $stats['rdv_realises'] ?? 0, 'icon' => 'fas fa-calendar-check', 'color' => 'success', 'gradient' => 'var(--success-gradient)'],
-            ['title' => 'RDV en Attente', 'value' => $stats['rdv_attente'] ?? 0, 'icon' => 'fas fa-clock', 'color' => 'warning', 'gradient' => 'var(--warning-gradient)'],
-            ['title' => 'Total Patients', 'value' => $stats['total_patients'] ?? 0, 'icon' => 'fas fa-users', 'color' => 'info', 'gradient' => 'var(--info-gradient)'],
-        ];
-    @endphp
-
-    @foreach($secretaireStats as $stat)
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card card-statistic h-100 border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="avatar-stat me-3" style="background: {{ $stat['gradient'] }}; color: white;">
-                            <i class="{{ $stat['icon'] }} fs-5"></i>
-                        </div>
-                        <h6 class="card-title text-muted mb-0 fw-bold">{{ $stat['title'] }}</h6>
-                    </div>
-                    <h2 class="mb-0 fw-bold">{{ $stat['value'] }}</h2>
+{{-- HERO BANNER --}}
+<div class="gs-banner mb-4" style="background: var(--grad-teal);">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div style="position:relative;z-index:2">
+            <div class="gs-time-badge">
+                <i class="fas fa-headset"></i>
+                <span>Accueil & Secrétariat</span>
+            </div>
+            <div class="gs-banner-title">{{ $greeting }}, {{ Auth::user()->prenom }}</div>
+            <div class="gs-banner-subtitle">
+                @if($apptCount > 0)
+                    Vous avez <strong>{{ $apptCount }} rendez-vous</strong> à gérer aujourd'hui.
+                @else
+                    Aucun rendez-vous planifié pour le moment.
+                @endif
+            </div>
+            <div class="mt-3 d-flex gap-3 flex-wrap">
+                <div>
+                    <div style="font-size:.7rem;opacity:.8;font-weight:600;text-transform:uppercase">Nouv. Patients</div>
+                    <div style="font-size:1.75rem;font-weight:800">{{ $stats['new_patients_today'] ?? 0 }}</div>
+                </div>
+                <div style="border-left:1px solid rgba(255,255,255,.3);margin:0 .5rem"></div>
+                <div>
+                    <div style="font-size:.7rem;opacity:.8;font-weight:600;text-transform:uppercase">RDV Réalisés</div>
+                    <div style="font-size:1.75rem;font-weight:800">{{ $stats['rdv_realises'] ?? 0 }}</div>
                 </div>
             </div>
         </div>
+        <div class="text-end d-none d-md-block" style="position:relative;z-index:2">
+            <div id="gs-clock"></div>
+            <div id="gs-date"></div>
+        </div>
+    </div>
+    <i class="fas fa-calendar-alt gs-banner-icon"></i>
+</div>
+
+{{-- KPI CARDS --}}
+<div class="row g-3 mb-4">
+    @php
+    $secStats = [
+        ['label'=>'Nouveaux Patients', 'value'=>$stats['new_patients_today']??0, 'sub'=>'Inscrits aujourd\'hui', 'icon'=>'fa-user-plus',    'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('patients.index')],
+        ['label'=>'RDV en Attente',    'value'=>$stats['rdv_attente']??0,    'sub'=>'À recevoir',         'icon'=>'fa-clock',        'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('rendezvous.index')],
+        ['label'=>'RDV Réalisés',      'value'=>$stats['rdv_realises']??0,   'sub'=>'Traités ce jour',    'icon'=>'fa-calendar-check','bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('rendezvous.index')],
+        ['label'=>'Total Patients',    'value'=>$stats['total_patients']??0,  'sub'=>'Base de données',    'icon'=>'fa-users',         'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index')],
+    ];
+    @endphp
+    @foreach($secStats as $s)
+    <div class="col-xl-3 col-md-6">
+        <a href="{{ $s['route'] }}" class="gs-kpi h-100">
+            <div class="gs-kpi-icon" style="background:{{ $s['bg'] }};color:#fff">
+                <i class="fas {{ $s['icon'] }}"></i>
+            </div>
+            <div class="gs-kpi-label">{{ $s['label'] }}</div>
+            <div class="gs-kpi-value"><span class="counter-val" data-target="{{ $s['value'] }}">{{ $s['value'] }}</span></div>
+            <div class="gs-kpi-sub">{{ $s['sub'] }}</div>
+            <div class="gs-kpi-bar" style="background:{{ $s['bar'] }}"></div>
+        </a>
+    </div>
     @endforeach
 </div>
 
-<!-- Rendez-vous du jour -->
-<div class="row">
+{{-- MAIN CONTENT --}}
+<div class="row g-3">
+    {{-- Appointments List --}}
     <div class="col-lg-8">
-        <div class="block block-rounded">
-            <div class="block-header block-header-default">
-                <h3 class="block-title">
-                    <i class="fas fa-calendar-day text-primary me-2"></i>
-                    Rendez-vous d'aujourd'hui
-                </h3>
-                <div class="block-options">
-                    <span class="badge bg-primary">{{ $todayAppointments->count() }} RDV</span>
-                </div>
+        <div class="gs-card h-100">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title">
+                    <span style="width:32px;height:32px;border-radius:8px;background:var(--med-teal-light);color:var(--med-teal);display:flex;align-items:center;justify-content:center">
+                        <i class="fas fa-calendar-day" style="font-size:.85rem"></i>
+                    </span>
+                    Planning du jour
+                </h6>
+                <span class="badge rounded-pill" style="background:var(--med-teal-light);color:var(--med-teal)">{{ $apptCount }} RDV</span>
             </div>
-            <div class="block-content">
-                @forelse($todayAppointments as $appointment)
-                    <div class="mb-3 p-3 border-start border-3 border-{{ $appointment->statut == 'prevu' ? 'primary' : ($appointment->statut == 'realise' ? 'success' : 'warning') }}">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <img class="img-avatar img-avatar32" src="{{ asset('assets/media/avatars/avatar0.jpg') }}" alt="">
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="fw-semibold">{{ $appointment->patient->prenom }} {{ $appointment->patient->nom }}</div>
-                                <div class="fs-sm text-muted">
-                                    <i class="far fa-clock me-1"></i>
-                                    {{ \Carbon\Carbon::parse($appointment->date_heure)->format('H:i') }} •
-                                    {{ $appointment->motif }}
-                                </div>
-                                <div class="fs-sm">
-                                    <i class="fas fa-user-md me-1"></i>
-                                    Dr. {{ $appointment->medecin->prenom ?? 'N/A' }}
-                                </div>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <span class="badge bg-{{ $appointment->statut == 'prevu' ? 'primary' : ($appointment->statut == 'realise' ? 'success' : 'warning') }}">
-                                    {{ $appointment->statut }}
-                                </span>
-                            </div>
+            <div class="gs-scroll-list" style="max-height:450px">
+                @forelse($todayAppointments as $appt)
+                <div class="gs-appt-item px-4 py-3">
+                    <div style="width:45px;height:45px;border-radius:12px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;color:#64748b;flex-shrink:0">
+                        {{ strtoupper(substr($appt->patient->prenom??'P',0,1)) }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <span style="font-size:.9rem;font-weight:700;color:#0f172a">{{ $appt->patient->prenom }} {{ $appt->patient->nom }}</span>
+                            <span class="gs-appt-time"><i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($appt->date_heure)->format('H:i') }}</span>
+                        </div>
+                        <div style="font-size:.78rem;color:#64748b;margin-top:.1rem">
+                            <i class="fas fa-user-md me-1 opacity-50"></i> Dr. {{ $appt->medecin->prenom ?? 'N/A' }} {{ $appt->medecin->name ?? '' }}
+                            <span class="mx-2 opacity-25">|</span>
+                            <i class="fas fa-tag me-1 opacity-50"></i> {{ $appt->motif }}
                         </div>
                     </div>
-                @empty
-                    <div class="text-center py-4">
-                        <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
-                        <div class="text-muted">Aucun rendez-vous aujourd'hui</div>
+                    <div class="ms-3">
+                        @php
+                            $status_class = match($appt->statut) {
+                                'prevu' => 'primary',
+                                'realise' => 'success',
+                                'annule' => 'danger',
+                                default => 'secondary'
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $status_class }}-subtle text-{{ $status_class }} rounded-pill" style="font-size:.7rem;padding:.3rem .7rem">
+                            {{ strtoupper($appt->statut) }}
+                        </span>
                     </div>
+                </div>
+                @empty
+                <div class="text-center py-5">
+                    <div style="font-size:3rem;margin-bottom:1rem">📅</div>
+                    <div style="font-size:.9rem;color:#94a3b8;font-weight:500">Aucun rendez-vous enregistré pour aujourd'hui.</div>
+                </div>
                 @endforelse
             </div>
         </div>
     </div>
 
+    {{-- Quick Actions --}}
     <div class="col-lg-4">
-        <!-- Actions rapides -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-bolt text-warning me-2"></i>Actions Rapides</h5>
+        <div class="gs-card mb-3">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title">
+                    <span style="width:32px;height:32px;border-radius:8px;background:var(--med-rose-light);color:var(--med-rose);display:flex;align-items:center;justify-content:center">
+                        <i class="fas fa-bolt" style="font-size:.85rem"></i>
+                    </span>
+                    Actions Rapides
+                </h6>
             </div>
-            <div class="card-body">
-                <a href="{{ route('rendezvous.index') }}" class="btn btn-primary w-100 mb-3 py-3">
-                    <i class="fas fa-calendar-plus me-2"></i>Nouveau RDV
+            <div class="gs-card-body">
+                <a href="{{ route('rendezvous.index') }}" class="gs-action-btn" style="background:var(--med-teal-light);color:var(--med-teal-dark)">
+                    <div class="icon-box" style="background:var(--med-teal);color:#fff"><i class="fas fa-calendar-plus"></i></div>
+                    <div>
+                        <div style="font-size:.85rem;font-weight:700">Nouveau RDV</div>
+                        <div style="font-size:.72rem;opacity:.7">Planifier une visite</div>
+                    </div>
                 </a>
-                <a href="{{ route('patients.create') }}" class="btn btn-success w-100 mb-3 py-3">
-                    <i class="fas fa-user-plus me-2"></i>Nouveau Patient
+                <a href="{{ route('patients.create') }}" class="gs-action-btn" style="background:var(--med-green-light);color:#065f46">
+                    <div class="icon-box" style="background:var(--med-green);color:#fff"><i class="fas fa-user-plus"></i></div>
+                    <div>
+                        <div style="font-size:.85rem;font-weight:700">Nouveau Patient</div>
+                        <div style="font-size:.72rem;opacity:.7">Enregistrer un dossier</div>
+                    </div>
                 </a>
+                <a href="{{ route('tickets.index') }}" class="gs-action-btn" style="background:var(--med-amber-light);color:#92400e">
+                    <div class="icon-box" style="background:var(--med-amber);color:#fff"><i class="fas fa-ticket-alt"></i></div>
+                    <div>
+                        <div style="font-size:.85rem;font-weight:700">Tickets / Attente</div>
+                        <div style="font-size:.72rem;opacity:.7">Gérer la file d'attente</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="gs-card">
+            <div class="gs-card-header">
+                <h6 class="gs-card-title">
+                    <span style="width:32px;height:32px;border-radius:8px;background:var(--med-violet-light);color:#7c3aed;display:flex;align-items:center;justify-content:center">
+                        <i class="fas fa-info-circle" style="font-size:.85rem"></i>
+                    </span>
+                    Aide mémoire
+                </h6>
+            </div>
+            <div class="gs-card-body">
+                <div style="font-size:.78rem;color:#64748b;line-height:1.6">
+                    <div class="d-flex gap-2 mb-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Vérifier systématiquement l'identité du patient.</span>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Confirmer le médecin traitant lors du RDV.</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>S'assurer que la caisse est ouverte pour les paiements.</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

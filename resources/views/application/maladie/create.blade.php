@@ -14,22 +14,22 @@
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
                         <h5 class="mb-0 text-primary fw-bold">
-                            {{ isset($famille) ? '✏️ Modifier un famille' : '➕ Ajouter un nouvel famille' }}
+                            {{ isset($famille) ? '✏️ Modifier un famille' : 'Ajouter un nouvel famille' }}
                         </h5>
                     </div>
                     <div class="block-content">
                         <form id="examenForm"
-                              action="{{ isset($famille) ? route('familles.update', $famille->id) : route('examens.store') }}"
-                              method="POST" class="mb-4">
+                            action="{{ isset($famille) ? route('familles.update', $famille->id) : route('examens.store') }}"
+                            method="POST" class="mb-4">
                             @csrf
-                            @if(isset($famille))
+                            @if (isset($famille))
                                 @method('PUT')
                             @endif
 
                             <div class="mb-3">
                                 <label class="form-label">Famille medicament</label>
                                 <input type="text" name="nom" class="form-control"
-                                       value="{{ old('nom', $famille->nom ?? '') }}" required>
+                                    value="{{ old('nom', $famille->nom ?? '') }}" required>
                             </div>
 
                             <button type="submit" class="btn btn-primary rounded-pill">
