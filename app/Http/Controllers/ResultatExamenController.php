@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\PrescriptionExamen;
 use App\Models\ResultatExamen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ResultatExamenController extends Controller
 {
@@ -13,6 +14,8 @@ class ResultatExamenController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les résultats.');
+
         if ($request->ajax()) {
             $resultats = ResultatExamen::with(['prescriptionExamen.consultation.patient'])
                 ->whereHas('prescriptionExamen', function($q) {
@@ -39,9 +42,13 @@ class ResultatExamenController extends Controller
                     return 'Aucun';
                 })
                 ->addColumn('actions', function($row){
-                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $user = Auth::user();
+                    $html = '';
+                    if ($user->can('examens.delete')) {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
                     
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $delete . '</div>';
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['fichier','actions'])
                 ->make(true);
@@ -50,11 +57,15 @@ class ResultatExamenController extends Controller
     }
     public function create()
     {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de saisir des résultats.');
+
         $prescriptions = PrescriptionExamen::with('consultation.patient')->get();
         return view('application.examenreponse.create', compact('prescriptions'));
     }
     public function reponse($id)
     {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de saisir des résultats.');
+
         // On charge la prescription correspondant à l'id
         $prescription = PrescriptionExamen::with('consultation.patient')
             ->where('id', $id)
@@ -66,6 +77,7 @@ class ResultatExamenController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de saisir des résultats.');
 
         $data=$request->validate([
             'prescription_examen_id' => 'required|exists:prescriptions_examens,id',
@@ -104,12 +116,16 @@ class ResultatExamenController extends Controller
 
     public function edit(ResultatExamen $resultatExamen)
     {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier des résultats.');
+
         $prescriptions = PrescriptionExamen::with('consultation.patient')->get();
         return view('application.examenreponse.edit', compact('resultatExamen', 'prescriptions'));
     }
 
     public function update(Request $request, ResultatExamen $resultatExamen)
     {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier des résultats.');
+
         $request->validate([
             'prescription_examen_id' => 'required|exists:prescriptions_examens,id',
             'resultat' => 'nullable|string',
@@ -132,6 +148,8 @@ class ResultatExamenController extends Controller
 
     public function destroy(ResultatExamen $resultatExamen)
     {
+        abort_unless(Auth::user()->can('examens.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer des résultats.');
+
         $resultatExamen->delete();
         return redirect()->route('reponses.index')->with('success', 'Résultat supprimé avec succès.');
     }

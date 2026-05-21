@@ -6,13 +6,14 @@ use App\Models\Grossesse;
 use App\Models\ConsultationPrenatale;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class MaternityController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas accès au module maternité.');
+        abort_unless(Auth::user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas accès au module maternité.');
 
         $year = session('exercice_year', date('Y'));
         $grossesses = Grossesse::with('patient')
@@ -24,6 +25,8 @@ class MaternityController extends Controller
 
     public function create()
     {
+        abort_unless(Auth::user()->can('maternity.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi de grossesse.');
+
         // On ne liste que les femmes
         $patients = Patient::where('genre', 'F')->get();
         return view('application.maternity.create', compact('patients'));
@@ -31,6 +34,8 @@ class MaternityController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('maternity.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi de grossesse.');
+
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'ddr'        => 'required|date',
@@ -50,7 +55,7 @@ class MaternityController extends Controller
 
     public function show(Grossesse $grossesse)
     {
-        abort_unless(auth()->user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les suivis de grossesse.');
+        abort_unless(Auth::user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les suivis de grossesse.');
 
         $grossesse->load(['patient', 'cpns']);
         return view('application.maternity.show', compact('grossesse'));
@@ -58,6 +63,8 @@ class MaternityController extends Controller
 
     public function storeCpn(Request $request)
     {
+        abort_unless(Auth::user()->can('maternity.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de saisir une CPN.');
+
         $validated = $request->validate([
             'grossesse_id' => 'required|exists:grossesses,id',
             'numero_cpn'   => 'required|integer',
@@ -78,6 +85,8 @@ class MaternityController extends Controller
 
     public function close(Request $request, Grossesse $grossesse)
     {
+        abort_unless(Auth::user()->can('maternity.close'), 403, 'Accès non autorisé : vous n\'avez pas la permission de clôturer un suivi de grossesse.');
+
         $validated = $request->validate([
             'statut'   => 'required|in:Terminée,Interrompue',
             'issue'    => 'required|string',

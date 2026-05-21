@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Suivi;
 use App\Models\Consultation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class SuiviController extends Controller
@@ -14,6 +15,8 @@ class SuiviController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('consultations.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les suivis.');
+
         if ($request->ajax()) {
             $suivis = Suivi::with(['patient','medecin','consultation'])->select('suivis.*');
 
@@ -26,11 +29,16 @@ class SuiviController extends Controller
                 ->addColumn('resultat', fn($s) => $s->resultat ?? '-')
                 ->addColumn('statut', fn($s) => ucfirst($s->statut))
                 ->addColumn('actions', function($s){
-                    $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$s->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
-                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$s->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
-                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$s->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $user = Auth::user();
+                    $html = '';
+
+                    if ($user->can('consultations.suivi')) {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$s->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$s->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$s->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
                     
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -40,6 +48,8 @@ class SuiviController extends Controller
     }
     public function create($consultation_id)
     {
+        abort_unless(Auth::user()->can('consultations.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi.');
+
         $consultation = Consultation::with(['patient', 'medecin'])->findOrFail($consultation_id);
 
         return view('application.suiviconsultation.create', [
@@ -52,6 +62,8 @@ class SuiviController extends Controller
     // Stocke le suivi créé depuis une consultation
    public function store(Request $request)
 {
+    abort_unless(Auth::user()->can('consultations.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi.');
+
     $consultation = Consultation::findOrFail($request->consultation_id);
 
     $request->validate([

@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class TicketController extends Controller
@@ -19,6 +20,8 @@ class TicketController extends Controller
 
     public function index(Request $request)
 {
+        abort_unless(Auth::user()->can('tickets.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les tickets.');
+
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $today = \Carbon\Carbon::today();
@@ -62,12 +65,23 @@ class TicketController extends Controller
 
             // Actions (Dropdown Bootstrap 5)
             ->addColumn('actions', function($ticket) {
-                $view  = '<a href="'.route('tickets.show', $ticket).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                $edit  = '<a href="'.route('tickets.edit', $ticket).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                $print = '<a href="'.route('tickets.print', $ticket).'" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
-                $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                $user = Auth::user();
+                $html = '';
+
+                if ($user->can('tickets.view')) {
+                    $html .= '<a href="'.route('tickets.show', $ticket).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                }
+                if ($user->can('tickets.edit')) {
+                    $html .= '<a href="'.route('tickets.edit', $ticket).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                }
+                if ($user->can('tickets.print')) {
+                    $html .= '<a href="'.route('tickets.print', $ticket).'" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                }
+                if ($user->can('tickets.delete')) {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                }
                 
-                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $print . $delete . '</div>';
+                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -81,6 +95,8 @@ class TicketController extends Controller
      */
     public function create()
     {
+        abort_unless(Auth::user()->can('tickets.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un ticket.');
+
         $prestations = Prestation::with('serviceMedical')->get();
 
         // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
@@ -97,6 +113,8 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('tickets.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un ticket.');
+
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'items' => 'required|array|min:1',
@@ -192,7 +210,7 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
-        abort_unless(auth()->user()->can('tickets.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les tickets.');
+        abort_unless(Auth::user()->can('tickets.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les tickets.');
 
         // Charger les relations nécessaires
         $ticket->load([
@@ -217,6 +235,8 @@ class TicketController extends Controller
      */
     public function edit(Ticket $ticket)
     {
+        abort_unless(Auth::user()->can('tickets.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier ce ticket.');
+
         $ticket->load(['patient', 'items.prestation.serviceMedical']);
         $prestations = Prestation::with('serviceMedical')->orderBy('nom')->get();
         $assurances  = \App\Models\Assurance::all();
@@ -231,6 +251,8 @@ class TicketController extends Controller
      */
     public function update(Request $request, Ticket $ticket)
     {
+        abort_unless(Auth::user()->can('tickets.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier ce ticket.');
+
         // Si expiré, on bloque
         if ($ticket->date_validite < now()) {
             $ticket->update(['statut' => 'expire']);
@@ -302,6 +324,8 @@ class TicketController extends Controller
     }
     public function print(Ticket $ticket)
     {
+        abort_unless(Auth::user()->can('tickets.print'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'imprimer un ticket.');
+
         $ticket->load([
             'patient',
             'user',
@@ -318,6 +342,7 @@ class TicketController extends Controller
      */
     public function destroy(Ticket $ticket)
     {
-        //
+        abort_unless(Auth::user()->can('tickets.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un ticket.');
+        // TODO: Implement actual deletion if required. Note that related records might need constraints.
     }
 }

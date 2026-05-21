@@ -8,6 +8,7 @@ use App\Models\OrdonnancePaiement;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class OrdonnanceController extends Controller
 {
@@ -15,7 +16,7 @@ class OrdonnanceController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des ordonnances.');
+        abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des ordonnances.');
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
@@ -40,11 +41,20 @@ class OrdonnanceController extends Controller
                     return $html;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdfBtn     = '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="PDF"><i class="fa fa-file-pdf"></i></a>';
-                    $paiementBtn = '<a href="'.route('ordonnances.paiement', $ord).'" class="btn btn-sm btn-outline-success" title="Payer"><i class="fa fa-credit-card"></i></a>';
-                    $deleteBtn  = '<button type="button" data-url="'.route('ordonnances.destroy', $ord).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $user = Auth::user();
+                    $html = '';
 
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $pdfBtn . ' ' . $paiementBtn . ' ' . $deleteBtn . '</div>';
+                    if ($user->can('ordonnances.pdf')) {
+                        $html .= '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="PDF"><i class="fa fa-file-pdf"></i></a> ';
+                    }
+                    if ($user->can('ordonnances.payer')) {
+                        $html .= '<a href="'.route('ordonnances.paiement', $ord).'" class="btn btn-sm btn-outline-success" title="Payer"><i class="fa fa-credit-card"></i></a> ';
+                    }
+                    if ($user->can('ordonnances.delete')) {
+                        $html .= '<button type="button" data-url="'.route('ordonnances.destroy', $ord).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['medicaments','actions'])
                 ->make(true);
@@ -55,6 +65,7 @@ class OrdonnanceController extends Controller
 
     public function create()
     {
+        abort_unless(Auth::user()->can('ordonnances.create'), 403, 'Accès non autorisé.');
         // Les ordonnances sont créées depuis une consultation (voir ConsultationController)
         return redirect()->route('consultations.index')
             ->with('info', 'Les ordonnances sont créées automatiquement lors d\'une consultation.');
@@ -63,7 +74,7 @@ class OrdonnanceController extends Controller
     // Afficher une ordonnance
     public function show(Ordonnance $ordonnance)
     {
-        abort_unless(auth()->user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
+        abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
 
         $ordonnance->load(['consultation.patient', 'consultation.medecin', 'medicaments']);
         return view('application.ordonnance.index');
@@ -72,6 +83,8 @@ class OrdonnanceController extends Controller
     // Enregistrer une ordonnance
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('ordonnances.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une ordonnance.');
+
         $request->validate([
         'consultation_id' => 'required|exists:consultations,id',
         'medicaments'     => 'required|array',
@@ -101,6 +114,8 @@ class OrdonnanceController extends Controller
     // Exporter en PDF
     public function pdf(Ordonnance $ordonnance)
     {
+        abort_unless(Auth::user()->can('ordonnances.pdf'), 403, 'Accès non autorisé : vous n\'avez pas la permission de générer le PDF.');
+
         $ordonnance->load(['consultation.patient', 'consultation.medecin', 'medicaments']);
         $patient = (object)[
             'id'             => $ordonnance->consultation->patient->id,
@@ -122,6 +137,8 @@ class OrdonnanceController extends Controller
     }
     public function paiementForm(Ordonnance $ordonnance)
     {
+        abort_unless(Auth::user()->can('ordonnances.payer'), 403, 'Accès non autorisé : vous n\'avez pas la permission de payer une ordonnance.');
+
         // Médicaments disponibles en stock
         $medicaments = $ordonnance->medicaments()
             ->where('stock', '>', 0)
@@ -132,6 +149,8 @@ class OrdonnanceController extends Controller
 
     public function payer(Request $request, Ordonnance $ordonnance)
     {
+        abort_unless(Auth::user()->can('ordonnances.payer'), 403, 'Accès non autorisé : vous n\'avez pas la permission de payer une ordonnance.');
+
         $request->validate([
             'medicaments' => 'required|array',
         ]);
@@ -218,6 +237,8 @@ class OrdonnanceController extends Controller
     }
     public function lespayer(Request $request)
     {
+        abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
+
         if ($request->ajax()) {
             $ordonnances = Ordonnance::with(['consultation.patient'])
                 ->whereIn('statutordo', ['paye', 'partiellement'])
@@ -229,9 +250,14 @@ class OrdonnanceController extends Controller
                     return $ord->consultation->patient->nom.' '.$ord->consultation->patient->prenom;
                 })
                 ->addColumn('actions', function($ord){
-                    $pdf = '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
+                    $user = Auth::user();
+                    $html = '';
+
+                    if ($user->can('ordonnances.pdf')) {
+                        $html .= '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
+                    }
                     
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $pdf . '</div>';
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);

@@ -16,109 +16,136 @@ class HospitalisationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        if ($request->ajax()) {
-            $year = session('exercice_year', date('Y'));
-            $hospitalisations = Hospitalisation::with([
-                'consultation.patient',
-                'salle',
-                'lit',
-                'service'
-            ])
-                ->whereYear('created_at', $year)
-                ->where('etat', 'en cours') // 🔹 Filtre ajouté ici
-                ->latest();
+ public function index(Request $request)
+{
+    abort_unless(Auth::user()->can('hospitalisations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les hospitalisations.');
 
-            return DataTables::of($hospitalisations)
-                ->addColumn('patient', function ($row) {
-                    return ($row->consultation->patient->nom ?? $row->patient->nom ?? '-') . ' ' .
-                        ($row->consultation->patient->prenom ?? $row->patient->prenom ?? '-');
-                })
-                ->addColumn('salle_lit', function ($row) {
-                    return ($row->salle->nom ?? '-') . '/' . ($row->lit->numero ?? '-');
-                })
-                ->addColumn('date_entree', function ($row) {
-                    return \Carbon\Carbon::parse($row->date_entree)->format('d-m-Y');
-                })
-                ->addColumn('etat', function ($row) {
-                    $class = match ($row->etat) {
-                        'en_cours' => 'bg-warning',
-                        'terminee' => 'bg-success',
-                        default => 'bg-secondary',
-                    };
-                    return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
-                })
-                ->addColumn('action', function ($row) {
-                    $view     = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $print    = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
-                    $edit     = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $payment  = '<button type="button" class="btn btn-sm btn-outline-success btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="fa fa-credit-card"></i></button>';
-                    $transfer = '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
-                    $delete   = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
-                    
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $print . $edit . $payment . $transfer . $delete . '</div>';
-                })
-                ->rawColumns(['etat', 'action'])
-                ->make(true);
-        }
+    if ($request->ajax()) {
+        $year = session('exercice_year', date('Y'));
+        $hospitalisations = Hospitalisation::with([
+            'consultation.patient',
+            'salle',
+            'lit',
+            'service'
+        ])
+            ->whereYear('created_at', $year)
+            ->where('etat', 'en cours') // 🔹 Filtre ajouté ici
+            ->latest();
 
+        return DataTables::of($hospitalisations)
+            ->addColumn('patient', function ($row) {
+                return ($row->consultation->patient->nom ?? $row->patient->nom ?? '-') . ' ' .
+                    ($row->consultation->patient->prenom ?? $row->patient->prenom ?? '-');
+            })
+            ->addColumn('salle_lit', function ($row) {
+                return ($row->salle->nom ?? '-') . '/' . ($row->lit->numero ?? '-');
+            })
+            ->addColumn('date_entree', function ($row) {
+                return \Carbon\Carbon::parse($row->date_entree)->format('d-m-Y');
+            })
+            ->addColumn('etat', function ($row) {
+                $class = match ($row->etat) {
+                    'en_cours', 'en cours' => 'bg-warning', // 💡 Petit conseil : j'ai ajouté 'en cours' avec espace au cas où
+                    'terminee' => 'bg-success',
+                    default => 'bg-secondary',
+                };
+                return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
+            }) //  Correction : Fermeture correcte de la colonne 'etat'
+            ->addColumn('action', function ($row) {
+                $user = Auth::user();
+                $html = '';
 
-        return view('application.hospitalisation.index');
+                if ($user->can('hospitalisations.view')) {
+                    $html .= '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                }
+                if ($user->can('hospitalisations.pdf')) {
+                    $html .= '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                }
+                if ($user->can('hospitalisations.edit')) {
+                    $html .= '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                }
+                if ($user->can('hospitalisations.payer')) {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="fa fa-credit-card"></i></button>';
+                }
+                if ($user->can('transferts.create')) {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                }
+                if ($user->can('hospitalisations.delete')) {
+                    $html .= '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                }
+
+                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
+            }) //  Correction : Fermeture correcte de la colonne 'action'
+            ->rawColumns(['etat', 'action'])
+            ->make(true);
     }
 
-    public function hopialisationrealise(Request $request)
-    {
+    return view('application.hospitalisation.index');
+}
 
+   public function hopialisationrealise(Request $request)
+{
+    abort_unless(Auth::user()->can('hospitalisations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les hospitalisations.');
 
-        if ($request->ajax()) {
-            $year = session('exercice_year', date('Y'));
-            $hospitalisations = Hospitalisation::with([
-                'consultation.patient',
-                'salle',
-                'lit',
-                'service'
-            ])
-                ->whereYear('created_at', $year)
-                ->where('etat', 'terminé') // 🔹 Filtre ajouté ici
-                ->get();
+    if ($request->ajax()) {
+        $year = session('exercice_year', date('Y'));
+        $hospitalisations = Hospitalisation::with([
+            'consultation.patient',
+            'salle',
+            'lit',
+            'service'
+        ])
+            ->whereYear('created_at', $year)
+            ->where('etat', 'terminé') // 🔹 Filtre des hospitalisations terminées
+            ->get();
 
-            return DataTables::of($hospitalisations)
-                ->addColumn('patient', function ($row) {
-                    return ($row->consultation->patient->nom ?? $row->patient->nom ?? '-') . ' ' .
-                        ($row->consultation->patient->prenom ?? $row->patient->prenom ?? '-');
-                })
-                ->addColumn('salle_lit', function ($row) {
-                    return ($row->salle->nom ?? '-') . '/' . ($row->lit->numero ?? '-');
-                })
-                ->addColumn('date_entree', function ($row) {
-                    return \Carbon\Carbon::parse($row->date_entree)->format('d-m-Y');
-                })
-                ->addColumn('etat', function ($row) {
-                    $class = match ($row->etat) {
-                        'en_cours' => 'bg-warning',
-                        'terminee' => 'bg-success',
-                        default => 'bg-secondary',
-                    };
-                    return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
-                })
-                ->addColumn('action', function ($row) {
-                    $view     = '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $print    = '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
-                    $edit     = '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $transfer = '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
-                    $delete   = '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
-                    
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $print . $edit . $transfer . $delete . '</div>';
-                })
-                ->rawColumns(['etat', 'action'])
-                ->make(true);
-        }
+        return DataTables::of($hospitalisations)
+            ->addColumn('patient', function ($row) {
+                return ($row->consultation->patient->nom ?? $row->patient->nom ?? '-') . ' ' .
+                    ($row->consultation->patient->prenom ?? $row->patient->prenom ?? '-');
+            })
+            ->addColumn('salle_lit', function ($row) {
+                return ($row->salle->nom ?? '-') . '/' . ($row->lit->numero ?? '-');
+            })
+            ->addColumn('date_entree', function ($row) {
+                return \Carbon\Carbon::parse($row->date_entree)->format('d-m-Y');
+            })
+            ->addColumn('etat', function ($row) {
+                $class = match ($row->etat) {
+                    'en_cours', 'en cours' => 'bg-warning',
+                    'terminee', 'terminé', 'termine' => 'bg-success', // 💡 Gère les variantes d'écriture pour le vert
+                    default => 'bg-secondary',
+                };
+                return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
+            }) //  Correction : Clôture propre de la colonne 'etat'
+            ->addColumn('action', function ($row) {
+                $user = Auth::user();
+                $html = '';
 
+                if ($user->can('hospitalisations.view')) {
+                    $html .= '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                }
+                if ($user->can('hospitalisations.pdf')) {
+                    $html .= '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                }
+                if ($user->can('hospitalisations.edit')) {
+                    $html .= '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                }
+                if ($user->can('transferts.create')) {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                }
+                if ($user->can('hospitalisations.delete')) {
+                    $html .= '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                }
 
-        return view('application.hospitalisation.realise');
+                return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
+            }) //  Correction : Clôture propre de la colonne 'action'
+            ->rawColumns(['etat', 'action'])
+            ->make(true);
     }
 
+    return view('application.hospitalisation.realise');
+}
     // Paiement AJAX
 //
 //        // Créer un paiement
@@ -138,6 +165,8 @@ class HospitalisationController extends Controller
 
     public function pdf($id)
     {
+        abort_unless(Auth::user()->can('hospitalisations.pdf'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'imprimer.');
+
         $hospitalisation = Hospitalisation::with(['patient','salle','lit'])->findOrFail($id);
 
         $pdf = Pdf::loadView('application.hospitalisation.pdf', compact('hospitalisation'))
@@ -168,6 +197,8 @@ class HospitalisationController extends Controller
      */
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('hospitalisations.payer'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'enregistrer un paiement d\'hospitalisation.');
+
         try {
             // 🔹 Vérifier si la caisse est ouverte
             if (!\App\Models\CaisseSession::hasOpenSession()) {
@@ -265,7 +296,7 @@ class HospitalisationController extends Controller
      */
     public function show($id)
     {
-        abort_unless(auth()->user()->can('hospitalisations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les hospitalisations.');
+        abort_unless(Auth::user()->can('hospitalisations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les hospitalisations.');
 
         $hospitalisation = Hospitalisation::with([
             'consultation.patient',
@@ -335,6 +366,7 @@ class HospitalisationController extends Controller
      */
     public function destroy(Hospitalisation $hospitalisation)
     {
+        abort_unless(Auth::user()->can('hospitalisations.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer une hospitalisation.');
         //
     }
 }

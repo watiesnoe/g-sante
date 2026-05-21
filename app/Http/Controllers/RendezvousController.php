@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RendezVous;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 class RendezvousController extends Controller
 {
@@ -12,6 +13,8 @@ class RendezvousController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous.');
+
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
@@ -37,23 +40,37 @@ class RendezvousController extends Controller
                 // Consultation
                 ->addColumn('consultation', fn($rdv) => $rdv->consultation ? "Consultation #{$rdv->consultation->id}" : '-')
 
-                // Actions
+                // Actions — filtrées selon les permissions de l'utilisateur connecté
                 ->addColumn('actions', function($rdv) {
-                    $view   = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $edit   = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $delete = '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
-                    
-                    $realiseBtn = '';
-                    if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                    $user = Auth::user();
+                    $html = '';
+
+                    // 👁 Voir (rendezvous.view)
+                    if ($user->can('rendezvous.view')) {
+                        $html .= '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                     }
 
-                    $suiviBtn = '';
-                    if ($rdv->consultation) {
-                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    // ✏️ Modifier (rendezvous.edit)
+                    if ($user->can('rendezvous.edit')) {
+                        $html .= '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $realiseBtn . $suiviBtn . $delete . '</div>';
+                    // ✅ Marquer réalisé (rendezvous.confirm)
+                    if ($user->can('rendezvous.confirm') && $rdv->statut !== 'realise') {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                    }
+
+                    // 📋 Créer un suivi (consultations.suivi)
+                    if ($user->can('consultations.suivi') && $rdv->consultation) {
+                        $html .= '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    }
+
+                    // 🗑 Supprimer (rendezvous.delete)
+                    if ($user->can('rendezvous.delete')) {
+                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -63,9 +80,11 @@ class RendezvousController extends Controller
     }
     public function disponible(Request $request)
     {
+        abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous réalisés.');
+
         if ($request->ajax()) {
             $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
-                ->where('statut', ['realise']) // 🔹 Exclure annulé et réalisé
+                ->where('statut', ['realise'])
                 ->select('rendezvous.*');
 
             return DataTables::of($rdvs)
@@ -86,23 +105,32 @@ class RendezvousController extends Controller
                 // Consultation
                 ->addColumn('consultation', fn($rdv) => $rdv->consultation ? "Consultation #{$rdv->consultation->id}" : '-')
 
-                // Actions
+                // Actions — filtrées selon les permissions de l'utilisateur connecté
                 ->addColumn('actions', function($rdv) {
-                    $view   = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $edit   = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $delete = '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
-                    
-                    $realiseBtn = '';
-                    if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                    $user = auth()->user();
+                    $html = '';
+
+                    // 👁 Voir (rendezvous.view)
+                    if ($user->can('rendezvous.view')) {
+                        $html .= '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                     }
 
-                    $suiviBtn = '';
-                    if ($rdv->consultation) {
-                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    // ✏️ Modifier (rendezvous.edit)
+                    if ($user->can('rendezvous.edit')) {
+                        $html .= '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $realiseBtn . $suiviBtn . $delete . '</div>';
+                    // 📋 Créer un suivi (consultations.suivi)
+                    if ($user->can('consultations.suivi') && $rdv->consultation) {
+                        $html .= '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    }
+
+                    // 🗑 Supprimer (rendezvous.delete)
+                    if ($user->can('rendezvous.delete')) {
+                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -112,9 +140,11 @@ class RendezvousController extends Controller
     }
     public function annuler(Request $request)
     {
+        abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous annulés.');
+
         if ($request->ajax()) {
             $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
-                ->where('statut', ['annule']) // 🔹 Exclure annulé et réalisé
+                ->where('statut', ['annule'])
                 ->select('rendezvous.*');
 
             return DataTables::of($rdvs)
@@ -135,23 +165,27 @@ class RendezvousController extends Controller
                 // Consultation
                 ->addColumn('consultation', fn($rdv) => $rdv->consultation ? "Consultation #{$rdv->consultation->id}" : '-')
 
-                // Actions
+                // Actions — filtrées selon les permissions de l'utilisateur connecté
                 ->addColumn('actions', function($rdv) {
-                    $view   = '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $edit   = '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $delete = '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
-                    
-                    $realiseBtn = '';
-                    if ($rdv->statut !== 'realise') {
-                        $realiseBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                    $user = auth()->user();
+                    $html = '';
+
+                    // 👁 Voir (rendezvous.view)
+                    if ($user->can('rendezvous.view')) {
+                        $html .= '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                     }
 
-                    $suiviBtn = '';
-                    if ($rdv->consultation) {
-                        $suiviBtn = '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                    // ✏️ Modifier (rendezvous.edit)
+                    if ($user->can('rendezvous.edit')) {
+                        $html .= '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $realiseBtn . $suiviBtn . $delete . '</div>';
+                    // 🗑 Supprimer (rendezvous.delete)
+                    if ($user->can('rendezvous.delete')) {
+                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -161,6 +195,8 @@ class RendezvousController extends Controller
     }
     public function marquerRealise(RendezVous $rendezvous)
     {
+        abort_unless(Auth::user()->can('rendezvous.confirm'), 403, 'Accès non autorisé : vous n\'avez pas la permission de confirmer un rendez-vous.');
+
         // Vérifie que le rendez-vous n'est pas déjà réalisé
         if ($rendezvous->statut !== 'realise') {
             $rendezvous->statut = 'realise';
@@ -178,6 +214,6 @@ class RendezvousController extends Controller
         abort_unless(auth()->user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous.');
 
         $rendezvous->load(['patient', 'medecin', 'consultation']);
-        return view('application.rendezvous.index');
+        return view('application.rendezvous.show', compact('rendezvous'));
     }
 }

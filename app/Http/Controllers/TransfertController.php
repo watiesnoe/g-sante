@@ -17,6 +17,8 @@ class TransfertController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('transferts.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les transferts.');
+
         if ($request->ajax()) {
             $transferts = Transfert::with(['patient', 'sourceMedecin', 'destMedecin', 'sourceService', 'destService', 'user'])->latest();
 
@@ -46,9 +48,14 @@ class TransfertController extends Controller
                     return \Carbon\Carbon::parse($row->date_transfert)->format('d/m/Y H:i');
                 })
                 ->addColumn('actions', function($row){
-                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTransfert('.$row->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $user = Auth::user();
+                    $html = '';
+
+                    if ($user->can('transferts.delete')) {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTransfert('.$row->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    }
                     
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $delete . '</div>';
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['type_label', 'actions'])
                 ->make(true);
@@ -59,6 +66,8 @@ class TransfertController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('transferts.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'effectuer un transfert.');
+
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'type' => 'required|in:medecin,service,hopital_externe',
@@ -151,6 +160,8 @@ class TransfertController extends Controller
 
     public function destroy(Transfert $transfert)
     {
+        abort_unless(Auth::user()->can('transferts.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'annuler un transfert.');
+
         try {
             $transfert->delete();
             return response()->json([

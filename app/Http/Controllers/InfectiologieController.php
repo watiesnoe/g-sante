@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Maladie;
 use App\Models\ProtocoleTraitement;
 
@@ -10,6 +11,8 @@ class InfectiologieController extends Controller
 {
     public function statistiques()
     {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé : vous n\'avez pas accès au module infectiologie.');
+
         // Top 5 maladies
         $topMaladies = \App\Models\Maladie::withCount('consultations')
             ->orderBy('consultations_count', 'desc')
@@ -35,6 +38,8 @@ class InfectiologieController extends Controller
 
     public function pathologies()
     {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
+
         $pathologies = \App\Models\Maladie::with(['protocole', 'symptomes'])
             ->withCount('consultations')
             ->get();
@@ -44,23 +49,31 @@ class InfectiologieController extends Controller
 
     public function pathogenes()
     {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
+
         $pathologies = \App\Models\Maladie::with(['protocole', 'symptomes'])->get();
         return view('application.infectiologie.pathogenes', compact('pathologies'));
     }
 
     public function protocoles()
     {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
+
         return view('application.infectiologie.protocoles');
     }
 
     public function showProtocole(ProtocoleTraitement $protocole)
     {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
+
         $protocole->load(['maladie', 'medicaments']);
         return view('application.infectiologie.show', compact('protocole'));
     }
 
     public function storeProtocole(Request $request)
     {
+        abort_unless(Auth::user()->can('infectiologie.aide_prescription'), 403, 'Accès non autorisé : vous n\'avez pas la permission de gérer les protocoles.');
+
         $request->validate([
             'maladie_id' => 'required|exists:maladies,id',
             'titre' => 'required|string',
@@ -97,6 +110,8 @@ class InfectiologieController extends Controller
 
     public function destroyProtocole(ProtocoleTraitement $protocole)
     {
+        abort_unless(Auth::user()->can('infectiologie.aide_prescription'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un protocole.');
+
         $protocole->delete();
         return redirect()->back()->with('success', 'Protocole supprimé avec succès.');
     }
@@ -105,11 +120,15 @@ class InfectiologieController extends Controller
 
     public function aidePrescription()
     {
+        abort_unless(Auth::user()->can('infectiologie.aide_prescription'), 403, 'Accès non autorisé.');
+
         return view('application.infectiologie.aide_prescription');
     }
 
     public function suivi()
     {
+        abort_unless(Auth::user()->can('infectiologie.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir le suivi.');
+
         // Consultations liées à au moins une maladie (via la table pivot)
         $suivis = \App\Models\Consultation::with(['patient', 'maladies.protocole'])
             ->whereHas('maladies', function($q) {

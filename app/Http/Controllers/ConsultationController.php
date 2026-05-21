@@ -20,6 +20,7 @@ use App\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\DataTables;
 
@@ -31,6 +32,8 @@ class ConsultationController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
+
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $consultations = Consultation::with(['patient', 'medecin', 'ticket'])
@@ -38,8 +41,8 @@ class ConsultationController extends Controller
                 ->latest();
 
             // Un médecin ne voit que ses propres consultations
-            if (auth()->user()->hasRole('medecin')) {
-                $consultations->where('medecin_id', auth()->id());
+            if (Auth::user()->hasRole('medecin')) {
+                $consultations->where('medecin_id', Auth::id());
             }
 
             return DataTables::of($consultations)
@@ -53,11 +56,20 @@ class ConsultationController extends Controller
                     return $row->ticket ? $row->ticket->id : '-';
                 })
                 ->addColumn('actions', function ($row) {
-                    $view     = '<a href="' . route('consultations.show', $row) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $edit     = '<a href="' . route('consultations.edit', $row) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $transfer = '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal(\'' . $row->patient->uuid . '\', \'' . $row->uuid . '\', \'\')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    $user = Auth::user();
+                    $html = '';
 
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $transfer . '</div>';
+                    if ($user->can('consultations.view')) {
+                        $html .= '<a href="' . route('consultations.show', $row) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    }
+                    if ($user->can('consultations.edit')) {
+                        $html .= '<a href="' . route('consultations.edit', $row) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    }
+                    if ($user->can('transferts.create') && $row->patient) {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal(\'' . $row->patient->uuid . '\', \'' . $row->uuid . '\', \'\')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -69,6 +81,8 @@ class ConsultationController extends Controller
 
     public function listeAttente(Request $request)
     {
+        abort_unless(Auth::user()->can('consultations.liste_attente'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir la liste d\'attente.');
+
         $today = Carbon::today();
         $ticketsQuery = Ticket::with(['patient', 'items', 'medecin'])
             ->where('statut', 'en_attente')
@@ -76,9 +90,9 @@ class ConsultationController extends Controller
             ->orderBy('created_at', 'asc');
 
         // Un médecin ne voit que les tickets qui lui sont assignés ou sans médecin assigné
-        if (auth()->user()->hasRole('medecin')) {
+        if (Auth::user()->hasRole('medecin')) {
             $ticketsQuery->where(function ($q) {
-                $q->where('medecin_id', auth()->id())
+                $q->where('medecin_id', Auth::id())
                   ->orWhereNull('medecin_id');
             });
         }
@@ -100,7 +114,10 @@ class ConsultationController extends Controller
                     return $row->items->pluck('libelle')->implode(', ');
                 })
                 ->addColumn('actions', function ($row) {
-                    return '<a href="' . route('consultations.create', ['ticket_id' => $row->uuid]) . '" class="btn btn-sm btn-outline-primary"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                    if (Auth::user()->can('consultations.create')) {
+                        return '<a href="' . route('consultations.create', ['ticket_id' => $row->uuid]) . '" class="btn btn-sm btn-outline-primary"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                    }
+                    return '-';
                 })
                 ->rawColumns(['medecin', 'actions'])
                 ->make(true);
@@ -114,6 +131,8 @@ class ConsultationController extends Controller
      */
     public function create(Request $request, Consultation $consultation)
     {
+        abort_unless(Auth::user()->can('consultations.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une consultation.');
+
         $today = Carbon::today();
         $tickets = Ticket::with(['patient', 'items'])
             ->where('statut', 'en_attente')
@@ -180,6 +199,8 @@ class ConsultationController extends Controller
      */
     public function litsLibres($salleId)
     {
+        abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé.');
+
         // On récupère les lits de la salle qui sont libres
         $lits = Lit::where('salle_id', $salleId)
             ->where('statut', 'Libre')
@@ -190,6 +211,8 @@ class ConsultationController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('consultations.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une consultation.');
+
         DB::beginTransaction();
         //            dd($request->all());
         try {
@@ -354,10 +377,10 @@ class ConsultationController extends Controller
      */
     public function show(Consultation $consultation)
     {
-        abort_unless(auth()->user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
+        abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
 
         // Un médecin ne peut voir que ses propres consultations
-        if (auth()->user()->hasRole('medecin') && $consultation->medecin_id !== auth()->id()) {
+        if (Auth::user()->hasRole('medecin') && $consultation->medecin_id !== Auth::id()) {
             abort(403, 'Accès refusé : cette consultation ne vous appartient pas.');
         }
         // Charger toutes les relations nécessaires
@@ -385,8 +408,10 @@ class ConsultationController extends Controller
      */
     public function edit(Consultation $consultation)
     {
+        abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
+
         // Un médecin ne peut modifier que ses propres consultations
-        if (auth()->user()->hasRole('medecin') && $consultation->medecin_id !== auth()->id()) {
+        if (Auth::user()->hasRole('medecin') && $consultation->medecin_id !== Auth::id()) {
             abort(403, 'Accès refusé : vous ne pouvez modifier que vos propres consultations.');
         }
         // ✅ Tickets en attente
@@ -449,6 +474,8 @@ class ConsultationController extends Controller
      */
     public function update(Request $request, Consultation $consultation)
     {
+        abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
+
         DB::beginTransaction();
         try {
             // Validation minimale
@@ -581,6 +608,8 @@ class ConsultationController extends Controller
     }
     public function print(Consultation $consultation)
     {
+        abort_unless(Auth::user()->can('consultations.print'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'imprimer une consultation.');
+
         $consultation->load([
             'patient',
             'medecin',
@@ -608,6 +637,7 @@ class ConsultationController extends Controller
      */
     public function destroy(Consultation $consultation)
     {
+        abort_unless(Auth::user()->can('consultations.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer une consultation.');
         //
     }
 }

@@ -6,13 +6,14 @@ use App\Models\Famille;
 use App\Models\Medicament;
 use App\Models\Unite;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class MedicamentController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des médicaments.');
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des médicaments.');
 
         if ($request->ajax()) {
             $query = Medicament::with(['unite','famille']);
@@ -32,11 +33,16 @@ class MedicamentController extends Controller
                     return $m->famille?->nom ?? '-';
                 })
                 ->addColumn('actions', function($m) {
-                    $show   = '<a href="'.route('medicaments.show', $m).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
-                    $edit   = '<a href="'.route('medicaments.edit', $m).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $delete = '<form action="'.route('medicaments.destroy', $m).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce médicament ?\');">'.csrf_field().method_field('DELETE').'<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
-                    
-                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $show . $edit . $delete . '</div>';
+                    $user = Auth::user();
+                    $html = '';
+
+                    if ($user->can('stock.medicaments')) {
+                        $html .= '<a href="'.route('medicaments.show', $m).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="'.route('medicaments.edit', $m).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<form action="'.route('medicaments.destroy', $m).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce médicament ?\');">'.csrf_field().method_field('DELETE').'<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    }
+
+                    return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions', 'checkbox'])
                 ->make(true);
@@ -61,7 +67,7 @@ class MedicamentController extends Controller
 
     public function show(Medicament $medicament)
     {
-        abort_unless(auth()->user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les médicaments.');
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les médicaments.');
 
         $medicament->load(['unite', 'famille', 'protocoles.maladie']);
         return view('application.medicament.show', compact('medicament'));
@@ -69,6 +75,8 @@ class MedicamentController extends Controller
 
     public function create()
     {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un médicament.');
+
         $medicaments = Medicament::with(['unite','famille'])->get(); // eager loading
         $unites = Unite::all();    // pour alimenter un <select>
         $familles = Famille::all();
@@ -79,6 +87,8 @@ class MedicamentController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un médicament.');
+
         $request->validate([
             'nom'=>'required|string|max:255',
             'description'=>'nullable|string',
@@ -94,6 +104,8 @@ class MedicamentController extends Controller
 
     public function edit(Medicament $medicament)
     {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un médicament.');
+
         $unites = Unite::all();    // pour alimenter le <select>
         $familles = Famille::all();
 
@@ -103,6 +115,8 @@ class MedicamentController extends Controller
 
     public function update(Request $request, Medicament $medicament)
     {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un médicament.');
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -123,6 +137,8 @@ class MedicamentController extends Controller
 
     public function destroy(Medicament $medicament)
     {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un médicament.');
+
         $medicament->delete();
         return redirect()->route('medicaments.index')->with('success','Médicament supprimé !');
     }
