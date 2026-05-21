@@ -265,6 +265,8 @@ class HospitalisationController extends Controller
      */
     public function show($id)
     {
+        abort_unless(auth()->user()->can('hospitalisations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les hospitalisations.');
+
         $hospitalisation = Hospitalisation::with([
             'consultation.patient',
             'service',

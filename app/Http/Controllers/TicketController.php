@@ -192,6 +192,8 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
+        abort_unless(auth()->user()->can('tickets.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les tickets.');
+
         // Charger les relations nécessaires
         $ticket->load([
             'patient',
@@ -300,7 +302,13 @@ class TicketController extends Controller
     }
     public function print(Ticket $ticket)
     {
-        $ticket->load(['patient', 'consultation', 'user']);
+        $ticket->load([
+            'patient',
+            'user',
+            'medecin',
+            'assurance',
+            'items.prestation.serviceMedical',
+        ]);
         $pdf = Pdf::loadView('application.ticket.pdf', compact('ticket'))
             ->setPaper('a4', 'portrait');
         return $pdf->stream('ticket_'.$ticket->uuid.'.pdf');

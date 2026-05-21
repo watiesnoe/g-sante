@@ -379,6 +379,7 @@
 
                         let item = {
                             prestation_id: id,
+                            service: cols.eq(1).text().trim(),
                             prix_unitaire: parseInt(cols.eq(2).text().replace(/\s/g, '')),
                             quantite: qteVal,
                             remise: parseInt(cols.eq(4).text()) || 0,

@@ -354,6 +354,8 @@ class ConsultationController extends Controller
      */
     public function show(Consultation $consultation)
     {
+        abort_unless(auth()->user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
+
         // Un médecin ne peut voir que ses propres consultations
         if (auth()->user()->hasRole('medecin') && $consultation->medecin_id !== auth()->id()) {
             abort(403, 'Accès refusé : cette consultation ne vous appartient pas.');

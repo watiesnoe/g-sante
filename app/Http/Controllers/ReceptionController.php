@@ -18,6 +18,8 @@ class ReceptionController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des réceptions.');
+
         if ($request->ajax()) {
 
             $data = Reception::with(['commande.lignes', 'fournisseur', 'lignes'])
@@ -284,6 +286,8 @@ class ReceptionController extends Controller
 
     public function show($id)
     {
+        abort_unless(auth()->user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les réceptions.');
+
         $reception = Reception::with(['commande.fournisseur', 'fournisseur', 'lignes.medicament', 'user'])->findOrFail($id);
         return view('application.reception.show', compact('reception'));
     }

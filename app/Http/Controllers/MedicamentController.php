@@ -12,6 +12,8 @@ class MedicamentController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des médicaments.');
+
         if ($request->ajax()) {
             $query = Medicament::with(['unite','famille']);
 
@@ -59,6 +61,8 @@ class MedicamentController extends Controller
 
     public function show(Medicament $medicament)
     {
+        abort_unless(auth()->user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les médicaments.');
+
         $medicament->load(['unite', 'famille', 'protocoles.maladie']);
         return view('application.medicament.show', compact('medicament'));
     }

@@ -19,6 +19,8 @@ class CommandeController extends Controller
 
 public function index(Request $request)
 {
+    abort_unless(auth()->user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des commandes.');
+
     if ($request->ajax()) {
 
         $commandes = Commande::with('fournisseur')->latest();
@@ -312,6 +314,8 @@ public function index(Request $request)
 
     public function show(Commande $commande)
     {
+        abort_unless(auth()->user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les commandes.');
+
         $commande->load(['fournisseur', 'lignes.medicament']);
         return view('application.commande.show', compact('commande'));
     }

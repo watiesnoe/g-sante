@@ -175,6 +175,8 @@ class RendezvousController extends Controller
     // Optionnel : afficher un rendez-vous
     public function show(RendezVous $rendezvous)
     {
+        abort_unless(auth()->user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous.');
+
         $rendezvous->load(['patient', 'medecin', 'consultation']);
         return view('application.rendezvous.index');
     }

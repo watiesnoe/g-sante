@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('titre')
-    🧪 {{ isset($famille) ? 'Modifier un examen' : 'Ajouter un examen' }}
+    {{ isset($famille) ? 'Modifier un famille' : 'Ajouter un nouvel famille' }}
 @endsection
 
 @section('content')

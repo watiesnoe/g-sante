@@ -17,7 +17,7 @@
                     <strong>Clinique Médicale & Centre d'Excellence</strong><br>
                     Tél: (+225) 07 00 00 00 00 / 05 00 00 00 00<br>
                     E-mail: contact@g-sante.com | Web: www.g-sante.com<br>
-                    Abidjan, Côte d'Ivoire
+                    Ségou, Mali
                 </p>
             </td>
             <td style="width: 30%; border: none !important; text-align: right; vertical-align: top;">

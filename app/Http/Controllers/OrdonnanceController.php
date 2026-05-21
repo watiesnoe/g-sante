@@ -15,6 +15,8 @@ class OrdonnanceController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des ordonnances.');
+
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $ordonnances = Ordonnance::with(['consultation.patient','medicaments'])
@@ -61,6 +63,8 @@ class OrdonnanceController extends Controller
     // Afficher une ordonnance
     public function show(Ordonnance $ordonnance)
     {
+        abort_unless(auth()->user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
+
         $ordonnance->load(['consultation.patient', 'consultation.medecin', 'medicaments']);
         return view('application.ordonnance.index');
     }
@@ -130,8 +134,24 @@ class OrdonnanceController extends Controller
     {
         $request->validate([
             'medicaments' => 'required|array',
-            'medicaments.*' => 'required|integer|min:1|exists:medicaments,id',
         ]);
+
+        foreach ($request->medicaments as $medId => $qteDemandee) {
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['medicament_id' => $medId, 'quantite' => $qteDemandee],
+                [
+                    'medicament_id' => 'required|integer|exists:medicaments,id',
+                    'quantite' => 'required|integer|min:1',
+                ]
+            );
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données de paiement invalides : ' . implode(' ', $validator->errors()->all())
+                ], 422);
+            }
+        }
 
         $montantTotal = 0;
         
@@ -149,36 +169,32 @@ class OrdonnanceController extends Controller
                 $qteFinale = min($qteDemandee, $med->stock);
 
                 if ($qteFinale > 0) {
-                    // Mettre à jour la ligne pivot
-                    $ligne = $ordonnance->medicaments()->where('medicament_id', $med->id)->first();
-                    if($ligne) {
-                        $ligne->pivot->update([
-                            'qte_vendu' => $qteFinale,
-                            'statut_vente' => 'disponible',
-                        ]);
-                    }
+                    // Mettre à jour la ligne pivot de manière robuste
+                    $ordonnance->medicaments()->updateExistingPivot($med->id, [
+                        'qte_vendu' => $qteFinale,
+                        'statut_vente' => 'disponible',
+                    ]);
 
                     // Décrémenter le stock
                     $med->decrement('stock', $qteFinale);
 
                     // Créer le paiement
-//                    OrdonnancePaiement::create([
-//                        'ordonnance_id' => $ordonnance->id,
-//                        'medicament_id' => $med->id,
-//                        'quantite' => $qteFinale,
-//                        'prix_total' => $med->prix_vente * $qteFinale,
-//                        'statutordo' => 'paye',
-//                    ]);
+                    OrdonnancePaiement::create([
+                        'ordonnance_id' => $ordonnance->id,
+                        'medicament_id' => $med->id,
+                        'quantite' => $qteFinale,
+                        'prix_total' => $med->prix_vente * $qteFinale,
+                        'statut' => 'payé',
+                    ]);
 
                     // Ajouter au montant total
                     $montantTotal += $med->prix_vente * $qteFinale;
                 }
             }
 
-            // Mise à jour de l’ordonnance
+            // Mise à jour de l’ordonnance (retrait de la colonne fictive 'montant')
             $ordonnance->update([
                 'date_paiement' => now(),
-                'montant' => $montantTotal,
                 'statutordo' => 'paye',
             ]);
 

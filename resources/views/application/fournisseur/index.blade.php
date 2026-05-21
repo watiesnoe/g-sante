@@ -13,10 +13,10 @@
             </div>
 
             <!-- Sidebar gauche -->
-            @include('layouts.partials.configside')
+
 
             <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8">
+            <div class="col-xl-12 col-lg-12">
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
                         <h3 class="block-title">Liste des Fournisseurs</h3>

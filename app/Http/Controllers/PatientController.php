@@ -76,6 +76,8 @@ class PatientController extends Controller
      */
     public function show(Patient $patient)
     {
+        abort_unless(auth()->user()->can('patients.dossier'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les dossiers patients.');
+
         $patient->load([
             'consultations.ordonnances',
             'consultations.examens',

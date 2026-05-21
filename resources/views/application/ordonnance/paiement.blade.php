@@ -43,7 +43,7 @@
                 </tbody>
             </table>
 
-            <button class="btn btn-success" type="submit">💳 Payer</button>
+            <button class="btn btn-success" type="submit"> Payer</button>
         </form>
     </div>
 @endsection
@@ -91,11 +91,15 @@
                             });
                         }
                     },
-                    error: function(){
+                    error: function(xhr){
+                        let message = 'Une erreur est survenue lors du paiement.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
                         Swal.fire({
                             icon: 'error',
                             title: 'Erreur',
-                            text: 'Une erreur est survenue lors du paiement.'
+                            text: message
                         });
                     }
                 });

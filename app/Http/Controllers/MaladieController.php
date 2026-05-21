@@ -14,6 +14,8 @@ class MaladieController extends Controller
      */
 
     public function index(Request $request) {
+        abort_unless(auth()->user()->can('parametres.maladies'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des maladies.');
+
         if($request->ajax()) {
             $maladies = Maladie::with('symptomes')->select('maladies.*');
 

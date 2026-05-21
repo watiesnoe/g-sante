@@ -11,6 +11,8 @@ class AssuranceController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless(auth()->user()->can('parametres.assurances'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des assurances.');
+
         if ($request->ajax()) {
             $assurances = Assurance::query();
             return DataTables::of($assurances)
@@ -48,6 +50,8 @@ class AssuranceController extends Controller
 
     public function show(Request $request, $id)
     {
+        abort_unless(auth()->user()->can('parametres.assurances'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les assurances.');
+
         $assurance = Assurance::findOrFail($id);
         if ($request->ajax()) {
             return response()->json($assurance);

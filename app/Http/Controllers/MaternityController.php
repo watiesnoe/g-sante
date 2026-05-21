@@ -12,6 +12,8 @@ class MaternityController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas accès au module maternité.');
+
         $year = session('exercice_year', date('Y'));
         $grossesses = Grossesse::with('patient')
             ->whereYear('created_at', $year)
@@ -48,6 +50,8 @@ class MaternityController extends Controller
 
     public function show(Grossesse $grossesse)
     {
+        abort_unless(auth()->user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les suivis de grossesse.');
+
         $grossesse->load(['patient', 'cpns']);
         return view('application.maternity.show', compact('grossesse'));
     }
