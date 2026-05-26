@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Yajra\DataTables\DataTables;
 
@@ -19,7 +20,7 @@ class CommandeController extends Controller
 
 public function index(Request $request)
 {
-    abort_unless(auth()->user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des commandes.');
+    abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des commandes.');
 
     if ($request->ajax()) {
 
@@ -61,10 +62,19 @@ public function index(Request $request)
 
             // Actions
             ->addColumn('actions', function ($row) {
-                $view   = '<a href="'.route('commandes.show', $row).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                $edit   = '<a href="'.route('commandes.edit', $row).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                $pdf    = '<a href="'.route('commandes.pdf', $row).'" target="_blank" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i></a>';
-                $delete = '<button type="button" class="btn btn-sm btn-outline-danger btnSupprimer" data-id="'.$row->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                $user = Auth::user();
+                $view = ''; $edit = ''; $pdf = ''; $delete = '';
+
+                if ($user->can('stock.commandes')) {
+                    $view   = '<a href="'.route('commandes.show', $row).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $pdf    = '<a href="'.route('commandes.pdf', $row).'" target="_blank" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i></a>';
+                }
+                
+                // Assuming edit/delete fall under stock.commandes for now since there's no specific commande.edit permission
+                if ($user->can('stock.commandes') && $row->statut != 'valide') {
+                    $edit   = '<a href="'.route('commandes.edit', $row).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger btnSupprimer" data-id="'.$row->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                }
 
                 return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $pdf . $delete . '</div>';
             })
@@ -79,6 +89,8 @@ public function index(Request $request)
     // Formulaire de création
     public function create()
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $fournisseurs = Fournisseur::all();
         $medicaments = Medicament::all();
         $panier = session()->get('commande_panier', []);
@@ -159,6 +171,8 @@ public function index(Request $request)
     // Enregistrer la commande finale
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         // Validation
         $request->validate([
             'reference' => 'required|string',
@@ -244,6 +258,8 @@ public function index(Request $request)
 
     public function edit(Commande $commande)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $commande->load('lignes.medicament');
         $fournisseurs = Fournisseur::all();
         $medicaments = Medicament::all();
@@ -265,6 +281,8 @@ public function index(Request $request)
 
     public function update(Request $request, Commande $commande)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'reference' => 'required|string',
             'date_commande' => 'required|date',
@@ -314,7 +332,7 @@ public function index(Request $request)
 
     public function show(Commande $commande)
     {
-        abort_unless(auth()->user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les commandes.');
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les commandes.');
 
         $commande->load(['fournisseur', 'lignes.medicament']);
         return view('application.commande.show', compact('commande'));
@@ -322,6 +340,8 @@ public function index(Request $request)
 
     public function pdf(Commande $commande)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $commande->load(['fournisseur', 'lignes.medicament']);
 
         $pdf = PDF::loadView('application.commande.pdf', compact('commande'))
@@ -332,6 +352,8 @@ public function index(Request $request)
 
     public function destroy(Commande $commande)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $commande->lignes()->delete();
         $commande->delete();
 

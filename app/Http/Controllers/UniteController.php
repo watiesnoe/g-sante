@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Unite;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
 class UniteController extends Controller
@@ -12,6 +13,8 @@ class UniteController extends Controller
     // Liste des unités avec DataTables
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les unités.');
+
         if ($request->ajax()) {
             $unites = Unite::query(); // ✅ Utiliser query()
 
@@ -35,6 +38,8 @@ class UniteController extends Controller
     // Enregistrer une unité
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'nom' => 'required|string|unique:unites,nom|max:255',
         ]);
@@ -47,6 +52,8 @@ class UniteController extends Controller
     // Mettre à jour une unité
     public function update(Request $request, $id)
     {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
         $unite = Unite::findOrFail($id);
 
         $request->validate([
@@ -61,6 +68,8 @@ class UniteController extends Controller
     // Supprimer une unité
     public function destroy($id)
     {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
         $unite = Unite::findOrFail($id);
         $unite->delete();
 
@@ -68,6 +77,8 @@ class UniteController extends Controller
     }
 
     public function show($id) {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
         $unite = Unite::findOrFail($id);
         return response()->json($unite);
     }

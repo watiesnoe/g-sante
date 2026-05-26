@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // 👈 ajoute ceci
+use Illuminate\Support\Facades\Auth;
 class UserController extends Controller
 {
     use AuthorizesRequests;
@@ -276,7 +277,7 @@ class UserController extends Controller
         $this->authorize('delete', $user);
 
         // Empêcher la suppression de son propre compte
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             if (request()->ajax()) {
                 return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 403);
             }
@@ -304,8 +305,8 @@ class UserController extends Controller
      */
     public function profile()
     {
-        $user = auth()->user();
-        return view('profile.edit', compact('user'));
+        $user = Auth::user();
+        return view('application.profile', compact('user'));
     }
 
     /**
@@ -313,7 +314,7 @@ class UserController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $validated = $request->validate([
             'prenom' => 'required|string|max:255',

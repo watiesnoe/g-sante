@@ -13,6 +13,10 @@
             </div>
 
             <div class="card-body">
+                <div class="mb-4">
+                    @include('layouts.pdf_header', ['docNumber' => 'HOSP-' . date('Ymd') . '-' . $hospitalisation->id])
+                </div>
+
                 <h6 class="fw-bold mb-3">Informations Patient</h6>
                 <p>
                     <strong>Nom :</strong> {{ $hospitalisation->consultation->patient->nom ?? '-' }}<br>

@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Famille;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class FamilleController extends Controller
@@ -12,6 +13,8 @@ class FamilleController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.familles'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les familles.');
+
         if ($request->ajax()) {
             $famille= Famille::query(); // ✅ Utiliser query()
 
@@ -32,6 +35,8 @@ class FamilleController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.familles'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'nom' => 'required|string|unique:familles,nom|max:255',
         ]);
@@ -44,6 +49,8 @@ class FamilleController extends Controller
     // Mettre à jour une famille
     public function update(Request $request, $id)
     {
+        abort_unless(Auth::user()->can('stock.familles'), 403, 'Accès non autorisé.');
+
         $famille = Famille::findOrFail($id);
 
         $request->validate([
@@ -58,6 +65,8 @@ class FamilleController extends Controller
     // Supprimer une famille
     public function destroy($id)
     {
+        abort_unless(Auth::user()->can('stock.familles'), 403, 'Accès non autorisé.');
+
         $famille = Famille::findOrFail($id);
         $famille->delete();
 
@@ -65,6 +74,8 @@ class FamilleController extends Controller
     }
 
     public function show($id) {
+        abort_unless(Auth::user()->can('stock.familles'), 403, 'Accès non autorisé.');
+
         $famille = Famille::findOrFail($id);
         return response()->json($famille);
     }

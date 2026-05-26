@@ -10,6 +10,7 @@ use App\Models\Medicament;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -18,7 +19,7 @@ class ReceptionController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des réceptions.');
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des réceptions.');
 
         if ($request->ajax()) {
 
@@ -65,19 +66,25 @@ class ReceptionController extends Controller
                 })
 
                 ->addColumn('actions', function($row){
-                    $view   = '<a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
-                    
-                    if (!$row->commande || $row->commande->statut !== 'valide') {
-                        $edit = '<a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    } else {
-                        $edit = '<button type="button" class="btn btn-sm btn-outline-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;"><i class="fa fa-pencil-alt"></i></button>';
+                    $user = Auth::user();
+                    $view = ''; $edit = ''; $delete = '';
+                    $actions = '';
+
+                    if ($user->can('stock.receptions')) {
+                        $view   = '<a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                        
+                        if (!$row->commande || $row->commande->statut !== 'valide') {
+                            $edit = '<a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        } else {
+                            $edit = '<button type="button" class="btn btn-sm btn-outline-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;"><i class="fa fa-pencil-alt"></i></button>';
+                        }
+
+                        $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        
+                        $actions = '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
+                        $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">'.csrf_field().method_field('DELETE').'</form>';
                     }
 
-                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')" title="Supprimer"><i class="fa fa-trash"></i></button>';
-                    
-                    $actions = '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
-                    $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">'.csrf_field().method_field('DELETE').'</form>';
-                    
                     return $actions;
                 })
 
@@ -91,12 +98,16 @@ class ReceptionController extends Controller
 
        public function create()
        {
+           abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+
            $commandes = Commande::with('fournisseur')->get();
            return view('application.reception.create', compact('commandes'));
        }
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'commande_id' => 'required|exists:commandes,id',
             'fournisseur_id' => 'required',
@@ -256,6 +267,8 @@ class ReceptionController extends Controller
 
     public function getProduits(Commande $commande)
     {
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+
         $commande->load(['fournisseur', 'lignes.medicament']);
 
         // Produits non complètement reçus
@@ -286,7 +299,7 @@ class ReceptionController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les réceptions.');
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les réceptions.');
 
         $reception = Reception::with(['commande.fournisseur', 'fournisseur', 'lignes.medicament', 'user'])->findOrFail($id);
         return view('application.reception.show', compact('reception'));
@@ -294,6 +307,8 @@ class ReceptionController extends Controller
 
     public function edit($id)
     {
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+
         $reception = Reception::with(['commande', 'fournisseur', 'lignes.medicament'])->findOrFail($id);
         
         if ($reception->commande && $reception->commande->statut === 'valide') {
@@ -332,6 +347,8 @@ class ReceptionController extends Controller
 
     public function update(Request $request, $id)
     {
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'date_reception' => 'required|date',
             'reference_reception' => 'required|string',
@@ -412,6 +429,8 @@ class ReceptionController extends Controller
 
     public function destroy($id)
     {
+        abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+
         $reception = Reception::with('lignes')->findOrFail($id);
         
         foreach ($reception->lignes as $ligne) {

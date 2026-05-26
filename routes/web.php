@@ -97,8 +97,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/paiements/hospitalisation', [PaiementController::class, 'store'])
         ->name('paiements.hospitalisation')->middleware('caisse.ouverte');
 
-    Route::get('/hospitalisations/{id}/pdf', [HospitalisationController::class, 'generatePDF'])->name('hospitalisations.pdf');
-    Route::get('/paiement/{id}/hospitalisations', [HospitalisationController::class, 'getPaiementData'])
+    Route::get('/hospitalisations/{hospitalisation}/pdf', [HospitalisationController::class, 'generatePDF'])->name('hospitalisations.pdf');
+    Route::get('/paiement/{hospitalisation}/hospitalisations', [HospitalisationController::class, 'getPaiementData'])
         ->name('hospitalisations.paiement.data');
     Route::get('/hospitalisation/realise', [HospitalisationController::class, 'hopialisationrealise'])
         ->name('hospitalisations.realise');

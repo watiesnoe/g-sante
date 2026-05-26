@@ -6,6 +6,7 @@ use App\Models\Hospitalisation;
 use App\Models\Paiement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PaiementController extends Controller
 {
@@ -14,6 +15,8 @@ class PaiementController extends Controller
      */
     public function index()
     {
+        abort_unless(Auth::user()->can('paiements.view'), 403, 'Accès non autorisé.');
+
         $year = session('exercice_year', date('Y'));
         $paiements = Paiement::with(['hospitalisation.patient'])
             ->whereYear('created_at', $year)
@@ -28,6 +31,8 @@ class PaiementController extends Controller
      */
     public function create()
     {
+        abort_unless(Auth::user()->can('paiements.create'), 403, 'Accès non autorisé.');
+
         // On peut récupérer les hospitalisations en cours
         $hospitalisations = Hospitalisation::where('etat', 'en_cours')->with('patient')->get();
         return view('paiements.create', compact('hospitalisations'));
@@ -38,8 +43,10 @@ class PaiementController extends Controller
      */
    public function store(Request $request)
 {
+    abort_unless(Auth::user()->can('paiements.create'), 403, 'Accès non autorisé.');
+
     $request->validate([
-        'hospitalisation_id' => 'required|exists:hospitalisations,id',
+        'hospitalisation_id' => 'required|exists:hospitalisations,uuid',
         'date_sortie'        => 'required|date|after_or_equal:today',
         'montant_total'      => 'required|numeric|min:0',
         'montant_recu'       => 'required|numeric|min:0',
@@ -58,7 +65,7 @@ class PaiementController extends Controller
 
         DB::transaction(function () use ($request) {
 
-            $hospitalisation = Hospitalisation::findOrFail($request->hospitalisation_id);
+            $hospitalisation = Hospitalisation::where('uuid', $request->hospitalisation_id)->firstOrFail();
 
             // 🔒 Vérifier si déjà terminé
             if ($hospitalisation->etat === 'terminé') {
@@ -136,6 +143,8 @@ class PaiementController extends Controller
      */
     public function show(Paiement $paiement)
     {
+        abort_unless(Auth::user()->can('paiements.view'), 403, 'Accès non autorisé.');
+
         return view('paiements.show', compact('paiement'));
     }
 
@@ -144,6 +153,8 @@ class PaiementController extends Controller
      */
     public function edit(Paiement $paiement)
     {
+        abort_unless(Auth::user()->can('paiements.edit'), 403, 'Accès non autorisé.');
+
         return view('paiements.edit', compact('paiement'));
     }
 
@@ -152,6 +163,8 @@ class PaiementController extends Controller
      */
     public function update(Request $request, Paiement $paiement)
     {
+        abort_unless(Auth::user()->can('paiements.edit'), 403, 'Accès non autorisé.');
+
         $data = $request->validate([
             'montant_total' => 'required|numeric|min:0',
             'montant_recu'  => 'required|numeric|min:0',
@@ -172,6 +185,8 @@ class PaiementController extends Controller
      */
     public function destroy(Paiement $paiement)
     {
+        abort_unless(Auth::user()->can('paiements.delete'), 403, 'Accès non autorisé.');
+
         $paiement->delete();
 
         return redirect()->route('hospitalisations.index')
@@ -183,6 +198,8 @@ class PaiementController extends Controller
      */
     public function print(Paiement $paiement)
     {
+        abort_unless(Auth::user()->can('paiements.view'), 403, 'Accès non autorisé.');
+
         // Charger patient et hospitalisation
         $paiement->load('hospitalisation.patient');
 

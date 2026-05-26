@@ -1,102 +1,91 @@
 @extends('layouts.app')
 
-@section('titre')
-    ⚙️ Configuration - Système de Santé
-@endsection
+@section('title_page', 'Détails du Rendez-vous')
 
 @section('content')
-    <div class="content">
-        <div class="row">
-            <!-- Sidebar gauche -->
-            <div class="col-xl-3 col-lg-4">
-                <div class="block block-rounded h-100 mb-0">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Menu</h3>
-                    </div>
-                    <div class="block-content">
-                        <ul class="nav nav-pills flex-column push">
-                            <li class="nav-item mb-1">
-                                <a class="nav-link active" href="#">
-                                    <i class="fa fa-hospital me-1"></i> Structure
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-stethoscope me-1"></i> Services médicaux
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users me-1"></i> Utilisateurs
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-door-open me-1"></i> Salles
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-bed me-1"></i> Lits
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-vials me-1"></i> Examens
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-layer-group me-1"></i> Unités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-users-cog me-1"></i> Famille
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-user-md me-1"></i> Spécialités
-                                </a>
-                            </li>
-                            <li class="nav-item mb-1">
-                                <a class="nav-link" href="#">
-                                    <i class="fa fa-id-card me-1"></i> Sécurité sociale
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+    <div class="container py-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fa fa-calendar-check me-2"></i> Rendez-vous #{{ $rendezvous->id }}</h5>
+                <div>
+                    @if(Auth::user()->can('rendezvous.edit'))
+                        <a href="{{ route('rendezvous.edit', $rendezvous->uuid) }}" class="btn btn-light btn-sm">
+                            <i class="fa fa-edit"></i> Modifier
+                        </a>
+                    @endif
+                    <a href="{{ route('rendezvous.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="fa fa-arrow-left"></i> Retour
+                    </a>
                 </div>
             </div>
 
-            <!-- Contenu principal -->
-            <div class="col-xl-9 col-lg-8">
-                <div class="block block-rounded">
-                    <div class="block-header block-header-default">
-                        <h3 class="block-title">⚙️ Configuration - Structure</h3>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Informations du Patient -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fa fa-user me-2"></i> Informations du Patient</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th style="width: 40%">Patient :</th>
+                                <td>{{ $rendezvous->patient->nom ?? '-' }} {{ $rendezvous->patient->prenom ?? '' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Contact :</th>
+                                <td>{{ $rendezvous->patient->telephone ?? '-' }}</td>
+                            </tr>
+                        </table>
                     </div>
-                    <div class="block-content">
-                        <form action="" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label">Nom de la structure</label>
-                                <input type="text" class="form-control" placeholder="Ex: Centre de Santé Municipal">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Adresse</label>
-                                <input type="text" class="form-control" placeholder="Adresse complète">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Téléphone</label>
-                                <input type="text" class="form-control" placeholder="+223 70 00 00 00">
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-save me-1"></i> Sauvegarder
-                            </button>
-                        </form>
+
+                    <!-- Détails du Rendez-vous -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fa fa-info-circle me-2"></i> Détails du Rendez-vous</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th style="width: 40%">Médecin :</th>
+                                <td>{{ $rendezvous->medecin->name ?? 'Non assigné' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date & Heure :</th>
+                                <td>{{ \Carbon\Carbon::parse($rendezvous->date_heure)->format('d/m/Y à H:i') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Motif :</th>
+                                <td>{{ $rendezvous->motif ?? 'Non précisé' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Statut :</th>
+                                <td>
+                                    @php
+                                        $badges = [
+                                            'en_attente' => 'bg-warning',
+                                            'realise' => 'bg-success',
+                                            'annule' => 'bg-danger'
+                                        ];
+                                        $badgeClass = $badges[$rendezvous->statut] ?? 'bg-secondary';
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }}">
+                                        {{ ucfirst(str_replace('_', ' ', $rendezvous->statut)) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
+
+                @if($rendezvous->consultation)
+                <hr>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="fw-bold text-success mb-3"><i class="fa fa-stethoscope me-2"></i> Consultation Associée</h6>
+                        <p>Ce rendez-vous est lié à la consultation <strong>#{{ $rendezvous->consultation->id }}</strong> du {{ \Carbon\Carbon::parse($rendezvous->consultation->created_at)->format('d/m/Y') }}.</p>
+                        @if(Auth::user()->can('consultations.view'))
+                            <a href="{{ route('consultations.show', $rendezvous->consultation->uuid) }}" class="btn btn-outline-success btn-sm">
+                                <i class="fa fa-eye"></i> Voir la consultation
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

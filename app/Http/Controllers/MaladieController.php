@@ -6,6 +6,7 @@ use App\Models\Maladie;
 use App\Models\Symptome;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
 
 class MaladieController extends Controller
 {
@@ -14,7 +15,7 @@ class MaladieController extends Controller
      */
 
     public function index(Request $request) {
-        abort_unless(auth()->user()->can('parametres.maladies'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des maladies.');
+        abort_unless(Auth::user()->can('parametres.maladies'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des maladies.');
 
         if($request->ajax()) {
             $maladies = Maladie::with('symptomes')->select('maladies.*');

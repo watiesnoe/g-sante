@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Symptome;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
 
 class SymptomeController extends Controller
 {
     // Index avec Datatable
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->can('parametres.symptomes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des symptômes.');
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des symptômes.');
 
         if($request->ajax()){
             $symptomes = Symptome::all();
@@ -72,7 +73,7 @@ class SymptomeController extends Controller
     }
 
     public function show($id) {
-        abort_unless(auth()->user()->can('parametres.symptomes'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les symptômes.');
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les symptômes.');
 
         $symptome = Symptome::with(['maladies.protocole'])->findOrFail($id);
         return view('application.symptome.show', compact('symptome'));

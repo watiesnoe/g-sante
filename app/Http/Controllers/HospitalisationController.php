@@ -50,28 +50,28 @@ class HospitalisationController extends Controller
                     default => 'bg-secondary',
                 };
                 return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
-            }) //  Correction : Fermeture correcte de la colonne 'etat'
+            })
             ->addColumn('action', function ($row) {
                 $user = Auth::user();
                 $html = '';
 
                 if ($user->can('hospitalisations.view')) {
-                    $html .= '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $html .= '<a href="' . route('hospitalisations.show', $row->uuid) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                 }
                 if ($user->can('hospitalisations.pdf')) {
-                    $html .= '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                    $html .= '<a href="' . route('hospitalisations.pdf', $row->uuid) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
                 }
                 if ($user->can('hospitalisations.edit')) {
-                    $html .= '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $html .= '<a href="' . route('hospitalisations.edit', $row->uuid) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                 }
-                if ($user->can('hospitalisations.payer')) {
-                    $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-paiement" data-id="' . $row->id . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="fa fa-credit-card"></i></button>';
+                if ($user->can('hospitalisations.paiement')) {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-paiement" data-id="' . $row->uuid . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="fa fa-credit-card"></i></button>';
                 }
                 if ($user->can('transferts.create')) {
                     $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
                 }
                 if ($user->can('hospitalisations.delete')) {
-                    $html .= '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    $html .= '<form action="' . route('hospitalisations.destroy', $row->uuid) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">'. csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
                 }
 
                 return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -117,25 +117,25 @@ class HospitalisationController extends Controller
                     default => 'bg-secondary',
                 };
                 return '<span class="badge ' . $class . '">' . ucfirst($row->etat) . '</span>';
-            }) //  Correction : Clôture propre de la colonne 'etat'
+            })
             ->addColumn('action', function ($row) {
                 $user = Auth::user();
                 $html = '';
 
                 if ($user->can('hospitalisations.view')) {
-                    $html .= '<a href="' . route('hospitalisations.show', $row->id) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $html .= '<a href="' . route('hospitalisations.show', $row->uuid) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                 }
                 if ($user->can('hospitalisations.pdf')) {
-                    $html .= '<a href="' . route('hospitalisations.pdf', $row->id) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
+                    $html .= '<a href="' . route('hospitalisations.pdf', $row->uuid) . '" target="_blank" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
                 }
                 if ($user->can('hospitalisations.edit')) {
-                    $html .= '<a href="' . route('hospitalisations.edit', $row->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $html .= '<a href="' . route('hospitalisations.edit', $row->uuid) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                 }
                 if ($user->can('transferts.create')) {
                     $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
                 }
                 if ($user->can('hospitalisations.delete')) {
-                    $html .= '<form action="' . route('hospitalisations.destroy', $row->id) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                    $html .= '<form action="' . route('hospitalisations.destroy', $row->uuid) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">'. csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
                 }
 
                 return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -163,11 +163,11 @@ class HospitalisationController extends Controller
 //        ]);
 //    }
 
-    public function pdf($id)
+    public function pdf(Hospitalisation $hospitalisation)
     {
         abort_unless(Auth::user()->can('hospitalisations.pdf'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'imprimer.');
 
-        $hospitalisation = Hospitalisation::with(['patient','salle','lit'])->findOrFail($id);
+        $hospitalisation->load(['patient', 'salle', 'lit']);
 
         $pdf = Pdf::loadView('application.hospitalisation.pdf', compact('hospitalisation'))
             ->setPaper('A4', 'portrait');
@@ -177,9 +177,9 @@ class HospitalisationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function getPaiementData($id)
+    public function getPaiementData(Hospitalisation $hospitalisation)
     {
-        $hospitalisation = Hospitalisation::with('salle')->findOrFail($id);
+        $hospitalisation->load('salle');
 
         return response()->json([
             'date_entree' => $hospitalisation->date_entree,
@@ -197,7 +197,7 @@ class HospitalisationController extends Controller
      */
     public function store(Request $request)
     {
-        abort_unless(Auth::user()->can('hospitalisations.payer'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'enregistrer un paiement d\'hospitalisation.');
+        abort_unless(Auth::user()->can('hospitalisations.paiement'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'enregistrer un paiement d\'hospitalisation.');
 
         try {
             // 🔹 Vérifier si la caisse est ouverte
@@ -210,14 +210,14 @@ class HospitalisationController extends Controller
 
             // 🔹 Validation des données
             $validated = $request->validate([
-                'hospitalisation_id' => 'required|exists:hospitalisations,id',
+                'hospitalisation_id' => 'required|exists:hospitalisations,uuid',
                 'dateSortie'         => 'required|date',
                 'montant_total'      => 'required|numeric|min:0',
                 'montant_recu'       => 'required|numeric|min:0',
             ]);
 
             // 🔹 Récupération de l'hospitalisation
-            $hospitalisation = Hospitalisation::findOrFail($validated['hospitalisation_id']);
+            $hospitalisation = Hospitalisation::where('uuid', $validated['hospitalisation_id'])->firstOrFail();
 
             // 🔹 Vérifications métier
             if ($validated['dateSortie'] <= $hospitalisation->date_entree) {
@@ -294,20 +294,20 @@ class HospitalisationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Hospitalisation $hospitalisation)
     {
         abort_unless(Auth::user()->can('hospitalisations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les hospitalisations.');
 
-        $hospitalisation = Hospitalisation::with([
+        $hospitalisation->load([
             'consultation.patient',
             'service',
             'salle',
             'lit',
             'paiements'
-        ])->findOrFail($id);
+        ]);
 
-        $montant_total = $hospitalisation->paiements->sum('montant_total');
-        $montant_recu = $hospitalisation->paiements->sum('montant_recu');
+        $montant_total   = $hospitalisation->paiements->sum('montant_total');
+        $montant_recu    = $hospitalisation->paiements->sum('montant_recu');
         $montant_restant = $montant_total - $montant_recu;
 
         return view('application.hospitalisation.show', compact(
@@ -321,19 +321,20 @@ class HospitalisationController extends Controller
     /**
      * Générer la facture PDF
      */
-    public function generatePDF($id)
+    public function generatePDF(Hospitalisation $hospitalisation)
     {
-        $hospitalisation = Hospitalisation::with([
+        $hospitalisation->load([
             'consultation.patient',
             'service',
             'salle',
             'lit',
             'paiements'
-        ])->findOrFail($id);
+        ]);
 
-        $montant_total = $hospitalisation->paiements->sum('montant_total');
-        $montant_recu = $hospitalisation->paiements->sum('montant_recu');
+        $montant_total   = $hospitalisation->paiements->sum('montant_total');
+        $montant_recu    = $hospitalisation->paiements->sum('montant_recu');
         $montant_restant = $montant_total - $montant_recu;
+
         $pdf = PDF::loadView('application.hospitalisation.pdf', compact(
             'hospitalisation',
             'montant_total',

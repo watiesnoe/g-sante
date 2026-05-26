@@ -144,10 +144,8 @@
                             <div class="card border-0 shadow-sm p-3">
                                 <h6 class="text-info border-bottom pb-2 mb-3"><i class="fas fa-capsules me-1"></i> Sélection des médicaments (Stock & Inventaire)</h6>
                                 <label class="form-label small">Choisissez les médicaments enregistrés dans le système</label>
-                                <select name="medicaments_ids[]" class="form-control js-select2" multiple="multiple" data-placeholder="Rechercher des médicaments...">
-                                    @foreach(\App\Models\Medicament::orderBy('nom')->get() as $med)
-                                        <option value="{{ $med->id }}">{{ $med->nom }}</option>
-                                    @endforeach
+                                <select name="medicaments_ids[]" class="form-control js-select2-ajax" multiple="multiple" data-placeholder="Rechercher des médicaments...">
+                                    <!-- Options chargées via AJAX -->
                                 </select>
                             </div>
                         </div>
@@ -185,10 +183,32 @@
                 order: [[0, 'asc']]
             });
 
-            if ($('.js-select2').length) {
-                $('.js-select2').select2({
+            if ($('.js-select2-ajax').length) {
+                $('.js-select2-ajax').select2({
                     dropdownParent: $('#modalProtocole'),
-                    width: '100%'
+                    width: '100%',
+                    ajax: {
+                        url: '/api/medicaments-list', // Corrigé pour correspondre à la route
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term // search term
+                            };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: $.map(data, function (item) {
+                                    return {
+                                        text: item.nom,
+                                        id: item.id
+                                    }
+                                })
+                            };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 1
                 });
             }
         });

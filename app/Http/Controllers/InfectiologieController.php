@@ -103,9 +103,17 @@ class InfectiologieController extends Controller
         return redirect()->back()->with('success', 'Protocole expert enregistré avec succès.');
     }
 
-    public function getMedicaments()
+    public function getMedicaments(Request $request)
     {
-        return response()->json(\App\Models\Medicament::select('id', 'nom')->get());
+        $search = $request->q;
+        $medicaments = \App\Models\Medicament::select('id', 'nom')
+            ->when($search, function($query) use ($search) {
+                return $query->where('nom', 'like', "%{$search}%");
+            })
+            ->take(50)
+            ->get();
+            
+        return response()->json($medicaments);
     }
 
     public function destroyProtocole(ProtocoleTraitement $protocole)

@@ -6,12 +6,15 @@ use App\Models\Commande;
 use App\Models\PaiementCommande;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class PaiementCommandeController extends Controller
 {
     public function dashboard()
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         // Récupérer toutes les commandes avec leurs relations
         $commandes = Commande::with(['fournisseur', 'paiements'])
             ->latest()
@@ -75,6 +78,8 @@ class PaiementCommandeController extends Controller
 
     public function create(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $commandeId = $request->get('commande_id');
 
         $commandes = Commande::with('fournisseur')
@@ -88,6 +93,8 @@ class PaiementCommandeController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'commande_id' => 'required|exists:commandes,id',
             'montant' => 'required|numeric|min:0.01',
@@ -172,6 +179,8 @@ class PaiementCommandeController extends Controller
 
     public function history($commandeId)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         $commande = Commande::with(['paiements', 'fournisseur'])->findOrFail($commandeId);
         $paiements = $commande->paiements()->latest()->get();
 
@@ -180,6 +189,8 @@ class PaiementCommandeController extends Controller
 
     public function destroy($id)
     {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
         try {
             DB::beginTransaction();
 

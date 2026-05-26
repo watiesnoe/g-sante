@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Models\Assurance;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
 
 class AssuranceController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->can('parametres.assurances'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des assurances.');
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des assurances.');
 
         if ($request->ajax()) {
             $assurances = Assurance::query();
@@ -50,7 +50,7 @@ class AssuranceController extends Controller
 
     public function show(Request $request, $id)
     {
-        abort_unless(auth()->user()->can('parametres.assurances'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les assurances.');
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les assurances.');
 
         $assurance = Assurance::findOrFail($id);
         if ($request->ajax()) {

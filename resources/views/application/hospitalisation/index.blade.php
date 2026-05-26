@@ -218,10 +218,14 @@
                     },
                     error: function(xhr) {
                         console.error('Erreur AJAX:', xhr.responseJSON);
+                        let msg = 'Une erreur inattendue s\'est produite.';
+                        if (xhr.responseJSON) {
+                            msg = xhr.responseJSON.message || xhr.responseJSON.error || Object.values(xhr.responseJSON.errors || {}).join("\n") || msg;
+                        }
                         Swal.fire({
                             icon: 'error',
                             title: 'Erreur',
-                            text: Object.values(xhr.responseJSON.errors || {}).join("\n")
+                            text: msg
                         });
                     }
                 });

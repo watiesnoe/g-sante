@@ -47,17 +47,17 @@ class RendezvousController extends Controller
 
                     // 👁 Voir (rendezvous.view)
                     if ($user->can('rendezvous.view')) {
-                        $html .= '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="'.route('rendezvous.show', $rdv->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                     }
 
                     // ✏️ Modifier (rendezvous.edit)
                     if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<a href="'.route('rendezvous.edit', $rdv->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
                     // ✅ Marquer réalisé (rendezvous.confirm)
                     if ($user->can('rendezvous.confirm') && $rdv->statut !== 'realise') {
-                        $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->id).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->uuid).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
                     }
 
                     // 📋 Créer un suivi (consultations.suivi)
@@ -67,7 +67,7 @@ class RendezvousController extends Controller
 
                     // 🗑 Supprimer (rendezvous.delete)
                     if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->uuid).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -107,17 +107,17 @@ class RendezvousController extends Controller
 
                 // Actions — filtrées selon les permissions de l'utilisateur connecté
                 ->addColumn('actions', function($rdv) {
-                    $user = auth()->user();
+                    $user = Auth::user();
                     $html = '';
 
                     // 👁 Voir (rendezvous.view)
                     if ($user->can('rendezvous.view')) {
-                        $html .= '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="'.route('rendezvous.show', $rdv->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                     }
 
                     // ✏️ Modifier (rendezvous.edit)
                     if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<a href="'.route('rendezvous.edit', $rdv->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
                     // 📋 Créer un suivi (consultations.suivi)
@@ -127,7 +127,7 @@ class RendezvousController extends Controller
 
                     // 🗑 Supprimer (rendezvous.delete)
                     if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->uuid).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -167,22 +167,22 @@ class RendezvousController extends Controller
 
                 // Actions — filtrées selon les permissions de l'utilisateur connecté
                 ->addColumn('actions', function($rdv) {
-                    $user = auth()->user();
+                    $user = Auth::user();
                     $html = '';
 
                     // 👁 Voir (rendezvous.view)
                     if ($user->can('rendezvous.view')) {
-                        $html .= '<a href="'.route('rendezvous.show', $rdv->id).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="'.route('rendezvous.show', $rdv->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
                     }
 
                     // ✏️ Modifier (rendezvous.edit)
                     if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="'.route('rendezvous.edit', $rdv->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<a href="'.route('rendezvous.edit', $rdv->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
                     // 🗑 Supprimer (rendezvous.delete)
                     if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->id).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->uuid).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -211,7 +211,7 @@ class RendezvousController extends Controller
     // Optionnel : afficher un rendez-vous
     public function show(RendezVous $rendezvous)
     {
-        abort_unless(auth()->user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous.');
+        abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous.');
 
         $rendezvous->load(['patient', 'medecin', 'consultation']);
         return view('application.rendezvous.show', compact('rendezvous'));

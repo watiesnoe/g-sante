@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\CaisseSession;
 use App\Models\CaisseMouvement;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CaisseController extends Controller
 {
@@ -14,8 +15,10 @@ class CaisseController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('caisse.view'), 403, 'Accès non autorisé.');
+
         // View all sessions for admin, or redirect normal users to their active session
-        if (!auth()->user()->hasRole(['admin', 'super_admin'])) {
+        if (!Auth::user()->hasRole(['admin', 'super_admin'])) {
             return redirect()->route('caisse.my_session');
         }
 
@@ -32,7 +35,7 @@ class CaisseController extends Controller
      */
     public function open()
     {
-        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
         if ($session) {
             return redirect()->route('caisse.my_session')->with('info', 'Vous avez déjà une caisse ouverte.');
         }
@@ -48,13 +51,13 @@ class CaisseController extends Controller
             'solde_initial' => 'required|numeric|min:0'
         ]);
 
-        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
         if ($session) {
             return redirect()->route('caisse.my_session')->with('info', 'Vous avez déjà une caisse ouverte.');
         }
 
         CaisseSession::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'solde_initial' => $request->solde_initial,
             'solde_theorique' => $request->solde_initial,
             'statut' => 'ouverte',
@@ -69,7 +72,7 @@ class CaisseController extends Controller
      */
     public function close()
     {
-        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
         if (!$session) {
             return redirect()->route('caisse.open')->with('error', 'Vous n\'avez pas de caisse ouverte à clôturer.');
         }
@@ -92,7 +95,7 @@ class CaisseController extends Controller
             'solde_reel' => 'required|numeric|min:0'
         ]);
 
-        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
         if (!$session) {
             return redirect()->route('caisse.open')->with('error', 'Vous n\'avez pas de caisse ouverte.');
         }
@@ -116,7 +119,7 @@ class CaisseController extends Controller
      */
     public function mySession()
     {
-        $session = CaisseSession::where('user_id', auth()->id())->where('statut', 'ouverte')->first();
+        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
         if (!$session) {
             return redirect()->route('caisse.open')->with('info', 'Veuillez ouvrir votre caisse pour commencer.');
         }
