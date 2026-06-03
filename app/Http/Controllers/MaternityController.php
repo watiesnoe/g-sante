@@ -27,9 +27,7 @@ class MaternityController extends Controller
     {
         abort_unless(Auth::user()->can('maternity.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi de grossesse.');
 
-        // On ne liste que les femmes
-        $patients = Patient::where('genre', 'F')->get();
-        return view('application.maternity.create', compact('patients'));
+        return view('application.maternity.create');
     }
 
     public function store(Request $request)

@@ -76,8 +76,50 @@ class RendezvousController extends Controller
                 ->make(true);
         }
 
-        return view('application.rendezvous.index');
+        $prefillConsultation = null;
+        if ($request->has('consultation')) {
+            $prefillConsultation = \App\Models\Consultation::with(['patient', 'medecin'])->where('uuid', $request->consultation)->first();
+        }
+
+        return view('application.rendezvous.index', compact('prefillConsultation'));
     }
+
+    public function store(Request $request)
+    {
+        if ($request->id) {
+            abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé');
+        } else {
+            abort_unless(Auth::user()->can('rendezvous.create'), 403, 'Accès non autorisé');
+        }
+
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'medecin_id' => 'required|exists:users,id',
+            'consultation_id' => 'nullable|exists:consultations,id',
+            'date_heure' => 'required|date',
+            'motif' => 'nullable|string|max:255',
+        ]);
+
+        $data = [
+            'patient_id' => $request->patient_id,
+            'medecin_id' => $request->medecin_id,
+            'consultation_id' => $request->consultation_id,
+            'date_heure' => $request->date_heure,
+            'motif' => $request->motif,
+        ];
+
+        if (!$request->id) {
+            $data['statut'] = 'prevu';
+        }
+
+        $rdv = RendezVous::updateOrCreate(
+            ['id' => $request->id],
+            $data
+        );
+
+        return response()->json(['success' => true, 'data' => $rdv]);
+    }
+
     public function disponible(Request $request)
     {
         abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous réalisés.');

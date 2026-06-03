@@ -15,10 +15,7 @@
                             <div class="col-md-12 mb-3">
                                 <label class="form-label fw-bold">Choix de la Patiente</label>
                                 <select name="patient_id" class="form-select select2" required>
-                                    <option value="">Sélectionner une patiente...</option>
-                                    @foreach($patients as $p)
-                                    <option value="{{ $p->id }}">{{ $p->nom }} {{ $p->prenom }} ({{ $p->age }} ans)</option>
-                                    @endforeach
+                                    <!-- Options will be populated by AJAX -->
                                 </select>
                             </div>
 
@@ -57,7 +54,43 @@
     </div>
 </div>
 
+@endsection
+
+@section('scripts')
 <script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            placeholder: "Rechercher une patiente par nom ou téléphone...",
+            allowClear: true,
+            width: '100%',
+            ajax: {
+                url: "{{ route('patients.search') }}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        gender: 'F,Féminin,Feminin,Femme', // only female
+                        min_age: 15 // min age 15
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return {
+                                text: item.nom + ' ' + item.prenom + ' (' + item.age + ' ans)',
+                                id: item.id
+                            }
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 2
+        });
+    });
+
     document.getElementById('ddr_input').addEventListener('change', function() {
         if (this.value) {
             let ddr = new Date(this.value);

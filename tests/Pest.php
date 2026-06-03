@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Validation\Rules\Password;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -13,6 +16,13 @@
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        // Désactiver CSRF pour tous les tests Feature (évite les erreurs 419)
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+
+        // Règles de mot de passe simplifiées pour les tests
+        Password::defaults(fn () => Password::min(8));
+    })
     ->in('Feature');
 
 /*

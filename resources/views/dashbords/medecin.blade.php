@@ -43,11 +43,10 @@
         ['label'=>"Consultations Auj.", 'value'=>$stats['consultations_today']??0, 'sub'=>'Patients reçus',        'icon'=>'fa-stethoscope',        'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('consultations.index'),    'alert'=>false],
         ['label'=>'Patients Totaux',    'value'=>$stats['total_patients']??0,      'sub'=>'Dossiers actifs',       'icon'=>'fa-user-injured',       'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('patients.index'),          'alert'=>false],
         ['label'=>'Hospitalisés',       'value'=>$stats['active_hospitalisations']??0,'sub'=>'En cours',           'icon'=>'fa-procedures',         'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('hospitalisations.index'), 'alert'=>($stats['active_hospitalisations']??0) > 0],
-        ['label'=>'Alertes Stock',      'value'=>$stats['low_stock_medicaments']??0, 'sub'=>'Médicaments critiques','icon'=>'fa-exclamation-triangle','bg'=>'var(--grad-rose)',  'bar'=>'#f43f5e', 'route'=>route('medicaments.index'),      'alert'=>($stats['low_stock_medicaments']??0) > 0],
     ];
     @endphp
     @foreach($kpis as $k)
-    <div class="col-xl-3 col-md-6">
+    <div class="col-xl-4 col-md-4">
         <a href="{{ $k['route'] }}" class="gs-kpi h-100">
             @if($k['alert'])<span class="gs-kpi-trend" style="background:var(--med-rose-light);color:var(--med-rose)"><span class="pulse-dot danger" style="width:7px;height:7px;margin-right:.3rem"></span>Alerte</span>@endif
             <div class="gs-kpi-icon" style="background:{{ $k['bg'] }};color:#fff"><i class="fas {{ $k['icon'] }}"></i></div>
@@ -99,29 +98,7 @@
 
 {{-- STOCK + HOSPITALISATIONS --}}
 <div class="row g-3 mb-4">
-    <div class="col-lg-6">
-        <div class="gs-card">
-            <div class="gs-card-header">
-                <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-rose-light);color:var(--med-rose);display:flex;align-items:center;justify-content:center"><i class="fas fa-pills" style="font-size:.85rem"></i></span>Stock Critique @if(($stats['low_stock_medicaments']??0)>0)<span class="pulse-dot danger ms-2" style="width:8px;height:8px"></span>@endif</h6>
-                <a href="{{ route('medicaments.index') }}" class="btn btn-sm" style="background:var(--med-rose-light);color:var(--med-rose);border-radius:50px;font-size:.75rem">Gérer</a>
-            </div>
-            <div class="gs-scroll-list" style="max-height:260px">
-                @forelse($lowStockMedicaments->take(8) as $med)
-                @php $pct=$med->stock_min>0?min(100,round(($med->stock/$med->stock_min)*100)):0; $isCritical=$med->stock<=5; @endphp
-                <div class="gs-stock-item {{ $isCritical?'critical':'low' }}">
-                    <div class="flex-grow-1">
-                        <div style="font-size:.83rem;font-weight:600;color:#0f172a">{{ $med->nom }}</div>
-                        <div class="gs-stock-progress" style="width:100px;margin-top:.4rem"><div class="gs-stock-progress-bar" style="width:{{ $pct }}%;background:{{ $isCritical?'#f43f5e':'#f59e0b' }}"></div></div>
-                    </div>
-                    <span style="font-size:.82rem;font-weight:700;color:{{ $isCritical?'#f43f5e':'#f59e0b' }}">{{ $med->stock }} u.</span>
-                </div>
-                @empty
-                <div class="text-center py-4"><div style="font-size:2rem">✅</div><div style="font-size:.82rem;color:#10b981;font-weight:600;margin-top:.5rem">Stock optimal</div></div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
+    <div class="col-lg-12">
         <div class="gs-card">
             <div class="gs-card-header">
                 <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-amber-light);color:var(--med-amber);display:flex;align-items:center;justify-content:center"><i class="fas fa-procedures" style="font-size:.85rem"></i></span>Hospitalisations Actives</h6>
@@ -136,7 +113,7 @@
                         <div style="font-size:.85rem;font-weight:600;color:#0f172a">{{ $nom }}</div>
                         <div style="font-size:.75rem;color:#64748b">{{ $hosp->salle->nom??'N/A' }} · {{ $hosp->service->nom??'N/A' }}</div>
                     </div>
-                    <a href="{{ route('hospitalisations.show', $hosp->id) }}" style="background:var(--med-amber-light);color:var(--med-amber);font-size:.72rem;font-weight:600;padding:.3rem .75rem;border-radius:50px;text-decoration:none">Gérer</a>
+                    <a href="{{ route('hospitalisations.show', $hosp->uuid) }}" style="background:var(--med-amber-light);color:var(--med-amber);font-size:.72rem;font-weight:600;padding:.3rem .75rem;border-radius:50px;text-decoration:none">Gérer</a>
                 </div>
                 @empty
                 <div class="text-center py-4"><div style="font-size:2rem">🛏️</div><div style="font-size:.82rem;color:#94a3b8;margin-top:.5rem">Aucune hospitalisation en cours</div></div>
@@ -150,10 +127,10 @@
 <div class="gs-card">
     <div class="gs-card-header"><h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center"><i class="fas fa-bolt" style="font-size:.85rem"></i></span>Actions Rapides</h6></div>
     <div class="gs-card-body">
-        <div class="row g-2">
-            @php $actions=[['icon'=>'fa-stethoscope','label'=>'Nouvelle Consultation','desc'=>'Ouvrir un dossier','route'=>route('consultations.create'),'bg'=>'var(--grad-teal)'],['icon'=>'fa-file-medical','label'=>'Ordonnance','desc'=>'Prescrire un traitement','route'=>route('ordonnances.create'),'bg'=>'var(--grad-green)'],['icon'=>'fa-calendar-plus','label'=>'Rendez-vous','desc'=>'Planifier un suivi','route'=>route('rendezvous.index'),'bg'=>'var(--grad-violet)'],['icon'=>'fa-user-plus','label'=>'Nouveau Patient','desc'=>'Enregistrer','route'=>route('patients.create'),'bg'=>'var(--grad-amber)'],['icon'=>'fa-procedures','label'=>'Hospitalisation','desc'=>'Admettre','route'=>route('hospitalisations.create'),'bg'=>'var(--grad-rose)'],['icon'=>'fa-clock','label'=>"File d'attente",'desc'=>'Patients en attente','route'=>route('liste.attente'),'bg'=>'var(--grad-dark)']]; @endphp
+        <div class="row g-2 justify-content-center">
+            @php $actions=[['icon'=>'fa-stethoscope','label'=>'Nouvelle Consultation','desc'=>'Ouvrir un dossier','route'=>route('consultations.create'),'bg'=>'var(--grad-teal)'],['icon'=>'fa-file-medical','label'=>'Ordonnance','desc'=>'Prescrire un traitement','route'=>route('ordonnances.create'),'bg'=>'var(--grad-green)'],['icon'=>'fa-calendar-plus','label'=>'Rendez-vous','desc'=>'Planifier un suivi','route'=>route('rendezvous.index'),'bg'=>'var(--grad-violet)'],['icon'=>'fa-procedures','label'=>'Hospitalisation','desc'=>'Admettre','route'=>route('hospitalisations.create'),'bg'=>'var(--grad-rose)'],['icon'=>'fa-clock','label'=>"File d'attente",'desc'=>'Patients en attente','route'=>route('liste.attente'),'bg'=>'var(--grad-dark)']]; @endphp
             @foreach($actions as $a)
-            <div class="col-lg-2 col-md-4 col-6">
+            <div class="col-xl col-lg-4 col-md-4 col-6">
                 <a href="{{ $a['route'] }}" class="gs-module-btn">
                     <div class="gs-module-icon" style="background:{{ $a['bg'] }};color:#fff;width:52px;height:52px;border-radius:16px"><i class="fas {{ $a['icon'] }}" style="font-size:1.1rem"></i></div>
                     <span style="font-size:.78rem;font-weight:700;color:#374151">{{ $a['label'] }}</span>

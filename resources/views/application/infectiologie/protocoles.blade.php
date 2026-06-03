@@ -38,10 +38,10 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
-                                <a href="{{ route('infectiologie.protocoles.show', $p) }}" class="btn-sm" title="Voir les détails">
+                                <a href="{{ route('infectiologie.protocoles.show', $p->uuid) }}" class="btn-sm" title="Voir les détails">
                                     <i class="fa fa-eye text-primary"></i>
                                 </a>
-                                <form action="{{ route('infectiologie.protocoles.destroy', $p) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                <form action="{{ route('infectiologie.protocoles.destroy', $p->uuid) }}" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Êtes-vous sûr ?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-sm border-0 bg-transparent" title="Supprimer">

@@ -20,6 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\EnsureExerciceYear::class,
         ]);
+
+        // Désactiver la vérification CSRF en environnement de test
+        if (env('APP_ENV') === 'testing') {
+            $middleware->web(remove: [
+                \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            ]);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

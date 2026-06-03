@@ -121,7 +121,7 @@
                             </td>
                             <td class="text-center pe-4">
                                 @if($p->protocole)
-                                    <a href="{{ route('infectiologie.protocoles.show', $p->protocole) }}" class="btn btn-sm btn-light border rounded-pill px-3 shadow-none">
+                                    <a href="{{ route('infectiologie.protocoles.show', $p->protocole->uuid) }}" class="btn btn-sm btn-light border rounded-pill px-3 shadow-none">
                                         <i class="fas fa-eye me-1"></i> Détails
                                     </a>
                                 @endif

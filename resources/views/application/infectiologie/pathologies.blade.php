@@ -44,7 +44,7 @@
 
                     <div class="pt-3 border-top mt-auto">
                         @if($p->protocole)
-                            <a href="{{ route('infectiologie.protocoles.show', $p->protocole->id) }}" class="btn btn-sm btn-outline-primary w-100 rounded-pill">
+                            <a href="{{ route('infectiologie.protocoles.show', $p->protocole->uuid) }}" class="btn btn-sm btn-outline-primary w-100 rounded-pill">
                                 <i class="fas fa-book-medical me-1"></i> Voir le Protocole Expert
                             </a>
                         @else

@@ -68,6 +68,9 @@ class ConsultationController extends Controller
                     if ($user->can('transferts.create') && $row->patient) {
                         $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal(\'' . $row->patient->uuid . '\', \'' . $row->uuid . '\', \'\')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
                     }
+                    if ($user->can('rendezvous.create')) {
+                        $html .= '<a href="' . route('rendezvous.index', ['consultation' => $row->uuid]) . '" class="btn btn-sm btn-outline-warning" title="Prendre Rendez-vous"><i class="fa fa-calendar-plus"></i></a>';
+                    }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })

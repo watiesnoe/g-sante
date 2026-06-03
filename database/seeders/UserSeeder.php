@@ -25,6 +25,31 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Pédiatrie'] ?? null,
             ],
             [
+                'name' => 'Dr Diop', 'nom' => 'Diop', 'prenom' => 'Ousmane', 'telephone' => '772345679',
+                'adresse' => 'Dakar', 'role' => 'medecin', 'email' => 'drdiop@example.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Radiologie'] ?? null,
+            ],
+            [
+                'name' => 'Dr Keita', 'nom' => 'Keita', 'prenom' => 'Ibrahim', 'telephone' => '772345680',
+                'adresse' => 'Dakar', 'role' => 'medecin', 'email' => 'drkeita@example.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Cardiologie'] ?? null,
+            ],
+            [
+                'name' => 'Dr Kone', 'nom' => 'Kone', 'prenom' => 'Awa', 'telephone' => '772345681',
+                'adresse' => 'Dakar', 'role' => 'medecin', 'email' => 'drkone@example.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Gynécologie'] ?? null,
+            ],
+            [
+                'name' => 'Dr Traore', 'nom' => 'Traore', 'prenom' => 'Cheick', 'telephone' => '772345682',
+                'adresse' => 'Dakar', 'role' => 'medecin', 'email' => 'drtraore@example.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Urgences'] ?? null,
+            ],
+            [
+                'name' => 'Dr Coulibaly', 'nom' => 'Coulibaly', 'prenom' => 'Salif', 'telephone' => '772345683',
+                'adresse' => 'Dakar', 'role' => 'medecin', 'email' => 'drcoulibaly@example.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => $serviceIds['Laboratoire d\'Analyses'] ?? null,
+            ],
+            [
                 'name' => 'moussa_pharmacien', 'nom' => 'Ndiaye', 'prenom' => 'Moussa', 'telephone' => '773456789',
                 'adresse' => 'Dakar', 'role' => 'pharmacien', 'email' => 'pharmacy@example.com',
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,

@@ -69,33 +69,41 @@ class TransfertController extends Controller
         abort_unless(Auth::user()->can('transferts.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'effectuer un transfert.');
 
         $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'type' => 'required|in:medecin,service,hopital_externe',
-            'motif' => 'required|string',
-            'consultation_id' => 'nullable|exists:consultations,id',
-            'hospitalisation_id' => 'nullable|exists:hospitalisations,id',
-            'dest_medecin_id' => 'required_if:type,medecin|nullable|exists:users,id',
-            'dest_service_id' => 'required_if:type,service|nullable|exists:service_medicals,id',
+            'patient_id'          => 'required|exists:patients,uuid',
+            'type'                => 'required|in:medecin,service,hopital_externe',
+            'motif'               => 'required|string',
+            'consultation_id'     => 'nullable|exists:consultations,uuid',
+            'hospitalisation_id'  => 'nullable|exists:hospitalisations,uuid',
+            'dest_medecin_id'     => 'required_if:type,medecin|nullable|exists:users,id',
+            'dest_service_id'     => 'required_if:type,service|nullable|exists:service_medicals,id',
             'hopital_destination' => 'required_if:type,hopital_externe|nullable|string',
         ]);
+
+        // Resolve models by UUID
+        $patient        = \App\Models\Patient::where('uuid', $request->patient_id)->firstOrFail();
+        $consultation   = $request->consultation_id
+            ? \App\Models\Consultation::where('uuid', $request->consultation_id)->first()
+            : null;
+        $hospitalisation = $request->hospitalisation_id
+            ? \App\Models\Hospitalisation::where('uuid', $request->hospitalisation_id)->first()
+            : null;
 
         DB::beginTransaction();
 
         try {
             $transfert = new Transfert();
-            $transfert->patient_id = $request->patient_id;
+            $transfert->patient_id = $patient->id;
             $transfert->type = $request->type;
             $transfert->motif = $request->motif;
             $transfert->date_transfert = now();
             $transfert->user_id = Auth::id();
-            $transfert->consultation_id = $request->consultation_id ?: null;
-            $transfert->hospitalisation_id = $request->hospitalisation_id ?: null;
+            $transfert->consultation_id = $consultation?->id;
+            $transfert->hospitalisation_id = $hospitalisation?->id;
 
             if ($request->type === 'medecin') {
                 if (!$transfert->consultation_id) {
                     throw new \Exception("Une consultation est requise pour transférer à un autre médecin.");
                 }
-                $consultation = Consultation::findOrFail($transfert->consultation_id);
                 $transfert->source_medecin_id = $consultation->medecin_id;
                 $transfert->dest_medecin_id = $request->dest_medecin_id;
 
@@ -104,20 +112,17 @@ class TransfertController extends Controller
                 $consultation->save();
             } else {
                 // Pour service ou hopital_externe, on a besoin d'une hospitalisation
-                $hId = $transfert->hospitalisation_id;
-                if (!$hId && $transfert->consultation_id) {
-                    $h = Hospitalisation::where('consultation_id', $transfert->consultation_id)
+                if (!$hospitalisation && $consultation) {
+                    $hospitalisation = Hospitalisation::where('consultation_id', $consultation->id)
                         ->where('etat', 'en cours')
                         ->first();
-                    $hId = $h?->id;
                 }
 
-                if (!$hId) {
+                if (!$hospitalisation) {
                     throw new \Exception("Le transfert vers un service ou un autre hôpital nécessite une hospitalisation en cours.");
                 }
 
-                $hospitalisation = Hospitalisation::findOrFail($hId);
-                $transfert->hospitalisation_id = $hId;
+                $transfert->hospitalisation_id = $hospitalisation->id;
 
                 if ($request->type === 'service') {
                     $transfert->source_service_id = $hospitalisation->service_id;

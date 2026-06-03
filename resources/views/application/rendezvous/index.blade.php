@@ -49,16 +49,15 @@
                     <div class="modal-body">
                         <div class="mb-2">
                             <label>Patient</label>
-                            <input type="text" name="patient_id" id="patient_id" class="form-control">
+                            <input type="text" id="patient_name" class="form-control bg-light" readonly placeholder="Sélection manuelle non disponible">
+                            <input type="hidden" name="patient_id" id="patient_id">
                         </div>
                         <div class="mb-2">
                             <label>Médecin</label>
-                            <input type="text" name="medecin_id" id="medecin_id" class="form-control">
+                            <input type="text" id="medecin_name" class="form-control bg-light" readonly placeholder="Sélection manuelle non disponible">
+                            <input type="hidden" name="medecin_id" id="medecin_id">
                         </div>
-                        <div class="mb-2">
-                            <label>Consultation</label>
-                            <input type="text" name="consultation_id" id="consultation_id" class="form-control">
-                        </div>
+                        <input type="hidden" name="consultation_id" id="consultation_id">
                         <div class="mb-2">
                             <label>Date & Heure</label>
                             <input type="datetime-local" name="date_heure" id="date_heure" class="form-control">
@@ -128,6 +127,20 @@
                 $('#rdvModal').modal('show');
             });
 
+            // Check prefill data from Controller
+            @if(isset($prefillConsultation))
+                $('#rdvForm')[0].reset();
+                $('#patient_id').val('{{ $prefillConsultation->patient_id }}');
+                $('#medecin_id').val('{{ $prefillConsultation->medecin_id }}');
+                $('#consultation_id').val('{{ $prefillConsultation->id }}');
+                
+                $('#patient_name').val('{{ addslashes($prefillConsultation->patient ? $prefillConsultation->patient->prenom . " " . $prefillConsultation->patient->nom : "") }}');
+                $('#medecin_name').val('{{ addslashes($prefillConsultation->medecin ? $prefillConsultation->medecin->name : "") }}');
+                
+                $('#rdvModal .modal-title').text("Nouveau Rendez-vous");
+                $('#rdvModal').modal('show');
+            @endif
+
             // Sauvegarder
             $('#rdvForm').submit(function(e) {
                 e.preventDefault();
@@ -138,6 +151,14 @@
                     success: function() {
                         $('#rdvModal').modal('hide');
                         table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let errors = xhr.responseJSON?.errors;
+                        let errorMsg = "Erreur lors de l'enregistrement.";
+                        if (errors) {
+                            errorMsg = Object.values(errors).map(e => e.join('\n')).join('\n');
+                        }
+                        alert(errorMsg);
                     }
                 });
             });

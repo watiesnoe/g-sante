@@ -68,7 +68,10 @@ class HospitalisationController extends Controller
                     $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-paiement" data-id="' . $row->uuid . '" data-date="' . $row->date_entree . '" data-montant="' . ($row->prix_jour ?? 0) . '" title="Paiement"><i class="fa fa-credit-card"></i></button>';
                 }
                 if ($user->can('transferts.create')) {
-                    $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal('.($row->consultation->patient_id ?? $row->patient_id).', '.($row->consultation_id ?? "''").', '.$row->id.')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
+                    $patientUuid = $row->consultation->patient->uuid ?? '';
+                    $consultationUuid = $row->consultation->uuid ?? '';
+                    $hospitalisationUuid = $row->uuid ?? '';
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-success" onclick="openTransfertModal(\'' . $patientUuid . '\', \'' . $consultationUuid . '\', \'' . $hospitalisationUuid . '\')" title="Transférer"><i class="fa fa-exchange-alt"></i></button>';
                 }
                 if ($user->can('hospitalisations.delete')) {
                     $html .= '<form action="' . route('hospitalisations.destroy', $row->uuid) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer cette hospitalisation ?\')">'. csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';

@@ -125,20 +125,14 @@ class HomeController extends Controller
             'total_patients' => Patient::count(),
             'total_consultations' => Consultation::where('medecin_id', $medecinId)->count(),
             'total_hospitalisations' => Hospitalisation::count(),
-            'total_medicaments' => Medicament::count(),
             'new_patients_today' => Patient::whereDate('created_at', today())->count(),
             'active_hospitalisations' => Hospitalisation::where('etat', 'en cours')->count(),
-            'low_stock_medicaments' => Medicament::whereColumn('stock', '<=', 'stock_min')->count(),
         ];
 
         $todayAppointments = RendezVous::with('patient')
             ->where('medecin_id', $medecinId)
             ->whereDate('date_heure', today())
             ->orderBy('date_heure')
-            ->get();
-
-        $lowStockMedicaments = Medicament::whereColumn('stock', '<=', 'stock_min')
-            ->orderBy('stock')
             ->get();
 
         $activeHospitalisations = Hospitalisation::with(['consultation.patient', 'salle', 'service'])
@@ -150,7 +144,6 @@ class HomeController extends Controller
         return view('dashboard', compact(
             'stats',
             'todayAppointments',
-            'lowStockMedicaments',
             'activeHospitalisations',
             'consultationStats'
         ));

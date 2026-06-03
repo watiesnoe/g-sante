@@ -83,10 +83,23 @@ class PatientController extends Controller
     {
         abort_unless(Auth::user()->can('patients.search'), 403, 'Accès non autorisé : vous n\'avez pas la permission de rechercher un patient.');
 
-        $patients = Patient::where('nom', 'like', '%'.$request->q.'%')
-            ->orWhere('telephone', 'like', '%'.$request->q.'%')
-            ->limit(10)
-            ->get(['id', 'uuid','nom','prenom','telephone','assurance_id','numero_assurance','fin_validite_assurance']);
+        $query = Patient::where(function($q) use ($request) {
+            $q->where('nom', 'like', '%'.$request->q.'%')
+              ->orWhere('prenom', 'like', '%'.$request->q.'%')
+              ->orWhere('telephone', 'like', '%'.$request->q.'%');
+        });
+
+        if ($request->has('gender')) {
+            $genders = is_array($request->gender) ? $request->gender : explode(',', $request->gender);
+            $query->whereIn('genre', $genders);
+        }
+
+        if ($request->has('min_age')) {
+            $query->where('age', '>=', $request->min_age);
+        }
+
+        $patients = $query->limit(20)
+            ->get(['id', 'uuid','nom','prenom','telephone','age','genre','assurance_id','numero_assurance','fin_validite_assurance']);
 
         return response()->json($patients);
     }
