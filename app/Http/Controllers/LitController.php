@@ -30,19 +30,19 @@ class LitController extends Controller
                         'Maintenance' => 'danger',
                         default => 'secondary',
                     };
-                    return '<span class="badge bg-'.$class.'">'.$row->statut.'</span>';
+                    return '<span class="badge bg-' . $class . '">' . $row->statut . '</span>';
                 })
                 ->addColumn('salle', function ($row) {
                     return $row->salle->nom ?? '-';
                 })
                 ->addColumn('actions', function ($row) {
                     // Utilisation de la colonne uuid (ou id si l'id principal de la table est une string UUID)
-                    $uuid = $row->uuid ?? $row->id; 
+                    $uuid = $row->uuid ?? $row->id;
 
-                    $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$uuid.'" title="Détails"><i class="fa fa-eye"></i></button>';
-                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$uuid.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
-                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
-                    
+                    $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="' . $uuid . '" title="Détails"><i class="fa fa-eye"></i></button>';
+                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="' . $uuid . '" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="' . $uuid . '" title="Supprimer"><i class="fa fa-trash"></i></button>';
+
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
                 })
                 ->editColumn('created_at', function ($row) {
