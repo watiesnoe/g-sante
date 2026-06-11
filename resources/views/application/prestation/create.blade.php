@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('titre')
-    ⚙️ Configuration - Système de Santé
+    ⚙️ Configuration - {{ isset($prestation) ? 'Modifier' : 'Ajouter' }} une Prestation
 @endsection
 
 @section('content')
@@ -13,11 +13,11 @@
             <div class="col-xl-9 col-lg-8 ">
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
-                        <h5 class="mb-0 text-primary fw-bold">📰 Formulaire d'ajout des services</h5>
+                        <h5 class="mb-0 text-primary fw-bold">📰 {{ isset($prestation) ? 'Modifier la prestation' : 'Formulaire d\'ajout de prestation' }}</h5>
                         <div class="d-flex justify-content-between align-items-center mb-3">
 
-                            <a href="{{ route('services.index') }}" class="btn btn-success btn-sm rounded-pill shadow-sm">
-                                Voir liste
+                            <a href="{{ route('prestations.index') }}" class="btn btn-success btn-sm rounded-pill shadow-sm">
+                                <i class="fa fa-arrow-left"></i> Retour à la liste
                             </a>
                         </div>
                     </div>
@@ -26,24 +26,55 @@
                             <div class="alert alert-success">{{ session('success') }}</div>
                         @endif
 
-                        <form action="{{ route('services.store') }}" id="serviceForm"  class="mb-2" method="POST">
+                        <form action="{{ isset($prestation) ? route('prestations.update', $prestation->id) : route('prestations.store') }}" id="prestationForm" class="mb-2" method="POST">
                             @csrf
+                            @if(isset($prestation))
+                                @method('PUT')
+                            @endif
 
-                            <div class="mb-3">
-                                <label for="nom" class="form-label">Nom du service</label>
-                                <input type="text" class="form-control @error('nom') is-invalid @enderror"
-                                       id="nom" name="nom" value="{{ old('nom') }}" required>
-                                @error('nom') <div class="text-danger">{{ $message }}</div> @enderror
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="service_medical_id" class="form-label">Service Médical <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('service_medical_id') is-invalid @enderror" id="service_medical_id" name="service_medical_id" required>
+                                        <option value="">-- Sélectionner un service --</option>
+                                        @foreach($services as $service)
+                                            <option value="{{ $service->id }}" {{ (old('service_medical_id') ?? ($prestation->service_medical_id ?? '')) == $service->id ? 'selected' : '' }}>
+                                                {{ $service->nom }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('service_medical_id') <div class="text-danger">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="nom" class="form-label">Nom de la prestation <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('nom') is-invalid @enderror"
+                                           id="nom" name="nom" value="{{ old('nom') ?? ($prestation->nom ?? '') }}" required placeholder="Ex: Consultation Générale">
+                                    @error('nom') <div class="text-danger">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="prix" class="form-label">Prix (FCFA) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control @error('prix') is-invalid @enderror"
+                                           id="prix" name="prix" value="{{ old('prix') ?? ($prestation->prix ?? '') }}" required placeholder="Ex: 15000">
+                                    @error('prix') <div class="text-danger">{{ $message }}</div> @enderror
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description (optionnelle)</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror"
-                                          id="description" name="description">{{ old('description') }}</textarea>
+                                          id="description" name="description" rows="3">{{ old('description') ?? ($prestation->description ?? '') }}</textarea>
                                 @error('description') <div class="text-danger">{{ $message }}</div> @enderror
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            <div class="text-end border-top pt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa fa-save"></i> {{ isset($prestation) ? 'Mettre à jour' : 'Enregistrer' }}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -53,50 +84,7 @@
 @endsection
 @section('scripts')
     <script>
-        $(document).ready(function() {
-            $('#serviceForm').on('submit', function(e) {
-                e.preventDefault(); // Bloque le submit classique
-
-                let formData = $(this).serialize();
-
-                $.ajax({
-                    url: $(this).attr('action'),
-                    method: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        if(response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Succès !',
-                                text: response.message,
-                                confirmButtonText: 'OK'
-                            });
-
-                            // Reset du formulaire
-                            $('#serviceForm')[0].reset();
-
-                            // Optionnel : rafraîchir la table AJAX si tu utilises DataTables
-                            // if($('#services-table').length) {
-                            //     $('#services-table').DataTable().ajax.reload();
-                            // }
-                        }
-                    },
-                    error: function(xhr) {
-                        let errors = xhr.responseJSON.errors;
-                        let errorMessage = '';
-                        $.each(errors, function(key, value) {
-                            errorMessage += value + '\n';
-                        });
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erreur',
-                            text: errorMessage,
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                });
-            });
-        });
+        // Le formulaire est géré de façon classique pour simplifier la validation
+        // Vous pouvez utiliser AJAX ici si vous préférez.
     </script>
 @endsection

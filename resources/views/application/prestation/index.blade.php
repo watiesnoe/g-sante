@@ -17,6 +17,12 @@
 
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa fa-check-circle me-1"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
                         <h3 class="block-title">Liste des prestations</h3>

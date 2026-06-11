@@ -265,10 +265,11 @@ class ReceptionController extends Controller
     //        ]);
     //    }
 
-    public function getProduits(Commande $commande)
+    public function getProduits($id)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
 
+        $commande = Commande::findOrFail($id);
         $commande->load(['fournisseur', 'lignes.medicament']);
 
         // Produits non complètement reçus

@@ -972,8 +972,11 @@
                     return;
                 }
 
+                let url = "{{ route('infectiologie.get_protocole', ':id') }}";
+                url = url.replace(':id', maladieId);
+
                 $.ajax({
-                    url: '/infectiologie/api/protocoles/' + maladieId,
+                    url: url,
                     type: 'GET',
                     success: function(response) {
                         if (response.success && response.protocoles && response.protocoles

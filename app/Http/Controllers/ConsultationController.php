@@ -40,9 +40,17 @@ class ConsultationController extends Controller
                 ->whereYear('created_at', $year)
                 ->latest();
 
-            // Un médecin ne voit que ses propres consultations
+            // Un médecin voit ses propres consultations ET celles des patients qui lui ont été transférés
             if (Auth::user()->hasRole('medecin')) {
-                $consultations->where('medecin_id', Auth::id());
+                $medecinId = Auth::id();
+                $patientsTransferes = \App\Models\Transfert::where('dest_medecin_id', $medecinId)
+                    ->pluck('patient_id')
+                    ->unique();
+
+                $consultations->where(function ($q) use ($medecinId, $patientsTransferes) {
+                    $q->where('medecin_id', $medecinId)
+                      ->orWhereIn('patient_id', $patientsTransferes);
+                });
             }
 
             return DataTables::of($consultations)
@@ -382,9 +390,19 @@ class ConsultationController extends Controller
     {
         abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
 
-        // Un médecin ne peut voir que ses propres consultations
-        if (Auth::user()->hasRole('medecin') && $consultation->medecin_id !== Auth::id()) {
-            abort(403, 'Accès refusé : cette consultation ne vous appartient pas.');
+        // Un médecin peut voir ses consultations ET celles des patients qui lui ont été transférés
+        if (Auth::user()->hasRole('medecin')) {
+            $medecinId = Auth::id();
+            $patientsTransferes = \App\Models\Transfert::where('dest_medecin_id', $medecinId)
+                ->pluck('patient_id')
+                ->unique();
+
+            $estAutorise = $consultation->medecin_id === $medecinId
+                || $patientsTransferes->contains($consultation->patient_id);
+
+            if (!$estAutorise) {
+                abort(403, 'Accès refusé : cette consultation ne vous appartient pas.');
+            }
         }
         // Charger toutes les relations nécessaires
         $consultation->load([
@@ -413,9 +431,19 @@ class ConsultationController extends Controller
     {
         abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
 
-        // Un médecin ne peut modifier que ses propres consultations
-        if (Auth::user()->hasRole('medecin') && $consultation->medecin_id !== Auth::id()) {
-            abort(403, 'Accès refusé : vous ne pouvez modifier que vos propres consultations.');
+        // Un médecin peut modifier ses consultations ET celles des patients qui lui ont été transférés
+        if (Auth::user()->hasRole('medecin')) {
+            $medecinId = Auth::id();
+            $patientsTransferes = \App\Models\Transfert::where('dest_medecin_id', $medecinId)
+                ->pluck('patient_id')
+                ->unique();
+
+            $estAutorise = $consultation->medecin_id === $medecinId
+                || $patientsTransferes->contains($consultation->patient_id);
+
+            if (!$estAutorise) {
+                abort(403, 'Accès refusé : vous ne pouvez modifier que vos propres consultations.');
+            }
         }
         // ✅ Tickets en attente
         $tickets = Ticket::with('patient')

@@ -53,6 +53,7 @@ class PrestationController extends Controller
             'service_medical_id' => 'required|exists:service_medicals,id',
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'prix' => 'required|numeric|min:0',
         ]);
 
         Prestation::create($request->all());
@@ -80,8 +81,17 @@ class PrestationController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
+        $request->validate([
+            'service_medical_id' => 'required|exists:service_medicals,id',
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'prix' => 'required|numeric|min:0',
+        ]);
+
         $prestation->update($request->all());
-        return response()->json($prestation);
+
+        return redirect()->route('prestations.index')
+            ->with('success', 'Prestation modifiée avec succès.');
     }
 
     public function destroy(Prestation $prestation)

@@ -67,7 +67,8 @@
                                 </select>
                             </div>
                             <div class="text-end border-top pt-3">
-                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="button" class="btn btn-sm btn-secondary"
+                                    data-bs-dismiss="modal">Fermer</button>
                                 <button type="submit" class="btn btn-sm btn-primary" id="btnSave">Enregistrer</button>
                             </div>
                         </form>
@@ -123,4 +124,3 @@
         });
     </script>
 @endsection
-

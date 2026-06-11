@@ -357,13 +357,21 @@
 
                 if (amount > remaining) {
                     e.preventDefault();
-                    alert('Erreur: Le montant ne peut pas dépasser le reste à payer.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Le montant ne peut pas dépasser le reste à payer.'
+                    });
                     return false;
                 }
 
                 if (amount <= 0) {
                     e.preventDefault();
-                    alert('Erreur: Le montant doit être supérieur à 0.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Le montant doit être supérieur à 0.'
+                    });
                     return false;
                 }
 

@@ -13,6 +13,6 @@
             <li class="list-group-item"><strong>Observations :</strong> {{ $paiement->observations ?? 'Aucune' }}</li>
         </ul>
 
-        <a href="{{ route('paiements.index') }}" class="btn btn-secondary mt-3">⬅ Retour</a>
+        <a href="{{ route('paiementscommande.history', $paiement->commande) }}" class="btn btn-secondary mt-3">⬅ Retour</a>
     </div>
 @endsection

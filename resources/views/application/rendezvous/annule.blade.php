@@ -4,9 +4,9 @@
 
 @section('content')
     <div class="container-fluid mt-3">
-         <div class="d-flex justify-content-end mb-3">
+         {{-- <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-primary" id="addRdvBtn"><i class="fa fa-plus me-1"></i> Ajouter</button>
-        </div>
+        </div> --}}
         <div class="card shadow-lg">
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 <h2 class="mb-4"><i class="fa fa-calendar me-2"></i>Liste des Rendez-vous</h2>

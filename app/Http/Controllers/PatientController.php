@@ -55,29 +55,32 @@ class PatientController extends Controller
         return view('application.patient.create');
     }
 
-    public function store(Request $request)
-    {
-        abort_unless(Auth::user()->can('patients.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un patient.');
+ public function store(Request $request)
+{
+    abort_unless(Auth::user()->can('patients.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un patient.');
 
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'genre' => 'required|in:M,F',
-            'telephone' => 'required|string|max:20|unique:patients,telephone',
-            'ethnie' => 'required|string|max:255',
-            'age' => 'required|integer|min:0',
-            'assurance_id' => 'nullable|exists:assurances,id',
-            'numero_assurance' => 'nullable|string|max:255',
-            'fin_validite_assurance' => 'nullable|date',
-        ]);
+    $validated = $request->validate([
+        'nom' => 'required|string|max:255',
+        'prenom' => 'required|string|max:255',
+        'genre' => 'required|in:M,F',
+        'telephone' => 'required|string|max:20|unique:patients,telephone',
+        'ethnie' => 'required|string|max:255',
+        'age' => 'required|integer|min:0',
+        'assurance_id' => 'nullable|exists:assurances,id',
+        'numero_assurance' => 'nullable|string|max:255',
+        'fin_validite_assurance' => 'nullable|date',
+        'groupe_sanguin' => 'nullable|string|max:5', // Ajouté pour correspondre à la vue
+        'adresse' => 'nullable|string',               // Ajouté pour correspondre à la vue
+    ]);
 
-        $patient = Patient::create($validated);
+    $patient = Patient::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'patient' => $patient
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'message' => 'Le patient a été enregistré avec succès.',
+        'patient' => $patient
+    ]);
+}
 
     public function search(Request $request)
     {

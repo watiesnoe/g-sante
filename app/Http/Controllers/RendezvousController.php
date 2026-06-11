@@ -258,4 +258,40 @@ class RendezvousController extends Controller
         $rendezvous->load(['patient', 'medecin', 'consultation']);
         return view('application.rendezvous.show', compact('rendezvous'));
     }
+
+    public function edit(RendezVous $rendezvous)
+    {
+        abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
+
+        // Retourne les données JSON pour remplir le modal d'édition
+        return response()->json($rendezvous);
+    }
+
+    public function update(Request $request, RendezVous $rendezvous)
+    {
+        abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
+
+        $request->validate([
+            'date_heure' => 'required|date',
+            'motif'      => 'nullable|string|max:255',
+        ]);
+
+        $rendezvous->update([
+            'date_heure' => $request->date_heure,
+            'motif'      => $request->motif,
+            'statut'     => $request->statut ?? $rendezvous->statut,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $rendezvous]);
+    }
+
+    public function destroy(RendezVous $rendezvous)
+    {
+        abort_unless(Auth::user()->can('rendezvous.delete'), 403, 'Accès non autorisé.');
+
+        $rendezvous->statut = 'annule';
+        $rendezvous->save();
+
+        return response()->json(['success' => true, 'message' => 'Rendez-vous annulé avec succès.']);
+    }
 }

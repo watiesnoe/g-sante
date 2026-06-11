@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\CaisseSession;
 use App\Models\CaisseMouvement;
+use App\Models\CaisseSession;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\DataTables;
 
 class CaisseController extends Controller
 {
@@ -117,23 +118,47 @@ class CaisseController extends Controller
     /**
      * Dashboard for the currently logged in user's open session
      */
-    public function mySession()
+    public function mySession(Request $request)
     {
-        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
-        if (!$session) {
-            return redirect()->route('caisse.open')->with('info', 'Veuillez ouvrir votre caisse pour commencer.');
-        }
+       $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
+    if (!$session) {
+        return redirect()->route('caisse.open')->with('info', 'Veuillez ouvrir votre caisse pour commencer.');
+    }
 
-        $mouvements = $session->mouvements()->latest()->get();
-        
-        $totalEntrees = $mouvements->where('type', 'entree')->sum('montant');
-        $totalSorties = $mouvements->where('type', 'sortie')->sum('montant');
-        
-        // Update theorique dynamically
-        $session->update([
-            'solde_theorique' => $session->solde_initial + $totalEntrees - $totalSorties
-        ]);
+    // 2. Calculs rapides pour les cartes du haut
+    $mouvementsQuery = $session->mouvements();
+    $totalEntrees = (clone $mouvementsQuery)->where('type', 'entree')->sum('montant');
+    $totalSorties = (clone $mouvementsQuery)->where('type', 'sortie')->sum('montant');
 
-        return view('application.caisse.my_session', compact('session', 'mouvements', 'totalEntrees', 'totalSorties'));
+    // Mise à jour dynamique du solde théorique
+    $session->update([
+        'solde_theorique' => $session->solde_initial + $totalEntrees - $totalSorties
+    ]);
+
+    // 3. SI LA REQUÊTE EST AJAX : On renvoie les données pour DataTables
+    if ($request->ajax()) {
+        $mouvements = $mouvementsQuery->latest();
+
+        return DataTables::of($mouvements)
+            ->editColumn('created_at', function ($mouvement) {
+                return Carbon::parse($mouvement->created_at)->format('d/m/Y H:i');
+            })
+            ->editColumn('type', function ($mouvement) {
+                return $mouvement->type === 'entree' 
+                    ? '<span class="badge bg-success">Entrée</span>' 
+                    : '<span class="badge bg-danger">Sortie</span>';
+            })
+            ->editColumn('montant', function ($mouvement) {
+                return number_format($mouvement->montant, 0, ',', ' ') . ' XOF';
+            })
+            ->addColumn('action', function ($mouvement) {
+                return '<a href="#" class="btn btn-sm btn-alt-secondary" title="Voir"><i class="fa fa-eye"></i></a>';
+            })
+            ->rawColumns(['type', 'action'])
+            ->make(true);
+    }
+
+    // 4. SI REQUÊTE NORMALE : On charge la vue standard
+    return view('application.caisse.my_session', compact('session', 'totalEntrees', 'totalSorties'));
     }
 }

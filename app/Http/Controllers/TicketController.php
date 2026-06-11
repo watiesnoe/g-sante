@@ -334,7 +334,7 @@ class TicketController extends Controller
             'items.prestation.serviceMedical',
         ]);
         $pdf = Pdf::loadView('application.ticket.pdf', compact('ticket'))
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'landscape');
         return $pdf->stream('ticket_'.$ticket->uuid.'.pdf');
     }
     /**

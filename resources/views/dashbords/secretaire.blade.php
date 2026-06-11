@@ -135,22 +135,22 @@
                 <a href="{{ route('rendezvous.index') }}" class="gs-action-btn" style="background:var(--med-teal-light);color:var(--med-teal-dark)">
                     <div class="icon-box" style="background:var(--med-teal);color:#fff"><i class="fas fa-calendar-plus"></i></div>
                     <div>
-                        <div style="font-size:.85rem;font-weight:700">Nouveau RDV</div>
+                        <div style="font-size:.85rem;font-weight:700;color:#0f172a">Liste des RDV</div>
                         <div style="font-size:.72rem;opacity:.7">Planifier une visite</div>
                     </div>
                 </a>
                 <a href="{{ route('patients.create') }}" class="gs-action-btn" style="background:var(--med-green-light);color:#065f46">
                     <div class="icon-box" style="background:var(--med-green);color:#fff"><i class="fas fa-user-plus"></i></div>
                     <div>
-                        <div style="font-size:.85rem;font-weight:700">Nouveau Patient</div>
-                        <div style="font-size:.72rem;opacity:.7">Enregistrer un dossier</div>
+                        <div style="font-size:.85rem;font-weight:700;color:#0f172a">Nouveau Patient</div>
+                        <div style="font-size:.72rem;opacity:.7;color:#0f172a">Enregistrer un dossier</div>
                     </div>
                 </a>
                 <a href="{{ route('tickets.index') }}" class="gs-action-btn" style="background:var(--med-amber-light);color:#92400e">
                     <div class="icon-box" style="background:var(--med-amber);color:#fff"><i class="fas fa-ticket-alt"></i></div>
                     <div>
-                        <div style="font-size:.85rem;font-weight:700">Tickets / Attente</div>
-                        <div style="font-size:.72rem;opacity:.7">Gérer la file d'attente</div>
+                        <div style="font-size:.85rem;font-weight:700;color:#0f172a">Tickets / Attente</div>
+                        <div style="font-size:.72rem;opacity:.7;color:#0f172a">Gérer la file d'attente</div>
                     </div>
                 </a>
             </div>

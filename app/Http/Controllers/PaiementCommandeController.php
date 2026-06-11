@@ -81,14 +81,24 @@ class PaiementCommandeController extends Controller
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
         $commandeId = $request->get('commande_id');
+        $commande = null;
+
+        if ($commandeId) {
+            $commande = Commande::where('uuid', $commandeId)
+                ->orWhere('id', $commandeId)
+                ->first();
+        }
 
         $commandes = Commande::with('fournisseur')
-        
             ->whereIn('StatutPaiement', ['en_cours', 'partielle']) // NON totalement payées
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('application.paiementcommande.create', compact('commandes'));
+        if ($commande && !$commandes->contains('id', $commande->id)) {
+            $commandes->push($commande);
+        }
+
+        return view('application.paiementcommande.create', compact('commandes', 'commande'));
     }
 
     public function store(Request $request)
@@ -177,24 +187,32 @@ class PaiementCommandeController extends Controller
         }
     }
 
-    public function history($commandeId)
+    public function history(Commande $commande)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
-        $commande = Commande::with(['paiements', 'fournisseur'])->findOrFail($commandeId);
+        $commande->load(['paiements', 'fournisseur']);
         $paiements = $commande->paiements()->latest()->get();
 
         return view('application.paiementcommande.history', compact('commande', 'paiements'));
     }
 
-    public function destroy($id)
+    public function show(PaiementCommande $paiement)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+
+        $paiement->load(['commande.fournisseur']);
+
+        return view('application.paiementcommande.show', compact('paiement'));
+    }
+
+    public function destroy(PaiementCommande $paiement)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
         try {
             DB::beginTransaction();
 
-            $paiement = PaiementCommande::findOrFail($id);
             $commande = $paiement->commande;
 
             $paiement->delete();
@@ -204,17 +222,26 @@ class PaiementCommandeController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Paiement supprimé avec succès'
-            ]);
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Paiement supprimé avec succès'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Paiement supprimé avec succès');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
-            ], 500);
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
         }
     }
     /**

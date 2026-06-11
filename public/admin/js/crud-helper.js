@@ -68,7 +68,7 @@ window.CrudHelper = {
 
             $.get(editUrl, function(data) {
                 $(settings.formId)[0].reset();
-                $(settings.hiddenId).val(data.id);
+                $(settings.hiddenId).val(data.uuid || data.id);
                 
                 // Map data to form fields
                 if (settings.mapData) {

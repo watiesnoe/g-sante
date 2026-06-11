@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('salles_id')->nullable()->constrained('salles')->onDelete('set null');
             $table->foreignId('lit_id')->nullable()->constrained('lits')->onDelete('set null');
             $table->date('date_entree');
+            $table->date('date_sortie')->nullable();
             $table->enum('statut_sortie', ['en cours', 'paye', 'en attente', 'cloture'])->default('en attente');
             $table->text('motif')->nullable();
             $table->enum('etat', ['en cours', 'terminé'])->default('en cours');
