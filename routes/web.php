@@ -50,17 +50,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('/services', ServiceMedicalController::class);
     Route::resource('prestations', PrestationController::class);
-    Route::resource('lits', LitController::class)->except(['show']);
+    Route::resource('lits', LitController::class);
     Route::resource('salles', SalleController::class);
     Route::resource('examens', ExamenController::class)->except(['show']);
     Route::resource('prescriptions', PrescriptionExamenController::class);
     Route::resource('reponses', ResultatExamenController::class);
-    Route::get('reponses/{id}/create', [ResultatExamenController::class,'reponse'])->name('reponse.create');
+    Route::get('reponses/{id}/create', [ResultatExamenController::class, 'reponse'])->name('reponse.create');
     Route::resource('unites', UniteController::class)->except(['create']);
     Route::resource('familles', FamilleController::class)->except(['create']);
     Route::resource('maladies', MaladieController::class)->except(['create']);
     Route::resource('symptomes', SymptomeController::class)->except(['create']);
-    Route::middleware('caisse.ouverte')->group(function() {
+    Route::middleware('caisse.ouverte')->group(function () {
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store');
     });
@@ -71,26 +71,32 @@ Route::middleware('auth')->group(function () {
     Route::resource('suivis', SuiviController::class);
     Route::resource('assurances', AssuranceController::class);
 
-//    Route::get('suivis/create', [SuiviController::class, 'create'])->name('suivis.create');
-// Route pour créer un suivi depuis une consultation
+    //    Route::get('suivis/create', [SuiviController::class, 'create'])->name('suivis.create');
+    // Route pour créer un suivi depuis une consultation
     Route::get('consultations/{consultation}/suivis/create', [SuiviController::class, 'create'])
         ->name('consultations.suivi.create');
 
-// Stocker le suivi depuis la consultation
-//    Route::post('suivis/{consultation}/suivis', [SuiviController::class, 'store'])
-//        ->name('suivi.store');
+    // Stocker le suivi depuis la consultation
+    //    Route::post('suivis/{consultation}/suivis', [SuiviController::class, 'store'])
+    //        ->name('suivi.store');
 
     Route::get('/rendezvous/data', [RendezvousController::class, 'getData'])->name('rendezvous.data');
     Route::get('/rendezvous/disponible', [RendezvousController::class, 'disponible'])->name('rendezvous.disponible');
     Route::get('/rendezvous/annuler', [RendezvousController::class, 'annuler'])->name('rendezvous.annuler');
-    Route::resource('rendezvous', RendezvousController::class)->except(['create']);
+    Route::get('/rendezvous', [RendezvousController::class, 'index'])->name('rendezvous.index');
+    Route::post('/rendezvous', [RendezvousController::class, 'store'])->name('rendezvous.store');
+    Route::get('/rendezvous/{rendezvous}', [RendezvousController::class, 'show'])->name('rendezvous.show');
+    Route::get('/rendezvous/{rendezvous}/edit', [RendezvousController::class, 'edit'])->name('rendezvous.edit');
+    Route::put('/rendezvous/{rendezvous}', [RendezvousController::class, 'update'])->name('rendezvous.update');
+    Route::patch('/rendezvous/{rendezvous}', [RendezvousController::class, 'update']);
+    Route::delete('/rendezvous/{rendezvous}', [RendezvousController::class, 'destroy'])->name('rendezvous.destroy');
     Route::post('rendezvous/{rendezvous}/marquer-realise', [RendezvousController::class, 'marquerRealise'])
         ->name('rendezvous.marquerRealise');
     Route::resource('ordonnances', OrdonnanceController::class);
     Route::get('ordonnances/{ordonnance}/pdf', [OrdonnanceController::class, 'pdf'])->name('ordonnances.pdf');
     Route::get('paiement/{ordonnance}/ordonnance', [OrdonnanceController::class, 'paiementForm'])
         ->name('ordonnances.paiement');
-    Route::post('/payer/{ordonnance}/ordonnance', [OrdonnanceController::class, 'payer']) ->name('ordonnances.payer')->middleware('caisse.ouverte');
+    Route::post('/payer/{ordonnance}/ordonnance', [OrdonnanceController::class, 'payer'])->name('ordonnances.payer')->middleware('caisse.ouverte');
     Route::get('/ordonnance/lespayer', [OrdonnanceController::class, 'lespayer'])->name('ordonnances.lespayer');
 
     Route::resource('hospitalisations', HospitalisationController::class);
@@ -110,37 +116,38 @@ Route::middleware('auth')->group(function () {
     Route::post('/commandes/panier/bulk-ajouter', [CommandeController::class, 'bulkAjouterAuPanier'])->name('commandes.panier.bulk-ajouter');
     Route::post('/commandes/panier/modifier', [CommandeController::class, 'modifierPanier'])->name('commandes.panier.modifier');
     Route::post('/commandes/panier/supprimer', [CommandeController::class, 'supprimerDuPanier'])->name('commandes.panier.supprimer');
-    Route::get('/commandes/{id}/pdf', [CommandeController::class, 'pdf'])->name('commandes.pdf');
+    Route::get('/commandes/{commande}/pdf', [CommandeController::class, 'pdf'])->name('commandes.pdf');
 
-// Supprimer un médicament du panier (AJAX)
+    // Supprimer un médicament du panier (AJAX)
     Route::get('/consultations/{consultation}/print', [ConsultationController::class, 'print'])->name('consultations.print');
 
-// Vider le panier
+    // Vider le panier
     Route::post('/commandes/panier/vider', [CommandeController::class, 'viderPanier'])->name('commandes.panier.vider');
 
     Route::get('/tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
 
     Route::resource('receptions', ReceptionController::class);
 
-//    Route::get('/receptions', [ReceptionController::class, 'index'])->name('receptions.index');
-//    Route::get('/receptions/create', [ReceptionController::class, 'create'])->name('receptions.create');
+    //    Route::get('/receptions', [ReceptionController::class, 'index'])->name('receptions.index');
+    //    Route::get('/receptions/create', [ReceptionController::class, 'create'])->name('receptions.create');
 
-    Route::get('/commandes/{id}/produits', [ReceptionController::class, 'getProduits']); // pour AJAX
+    Route::get('/commandes/{commande}/produits', [ReceptionController::class, 'getProduits']); // pour AJAX
 
-//    Route::post('/receptions', [ReceptionController::class, 'store'])->name('receptions.store');
+    //    Route::post('/receptions', [ReceptionController::class, 'store'])->name('receptions.store');
 
     Route::get('/salle/{salleId}/lits-libres', [SalleController::class, 'litsLibres'])->name('salles.litsLibres');
 
 
-// Route pour récupérer les médicaments d'une commande (Ajax)
-    Route::get('commandes/{commande}/medicaments', [CommandeController::class,'medicaments'])->name('commandes.medicaments');
+    // Route pour récupérer les médicaments d'une commande (Ajax)
+    Route::get('commandes/{commande}/medicaments', [CommandeController::class, 'medicaments'])->name('commandes.medicaments');
 
     Route::prefix('paiementscommande')->group(function () {
         Route::get('/dashboard', [PaiementCommandeController::class, 'dashboard'])->name('paiementscommande.dashboard');
         Route::get('/create', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create')->middleware('caisse.ouverte');
         Route::post('/store', [PaiementCommandeController::class, 'store'])->name('paiementscommande.store')->middleware('caisse.ouverte');
         Route::get('/history/{commande}', [PaiementCommandeController::class, 'history'])->name('paiementscommande.history');
-        Route::delete('/{id}', [PaiementCommandeController::class, 'destroy'])->name('paiementscommande.destroy');
+        Route::get('/{paiement}', [PaiementCommandeController::class, 'show'])->name('paiementscommande.show');
+        Route::delete('/{paiement}', [PaiementCommandeController::class, 'destroy'])->name('paiementscommande.destroy');
     });
 
     // Caisse Globale
@@ -176,7 +183,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('infectiologie')->group(function () {
         Route::get('/pathologies', [\App\Http\Controllers\InfectiologieController::class, 'pathologies'])->name('infectiologie.pathologies');
         Route::get('/pathogenes', [\App\Http\Controllers\InfectiologieController::class, 'pathogenes'])->name('infectiologie.pathogenes');
-        Route::get('/pathologies-api', function() {
+        Route::get('/pathologies-api', function () {
             return response()->json(\App\Models\Maladie::all());
         })->name('infectiologie.pathologies.api');
         Route::get('/statistiques', [\App\Http\Controllers\InfectiologieController::class, 'statistiques'])->name('infectiologie.statistiques');
@@ -208,23 +215,22 @@ Route::middleware('auth')->group(function () {
         Route::post('/cpn', [\App\Http\Controllers\MaternityController::class, 'storeCpn'])->name('cpn.store');
         Route::post('/{grossesse}/close', [\App\Http\Controllers\MaternityController::class, 'close'])->name('close');
     });
-
 });
 
 // Routes pour la gestion des rôles et permissions
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    
+
     // Gestion des rôles
     Route::resource('roles', RolePermissionController::class);
-    
+
     // Gestion des permissions des rôles
     Route::put('roles/{role}/permissions', [RolePermissionController::class, 'updatePermissions'])
         ->name('roles.permissions.update');
-    
+
     // Gestion des permissions globales
     Route::get('permissions', [RolePermissionController::class, 'permissions'])
         ->name('permissions.index');
-    
+
     // Gestion des permissions des utilisateurs (API)
     Route::get('users/{user}/permissions', [RolePermissionController::class, 'getUserPermissions'])
         ->name('users.permissions');
@@ -233,4 +239,4 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 // Auth routes générées par Breeze ou Jetstream
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
