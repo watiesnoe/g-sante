@@ -66,6 +66,7 @@ class ServiceMedicalController extends Controller
 
         // Si ce n'est pas une requête AJAX, afficher la vue
         return view('application.service.index');
+        
     }
     public function store(Request $request)
     {

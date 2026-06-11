@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('nom');
             $table->text('description')->nullable();
             $table->decimal('prix', 10, 2)->nullable();
-            $table->foreignId('service_medical_id')->constrained()->onDelete('cascade');
+            $table->foreignId('service_medical_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
