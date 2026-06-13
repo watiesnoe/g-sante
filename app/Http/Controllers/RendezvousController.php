@@ -263,8 +263,12 @@ class RendezvousController extends Controller
     {
         abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
 
-        // Retourne les données JSON pour remplir le modal d'édition
-        return response()->json($rendezvous);
+        $rendezvous->load(['patient', 'medecin', 'consultation']);
+        $medecins = \App\Models\User::whereHas('roles', function($q) {
+            $q->where('name', 'medecin');
+        })->orderBy('name')->get();
+
+        return view('application.rendezvous.edit', compact('rendezvous', 'medecins'));
     }
 
     public function update(Request $request, RendezVous $rendezvous)

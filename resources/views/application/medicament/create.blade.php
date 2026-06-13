@@ -12,7 +12,7 @@
                 <a href="{{ route('medicaments.index') }}" class="btn btn-light btn-sm">↩️ Retour à la liste</a>
             </div>
             <div class="card-body">
-                <form action="{{ isset($medicament) ? route('medicaments.update', $medicament->id) : route('medicaments.store') }}" method="POST">
+                <form action="{{ isset($medicament) ? route('medicaments.update', $medicament) : route('medicaments.store') }}" method="POST">
                     @csrf
                     @if(isset($medicament)) @method('PUT') @endif
 

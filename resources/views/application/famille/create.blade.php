@@ -14,7 +14,7 @@
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
                         <h5 class="mb-0 text-primary fw-bold">
-                            {{ isset($famille) ? '✏️ Modifier un famille' : '➕ Ajouter un nouvel famille' }}
+                            {{ isset($famille) ? 'Modifier un famille' : 'Ajouter un nouvel famille' }}
                         </h5>
                     </div>
                     <div class="block-content">

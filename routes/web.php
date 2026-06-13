@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('prescriptions', PrescriptionExamenController::class);
     Route::resource('reponses', ResultatExamenController::class);
     Route::get('reponses/{id}/create', [ResultatExamenController::class, 'reponse'])->name('reponse.create');
-    Route::resource('unites', UniteController::class)->except(['create']);
+    Route::resource('unites', UniteController::class);
     Route::resource('familles', FamilleController::class)->except(['create']);
     Route::resource('maladies', MaladieController::class)->except(['create']);
     Route::resource('symptomes', SymptomeController::class)->except(['create']);

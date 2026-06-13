@@ -122,6 +122,18 @@ class PermissionRoleSeeder extends Seeder
             'paiements.delete'                   => 'Supprimer un paiement',
             'caisse.view'                        => 'Voir la caisse globale',
 
+            // ── Assurances / Sécurité sociale ─────────────────────────
+            'assurances.view'                    => 'Voir les assurances',
+            'assurances.create'                  => 'Créer une assurance',
+            'assurances.edit'                    => 'Modifier une assurance',
+            'assurances.delete'                  => 'Supprimer une assurance',
+
+            // ── Fournisseurs ───────────────────────────────────────────
+            'fournisseurs.view'                  => 'Voir les fournisseurs',
+            'fournisseurs.create'                => 'Créer un fournisseur',
+            'fournisseurs.edit'                  => 'Modifier un fournisseur',
+            'fournisseurs.delete'                => 'Supprimer un fournisseur',
+
             // ── Paramètres / Configuration ────────────────────────────
             'parametres.view'                    => 'Voir les paramètres',
             'parametres.services'                => 'Gérer les structures / services',
@@ -133,6 +145,7 @@ class PermissionRoleSeeder extends Seeder
             'parametres.symptomes'               => 'Gérer les symptômes',
             'parametres.maladies'                => 'Gérer les maladies',
             'parametres.backup'                  => 'Gérer les sauvegardes système',
+
 
             // ── Utilisateurs & Rôles ──────────────────────────────────
             'users.view'                         => 'Voir les utilisateurs',
@@ -186,7 +199,10 @@ class PermissionRoleSeeder extends Seeder
             'maternity.view',
             'infectiologie.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs', 'stock.commandes', 'stock.receptions',
+            'stock.familles', 'stock.unites',
             'paiements.view', 'paiements.create', 'caisse.view',
+            'assurances.view', 'assurances.create', 'assurances.edit',
+            'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
             'parametres.view', 'parametres.services', 'parametres.prestations', 'parametres.salles',
             'parametres.lits', 'parametres.examens_config', 'parametres.assurances',
             'parametres.symptomes', 'parametres.maladies',
@@ -263,6 +279,8 @@ class PermissionRoleSeeder extends Seeder
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites',
+            'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
+            'assurances.view',
             'ordonnances.view', 'ordonnances.payer',
             'paiements.view', 'paiements.create',
         ]);
@@ -303,6 +321,7 @@ class PermissionRoleSeeder extends Seeder
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites',
+            'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit', 'fournisseurs.delete',
         ]);
         $this->command->info('✅ gestionnaire_stock → permissions configurées');
 

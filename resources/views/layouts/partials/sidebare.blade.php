@@ -40,42 +40,59 @@
                 @if(auth()->user()->hasModuleAccess('patient'))
                     @include('layouts.partials.menus.patient')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('ticket'))
                     @include('layouts.partials.menus.ticket')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('consultation'))
                     @include('layouts.partials.menus.consultation')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('rendezvous'))
                     @include('layouts.partials.menus.rendezvous')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('ordonnance'))
                     @include('layouts.partials.menus.ordonnance')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('examens'))
                     @include('layouts.partials.menus.examens')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('hospitalisation'))
                     @include('layouts.partials.menus.hospitalisation')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('stock'))
                     @include('layouts.partials.menus.stock')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('paiements'))
                     @include('layouts.partials.menus.paiements')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('caisse'))
                     @include('layouts.partials.menus.caisse')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('maternity'))
                     @include('layouts.partials.menus.maternity')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('infectiologie'))
                     @include('layouts.partials.menus.infectiologie')
                 @endif
+
                 @if(auth()->user()->hasModuleAccess('transfert'))
                     @include('layouts.partials.menus.transfert')
                 @endif
+
+                @if(auth()->user()->hasModuleAccess('fournisseur'))
+                    @include('layouts.partials.menus.fournisseur')
+                @endif
+
                 @if(auth()->user()->hasModuleAccess('parametre'))
                     <!-- Paramètres -->
                     <li class="nav-main-item">

@@ -6,6 +6,7 @@
         <div class="block-content">
             <ul class="nav nav-pills flex-column push">
 
+                {{-- Structures / Services médicaux --}}
                 @can('parametres.services')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}"
@@ -15,33 +16,17 @@
                 </li>
                 @endcan
 
+                {{-- Prestations --}}
                 @can('parametres.prestations')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('prestations.*') ? 'active' : '' }}"
                        href="{{ route('prestations.index') }}">
-                        <i class="fa fa-stethoscope me-1"></i> Services
+                        <i class="fa fa-hand-holding-medical me-1"></i> Prestations
                     </a>
                 </li>
                 @endcan
 
-                @role(['super_admin', 'superadmin', 'admin'])
-                <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
-                       href="{{ route('admin.roles.index') }}">
-                        <i class="fa fa-shield-alt me-1"></i> Rôles &amp; Permissions
-                    </a>
-                </li>
-                @endrole
-
-                @role(['super_admin', 'superadmin', 'admin'])
-                <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
-                       href="{{ route('users.index') }}">
-                        <i class="fa fa-users me-1"></i> Utilisateurs
-                    </a>
-                </li>
-                @endrole
-
+                {{-- Salles --}}
                 @can('parametres.salles')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('salles.*') ? 'active' : '' }}"
@@ -51,6 +36,7 @@
                 </li>
                 @endcan
 
+                {{-- Lits --}}
                 @can('parametres.lits')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('lits.*') ? 'active' : '' }}"
@@ -60,6 +46,7 @@
                 </li>
                 @endcan
 
+                {{-- Configuration Examens --}}
                 @can('parametres.examens_config')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('examens.*') ? 'active' : '' }}"
@@ -69,24 +56,7 @@
                 </li>
                 @endcan
 
-                @can('parametres.services')
-                <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('unites.*') ? 'active' : '' }}"
-                       href="{{ route('unites.index') }}">
-                        <i class="fa fa-layer-group me-1"></i> Unités
-                    </a>
-                </li>
-                @endcan
-
-                @can('parametres.services')
-                <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('familles.*') ? 'active' : '' }}"
-                       href="{{ route('familles.index') }}">
-                        <i class="fa fa-users-cog me-1"></i> Famille
-                    </a>
-                </li>
-                @endcan
-
+                {{-- Assurances / Sécurité sociale --}}
                 @can('parametres.assurances')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('assurances.*') ? 'active' : '' }}"
@@ -96,6 +66,7 @@
                 </li>
                 @endcan
 
+                {{-- Symptômes --}}
                 @can('parametres.symptomes')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('symptomes.*') ? 'active' : '' }}"
@@ -105,11 +76,62 @@
                 </li>
                 @endcan
 
+                {{-- Maladies --}}
                 @can('parametres.maladies')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('maladies.*') ? 'active' : '' }}"
                        href="{{ route('maladies.index') }}">
                         <i class="fa fa-virus me-1"></i> Maladies
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Médicaments (stock) --}}
+                @can('stock.medicaments')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('medicaments.*') ? 'active' : '' }}"
+                       href="{{ route('medicaments.index') }}">
+                        <i class="fa fa-pills me-1"></i> Médicaments
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Familles de médicaments (stock) --}}
+                @can('stock.familles')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('familles.*') ? 'active' : '' }}"
+                       href="{{ route('familles.index') }}">
+                        <i class="fa fa-users-cog me-1"></i> Familles médicaments
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Unités de mesure (stock) --}}
+                @can('stock.unites')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('unites.*') ? 'active' : '' }}"
+                       href="{{ route('unites.index') }}">
+                        <i class="fa fa-layer-group me-1"></i> Unités
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Rôles & Permissions (admin seulement) --}}
+                @can('roles.view')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
+                       href="{{ route('admin.roles.index') }}">
+                        <i class="fa fa-shield-alt me-1"></i> Rôles &amp; Permissions
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Utilisateurs (admin seulement) --}}
+                @can('users.view')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                       href="{{ route('users.index') }}">
+                        <i class="fa fa-users me-1"></i> Utilisateurs
                     </a>
                 </li>
                 @endcan

@@ -10,19 +10,22 @@ use Yajra\DataTables\Facades\DataTables;
 
 class UniteController extends Controller
 {
-    // Liste des unités avec DataTables
+    /**
+     * Liste des unités avec DataTables
+     */
     public function index(Request $request)
     {
         abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les unités.');
 
         if ($request->ajax()) {
-            $unites = Unite::query(); // ✅ Utiliser query()
+            $unites = Unite::query();
 
             return DataTables::of($unites)
                 ->addIndexColumn()
                 ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-m-Y') : '-')
                 ->addColumn('actions', function ($row) {
                     $view   = '<button type="button" class="btn btn-sm btn-outline-primary view" data-id="'.$row->id.'" title="Détails"><i class="fa fa-eye"></i></button>';
+                    // On garde data-nom pour pouvoir modifier instantanément côté JS si besoin
                     $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->id.'" data-nom="'.$row->nom.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
                     $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     
@@ -35,7 +38,9 @@ class UniteController extends Controller
         return view('application.unite.index');
     }
 
-    // Enregistrer une unité
+    /**
+     * Enregistrer une nouvelle unité
+     */
     public function store(Request $request)
     {
         abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
@@ -46,10 +51,39 @@ class UniteController extends Controller
 
         $unite = Unite::create(['nom' => $request->nom]);
 
-        return response()->json(['success' => 'Unité ajoutée avec succès', 'unite' => $unite]);
+        return response()->json([
+            'message' => 'Unité ajoutée avec succès', 
+            'unite' => $unite
+        ]);
     }
 
-    // Mettre à jour une unité
+    /**
+     * Récupérer les données d'une unité (via AJAX pour la modification/détails)
+     */
+    public function show($id) 
+    {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
+        $unite = Unite::findOrFail($id);
+        
+        return response()->json($unite);
+    }
+
+    /**
+     * Formulaire de modification (Optionnel si vous utilisez la route show, mais requis par Route::resource)
+     */
+    public function edit($id)
+    {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
+        $unite = Unite::findOrFail($id);
+        
+        return response()->json($unite);
+    }
+
+    /**
+     * Mettre à jour une unité existante
+     */
     public function update(Request $request, $id)
     {
         abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
@@ -62,10 +96,14 @@ class UniteController extends Controller
 
         $unite->update(['nom' => $request->nom]);
 
-        return response()->json(['success' => 'Unité mise à jour avec succès']);
+        return response()->json([
+            'message' => 'Unité mise à jour avec succès'
+        ]);
     }
 
-    // Supprimer une unité
+    /**
+     * Supprimer une unité
+     */
     public function destroy($id)
     {
         abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
@@ -73,13 +111,8 @@ class UniteController extends Controller
         $unite = Unite::findOrFail($id);
         $unite->delete();
 
-        return response()->json(['success' => 'Unité supprimée avec succès']);
-    }
-
-    public function show($id) {
-        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
-
-        $unite = Unite::findOrFail($id);
-        return response()->json($unite);
+        return response()->json([
+            'message' => 'Unité supprimée avec succès'
+        ]);
     }
 }
