@@ -34,8 +34,8 @@
                     <div class="row mt-3">
                         <div class="col-md-4">
                             <label>Référence Réception</label>
-                            <input type="text" name="reference_reception" class="form-control"
-                                   value="{{ 'REC-' . strtoupper(uniqid()) }}" readonly>
+                            <input type="text" id="reference_reception" name="reference_reception"
+                                   class="form-control bg-light" placeholder="Générée automatiquement" readonly>
                         </div>
 
                         <div class="col-md-4">
@@ -182,11 +182,21 @@
             $('#formReception').on('submit', function (e) {
                 e.preventDefault();
 
+                const $form = $(this);
+                const $btn  = $('#btnValider');
+
+                // 🔒 Anti-double-soumission
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Enregistrement...');
+
                 $.ajax({
                     url: "{{ route('receptions.store') }}",
                     type: "POST",
-                    data: $(this).serialize(),
+                    data: $form.serialize(),
                     success: function (response) {
+                        // Afficher la référence générée côté serveur
+                        if (response.reference_reception) {
+                            $('#reference_reception').val(response.reference_reception);
+                        }
                         Swal.fire({
                             icon: 'success',
                             title: 'Réception enregistrée !',
@@ -195,18 +205,18 @@
                             timer: 2000,
                             timerProgressBar: true,
                         }).then(() => {
-                            // 🔁 Recharger la page après succès
                             location.reload();
                         });
                     },
                     error: function (xhr) {
+                        // 🔓 Réactiver le bouton en cas d'erreur
+                        $btn.prop('disabled', false).html('✅ Valider');
+
                         let message = xhr.responseJSON?.message ?? 'Une erreur est survenue.';
 
-                        // Si c’est une erreur de validation Laravel
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             let details = Object.values(errors).flat().join('<br>');
-
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Erreur de validation',

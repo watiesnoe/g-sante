@@ -52,15 +52,15 @@
                             <input type="hidden" name="id" id="id">
                             <div class="mb-3">
                                 <label class="form-label">Nom</label>
-                                <input type="text" name="nom" class="form-control" required>
+                                <input type="text" id="nom" name="nom" class="form-control" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Contact</label>
-                                <input type="text" name="telephone" class="form-control" placeholder="Téléphone">
+                                <input type="text" id="contact" name="contact" class="form-control" placeholder="Téléphone">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Adresse</label>
-                                <input type="text" name="adresse" class="form-control">
+                                <input type="text" id="adresse" name="adresse" class="form-control">
                             </div>
                             <div class="text-end border-top pt-3">
                                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -80,6 +80,7 @@
             $(document).ready(function() {
                 CrudHelper.init({
                     baseUrl: '/fournisseurs',
+                    storeUrl: '/fournisseurs',
                     ajaxUrl: "{{ route('fournisseurs.index') }}",
                     tableId: '#fournisseurTable',
                     columns: [

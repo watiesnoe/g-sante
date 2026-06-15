@@ -58,7 +58,8 @@ window.CrudHelper = {
             if (settings.onAdd) settings.onAdd();
             
             $(settings.modalLabel).text(settings.addTitle);
-            $(settings.btnSaveId).text('Ajouter').show();
+            // 🔓 Réinitialiser le bouton (au cas où il était désactivé)
+            $(settings.btnSaveId).prop('disabled', false).text('Ajouter').show();
             $(settings.modalId).modal('show');
         });
 
@@ -86,7 +87,8 @@ window.CrudHelper = {
                     $(settings.formId).find('input, textarea, select').prop('disabled', true);
                 } else {
                     $(settings.modalLabel).text(settings.editTitle);
-                    $(settings.btnSaveId).text('Enregistrer').show();
+                    // 🔓 Réinitialiser le bouton (au cas où il était désactivé)
+                    $(settings.btnSaveId).prop('disabled', false).text('Enregistrer').show();
                     $(settings.formId).find('input, textarea, select').prop('disabled', false);
                 }
                 
@@ -105,15 +107,23 @@ window.CrudHelper = {
         // 4. Form Submit (Store & Update)
         $(settings.formId).submit(function(e) {
             e.preventDefault();
-            const id = $(settings.hiddenId).val();
-            const url = id ? (settings.updateUrl ? settings.updateUrl.replace(':id', id) : settings.baseUrl + '/' + id) 
-                         : settings.storeUrl;
+            const $form = $(this);
+            const $btn  = $(settings.btnSaveId);
+            const id    = $(settings.hiddenId).val();
+
+            // Fallback storeUrl → baseUrl (évite url = undefined)
+            const storeUrl = settings.storeUrl || settings.baseUrl;
+            const url  = id ? (settings.updateUrl ? settings.updateUrl.replace(':id', id) : settings.baseUrl + '/' + id)
+                           : storeUrl;
             const type = id ? 'PUT' : 'POST';
+
+            // 🔒 Anti-double-soumission : désactiver le bouton
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...');
 
             $.ajax({
                 url: url,
                 type: type,
-                data: $(this).serialize(),
+                data: $form.serialize(),
                 success: function(res) {
                     Swal.fire({
                         icon: 'success',
@@ -124,9 +134,13 @@ window.CrudHelper = {
                     });
                     $(settings.modalId).modal('hide');
                     table.ajax.reload();
+                    // Le bouton sera réinitialisé à la prochaine ouverture du modal
                 },
                 error: function(xhr) {
-                    let errors = xhr.responseJSON.errors || { error: [xhr.responseJSON.message || 'Une erreur est survenue'] };
+                    // 🔓 Réactiver le bouton en cas d'erreur
+                    $btn.prop('disabled', false).text('Enregistrer');
+                    let errData = xhr.responseJSON || {};
+                    let errors = errData.errors || { error: [errData.message || 'Une erreur est survenue'] };
                     let msg = '';
                     for (let k in errors) msg += errors[k] + '\n';
                     Swal.fire('Erreur', msg, 'error');

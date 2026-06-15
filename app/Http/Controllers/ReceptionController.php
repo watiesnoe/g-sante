@@ -109,78 +109,84 @@ class ReceptionController extends Controller
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
 
         $request->validate([
-            'commande_id' => 'required|exists:commandes,id',
-            'fournisseur_id' => 'required',
-            'date_reception' => 'required|date',
-            'reference_reception' => 'required|string',
-            'receptions.*.commande_medicament_id' => 'required|exists:commande_medicaments,id',
-            'receptions.*.medicament_id' => 'required|exists:medicaments,id',
-            'receptions.*.quantite_recue' => 'required|numeric|min:0',
-            'receptions.*.prix_unitaire' => 'required|numeric|min:0',
+            'commande_id'                          => 'required|exists:commandes,id',
+            'fournisseur_id'                       => 'required',
+            'date_reception'                       => 'required|date',
+            'receptions.*.commande_medicament_id'  => 'required|exists:commande_medicaments,id',
+            'receptions.*.medicament_id'           => 'required|exists:medicaments,id',
+            'receptions.*.quantite_recue'          => 'required|numeric|min:0',
+            'receptions.*.prix_unitaire'           => 'required|numeric|min:0',
         ]);
 
-        // ✅ Création de la réception principale
-        $reception = Reception::create([
-            'commande_id' => $request->commande_id,
-            'fournisseur_id' => $request->fournisseur_id,
-            'date_reception' => $request->date_reception,
-            'reference_reception' => $request->reference_reception,
-            'user_id' => auth()->id(),
-            'statut' => 'partielle',
-        ]);
+        // ✅ Génération de la référence côté serveur (évite les duplicatas via uniqid() client)
+        $referenceReception = 'REC-' . strtoupper(Str::random(8)) . '-' . now()->format('dmY');
 
-        if ($request->has('receptions')) {
-            foreach ($request->receptions as $ligne) {
-                // 🧩 Récupération de la ligne commande_medicament par son ID
-                $commandeMedicament = DB::table('commande_medicaments')
-                    ->where('id', $ligne['commande_medicament_id'])
-                    ->first();
+        return DB::transaction(function () use ($request, $referenceReception) {
 
-                if (!$commandeMedicament) {
-                    return response()->json(['error' => 'Produit non trouvé dans la commande.'], 422);
+            // ✅ Création de la réception principale
+            $reception = Reception::create([
+                'commande_id'         => $request->commande_id,
+                'fournisseur_id'      => $request->fournisseur_id,
+                'date_reception'      => $request->date_reception,
+                'reference_reception' => $referenceReception,
+                'user_id'             => auth()->id(),
+                'statut'              => 'partielle',
+            ]);
+
+            if ($request->has('receptions')) {
+                foreach ($request->receptions as $ligne) {
+
+                    // 🔒 Verrou pessimiste : empêche les race conditions sur réseau lent
+                    $commandeMedicament = DB::table('commande_medicaments')
+                        ->where('id', $ligne['commande_medicament_id'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$commandeMedicament) {
+                        abort(422, 'Produit non trouvé dans la commande.');
+                    }
+
+                    $quantiteCommandee     = $commandeMedicament->quantite;
+                    $quantiteRecueActuelle = $commandeMedicament->quantiterecue ?? 0;
+                    $nouvelleQuantiteTotale = $quantiteRecueActuelle + $ligne['quantite_recue'];
+
+                    // ❌ Blocage si la quantité totale dépasse la commande
+                    if ($nouvelleQuantiteTotale > $quantiteCommandee) {
+                        abort(422, "Quantité reçue ({$nouvelleQuantiteTotale}) dépasse la quantité commandée ({$quantiteCommandee}) pour le médicament ID {$ligne['medicament_id']}.");
+                    }
+
+                    // ✅ Enregistrer la ligne de réception
+                    $reception->lignes()->create([
+                        'medicament_id'     => $ligne['medicament_id'],
+                        'quantite_commandee'=> $quantiteCommandee,
+                        'quantite_recue'    => $ligne['quantite_recue'],
+                        'prix_unitaire'     => $ligne['prix_unitaire'],
+                        'lot'               => $ligne['lot'] ?? null,
+                        'date_peremption'   => $ligne['date_peremption'] ?? null,
+                    ]);
+
+                    // 🔁 Mettre à jour quantiterecue (dans la même transaction)
+                    DB::table('commande_medicaments')
+                        ->where('id', $ligne['commande_medicament_id'])
+                        ->update(['quantiterecue' => $nouvelleQuantiteTotale]);
                 }
-
-                $quantiteCommandee = $commandeMedicament->quantite;
-                $quantiteRecueActuelle = $commandeMedicament->quantiterecue ?? 0;
-                $nouvelleQuantiteTotale = $quantiteRecueActuelle + $ligne['quantite_recue'];
-
-                // ❌ Validation si quantité reçue > quantité commandée
-                if ($nouvelleQuantiteTotale > $quantiteCommandee) {
-                    return response()->json([
-                        'error' => "Erreur : la quantité reçue ({$nouvelleQuantiteTotale}) dépasse la quantité commandée ({$quantiteCommandee}) pour le médicament ID {$ligne['medicament_id']}."
-                    ], 422);
-                }
-
-                // ✅ Enregistrer la ligne dans receptions_lignes
-                $reception->lignes()->create([
-                    'medicament_id' => $ligne['medicament_id'],
-                    'quantite_commandee' => $quantiteCommandee,
-                    'quantite_recue' => $ligne['quantite_recue'],
-                    'prix_unitaire' => $ligne['prix_unitaire'],
-                    'lot' => $ligne['lot'] ?? null,
-                    'date_peremption' => $ligne['date_peremption'] ?? null,
-                ]);
-
-                // 🔁 Mettre à jour la ligne commande_medicament via ID direct
-                DB::table('commande_medicaments')
-                    ->where('id', $ligne['commande_medicament_id'])
-                    ->update(['quantiterecue' => $nouvelleQuantiteTotale]);
             }
-        }
 
-        // 🟢 Vérifier si la commande est complètement reçue
-        $lignes = DB::table('commande_medicaments')->where('commande_id', $request->commande_id)->get();
-        $toutesRecues = $lignes->every(fn($l) => $l->quantite == $l->quantiterecue);
+            // 🟢 Vérifier si la commande est complètement reçue
+            $lignes      = DB::table('commande_medicaments')->where('commande_id', $request->commande_id)->get();
+            $toutesRecues = $lignes->every(fn($l) => $l->quantite == $l->quantiterecue);
 
-        // 🏁 Mise à jour du statut de la commande
-        DB::table('commandes')
-            ->where('id', $request->commande_id)
-            ->update(['statut' => $toutesRecues ? 'valide' : 'en_cours']);
+            // 🏁 Mise à jour du statut de la commande
+            DB::table('commandes')
+                ->where('id', $request->commande_id)
+                ->update(['statut' => $toutesRecues ? 'valide' : 'en_cours']);
 
-        return response()->json([
-            'message' => 'Réception enregistrée avec succès !',
-            'reception_id' => $reception->id,
-        ]);
+            return response()->json([
+                'message'              => 'Réception enregistrée avec succès !',
+                'reception_id'         => $reception->id,
+                'reference_reception'  => $referenceReception,
+            ]);
+        });
     }
 
 
