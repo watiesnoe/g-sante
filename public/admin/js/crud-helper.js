@@ -29,7 +29,9 @@ window.CrudHelper = {
         const table = $(settings.tableId).DataTable({
             processing: true,
             serverSide: true,
-            ajax: settings.ajaxUrl,
+            ajax: settings.ajaxData
+                ? { url: settings.ajaxUrl, data: settings.ajaxData }
+                : settings.ajaxUrl,
             columns: settings.columns,
             language: { 
                 url: settings.languageUrl,

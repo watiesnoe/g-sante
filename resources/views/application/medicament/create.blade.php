@@ -12,7 +12,7 @@
                 <a href="{{ route('medicaments.index') }}" class="btn btn-light btn-sm">↩️ Retour à la liste</a>
             </div>
             <div class="card-body">
-                <form action="{{ isset($medicament) ? route('medicaments.update', $medicament->id) : route('medicaments.store') }}" method="POST">
+                <form action="{{ isset($medicament) ? route('medicaments.update', $medicament) : route('medicaments.store') }}" method="POST">
                     @csrf
                     @if(isset($medicament)) @method('PUT') @endif
 
@@ -22,7 +22,7 @@
                         <input type="text" name="nom" class="form-control" value="{{ $medicament->nom ?? old('nom') }}" required>
                     </div>
 
-                    <!-- Description -->
+                    <!-- Description --> 
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea name="description" class="form-control" rows="3">{{ $medicament->description ?? old('description') }}</textarea>

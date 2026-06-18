@@ -89,9 +89,7 @@
                     @include('layouts.partials.menus.transfert')
                 @endif
 
-                @if(auth()->user()->hasModuleAccess('fournisseur'))
-                    @include('layouts.partials.menus.fournisseur')
-                @endif
+            
 
                 @if(auth()->user()->hasModuleAccess('parametre'))
                     <!-- Paramètres -->

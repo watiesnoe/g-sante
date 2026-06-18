@@ -6,7 +6,6 @@ use App\Models\Fournisseur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
-
 class FournisseurController extends Controller
 {
     public function index(Request $request)

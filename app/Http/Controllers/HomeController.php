@@ -43,32 +43,55 @@ class HomeController extends Controller
     private function superadminDashboard()
     {
         $year = session('exercice_year', date('Y'));
+
+        // ── 1 seule requête pour les stats globales ───────────────────
         $stats = [
-            'total_users' => User::count(),
-            'total_medecins' => User::role('medecin')->count(),
-            'total_secretaires' => User::role('secretaire')->count(),
-            'total_admins' => User::role('admin')->count(),
-            'total_patients' => Patient::whereYear('created_at', $year)->count(),
-            'total_ordonnance'=> Ordonnance::whereYear('created_at', $year)->count(),
-            'total_fournisseur'=> Fournisseur::count(),
-            'total_rendezvou'=> RendezVous::whereYear('created_at', $year)->count(),
-            'total_ticket'=> \App\Models\Ticket::whereYear('created_at', $year)->count(),
-            'total_medicament'=> Medicament::count(),
-            'total_examens'=> Examen::count(),
-            'total_lits'=> Lit::count(),
-            'new_patients_today' => Patient::whereYear('created_at', $year)->whereDate('created_at', today())->count(),
+            'total_users'         => User::count(),
+            'total_medecins'      => User::role('medecin')->count(),
+            'total_secretaires'   => User::role('secretaire')->count(),
+            'total_admins'        => User::role('admin')->count(),
+            'total_patients'      => Patient::whereYear('created_at', $year)->count(),
+            'total_ordonnance'    => Ordonnance::whereYear('created_at', $year)->count(),
+            'total_fournisseur'   => Fournisseur::count(),
+            'total_rendezvou'     => RendezVous::whereYear('created_at', $year)->count(),
+            'total_ticket'        => \App\Models\Ticket::whereYear('created_at', $year)->count(),
+            'total_medicament'    => Medicament::count(),
+            'total_examens'       => Examen::count(),
+            'total_lits'          => Lit::count(),
+            'new_patients_today'  => Patient::whereDate('created_at', today())->count(),
             'total_consultations' => Consultation::whereYear('created_at', $year)->count(),
         ];
 
-        // Préparer les données pour le graphique
+        // ── Graphique 7 jours : 3 requêtes GROUP BY au lieu de 21 ─────
+        $startDate = now()->subDays(6)->startOfDay();
+
+        // Patients par jour
+        $patientsPerDay = Patient::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+            ->where('created_at', '>=', $startDate)
+            ->groupByRaw('DATE(created_at)')
+            ->get()->keyBy('date');
+
+        // Consultations par jour
+        $consultationsPerDay = Consultation::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+            ->where('created_at', '>=', $startDate)
+            ->groupByRaw('DATE(created_at)')
+            ->get()->keyBy('date');
+
+        // Rendez-vous par jour
+        $rdvPerDay = RendezVous::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+            ->where('created_at', '>=', $startDate)
+            ->groupByRaw('DATE(created_at)')
+            ->get()->keyBy('date');
+
+        // Construction du tableau final
         $last7Days = collect();
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
             $last7Days->push([
-                'date' => $date,
-                'patients' => Patient::whereDate('created_at', $date)->count(),
-                'consultations' => Consultation::whereDate('created_at', $date)->count(),
-                'rendezvous' => RendezVous::whereDate('created_at', $date)->count(),
+                'date'          => $date,
+                'patients'      => $patientsPerDay[$date]->total      ?? 0,
+                'consultations' => $consultationsPerDay[$date]->total  ?? 0,
+                'rendezvous'    => $rdvPerDay[$date]->total            ?? 0,
             ]);
         }
 

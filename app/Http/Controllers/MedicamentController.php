@@ -16,30 +16,30 @@ class MedicamentController extends Controller
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des médicaments.');
 
         if ($request->ajax()) {
-            $query = Medicament::with(['unite','famille']);
+            $query = Medicament::with(['unite', 'famille']);
 
             if ($request->filled('famille_id')) {
                 $query->where('famille_id', $request->famille_id);
             }
 
             return DataTables::of($query)
-                ->addColumn('checkbox', function($m) {
-                    return '<input type="checkbox" class="form-check-input medicament-checkbox" value="'.$m->uuid.'">';
+                ->addColumn('checkbox', function ($m) {
+                    return '<input type="checkbox" class="form-check-input medicament-checkbox" value="' . $m->uuid . '">';
                 })
-                ->addColumn('unite', function($m) {
+                ->addColumn('unite', function ($m) {
                     return $m->unite?->nom ?? '-';
                 })
-                ->addColumn('famille', function($m) {
+                ->addColumn('famille', function ($m) {
                     return $m->famille?->nom ?? '-';
                 })
-                ->addColumn('actions', function($m) {
+                ->addColumn('actions', function ($m) {
                     $user = Auth::user();
                     $html = '';
 
                     if ($user->can('stock.medicaments')) {
-                        $html .= '<a href="'.route('medicaments.show', $m).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
-                        $html .= '<a href="'.route('medicaments.edit', $m).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                        $html .= '<form action="'.route('medicaments.destroy', $m).'" method="POST" class="d-inline" onsubmit="return confirm(\'Supprimer ce médicament ?\');">'.csrf_field().method_field('DELETE').'<button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa fa-trash"></i></button></form>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-primary view"   data-id="' . $m->uuid . '" title="Détails"><i class="fa fa-eye"></i></button>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-info edit"    data-id="' . $m->uuid . '" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="' . $m->uuid . '" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -48,8 +48,11 @@ class MedicamentController extends Controller
                 ->make(true);
         }
 
-        $familles = Famille::orderBy('nom')->get();
-        
+        $familles       = Famille::orderBy('nom')->get();
+        $unites         = Unite::all();
+        $totalMolecules = Medicament::count();
+        $stockCritique  = Medicament::whereColumn('stock', '<=', 'stock_min')->count();
+
         $pageTitle = '🩺 Gestion des Médicaments';
         if ($request->filled('famille_id')) {
             $famille = $familles->find($request->famille_id);
@@ -58,16 +61,16 @@ class MedicamentController extends Controller
             }
         }
 
-        // Stats
-        $totalMolecules = Medicament::count();
-        $stockCritique = Medicament::whereColumn('stock', '<=', 'stock_min')->count();
-
-        return view('application.medicament.index', compact('familles', 'totalMolecules', 'stockCritique', 'pageTitle'));
+        return view('application.medicament.index', compact('familles', 'unites', 'totalMolecules', 'stockCritique', 'pageTitle'));
     }
 
     public function show(Medicament $medicament)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les médicaments.');
+
+        if (request()->ajax()) {
+            return response()->json($medicament->load(['unite', 'famille']));
+        }
 
         $medicament->load(['unite', 'famille', 'protocoles.maladie']);
         return view('application.medicament.show', compact('medicament'));
@@ -77,40 +80,44 @@ class MedicamentController extends Controller
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un médicament.');
 
-        $medicaments = Medicament::with(['unite','famille'])->get(); // eager loading
-        $unites = Unite::all();    // pour alimenter un <select>
+        $unites  = Unite::all();
         $familles = Famille::all();
 
-        return view('application.medicament.create', compact('medicaments','unites','familles'));
-
+        return view('application.medicament.create', compact('unites', 'familles'));
     }
 
     public function store(Request $request)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un médicament.');
 
-        $request->validate([
-            'nom'=>'required|string|max:255',
-            'description'=>'nullable|string',
-            'stock'=>'required|integer|min:0',
-            'stock_min'=>'required|integer|min:0',
-            'prix_achat'=>'required|numeric|min:0',
-            'prix_vente'=>'required|numeric|min:0',
+        $validated = $request->validate([
+            'nom'         => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'stock'       => 'required|integer|min:0',
+            'stock_min'   => 'required|integer|min:0',
+            'prix_achat'  => 'required|numeric|min:0',
+            'prix_vente'  => 'required|numeric|min:0',
+            'unite_id'    => 'required|exists:unites,id',
+            'famille_id'  => 'required|exists:familles,id',
         ]);
 
-        Medicament::create($request->all());
-        return redirect()->route('medicaments.index')->with('success','Médicament ajouté !');
+        $medicament = Medicament::create($validated);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Médicament ajouté avec succès ✅',
+            'data'    => $medicament,
+        ]);
     }
 
     public function edit(Medicament $medicament)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un médicament.');
 
-        $unites = Unite::all();    // pour alimenter le <select>
+        $unites  = Unite::all();
         $familles = Famille::all();
 
-        // On passe bien $medicament au singulier
-        return view('application.medicament.create', compact('medicament','unites','familles'));
+        return view('application.medicament.create', compact('medicament', 'unites', 'familles'));
     }
 
     public function update(Request $request, Medicament $medicament)
@@ -118,28 +125,33 @@ class MedicamentController extends Controller
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un médicament.');
 
         $validated = $request->validate([
-            'nom' => 'required|string|max:255',
+            'nom'         => 'required|string|max:255',
             'description' => 'nullable|string',
-            'stock' => 'required|integer|min:0',
-            'stock_min' => 'required|integer|min:0',
-            'prix_achat' => 'required|numeric|min:0',
-            'prix_vente' => 'required|numeric|min:0',
-            'unite_id' => 'required|exists:unites,id',
-            'famille_id' => 'required|exists:familles,id',
+            'stock'       => 'required|integer|min:0',
+            'stock_min'   => 'required|integer|min:0',
+            'prix_achat'  => 'required|numeric|min:0',
+            'prix_vente'  => 'required|numeric|min:0',
+            'unite_id'    => 'required|exists:unites,id',
+            'famille_id'  => 'required|exists:familles,id',
         ]);
 
-        // Mise à jour avec uniquement les champs validés
         $medicament->update($validated);
 
-        return redirect()->route('medicaments.index')->with('success', 'Médicament mis à jour !');
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Médicament mis à jour avec succès ✏️',
+        ]);
     }
-
 
     public function destroy(Medicament $medicament)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un médicament.');
 
         $medicament->delete();
-        return redirect()->route('medicaments.index')->with('success','Médicament supprimé !');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Médicament supprimé avec succès 🗑️',
+        ]);
     }
 }
