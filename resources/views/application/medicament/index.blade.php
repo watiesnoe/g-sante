@@ -131,11 +131,11 @@
                             {{-- Prix --}}
                             <div class="col-md-6">
                                 <label class="form-label">Prix Achat <span class="text-danger">*</span></label>
-                                <input type="number" name="prix_achat" id="prix_achat" class="form-control" value="0" step="0.01" min="0" required>
+                                <input type="text" name="prix_achat" id="prix_achat" class="form-control price-input" value="0" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Prix Vente <span class="text-danger">*</span></label>
-                                <input type="number" name="prix_vente" id="prix_vente" class="form-control" value="0" step="0.01" min="0" required>
+                                <input type="text" name="prix_vente" id="prix_vente" class="form-control price-input" value="0" required>
                             </div>
 
                             {{-- Unité --}}

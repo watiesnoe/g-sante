@@ -22,7 +22,7 @@
                             @csrf
                             <div class="mb-4">
                                 <label class="form-label" for="solde_initial">Fonds de caisse (Solde Initial) en XOF</label>
-                                <input type="number" class="form-control form-control-lg @error('solde_initial') is-invalid @enderror" id="solde_initial" name="solde_initial" value="{{ old('solde_initial', 0) }}" min="0" required>
+                                <input type="text" class="form-control form-control-lg price-input @error('solde_initial') is-invalid @enderror" id="solde_initial" name="solde_initial" value="{{ old('solde_initial', 0) }}" required>
                                 @error('solde_initial')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

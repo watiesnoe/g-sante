@@ -52,7 +52,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Prix (optionnel)</label>
-                                <input type="number" step="0.01" name="prix" class="form-control"
+                                <input type="text" name="prix" class="form-control price-input"
                                        value="{{ old('prix', $examen->prix ?? '') }}">
                             </div>
 

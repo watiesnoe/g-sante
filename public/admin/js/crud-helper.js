@@ -20,7 +20,7 @@ window.CrudHelper = {
             editTitle: 'Modifier',
             viewTitle: 'Détails',
             csrfToken: $('meta[name="csrf-token"]').attr('content'),
-            languageUrl: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
+            languageUrl: '/admin/js/plugins/datatables/i18n/fr-FR.json'
         };
 
         const settings = $.extend({}, defaults, config);

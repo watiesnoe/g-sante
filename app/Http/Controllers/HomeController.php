@@ -306,20 +306,26 @@ class HomeController extends Controller
 
     private function getConsultationStats()
     {
+        // 1 seule requête GROUP BY au lieu de 6 requêtes en boucle
+        $results = Consultation::selectRaw(
+                'YEAR(date_consultation) as yr, MONTH(date_consultation) as mo, COUNT(*) as total'
+            )
+            ->where('date_consultation', '>=', Carbon::now()->subMonths(5)->startOfMonth())
+            ->groupByRaw('YEAR(date_consultation), MONTH(date_consultation)')
+            ->orderByRaw('yr ASC, mo ASC')
+            ->get()
+            ->keyBy(fn($r) => $r->yr . '-' . str_pad($r->mo, 2, '0', STR_PAD_LEFT));
+
         $months = [];
         $counts = [];
 
         for ($i = 5; $i >= 0; $i--) {
-            $month = Carbon::now()->subMonths($i);
-            $months[] = $month->format('M Y');
-            $counts[] = Consultation::whereYear('date_consultation', $month->year)
-                ->whereMonth('date_consultation', $month->month)
-                ->count();
+            $month     = Carbon::now()->subMonths($i);
+            $key       = $month->format('Y-m');
+            $months[]  = $month->format('M Y');
+            $counts[]  = $results[$key]->total ?? 0;
         }
 
-        return [
-            'months' => $months,
-            'counts' => $counts
-        ];
+        return ['months' => $months, 'counts' => $counts];
     }
 }

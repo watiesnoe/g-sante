@@ -40,11 +40,11 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Prix Achat</label>
-                            <input type="number" name="prix_achat" class="form-control" value="{{ $medicament->prix_achat ?? 0 }}" step="0.01">
+                            <input type="text" name="prix_achat" class="form-control price-input" value="{{ $medicament->prix_achat ?? 0 }}">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Prix Vente</label>
-                            <input type="number" name="prix_vente" class="form-control" value="{{ $medicament->prix_vente ?? 0 }}" step="0.01">
+                            <input type="text" name="prix_vente" class="form-control price-input" value="{{ $medicament->prix_vente ?? 0 }}">
                         </div>
                     </div>
 

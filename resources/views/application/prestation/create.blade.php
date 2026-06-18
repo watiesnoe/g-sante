@@ -57,8 +57,8 @@
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label for="prix" class="form-label">Prix (FCFA) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" class="form-control @error('prix') is-invalid @enderror"
-                                           id="prix" name="prix" value="{{ old('prix') ?? ($prestation->prix ?? '') }}" required placeholder="Ex: 15000">
+                                    <input type="text" class="form-control price-input @error('prix') is-invalid @enderror"
+                                           id="prix" name="prix" value="{{ old('prix') ?? ($prestation->prix ?? '') }}" required placeholder="Ex: 15 000">
                                     @error('prix') <div class="text-danger">{{ $message }}</div> @enderror
                                 </div>
                             </div>

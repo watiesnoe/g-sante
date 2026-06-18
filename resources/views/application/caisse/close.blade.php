@@ -35,7 +35,7 @@
                             @csrf
                             <div class="mb-4">
                                 <label class="form-label" for="solde_reel">Montant Physique Compté (Solde Réel) en XOF</label>
-                                <input type="number" class="form-control form-control-lg @error('solde_reel') is-invalid @enderror" id="solde_reel" name="solde_reel" value="{{ old('solde_reel') }}" min="0" required placeholder="Combien d'argent avez-vous en caisse ?">
+                                <input type="text" class="form-control form-control-lg price-input @error('solde_reel') is-invalid @enderror" id="solde_reel" name="solde_reel" value="{{ old('solde_reel') }}" required placeholder="Combien d'argent avez-vous en caisse ?">
                                 @error('solde_reel')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
