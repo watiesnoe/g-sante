@@ -17,7 +17,7 @@
         </div>
         <div class="col-md-6">
             <label>Téléphone</label>
-            <input type="text" name="telephone" class="form-control" value="{{ $user->telephone }}">
+            <input type="tel" name="telephone" class="form-control phone-input" value="{{ $user->telephone }}">
         </div>
         <div class="col-md-6">
             <label>Adresse</label>

@@ -494,8 +494,8 @@
                                 <label class="form-label fw-semibold">
                                     <i class="fa fa-phone me-1"></i>Téléphone
                                 </label>
-                                <input type="tel" class="form-control" id="telephone" placeholder="07 12 34 56">
-                                <small class="text-muted">8 chiffres</small>
+                                <input type="tel" class="form-control phone-input" id="telephone">
+                                <small class="text-muted">Ex: 65 01 23 45</small>
                             </div>
                             
                             <div class="mb-3">
@@ -561,7 +561,9 @@
                         const nom = $('#nom').val().trim();
                         const prenom = $('#prenom').val().trim();
                         const genre = $('#genre').val();
-                        const telephone = $('#telephone').val().replace(/\s/g, '');
+                        const telephone = window.getPhoneNumber
+                            ? window.getPhoneNumber(document.getElementById('telephone'))
+                            : $('#telephone').val();
                         let ethnie = $('#ethnie').val();
                         
                         // Validation
@@ -588,8 +590,8 @@
                             return false;
                         }
                         
-                        if (telephone && !/^\d{8}$/.test(telephone)) {
-                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Le téléphone doit contenir 8 chiffres');
+                        if (telephone && telephone.length < 8) {
+                            Swal.showValidationMessage('<i class="fa fa-exclamation-circle me-2"></i>Numéro de téléphone invalide');
                             return false;
                         }
                         
@@ -650,14 +652,10 @@
                             }
                         });
                         
-                        // Formatage téléphone
-                        $('#telephone').on('input', function() {
-                            let value = $(this).val().replace(/\D/g, '');
-                            if (value.length >= 2) {
-                                value = value.match(/.{1,2}/g).join(' ');
-                            }
-                            $(this).val(value.substring(0, 14));
-                        });
+                        // Init intl-tel-input sur le champ téléphone du modal
+                        if (window.initPhoneInputs) {
+                            initPhoneInputs();
+                        }
                         
                         // Style des boutons
                         $('.swal2-confirm').css({

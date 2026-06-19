@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Patient;
 use App\Models\RendezVous;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
+
 class RendezvousController extends Controller
 {
 
@@ -17,7 +20,7 @@ class RendezvousController extends Controller
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
-            $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
+            $rdvs = RendezVous::with(['patient.grossesses', 'medecin', 'consultation'])
                 ->whereYear('date_heure', $year)
                 ->whereNotIn('statut', ['annule', 'realise']) // 🔹 Exclure annulé et réalisé
                 ->select('rendezvous.*');
@@ -41,33 +44,39 @@ class RendezvousController extends Controller
                 ->addColumn('consultation', fn($rdv) => $rdv->consultation ? "Consultation #{$rdv->consultation->id}" : '-')
 
                 // Actions — filtrées selon les permissions de l'utilisateur connecté
-                ->addColumn('actions', function($rdv) {
+                ->addColumn('actions', function ($rdv) {
                     $user = Auth::user();
                     $html = '';
 
                     // 👁 Voir (rendezvous.view)
                     if ($user->can('rendezvous.view')) {
-                        $html .= '<a href="'.route('rendezvous.show', $rdv->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="' . route('rendezvous.show', $rdv->uuid) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    }
+
+                    // 🤰 Maternité (maternity.view) s'il y a une grossesse active en cours
+                    $activeGrossesse = $rdv->patient ? $rdv->patient->grossesses->where('statut', 'En cours')->first() : null;
+                    if ($user->can('maternity.view') && $activeGrossesse) {
+                        $html .= '<a href="' . route('maternity.show', [$activeGrossesse->uuid, 'rdv_uuid' => $rdv->uuid]) . '" class="btn btn-sm btn-outline-danger" title="Maternité" style="color: #e91e63; border-color: #e91e63;"><i class="fa fa-female"></i></a>';
                     }
 
                     // ✏️ Modifier (rendezvous.edit)
                     if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="'.route('rendezvous.edit', $rdv->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<a href="' . route('rendezvous.edit', $rdv->uuid) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
                     // ✅ Marquer réalisé (rendezvous.confirm)
                     if ($user->can('rendezvous.confirm') && $rdv->statut !== 'realise') {
-                        $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="'.route('rendezvous.marquerRealise', $rdv->uuid).'" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-success btn-realise" data-url="' . route('rendezvous.marquerRealise', $rdv->uuid) . '" title="Marquer comme réalisé"><i class="fa fa-check"></i></button>';
                     }
 
                     // 📋 Créer un suivi (consultations.suivi)
                     if ($user->can('consultations.suivi') && $rdv->consultation) {
-                        $html .= '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                        $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation->id) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
                     }
 
                     // 🗑 Supprimer (rendezvous.delete)
                     if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->uuid).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<button type="button" data-url="' . route('rendezvous.destroy', $rdv->uuid) . '" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -83,6 +92,26 @@ class RendezvousController extends Controller
 
         return view('application.rendezvous.index', compact('prefillConsultation'));
     }
+    public function create(Request $request, $patient = null)
+    {
+        abort_unless(Auth::user()->can('rendezvous.create'), 403, 'Accès non autorisé');
+
+        // Résoudre le patient depuis le segment de route (UUID) ou le query param
+        if ($patient) {
+            $patient = Patient::where('uuid', $patient)->firstOrFail();
+        } elseif ($request->has('patient_id')) {
+            $patient = Patient::where('uuid', $request->patient_id)->firstOrFail();
+        }
+
+        $medecins = User::whereHas('roles', function ($q) {
+            $q->where('name', 'medecin');
+        })->orderBy('name')->get();
+
+        // Médecin pré-sélectionné : depuis query param ou utilisateur connecté s'il est médecin
+        $preselectedMedecinId = $request->input('medecin_id', Auth::id());
+
+        return view('application.rendezvous.create', compact('patient', 'medecins', 'preselectedMedecinId'));
+    }
 
     public function store(Request $request)
     {
@@ -92,20 +121,39 @@ class RendezvousController extends Controller
             abort_unless(Auth::user()->can('rendezvous.create'), 403, 'Accès non autorisé');
         }
 
+        // ── Résolution UUID → ID numérique ──────────────────────────────
+        // Support des deux modes : UUID (depuis modale) ou ID numérique (depuis index)
+        if ($request->filled('patient_uuid')) {
+            $patient = Patient::where('uuid', $request->patient_uuid)->firstOrFail();
+            $patientId = $patient->id;
+        } else {
+            $patientId = $request->patient_id;
+        }
+
+        if ($request->filled('medecin_uuid')) {
+            $medecin = User::where('uuid', $request->medecin_uuid)->firstOrFail();
+            $medecinId = $medecin->id;
+        } else {
+            $medecinId = $request->medecin_id;
+        }
+        // ────────────────────────────────────────────────────────────────
+
         $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'medecin_id' => 'required|exists:users,id',
             'consultation_id' => 'nullable|exists:consultations,id',
-            'date_heure' => 'required|date',
-            'motif' => 'nullable|string|max:255',
+            'date_heure'      => 'required|date',
+            'motif'           => 'nullable|string|max:255',
         ]);
 
+        // Valider que patient et médecin ont bien été résolus
+        abort_if(empty($patientId), 422, 'Patient introuvable.');
+        abort_if(empty($medecinId), 422, 'Médecin introuvable.');
+
         $data = [
-            'patient_id' => $request->patient_id,
-            'medecin_id' => $request->medecin_id,
+            'patient_id'      => $patientId,
+            'medecin_id'      => $medecinId,
             'consultation_id' => $request->consultation_id,
-            'date_heure' => $request->date_heure,
-            'motif' => $request->motif,
+            'date_heure'      => $request->date_heure,
+            'motif'           => $request->motif,
         ];
 
         if (!$request->id) {
@@ -125,7 +173,7 @@ class RendezvousController extends Controller
         abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous réalisés.');
 
         if ($request->ajax()) {
-            $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
+            $rdvs = RendezVous::with(['patient.grossesses', 'medecin', 'consultation'])
                 ->where('statut', ['realise'])
                 ->select('rendezvous.*');
 
@@ -148,28 +196,34 @@ class RendezvousController extends Controller
                 ->addColumn('consultation', fn($rdv) => $rdv->consultation ? "Consultation #{$rdv->consultation->id}" : '-')
 
                 // Actions — filtrées selon les permissions de l'utilisateur connecté
-                ->addColumn('actions', function($rdv) {
+                ->addColumn('actions', function ($rdv) {
                     $user = Auth::user();
                     $html = '';
 
                     // 👁 Voir (rendezvous.view)
                     if ($user->can('rendezvous.view')) {
-                        $html .= '<a href="'.route('rendezvous.show', $rdv->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="' . route('rendezvous.show', $rdv->uuid) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    }
+
+                    // 🤰 Maternité (maternity.view) s'il y a une grossesse active en cours
+                    $activeGrossesse = $rdv->patient ? $rdv->patient->grossesses->where('statut', 'En cours')->first() : null;
+                    if ($user->can('maternity.view') && $activeGrossesse) {
+                        $html .= '<a href="' . route('maternity.show', [$activeGrossesse->uuid, 'rdv_uuid' => $rdv->uuid]) . '" class="btn btn-sm btn-outline-danger" title="Maternité" style="color: #e91e63; border-color: #e91e63;"><i class="fa fa-female"></i></a>';
                     }
 
                     // ✏️ Modifier (rendezvous.edit)
                     if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="'.route('rendezvous.edit', $rdv->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<a href="' . route('rendezvous.edit', $rdv->uuid) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
                     // 📋 Créer un suivi (consultations.suivi)
                     if ($user->can('consultations.suivi') && $rdv->consultation) {
-                        $html .= '<a href="'.route('consultations.suivi.create', $rdv->consultation->id).'" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                        $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation->id) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
                     }
 
                     // 🗑 Supprimer (rendezvous.delete)
                     if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->uuid).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<button type="button" data-url="' . route('rendezvous.destroy', $rdv->uuid) . '" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -185,7 +239,7 @@ class RendezvousController extends Controller
         abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous annulés.');
 
         if ($request->ajax()) {
-            $rdvs = RendezVous::with(['patient', 'medecin', 'consultation'])
+            $rdvs = RendezVous::with(['patient.grossesses', 'medecin', 'consultation'])
                 ->where('statut', ['annule'])
                 ->select('rendezvous.*');
 
@@ -208,23 +262,29 @@ class RendezvousController extends Controller
                 ->addColumn('consultation', fn($rdv) => $rdv->consultation ? "Consultation #{$rdv->consultation->id}" : '-')
 
                 // Actions — filtrées selon les permissions de l'utilisateur connecté
-                ->addColumn('actions', function($rdv) {
+                ->addColumn('actions', function ($rdv) {
                     $user = Auth::user();
                     $html = '';
 
                     // 👁 Voir (rendezvous.view)
                     if ($user->can('rendezvous.view')) {
-                        $html .= '<a href="'.route('rendezvous.show', $rdv->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="' . route('rendezvous.show', $rdv->uuid) . '" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    }
+
+                    // 🤰 Maternité (maternity.view) s'il y a une grossesse active en cours
+                    $activeGrossesse = $rdv->patient ? $rdv->patient->grossesses->where('statut', 'En cours')->first() : null;
+                    if ($user->can('maternity.view') && $activeGrossesse) {
+                        $html .= '<a href="' . route('maternity.show', [$activeGrossesse->uuid, 'rdv_uuid' => $rdv->uuid]) . '" class="btn btn-sm btn-outline-danger" title="Maternité" style="color: #e91e63; border-color: #e91e63;"><i class="fa fa-female"></i></a>';
                     }
 
                     // ✏️ Modifier (rendezvous.edit)
                     if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="'.route('rendezvous.edit', $rdv->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<a href="' . route('rendezvous.edit', $rdv->uuid) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     }
 
                     // 🗑 Supprimer (rendezvous.delete)
                     if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="'.route('rendezvous.destroy', $rdv->uuid).'" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<button type="button" data-url="' . route('rendezvous.destroy', $rdv->uuid) . '" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -264,7 +324,7 @@ class RendezvousController extends Controller
         abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
 
         $rendezvous->load(['patient', 'medecin', 'consultation']);
-        $medecins = \App\Models\User::whereHas('roles', function($q) {
+        $medecins = \App\Models\User::whereHas('roles', function ($q) {
             $q->where('name', 'medecin');
         })->orderBy('name')->get();
 

@@ -50,7 +50,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Téléphone</label>
-                                <input type="text" name="telephone" class="form-control" value="{{ old('telephone', $user->telephone) }}">
+                                <input type="tel" name="telephone" class="form-control phone-input" value="{{ old('telephone', $user->telephone) }}">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">Adresse</label>

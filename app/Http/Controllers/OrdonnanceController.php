@@ -5,6 +5,7 @@ use App\Models\Consultation;
 use App\Models\Medicament;
 use App\Models\OrdonnanceMedicament;
 use App\Models\OrdonnancePaiement;
+use App\Models\Patient;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -63,12 +64,28 @@ class OrdonnanceController extends Controller
         return view('application.ordonnance.index');
     }
 
-    public function create()
+    public function create(Request $request, $patient = null)
     {
         abort_unless(Auth::user()->can('ordonnances.create'), 403, 'Accès non autorisé.');
-        // Les ordonnances sont créées depuis une consultation (voir ConsultationController)
-        return redirect()->route('consultations.index')
-            ->with('info', 'Les ordonnances sont créées automatiquement lors d\'une consultation.');
+
+        // Résoudre le patient depuis le segment de route (UUID) ou le query param
+        if ($patient) {
+            $patient = Patient::where('uuid', $patient)->firstOrFail();
+        } elseif ($request->has('patient_id')) {
+            $patient = Patient::where('uuid', $request->patient_id)->firstOrFail();
+        }
+
+        // Récupérer la grossesse active si existante
+        $grossesse_id = null;
+        if ($patient) {
+            $activeGrossesse = $patient->grossesses->where('statut', 'En cours')->first();
+            $grossesse_id = $activeGrossesse ? $activeGrossesse->id : null;
+        }
+
+        $medicaments = Medicament::orderBy('nom')->get();
+        $patients = $patient ? collect() : Patient::orderBy('nom')->get();
+
+        return view('application.ordonnance.create', compact('patient', 'medicaments', 'patients', 'grossesse_id'));
     }
 
     // Afficher une ordonnance
@@ -86,29 +103,71 @@ class OrdonnanceController extends Controller
         abort_unless(Auth::user()->can('ordonnances.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une ordonnance.');
 
         $request->validate([
-        'consultation_id' => 'required|exists:consultations,id',
-        'medicaments'     => 'required|array',
-        'medicaments.*.id' => 'required|exists:medicaments,id',
-        'medicaments.*.posologie' => 'required|string',
-        'medicaments.*.duree_jours' => 'nullable|integer',
-        'medicaments.*.quantite' => 'required|integer|min:1', // ✅ nouveau
+            'consultation_id' => 'nullable|exists:consultations,id',
+            'patient_id'      => 'required_without:consultation_id|exists:patients,id',
+            'grossesse_id'    => 'nullable|exists:grossesses,id',
+            'medicaments'     => 'required|array',
+            'medicaments.*'   => 'required|exists:medicaments,id',
+            'posologies'      => 'required|array',
+            'duree_jours'     => 'nullable|array',
+            'quantites'       => 'required|array',
         ]);
 
+        DB::beginTransaction();
+        try {
+            $consultationId = $request->consultation_id;
 
-        $ordonnance = Ordonnance::create([
-            'consultation_id' => $request->consultation_id,
-            'date' => now(),
-        ]);
+            if (!$consultationId) {
+                // Créer une consultation simplifiée pour l'ordonnance
+                $consultation = Consultation::create([
+                    'patient_id'        => $request->patient_id,
+                    'medecin_id'        => Auth::id(),
+                    'date_consultation' => now(),
+                    'motif'             => $request->grossesse_id ? 'Prescription Maternité' : 'Prescription simple',
+                    'diagnostic'        => 'Prescription d\'ordonnance',
+                    'grossesse_id'      => $request->grossesse_id,
+                ]);
+                $consultationId = $consultation->id;
+            }
 
-        foreach ($request->medicaments as $med) {
-            $ordonnance->medicaments()->attach($med['id'], [
-            'posologie' => $med['posologie'],
-            'duree_jours' => $med['duree_jours'] ?? null,
-            'quantite' => $med['quantite'], // ✅
+            $ordonnance = Ordonnance::create([
+                'consultation_id' => $consultationId,
+                'date'            => now(),
             ]);
-        }
 
-        return redirect()->route('ordonnances.index')->with('success', 'Ordonnance créée avec succès');
+            foreach ($request->medicaments as $i => $medId) {
+                if (!$medId) continue;
+
+                OrdonnanceMedicament::create([
+                    'ordonnance_id' => $ordonnance->id,
+                    'medicament_id' => $medId,
+                    'posologie'     => $request->posologies[$i] ?? '',
+                    'duree_jours'   => $request->duree_jours[$i] ?? null,
+                    'quantite'      => $request->quantites[$i] ?? 1,
+                ]);
+            }
+
+            DB::commit();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Ordonnance créée avec succès ✅',
+                    'redirect' => route('ordonnances.index')
+                ]);
+            }
+
+            return redirect()->route('ordonnances.index')->with('success', 'Ordonnance créée avec succès');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Erreur lors de la création de l\'ordonnance : ' . $e->getMessage());
+        }
     }
 
     // Exporter en PDF

@@ -84,6 +84,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/rendezvous/disponible', [RendezvousController::class, 'disponible'])->name('rendezvous.disponible');
     Route::get('/rendezvous/annuler', [RendezvousController::class, 'annuler'])->name('rendezvous.annuler');
     Route::get('/rendezvous', [RendezvousController::class, 'index'])->name('rendezvous.index');
+    Route::get('/rendezvous/patient/{patient}', [RendezvousController::class, 'create'])->name('rendezvous.maternite');
+    Route::get('/ordonnances/patient/{patient}', [OrdonnanceController::class, 'create'])->name('ordonnances.maternite');
     Route::post('/rendezvous', [RendezvousController::class, 'store'])->name('rendezvous.store');
     Route::get('/rendezvous/{rendezvous}', [RendezvousController::class, 'show'])->name('rendezvous.show');
     Route::get('/rendezvous/{rendezvous}/edit', [RendezvousController::class, 'edit'])->name('rendezvous.edit');

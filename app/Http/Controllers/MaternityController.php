@@ -55,8 +55,27 @@ class MaternityController extends Controller
     {
         abort_unless(Auth::user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les suivis de grossesse.');
 
+        // Si le paramètre rdv_uuid est passé, marquer ce rendez-vous comme réalisé
+        if (request()->filled('rdv_uuid')) {
+            $rdv = \App\Models\RendezVous::where('uuid', request('rdv_uuid'))->first();
+            if ($rdv && $rdv->statut !== 'realise') {
+                $rdv->statut = 'realise';
+                $rdv->save();
+            }
+        }
+
         $grossesse->load(['patient', 'cpns']);
-        return view('application.maternity.show', compact('grossesse'));
+
+        // Récupérer le médecin de la dernière consultation médicale du patient
+        $dernierMedecinId = \App\Models\Consultation::where('patient_id', $grossesse->patient_id)
+            ->whereNotNull('medecin_id')
+            ->latest()
+            ->value('medecin_id');
+
+        // Fallback : utilisateur connecté
+        $dernierMedecinId = $dernierMedecinId ?? Auth::id();
+
+        return view('application.maternity.show', compact('grossesse', 'dernierMedecinId'));
     }
 
     public function storeCpn(Request $request)

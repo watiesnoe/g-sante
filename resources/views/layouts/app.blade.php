@@ -40,6 +40,8 @@
     @include('layouts.partials.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- intl-tel-input (champ téléphone avec drapeau + indicatif pays) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
     <!-- Google Fonts avec preconnect pour accélérer la connexion DNS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,6 +279,38 @@
                 background-color: rgba(233, 30, 99, 0.05);
             }
             .italic { font-style: italic; }
+
+            /* ── intl-tel-input Bootstrap 5 integration ─────────────── */
+            .iti { width: 100%; }
+            .iti__flag-container { z-index: 10; }
+            .iti input.phone-input,
+            .iti input[type="tel"] {
+                padding-left: 90px !important;
+            }
+            .iti--separate-dial-code .iti__selected-flag {
+                background-color: transparent;
+                border-right: 1px solid #dee2e6;
+                border-radius: 0.375rem 0 0 0.375rem;
+                padding: 0 10px;
+                height: 100%;
+                transition: background-color 0.15s ease;
+            }
+            .iti--separate-dial-code .iti__selected-flag:hover {
+                background-color: #f8f9fa;
+            }
+            .iti__country-list {
+                border-radius: 0.375rem;
+                box-shadow: 0 4px 20px rgba(0,0,0,.12);
+                border: 1px solid #dee2e6;
+                z-index: 9999;
+                max-height: 220px;
+            }
+            .iti__country-list .iti__country.iti__highlight {
+                background-color: #e8f4fe;
+                color: var(--primary, #2c7fb8);
+            }
+            /* Fix dropdown z-index inside modals */
+            .modal .iti__country-list { z-index: 99999; }
         </style>
 
     <style>

@@ -33,6 +33,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 
+    <!-- intl-tel-input : champ téléphone avec drapeau + indicatif pays -->
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+
     <!-- Select2 init global -->
     <script>
         $(document).ready(function () {
@@ -248,5 +251,84 @@
                 };
             }
         });
+    </script>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         CHAMPS TÉLÉPHONE GLOBAUX  – intl-tel-input
+         Classe requise sur l'input : phone-input
+         ══════════════════════════════════════════════════════════════ -->
+    <script>
+    (function () {
+        'use strict';
+
+        // Map : élément DOM → instance iti
+        var itiMap = new WeakMap();
+
+        /**
+         * Initialise intl-tel-input sur tous les inputs .phone-input
+         * qui ne l'ont pas encore.
+         */
+        window.initPhoneInputs = function () {
+            document.querySelectorAll('input.phone-input').forEach(function (input) {
+                if (itiMap.has(input)) return; // déjà initialisé
+
+                var iti = window.intlTelInput(input, {
+                    initialCountry        : 'ml',
+                    preferredCountries    : ['ml', 'sn', 'ci', 'gn', 'bf', 'ne', 'mr'],
+                    separateDialCode      : true,
+                    utilsScript           : 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js',
+                    autoPlaceholder       : 'polite',
+                    nationalMode          : true,
+                    formatOnDisplay       : true,
+                    dropdownContainer     : document.body
+                });
+
+                itiMap.set(input, iti);
+
+                // Pré-remplir si une valeur existe déjà (mode édition)
+                var existing = input.value.trim();
+                if (existing && existing !== '') {
+                    iti.setNumber(existing);
+                }
+            });
+        };
+
+        /**
+         * Retourne le numéro E.164 de l'input (ex: +22365012345)
+         * ou la valeur brute si pas initialisé.
+         */
+        window.getPhoneNumber = function (input) {
+            var iti = itiMap.get(input);
+            if (iti) {
+                var num = iti.getNumber();
+                return num || input.value;
+            }
+            return input.value;
+        };
+
+        /* ── Lancement initial ─────────────────────────────────── */
+        document.addEventListener('DOMContentLoaded', function () {
+            initPhoneInputs();
+        });
+
+        /* ── Ré-init à chaque ouverture de modal Bootstrap ────── */
+        document.addEventListener('shown.bs.modal', function () {
+            initPhoneInputs();
+        });
+
+        /* ── Nettoyage avant soumission (native + jQuery) ───────── */
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!form || form.tagName !== 'FORM') return;
+            form.querySelectorAll('input.phone-input').forEach(function (input) {
+                var iti = itiMap.get(input);
+                if (iti) {
+                    var num = iti.getNumber();
+                    if (num) input.value = num;
+                }
+            });
+        }, true);
+
+    }());
     </script>
 

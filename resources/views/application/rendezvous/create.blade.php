@@ -1,187 +1,187 @@
 @extends('layouts.app')
 
-@section('titre', isset($commande) ? 'Éditer la commande' : 'Créer une commande')
+@section('titre', 'Nouveau Rendez-vous')
 
 @section('content')
     <div class="container mt-4">
-        <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white">
-                <h4>📝 {{ isset($commande) ? 'Modifier la commande' : 'Nouvelle commande' }}</h4>
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h4 class="mb-0"><i class="fa fa-calendar-plus me-2 text-primary"></i>Nouveau Rendez-vous</h4>
+            <a href="{{ route('rendezvous.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Retour à la liste
+            </a>
+        </div>
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <div class="card-body">
-                <form action="{{ isset($commande) ? route('commandes.update', $commande->id) : route('commandes.store') }}"
-                      method="POST" id="commandeForm">
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fa fa-calendar-check me-2"></i>Planifier un Rendez-vous</h5>
+            </div>
+            <div class="card-body p-4">
+
+                {{-- Infos patient pré-rempli (venant de la maternité) --}}
+                @if($patient)
+                    <div class="alert alert-info border-0 d-flex align-items-center mb-4">
+                        <i class="fa fa-user-circle fa-2x me-3 text-info"></i>
+                        <div>
+                            <div class="fw-bold">Patient : {{ $patient->nom }} {{ $patient->prenom }}</div>
+                            <small class="text-muted">Ce rendez-vous sera automatiquement lié à ce patient.</small>
+                        </div>
+                    </div>
+                @endif
+
+                <form id="rdvForm">
                     @csrf
-                    @if(isset($commande))
-                        @method('PUT')
+
+                    {{-- Patient (caché si pré-rempli, sinon sélectionnable) --}}
+                    @if($patient)
+                        <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+                    @else
+                        <div class="mb-3">
+                            <label for="patient_id" class="form-label fw-semibold">Patient <span class="text-danger">*</span></label>
+                            <select name="patient_id" id="patient_id" class="form-select" required>
+                                <option value="">-- Sélectionnez un patient --</option>
+                            </select>
+                            <small class="text-muted">Commencez à taper pour rechercher un patient.</small>
+                        </div>
                     @endif
 
-                    <!-- Fournisseur -->
+                    {{-- Médecin --}}
                     <div class="mb-3">
-                        <label for="fournisseur_id" class="form-label">Fournisseur</label>
-                        <select name="fournisseur_id" id="fournisseur_id" class="form-control" required>
-                            <option value="">-- Sélectionnez un fournisseur --</option>
-                            @foreach($fournisseurs as $f)
-                                <option value="{{ $f->id }}" {{ isset($commande) && $commande->fournisseur_id == $f->id ? 'selected' : '' }}>
-                                    {{ $f->nom }}
+                        <label for="medecin_id" class="form-label fw-semibold">Médecin responsable <span class="text-danger">*</span></label>
+                        <select name="medecin_id" id="medecin_id" class="form-select" required>
+                            <option value="">-- Sélectionnez un médecin --</option>
+                            @foreach($medecins as $med)
+                                <option value="{{ $med->id }}" {{ (isset($preselectedMedecinId) && $preselectedMedecinId == $med->id) ? 'selected' : '' }}>
+                                    {{ $med->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    <!-- Date de commande -->
+                    {{-- Date & Heure --}}
                     <div class="mb-3">
-                        <label for="date_commande" class="form-label">Date de commande</label>
-                        <input type="date" name="date_commande" id="date_commande" class="form-control" required
-                               value="{{ isset($commande) ? \Carbon\Carbon::parse($commande->date_commande)->format('Y-m-d') : now()->format('Y-m-d') }}">
+                        <label for="date_heure" class="form-label fw-semibold">Date et heure du rendez-vous <span class="text-danger">*</span></label>
+                        <input type="datetime-local"
+                               name="date_heure"
+                               id="date_heure"
+                               class="form-control"
+                               value="{{ now()->addDay()->format('Y-m-d\TH:i') }}"
+                               min="{{ now()->format('Y-m-d\TH:i') }}"
+                               required>
                     </div>
 
-                    <!-- Tableau des médicaments -->
-                    <h5 class="mt-4">📦 Médicaments</h5>
-                    <table class="table table-bordered" id="medicamentsTable">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Médicament</th>
-                            <th>Quantité</th>
-                            <th>Prix Unitaire</th>
-                            <th>Sous-total</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @php $rowIndex = 0; @endphp
-                        @if(isset($commande) && $commande->medicaments)
-                            @foreach($commande->medicaments as $i => $med)
-                                <tr>
-                                    <td>
-                                        <select name="medicaments[{{ $i }}][medicament_id]" class="form-control selectMed" required>
-                                            <option value="">-- Choisir --</option>
-                                            @foreach($medicaments as $m)
-                                                <option value="{{ $m->id }}" {{ $med->id == $m->id ? 'selected' : '' }}>
-                                                    {{ $m->nom }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="medicaments[{{ $i }}][quantite]"
-                                               class="form-control quantite" value="{{ $med->pivot->quantite }}" min="1" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="medicaments[{{ $i }}][prix_unitaire]"
-                                               class="form-control prix" value="{{ $med->pivot->prix_unitaire }}" min="0" step="0.01" required>
-                                    </td>
-                                    <td class="sous-total">{{ number_format($med->pivot->quantite * $med->pivot->prix_unitaire, 2) }}</td>
-                                    <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-                                </tr>
-                                @php $rowIndex++; @endphp
-                            @endforeach
-                        @else
-                            <tr>
-                                <td>
-                                    <select name="medicaments[0][medicament_id]" class="form-control selectMed" required>
-                                        <option value="">-- Choisir --</option>
-                                        @foreach($medicaments as $m)
-                                            <option value="{{ $m->id }}">{{ $m->nom }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td><input type="number" name="medicaments[0][quantite]" class="form-control quantite" value="1" min="1" required></td>
-                                <td><input type="number" name="medicaments[0][prix_unitaire]" class="form-control prix" value="0" min="0" step="0.01" required></td>
-                                <td class="sous-total">0.00</td>
-                                <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-                            </tr>
-                            @php $rowIndex = 1; @endphp
-                        @endif
-                        </tbody>
-                    </table>
-
-                    <button type="button" class="btn btn-secondary" id="addRow">➕ Ajouter un médicament</button>
-
-                    <div class="mt-3">
-                        <h5>Total : <span id="total">0.00</span> CFA</h5>
-                        <input type="hidden" name="total" id="totalInput" value="{{ isset($commande) ? $commande->total : 0 }}">
+                    {{-- Motif --}}
+                    <div class="mb-4">
+                        <label for="motif" class="form-label fw-semibold">Motif du rendez-vous</label>
+                        <textarea name="motif"
+                                  id="motif"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Ex: Consultation de suivi, CPN, contrôle post-natal...">{{ old('motif') }}</textarea>
                     </div>
 
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-success">✅ {{ isset($commande) ? 'Mettre à jour' : 'Enregistrer' }}</button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" id="btnSave" class="btn btn-primary px-4">
+                            <i class="fa fa-save me-2"></i>Enregistrer le rendez-vous
+                        </button>
+                        <a href="{{ route('rendezvous.index') }}" class="btn btn-outline-secondary px-4">
+                            Annuler
+                        </a>
                     </div>
                 </form>
+
             </div>
         </div>
+
     </div>
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            let rowIndex = {{ $rowIndex ?? 1 }};
-            let medicamentIds = [];
+<script>
+$(document).ready(function () {
 
-            function calculerTotal() {
-                let total = 0;
-                $("#medicamentsTable tbody tr").each(function() {
-                    let q = parseFloat($(this).find(".quantite").val()) || 0;
-                    let p = parseFloat($(this).find(".prix").val()) || 0;
-                    let st = q * p;
-                    $(this).find(".sous-total").text(st.toFixed(2));
-                    total += st;
-                });
-                $("#total").text(total.toFixed(2));
-                $("#totalInput").val(total.toFixed(2));
+    @unless($patient)
+    // Select2 pour la recherche de patient
+    $('#patient_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Rechercher un patient...',
+        minimumInputLength: 2,
+        ajax: {
+            url: '{{ route("patients.search") }}',
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return { q: params.term };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (p) {
+                        return { id: p.id, text: p.nom + ' ' + p.prenom };
+                    })
+                };
             }
+        }
+    });
+    @endunless
 
-            function updateMedicamentIds() {
-                medicamentIds = $(".selectMed").map(function() {
-                    return $(this).val();
-                }).get().filter(v => v);
-            }
+    // Soumission AJAX
+    $('#rdvForm').on('submit', function (e) {
+        e.preventDefault();
 
-            // Ajouter une ligne
-            $("#addRow").click(function() {
-                let options = `@foreach($medicaments as $m)<option value="{{ $m->id }}">{{ $m->nom }}</option>@endforeach`;
-                let newRow = `<tr>
-            <td>
-                <select name="medicaments[${rowIndex}][medicament_id]" class="form-control selectMed" required>
-                    <option value="">-- Choisir --</option>
-                    ${options}
-                </select>
-            </td>
-            <td><input type="number" name="medicaments[${rowIndex}][quantite]" class="form-control quantite" value="1" min="1" required></td>
-            <td><input type="number" name="medicaments[${rowIndex}][prix_unitaire]" class="form-control prix" value="0" min="0" step="0.01" required></td>
-            <td class="sous-total">0.00</td>
-            <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-        </tr>`;
-                $("#medicamentsTable tbody").append(newRow);
-                rowIndex++;
-                updateMedicamentIds();
-            });
+        const btn = $('#btnSave');
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-2"></i>Enregistrement...');
 
-            // Supprimer une ligne
-            $(document).on("click", ".removeRow", function() {
-                $(this).closest("tr").remove();
-                calculerTotal();
-                updateMedicamentIds();
-            });
-
-            // Vérifier la duplication
-            $(document).on("change", ".selectMed", function() {
-                let val = $(this).val();
-                if(medicamentIds.includes(val)) {
-                    alert("Ce médicament est déjà dans le panier !");
-                    $(this).val("");
+        $.ajax({
+            url: '{{ route("rendezvous.store") }}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Succès',
+                        text: 'Rendez-vous enregistré avec succès !',
+                        confirmButtonText: 'Voir la liste'
+                    }).then(() => {
+                        window.location.href = '{{ route("rendezvous.index") }}';
+                    });
                 } else {
-                    updateMedicamentIds();
+                    Swal.fire('Erreur', res.message ?? 'Une erreur est survenue.', 'error');
+                    btn.prop('disabled', false).html('<i class="fa fa-save me-2"></i>Enregistrer le rendez-vous');
                 }
-            });
-
-            // Recalcul automatique
-            $(document).on("input", ".quantite, .prix", function() {
-                calculerTotal();
-            });
-
-            calculerTotal();
-            updateMedicamentIds();
+            },
+            error: function (xhr) {
+                let msg = 'Une erreur est survenue.';
+                if (xhr.status === 422) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        msg = Object.values(errors).flat().join('<br>');
+                    }
+                } else if (xhr.status === 403) {
+                    msg = 'Accès non autorisé.';
+                }
+                Swal.fire({ icon: 'error', title: 'Erreur', html: msg });
+                btn.prop('disabled', false).html('<i class="fa fa-save me-2"></i>Enregistrer le rendez-vous');
+            }
         });
-    </script>
+    });
+});
+</script>
 @endsection

@@ -68,7 +68,7 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="telephone">Téléphone <span
                                                 class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="telephone" name="telephone"
+                                        <input type="tel" class="form-control phone-input" id="telephone" name="telephone"
                                             value="{{ old('telephone', $patient->telephone ?? '') }}" required>
                                     </div>
                                     <div class="mb-2">

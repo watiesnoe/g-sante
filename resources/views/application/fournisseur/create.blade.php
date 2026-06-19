@@ -33,8 +33,7 @@
                         <label for="contact" class="form-label">
                             <i class="fa fa-phone me-1"></i>Contact <span class="text-danger">*</span>
                         </label>
-                        <input type="tel" id="contact" name="contact" class="form-control"
-                               placeholder="+223 12 34 56 78"
+                        <input type="tel" id="contact" name="contact" class="form-control phone-input"
                                value="{{ $fournisseur->contact ?? old('contact') }}" required>
                         <div class="invalid-feedback"></div>
                     </div>

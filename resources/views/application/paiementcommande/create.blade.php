@@ -94,12 +94,10 @@
                                     <div class="mb-4">
                                         <label class="form-label" for="montant">Montant <span class="text-danger">*</span></label>
                                         <div class="input-group">
-                                            <input type="number"
-                                                   class="form-control @error('montant') is-invalid @enderror"
+                                            <input type="text"
+                                                   class="form-control price-input @error('montant') is-invalid @enderror"
                                                    id="montant"
                                                    name="montant"
-                                                   step="0.01"
-                                                   min="0.01"
                                                    placeholder="0.00"
                                                    required>
                                             <span class="input-group-text">€</span>
@@ -301,7 +299,7 @@
             });
 
             function updateSummary() {
-                const amount = parseFloat($('#montant').val()) || 0;
+                const amount = parseFloat(getRawNumericValue($('#montant').val())) || 0;
                 const remaining = parseFloat($('#infoRemaining').text()) || 0;
                 const newBalance = remaining - amount;
 
@@ -334,7 +332,7 @@
             }
 
             function validateAmount() {
-                const amount = parseFloat($('#montant').val()) || 0;
+                const amount = parseFloat(getRawNumericValue($('#montant').val())) || 0;
                 const remaining = parseFloat($('#infoRemaining').text()) || 0;
                 const submitBtn = $('#submitBtn');
 
@@ -352,7 +350,7 @@
 
             // Validation du formulaire
             $('#paymentForm').on('submit', function(e) {
-                const amount = parseFloat($('#montant').val()) || 0;
+                const amount = parseFloat(getRawNumericValue($('#montant').val())) || 0;
                 const remaining = parseFloat($('#infoRemaining').text()) || 0;
 
                 if (amount > remaining) {
