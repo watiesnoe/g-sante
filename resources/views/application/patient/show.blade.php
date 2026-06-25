@@ -26,8 +26,7 @@
                     <a href="{{ route('patients.edit', $patient) }}" class="btn btn-sm btn-white border px-3">
                         <i class="fas fa-edit me-2 text-info"></i>Modifier
                     </a>
-                    <a href="{{ route('consultations.create', ['patient_id' => $patient->uuid]) }}"
-                        class="btn btn-sm btn-primary px-3">
+                    <a href="{{ route('consultations.listeentente', $patient->uuid) }}" class="btn btn-sm btn-primary px-3">
                         <i class="fas fa-plus me-2"></i>Consultation
                     </a>
                 </div>
@@ -71,7 +70,7 @@
 
                         <div class="border-top pt-3 text-start">
                             <div class="mb-2 small">
-                                            </div>
+                            </div>
                             <div class="mb-0 small"> <i
                                     class="fas fa-phone-alt text-primary me-2 w-20px"></i>{{ $patient->telephone }}
                             </div>
@@ -548,41 +547,41 @@
         .bg-pink-light {
             background-color: rgba(233, 30, 99, 0.05);
         }
-
     </style>
 
 @endsection
 
 @section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Gestion manuelle des onglets (compatible Dashmix/Bootstrap 4 & 5)
-        const tabLinks = document.querySelectorAll('#patientTabs .nav-link');
-        const tabPanes = document.querySelectorAll('.tab-content .tab-pane');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gestion manuelle des onglets (compatible Dashmix/Bootstrap 4 & 5)
+            const tabLinks = document.querySelectorAll('#patientTabs .nav-link');
+            const tabPanes = document.querySelectorAll('.tab-content .tab-pane');
 
-        tabLinks.forEach(function (link) {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
+            tabLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
 
-                // Désactiver tous les onglets
-                tabLinks.forEach(l => {
-                    l.classList.remove('active');
+                    // Désactiver tous les onglets
+                    tabLinks.forEach(l => {
+                        l.classList.remove('active');
+                    });
+                    tabPanes.forEach(p => {
+                        p.classList.remove('show', 'active');
+                    });
+
+                    // Activer l'onglet cliqué
+                    link.classList.add('active');
+
+                    // Récupérer la cible
+                    const targetId = link.getAttribute('href') || link.getAttribute(
+                        'data-bs-target');
+                    const targetPane = document.querySelector(targetId);
+                    if (targetPane) {
+                        targetPane.classList.add('show', 'active');
+                    }
                 });
-                tabPanes.forEach(p => {
-                    p.classList.remove('show', 'active');
-                });
-
-                // Activer l'onglet cliqué
-                link.classList.add('active');
-
-                // Récupérer la cible
-                const targetId = link.getAttribute('href') || link.getAttribute('data-bs-target');
-                const targetPane = document.querySelector(targetId);
-                if (targetPane) {
-                    targetPane.classList.add('show', 'active');
-                }
             });
         });
-    });
-</script>
+    </script>
 @endsection

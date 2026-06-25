@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Salle;
 use App\Models\ServiceMedical;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class SalleController extends Controller
@@ -15,16 +16,28 @@ class SalleController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $salles = Salle::with('serviceMedical');
+            $salles = DB::table('salles')
+                ->join('service_medicals', 'salles.service_medical_id', '=', 'service_medicals.id')
+                ->leftJoin('lits', 'salles.id', '=', 'lits.salle_id')
+                ->select([
+                    'salles.id',
+                    'salles.nom',
+                    'salles.type',
+                    'salles.capacite',
+                    'service_medicals.nom as service_medical_nom',
+                    DB::raw('COUNT(lits.id) as lits_total'),
+                    DB::raw('SUM(CASE WHEN lits.statut = "Libre" THEN 1 ELSE 0 END) as lits_libres')
+                ])
+                ->groupBy('salles.id', 'salles.nom', 'salles.type', 'salles.capacite', 'service_medicals.nom');
 
             return DataTables::of($salles)
                 ->addIndexColumn()
                 ->addColumn('service', function ($row) {
-                    return $row->serviceMedical->nom ?? 'N/A';
+                    return $row->service_medical_nom ?? 'N/A';
                 })
                 ->addColumn('disponibilite', function ($row) {
-                    $total = $row->lits()->count();
-                    $libres = $row->lits()->where('statut', 'Libre')->count();
+                    $total = $row->lits_total ?? 0;
+                    $libres = $row->lits_libres ?? 0;
                     $color = $libres > 0 ? 'success' : 'danger';
                     return '<span class="badge bg-'.$color.'">'.$libres.' / '.$total.' Libres</span>';
                 })
@@ -39,7 +52,7 @@ class SalleController extends Controller
                 ->make(true);
         }
 
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.index', compact('services'));
     }
 
@@ -49,7 +62,7 @@ class SalleController extends Controller
      */
     public function create()
     {
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.create', compact('services'));
     }
     public function litsLibres($salleId)
@@ -96,7 +109,7 @@ class SalleController extends Controller
      */
     public function edit(Salle $salle)
     {
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.create', compact('salle', 'services'));
     }
 

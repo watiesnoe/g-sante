@@ -76,17 +76,30 @@ class PaiementCommandeController extends Controller
         ];
     }
 
-    public function create(Request $request)
+    public function create(Request $request, $commande = null)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
-        $commandeId = $request->get('commande_id');
-        $commande = null;
+        $commandeModel = null;
 
-        if ($commandeId) {
-            $commande = Commande::where('uuid', $commandeId)
-                ->orWhere('id', $commandeId)
+        if ($commande) {
+            $commandeModel = Commande::where('uuid', $commande)
+                ->orWhere('id', $commande)
                 ->first();
+        } else {
+            $commandeId = $request->get('commande_id');
+            if ($commandeId) {
+                $commandeModel = Commande::where('uuid', $commandeId)
+                    ->orWhere('id', $commandeId)
+                    ->first();
+            }
+        }
+
+        $commande = $commandeModel;
+
+        if ($commande && $commande->StatutPaiement === 'total') {
+            return redirect()->route('paiementscommande.dashboard')
+                ->with('error', 'Cette commande est déjà entièrement payée.');
         }
 
         $commandes = Commande::with('fournisseur')

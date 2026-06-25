@@ -125,69 +125,114 @@ $(document).ready(function() {
         });
     });
 
-    $(document).on('click', '.show-protocol', function() {
-        let id = $(this).data('id');
-        $('#searchResults').hide();
-        $('#medicalSearch').val($(this).text().trim());
+   $(document).on('click', '.show-protocol', function() {
+    let id = $(this).data('id');
+    $('#searchResults').hide();
+    $('#medicalSearch').val($(this).text().trim());
 
-        $.ajax({
-            url: '/infectiologie/api/protocoles/' + id,
-            type: 'GET',
-            success: function(response) {
-                if (response.success && response.protocoles && response.protocoles.length > 0) {
-                    let p = response.protocoles[0];
-                    let html = `
-                        <div class="p-4 border-bottom bg-light">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h4 class="fw-bold text-primary mb-1">${p.titre}</h4>
-                                    <p class="mb-0 text-muted">Protocole Expert - Mise à jour: 2026</p>
-                                </div>
-                                <a href="/infectiologie/protocoles/${p.id}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
-                                    <i class="fas fa-external-link-alt me-1"></i> Mode Plein Écran
-                                </a>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="row g-4">
-                                <div class="col-md-6 border-end">
-                                    <h6 class="text-uppercase small fw-bold text-secondary mb-3">Diagnostic & Signes</h6>
-                                    <p class="small">${p.signes || 'Consulter le médecin'}</p>
-                                    <hr>
-                                    <h6 class="text-uppercase small fw-bold text-secondary mb-3">Germes Probables</h6>
-                                    <p class="small text-muted italic">${p.germes_adulte || 'Variable'}</p>
-                                </div>
-                                <div class="col-md-6 ps-md-4">
-                                    <h6 class="text-uppercase small fw-bold text-success mb-3">Traitement de Première Intention</h6>
-                                    <div class="bg-soft-success p-3 rounded-3 mb-3 border border-success-subtle">
-                                        <div class="fw-bold text-success mb-1">${p.traitement_principal}</div>
-                                        <div class="small fw-semibold mt-2">Posologie:</div>
-                                        <div class="small text-dark">${p.posologie_principale}</div>
-                                    </div>
-                                    
-                                    <h6 class="text-uppercase small fw-bold text-warning mb-3">Alternative Thérapeutique</h6>
-                                    <div class="small opacity-75">${p.traitement_alternatif || 'N/A'}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    $('#protocolContent').html(html);
-                    $('#protocolDisplay').fadeIn();
+    // Utilisation de la route Laravel (générée proprement via Blade en amont)
+    let url = "{{ route('infectiologie.get_protocole', ':id') }}";
+    url = url.replace(':id', id);
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(response) {
+            if (response.success && response.protocoles && response.protocoles.length > 0) {
+                let protocols = response.protocoles;
+                let p = protocols[0];
+
+                // Gestion des protocoles multiples (Sélection alternative)
+                if (protocols.length > 1) {
+                    let opts = '';
+                    protocols.forEach((item, idx) => {
+                        opts += `<option value="${idx}">${item.titre}</option>`;
+                    });
+                    
+                    $('#selectProtocoleAlt').html(opts);
+                    $('#multiProtocolSelector').show();
+                    
+                    // Changement de protocole au clic sur le select
+                    $('#selectProtocoleAlt').off('change').on('change', function() {
+                        renderProtocoleHTML(protocols[$(this).val()]);
+                    });
                 } else {
-                    if (typeof Toast !== 'undefined') {
-                        Toast.fire({ icon: 'info', title: 'Aucun protocole défini pour cette pathologie.' });
-                    } else {
-                        alert('Aucun protocole défini pour cette pathologie.');
-                    }
+                    $('#multiProtocolSelector').hide();
                 }
-            },
-            error: function() {
+
+                // Injection du premier protocole (ou de l'unique)
+                renderProtocoleHTML(p);
+                $('#protocolDisplay').fadeIn();
+
+                // Auto-prescription (si votre bouton existe aussi dans cette vue)
+                if ($('#btnApplyProtocole').length) {
+                    setTimeout(() => {
+                        $('#btnApplyProtocole').trigger('click');
+                    }, 300);
+                }
+
+            } else {
+                $('#protocolDisplay').hide();
                 if (typeof Toast !== 'undefined') {
-                    Toast.fire({ icon: 'error', title: 'Erreur de connexion.' });
+                    Toast.fire({ icon: 'info', title: 'Aucun protocole défini pour cette pathologie.' });
+                } else {
+                    alert('Aucun protocole défini pour cette pathologie.');
                 }
             }
-        });
+        },
+        error: function() {
+            $('#protocolDisplay').hide();
+            if (typeof Toast !== 'undefined') {
+                Toast.fire({ icon: 'error', title: 'Erreur de connexion.' });
+            }
+        }
     });
+});
+
+function renderProtocoleHTML(p) {
+    let viewUrl = "{{ route('infectiologie.protocoles.show', ':uuid') }}".replace(':uuid', p.uuid);
+    let html = `
+        <div class="p-4 border-bottom bg-light">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h4 class="fw-bold text-primary mb-1">${p.titre}</h4>
+                    <p class="mb-0 text-muted">Protocole Expert - Mise à jour: 2026</p>
+                </div>
+                <a href="${viewUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                    <i class="fas fa-external-link-alt me-1"></i> Mode Plein Écran
+                </a>
+            </div>
+        </div>
+        <div class="p-4">
+            <div class="row g-4">
+                <div class="col-md-6 border-end">
+                    <h6 class="text-uppercase small fw-bold text-secondary mb-3">Diagnostic & Signes</h6>
+                    <p class="small">${p.signes || 'Consulter le médecin'}</p>
+                    <hr>
+                    <h6 class="text-uppercase small fw-bold text-secondary mb-3">Germes Probables</h6>
+                    <p class="small text-muted italic">${p.germes_adulte || 'Variable'}</p>
+                </div>
+                <div class="col-md-6 ps-md-4">
+                    <h6 class="text-uppercase small fw-bold text-success mb-3">Traitement de Première Intention</h6>
+                    <div class="bg-soft-success p-3 rounded-3 mb-3 border border-success-subtle">
+                        <div class="fw-bold text-success mb-1">${p.traitement_principal}</div>
+                        <div class="small fw-semibold mt-2">Posologie:</div>
+                        <div class="small text-dark">${p.posologie_principale}</div>
+                    </div>
+                    
+                    <h6 class="text-uppercase small fw-bold text-warning mb-3">Alternative Thérapeutique</h6>
+                    <div class="small opacity-75">${p.traitement_alternatif || 'N/A'}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    $('#protocolContent').html(html);
+    
+    // Si vous stockez les données dans le bouton d'application automatique :
+    if ($('#btnApplyProtocole').length) {
+        $('#btnApplyProtocole').data('protocole', p);
+    }
+}
 
     $('.category-card').click(function() {
         let cat = $(this).data('category');

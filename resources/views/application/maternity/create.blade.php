@@ -71,8 +71,8 @@
                 data: function (params) {
                     return {
                         q: params.term, // search term
-                        gender: 'F,Féminin,Feminin,Femme', // only female
-                        min_age: 15 // min age 15
+                        gender: 'F', // only female
+                        min_age: 15 // min age 15 (superieur a 14)
                     };
                 },
                 processResults: function (data) {

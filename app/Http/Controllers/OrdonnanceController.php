@@ -299,23 +299,30 @@ class OrdonnanceController extends Controller
         abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
 
         if ($request->ajax()) {
-            $ordonnances = Ordonnance::with(['consultation.patient'])
-                ->whereIn('statutordo', ['paye', 'partiellement'])
-                ->orderBy('ordonnances.created_at','desc')
-                ->get(); // 👈 ici
+            $ordonnances = DB::table('ordonnances')
+                ->join('consultations', 'ordonnances.consultation_id', '=', 'consultations.id')
+                ->join('patients', 'consultations.patient_id', '=', 'patients.id')
+                ->whereIn('ordonnances.statutordo', ['paye', 'partiellement'])
+                ->select(
+                    'ordonnances.id',
+                    'ordonnances.uuid',
+                    'ordonnances.created_at',
+                    'ordonnances.statutordo',
+                    'patients.nom',
+                    'patients.prenom'
+                )
+                ->orderByDesc('ordonnances.created_at');
 
             return datatables()->of($ordonnances)
-                ->addColumn('patient', function($ord){
-                    return $ord->consultation->patient->nom.' '.$ord->consultation->patient->prenom;
-                })
-                ->addColumn('actions', function($ord){
+                ->addColumn('patient', fn($ord) => $ord->nom . ' ' . $ord->prenom)
+                ->addColumn('actions', function($ord) {
                     $user = Auth::user();
                     $html = '';
 
                     if ($user->can('ordonnances.pdf')) {
-                        $html .= '<a href="'.route('ordonnances.pdf', $ord).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
+                        $html .= '<a href="'.route('ordonnances.pdf', $ord->uuid).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
                     }
-                    
+
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
                 ->rawColumns(['actions'])

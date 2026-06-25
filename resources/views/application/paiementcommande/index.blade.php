@@ -4,6 +4,20 @@
 
 @section('content')
     <div class="container mt-4">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="mb-1">Dashboard Paiements Commandes</h2>
@@ -149,7 +163,7 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-2">
-                                            <a href="{{ route('paiementscommande.create', ['commande_id' => $commande->uuid]) }}"
+                                            <a href="{{ route('paiementscommande.create', $commande->uuid) }}"
                                                class="btn-sm"
                                                title="Payer">
                                                 <i class="fa fa-money-bill text-primary"></i>

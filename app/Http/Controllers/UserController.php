@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\ServiceMedical;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // 👈 ajoute ceci
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // 👈 ajoute ceci
-use Illuminate\Support\Facades\Auth;
+
 class UserController extends Controller
 {
     use AuthorizesRequests;
@@ -24,7 +26,11 @@ class UserController extends Controller
 
         // Si la requête est AJAX (pour DataTables)
         if ($request->ajax()) {
-            $users = User::whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))->latest()->get();
+            $users = User::select(['id', 'uuid', 'name', 'prenom', 'nom', 'email', 'telephone', 'photo', 'statut', 'created_at'])
+                ->whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))
+                ->with('roles:id,name,libelle')
+                ->latest()
+                ->get();
 
             return datatables()->of($users)
                 ->addIndexColumn()
@@ -61,9 +67,9 @@ class UserController extends Controller
         }
 
         $stats = [
-            'total' => User::count(),
-            'actifs' => User::where('statut', 'actif')->count(),
-            'inactifs' => User::where('statut', 'inactif')->count(),
+            'total'    => DB::table('users')->count(),
+            'actifs'   => DB::table('users')->where('statut', 'actif')->count(),
+            'inactifs' => DB::table('users')->where('statut', 'inactif')->count(),
         ];
 
         $roles = \Spatie\Permission\Models\Role::all();

@@ -68,8 +68,9 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="telephone">Téléphone <span
                                                 class="text-danger">*</span></label>
-                                        <input type="tel" class="form-control phone-input" id="telephone" name="telephone"
-                                            value="{{ old('telephone', $patient->telephone ?? '') }}" required>
+                                        <input type="tel" class="form-control phone-input" id="telephone"
+                                            name="telephone" value="{{ old('telephone', $patient->telephone ?? '') }}"
+                                            required>
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label" for="ethnie">Ethnie / Origine <span
@@ -139,35 +140,55 @@
 @endsection
 
 @section('scripts')
+    {{-- Liaisons indispensables chargées de manière sécurisée si non présentes dans votre layout global --}}
+    {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.1/build/css/intlTelInput.css">
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.1/build/js/intlTelInput.min.js"></script> --}}
+
     <script>
         $(document).ready(function() {
+            // 1. Initialisation d'intl-tel-input configurée pour la sous-région (Guinée, Mali, Sénégal, etc.)
+            const phoneInput = document.getElementById('telephone');
+            let iti = null;
+
+            if (phoneInput) {
+                iti = window.intlTelInput(phoneInput, {
+                    initialCountry: "gn", // Pays par défaut (Guinée)
+                    preferredCountries: ["gn", "ml", "sn", "ci"], // Choix rapides prioritaires
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.1/build/js/utils.js",
+                    autoPlaceholder: "polite"
+                });
+            }
+
+            // 2. Gestion de la soumission du formulaire via AJAX
             $('#patientForm').on('submit', function(e) {
                 e.preventDefault();
 
                 let $form = $(this);
                 let actionUrl = $form.attr('action');
 
-                // Extraire le numéro E.164 depuis intl-tel-input avant FormData
-                var phoneInput = document.getElementById('telephone');
-                if (window.getPhoneNumber) {
-                    var fullPhone = window.getPhoneNumber(phoneInput);
-                    if (fullPhone) phoneInput.value = fullPhone;
+                // EXTRACTION SOUPLE DU NUMÉRO SANS BLOCAGE INTRINSÈQUE
+                if (iti) {
+                    if (iti.isValidNumber()) {
+                        // S'il est 100% conforme à l'indicateur sélectionné, on injecte le format international propre (+224...)
+                        phoneInput.value = iti.getNumber();
+                    } else {
+                        // Si l'outil le juge "non standard" (ex: numéro malien à 8 chiffres alors que l'indicateur affiche la Guinée)
+                        // On nettoie simplement les espaces vides et on laisse passer la saisie brute utilisateur.
+                        phoneInput.value = phoneInput.value.replace(/\s+/g, '');
+                    }
                 }
 
                 let formData = new FormData(this);
-
                 let $submitBtn = $form.find('button[type="submit"]');
                 let originalBtnHtml = $submitBtn.html();
 
-                // 1. Nettoyage initial des erreurs graphiques
+                // Nettoyage des alertes et feedback d'erreurs Bootstrap
                 $('.invalid-feedback').remove();
                 $('.form-control, .form-select').removeClass('is-invalid');
 
-                // Désactivation du bouton
-                $submitBtn.html('<i class="fa fa-spinner fa-spin me-1"></i> Traitement...').attr('disabled',
-                    true);
+                // Verrouillage du bouton durant le traitement
+                $submitBtn.html('<i class="fa fa-spinner fa-spin me-1"></i> Traitement...').attr('disabled', true);
 
-                // 2. Requête AJAX
                 $.ajax({
                     url: actionUrl,
                     type: 'POST',
@@ -180,8 +201,7 @@
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Succès !',
-                                text: response.message ||
-                                    'Patient enregistré avec succès.',
+                                text: response.message || 'Opération complétée avec succès.',
                                 timer: 2000,
                                 showConfirmButton: false
                             }).then(() => {
@@ -204,13 +224,9 @@
 
                             $.each(errors, function(field, messages) {
                                 let $input = $('#' + field);
-
                                 if ($input.length) {
                                     $input.addClass('is-invalid');
-                                    // S'adapte au conteneur parent pour positionner le retour d'erreur Bootstrap
-                                    $input.parent().append(
-                                        '<div class="invalid-feedback">' + messages[
-                                            0] + '</div>');
+                                    $input.parent().append('<div class="invalid-feedback">' + messages[0] + '</div>');
                                 }
                             });
                         } else {

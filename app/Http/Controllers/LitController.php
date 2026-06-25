@@ -7,6 +7,7 @@ use App\Models\Salle;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class LitController extends Controller
@@ -18,8 +19,18 @@ class LitController extends Controller
         abort_unless(Auth::user()->can('parametres.lits'), 403, 'Accès non autorisé.');
 
         if ($request->ajax()) {
-            // Récupération des lits triés par date décroissante avec leur salle liée
-            $lits = Lit::with('salle')->orderBy('created_at', 'desc')->select('lits.*');
+            // Récupération des lits triés par date décroissante avec leur salle liée via DB::table()
+            $lits = DB::table('lits')
+                ->join('salles', 'lits.salle_id', '=', 'salles.id')
+                ->select([
+                    'lits.id',
+                    'lits.uuid',
+                    'lits.numero',
+                    'lits.statut',
+                    'lits.created_at',
+                    'salles.nom as salle_nom'
+                ])
+                ->orderBy('lits.created_at', 'desc');
 
             return DataTables::of($lits)
                 ->addIndexColumn() // Numéro de ligne automatique
@@ -33,7 +44,7 @@ class LitController extends Controller
                     return '<span class="badge bg-' . $class . '">' . $row->statut . '</span>';
                 })
                 ->addColumn('salle', function ($row) {
-                    return $row->salle->nom ?? '-';
+                    return $row->salle_nom ?? '-';
                 })
                 ->addColumn('actions', function ($row) {
                     // Utilisation de la colonne uuid (ou id si l'id principal de la table est une string UUID)
@@ -53,7 +64,7 @@ class LitController extends Controller
         }
 
         // Si ce n'est pas de l'AJAX, on charge la vue principale avec la liste des salles pour le modal
-        $salles = Salle::all();
+        $salles = DB::table('salles')->select('id', 'nom')->get();
         return view('application.lit.index', compact('salles'));
     }
 

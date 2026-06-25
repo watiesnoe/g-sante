@@ -6,6 +6,7 @@ use App\Models\Examen;
 use App\Models\ServiceMedical;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class ExamenController extends Controller
@@ -15,10 +16,18 @@ class ExamenController extends Controller
         abort_unless(Auth::user()->can('parametres.examens_config'), 403, 'Accès non autorisé : vous n\'avez pas la permission de configurer les examens.');
 
         if($request->ajax()) {
-            $examens = Examen::with('serviceMedical')->select('examens.*');
+            $examens = DB::table('examens')
+                ->join('service_medicals', 'examens.service_medical_id', '=', 'service_medicals.id')
+                ->select([
+                    'examens.id',
+                    'examens.nom',
+                    'examens.description',
+                    'examens.prix',
+                    'service_medicals.nom as service_medical_nom'
+                ]);
             return DataTables::of($examens)
                 ->addIndexColumn()
-                ->addColumn('service', fn($row) => $row->serviceMedical->nom ?? '-')
+                ->addColumn('service', fn($row) => $row->service_medical_nom ?? '-')
                 ->addColumn('actions', function($row){
                     $user = Auth::user();
                     $html = '';
@@ -39,7 +48,7 @@ class ExamenController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.examens_config'), 403, 'Accès non autorisé.');
 
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.examen.create', compact('services'));
     }
 
@@ -67,7 +76,7 @@ class ExamenController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.examens_config'), 403, 'Accès non autorisé.');
 
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.examen.create', compact('examen','services'));
     }
 

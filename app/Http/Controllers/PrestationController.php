@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PrestationController extends Controller
 {
@@ -16,12 +17,20 @@ class PrestationController extends Controller
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
         if ($request->ajax()) {
-            $prestations = Prestation::with('serviceMedical'); // pas ->get()
+            $prestations = DB::table('prestations')
+                ->join('service_medicals', 'prestations.service_medical_id', '=', 'service_medicals.id')
+                ->select([
+                    'prestations.id',
+                    'prestations.nom',
+                    'prestations.description',
+                    'prestations.prix',
+                    'service_medicals.nom as service_medical_nom'
+                ]);
 
             return DataTables::of($prestations)
                 ->addIndexColumn()
                 ->addColumn('service_medical', function ($row) {
-                    return $row->serviceMedical->nom ?? '';
+                    return $row->service_medical_nom ?? '';
                 })
                 ->addColumn('actions', function ($row) {
                     $edit   = '<a href="'.route('prestations.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
@@ -41,7 +50,7 @@ class PrestationController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.prestation.create', compact('services'));
     }
 
@@ -66,7 +75,7 @@ class PrestationController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
-        $services = ServiceMedical::all();
+        $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.prestation.create', compact('prestation', 'services'));
     }
 

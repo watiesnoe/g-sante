@@ -7,19 +7,37 @@ use App\Models\Medicament;
 use App\Models\Unite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class MedicamentController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $famille = null)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des médicaments.');
+
+        $selectedFamilleId = null;
+        if ($famille) {
+            $familleModel = Famille::where('uuid', $famille)
+                ->orWhere('id', $famille)
+                ->first();
+            $selectedFamilleId = $familleModel?->id;
+        } else {
+            $selectedFamilleId = $request->get('famille_id');
+        }
+
+        // 🎯 Détection stricte pour différencier l'état actif (1) de l'état inactif (0)
+        $filterStockCritique = $request->input('stock_critique') == 1 || $request->input('stock_critique') === '1';
 
         if ($request->ajax()) {
             $query = Medicament::with(['unite', 'famille']);
 
-            if ($request->filled('famille_id')) {
-                $query->where('famille_id', $request->famille_id);
+            if ($selectedFamilleId) {
+                $query->where('famille_id', $selectedFamilleId);
+            }
+
+            // 🎯 Utilisation du scope centralisé du modèle
+            if ($filterStockCritique) {
+                $query->critique();
             }
 
             return DataTables::of($query)
@@ -51,22 +69,26 @@ class MedicamentController extends Controller
         $familles       = Famille::orderBy('nom')->get();
         $unites         = Unite::all();
         $totalMolecules = Medicament::count();
-        $stockCritique  = Medicament::whereColumn('stock', '<=', 'stock_min')->count();
+
+        // 🎯 Utilisation du scope pour le compteur global
+        $stockCritique  = Medicament::critique()->count();
 
         $pageTitle = '🩺 Gestion des Médicaments';
-        if ($request->filled('famille_id')) {
-            $famille = $familles->find($request->famille_id);
-            if ($famille) {
-                $pageTitle = '💊 Gestion des ' . $famille->nom;
+        if ($selectedFamilleId) {
+            $familleObj = $familles->find($selectedFamilleId);
+            if ($familleObj) {
+                $pageTitle = '💊 Gestion des ' . $familleObj->nom;
             }
         }
 
-        return view('application.medicament.index', compact('familles', 'unites', 'totalMolecules', 'stockCritique', 'pageTitle'));
+        return view('application.medicament.index', compact('familles', 'unites', 'totalMolecules', 'stockCritique', 'pageTitle', 'selectedFamilleId', 'filterStockCritique'));
     }
 
-    public function show(Medicament $medicament)
+    public function show($id)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les médicaments.');
+
+        $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
 
         if (request()->ajax()) {
             return response()->json($medicament->load(['unite', 'famille']));
@@ -110,19 +132,22 @@ class MedicamentController extends Controller
         ]);
     }
 
-    public function edit(Medicament $medicament)
+    public function edit($id)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un médicament.');
 
+        $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
         $unites  = Unite::all();
         $familles = Famille::all();
 
         return view('application.medicament.create', compact('medicament', 'unites', 'familles'));
     }
 
-    public function update(Request $request, Medicament $medicament)
+    public function update(Request $request, $id)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un médicament.');
+
+        $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
 
         $validated = $request->validate([
             'nom'         => 'required|string|max:255',
@@ -143,10 +168,11 @@ class MedicamentController extends Controller
         ]);
     }
 
-    public function destroy(Medicament $medicament)
+    public function destroy($id)
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un médicament.');
 
+        $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
         $medicament->delete();
 
         return response()->json([

@@ -30,7 +30,7 @@ class ConsultationController extends Controller
      * Display a listing of the resource.
      */
 
-    public function index(Request $request)
+  public function index(Request $request)
     {
         abort_unless(Auth::user()->can('consultations.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les consultations.');
 
@@ -94,24 +94,23 @@ class ConsultationController extends Controller
     {
         abort_unless(Auth::user()->can('consultations.liste_attente'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir la liste d\'attente.');
 
-        $today = Carbon::today();
-        $ticketsQuery = Ticket::with(['patient', 'items', 'medecin'])
-            ->where('statut', 'en_attente')
-            ->where('date_validite', '>=', $today)
-            ->orderBy('created_at', 'asc');
-
-        // Un médecin ne voit que les tickets qui lui sont assignés ou sans médecin assigné
-        if (Auth::user()->hasRole('medecin')) {
-            $ticketsQuery->where(function ($q) {
-                $q->where('medecin_id', Auth::id())
-                  ->orWhereNull('medecin_id');
-            });
-        }
-
-        $tickets = $ticketsQuery->get();
-
         if ($request->ajax()) {
-            return DataTables::of($tickets)
+            $today = Carbon::today();
+            $ticketsQuery = Ticket::with(['patient', 'items', 'medecin'])
+                ->where('statut', 'en_attente')
+                ->where('date_validite', '>=', $today)
+                ->orderBy('created_at', 'asc');
+
+            // Un médecin ne voit que les tickets qui lui sont assignés ou sans médecin assigné
+            if (Auth::user()->hasRole('medecin')) {
+                $ticketsQuery->where(function ($q) {
+                    $q->where('medecin_id', Auth::id())
+                      ->orWhereNull('medecin_id');
+                });
+            }
+
+            // Utilisation directe du QueryBuilder dans DataTables (meilleures performances que .get())
+            return DataTables::of($ticketsQuery)
                 ->addColumn('patient', function ($row) {
                     return $row->patient ? $row->patient->prenom . ' ' . $row->patient->nom : '-';
                 })
@@ -122,11 +121,12 @@ class ConsultationController extends Controller
                     return $row->medecin_id && $row->medecin ? $row->medecin->name : '<span class="badge bg-secondary">Tout médecin</span>';
                 })
                 ->addColumn('motif', function ($row) {
-                    return $row->items->pluck('libelle')->implode(', ');
+                    return $row->items->pluck('libelle')->filter()->implode(', ') ?: $row->description;
                 })
                 ->addColumn('actions', function ($row) {
                     if (Auth::user()->can('consultations.create')) {
-                        return '<a href="' . route('consultations.create', ['ticket_id' => $row->uuid]) . '" class="btn btn-sm btn-outline-primary"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
+                        // Utilisation exacte de la route "listeentente" configurée avec l'UUID du ticket
+                        return '<a href="' . route('consultations.listeentente', $row->uuid) . '" class="btn btn-sm btn-outline-primary"><i class="fa fa-stethoscope me-1"></i> Consulter</a>';
                     }
                     return '-';
                 })
@@ -136,11 +136,11 @@ class ConsultationController extends Controller
 
         return view('application.consultation.liste_attente');
     }
-
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request, Consultation $consultation)
+    // 1. Ajoutez $ticket_uuid = null à la fin des paramètres de la fonction
+    public function create(Request $request, Consultation $consultation, $ticket_uuid = null)
     {
         abort_unless(Auth::user()->can('consultations.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une consultation.');
 
@@ -151,31 +151,35 @@ class ConsultationController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $selectedTicketId = $request->get('ticket_id');
+        // 2. On récupère le ticket_id depuis la Query String OU depuis le Path (ticket_uuid)
+        $selectedTicketId = $request->get('ticket_id') ?: $ticket_uuid;
         $selectedPatientId = $request->get('patient_id');
         $selectedGrossesseId = $request->get('grossesse_id');
 
         // Pré-remplissage si un ticket est spécifié
         if ($selectedTicketId) {
-            // Check if it's a UUID or ID (for backward compatibility or if some links still use ID)
             $ticket = Ticket::with(['patient', 'items'])
                 ->where('uuid', $selectedTicketId)
                 ->orWhere('id', $selectedTicketId)
                 ->first();
+                
             if ($ticket) {
+                // On force l'ID numérique pour la correspondance exacte dans la vue
+                $selectedTicketId = $ticket->id; 
                 $selectedPatientId = $selectedPatientId ?: $ticket->patient_id;
+                
                 if (!$consultation->motif) {
                     $consultation->motif = $ticket->items->pluck('libelle')->filter()->implode(', ') ?: $ticket->description;
                 }
             }
         }
 
-        $patients = Patient::all();
-        $symptomes = Symptome::with('maladies')->get();
-        $maladies = Maladie::with(['protocole', 'symptomes'])->get();
-        $medicaments = Medicament::all();
-        $salles = Salle::all();
-        $lits = Lit::all();
+        $patients    = DB::table('patients')->select('id', 'uuid', 'nom', 'prenom', 'genre', 'age')->orderBy('nom')->get();
+        $symptomes   = Symptome::with('maladies')->get();
+        $maladies    = Maladie::with(['protocole', 'symptomes'])->get();
+        $medicaments = DB::table('medicaments')->select('id', 'nom', 'prix_vente', 'stock')->orderBy('nom')->get();
+        $salles      = DB::table('salles')->select('id', 'nom', 'type','service_medical_id')->orderBy('nom')->get();
+        $lits        = DB::table('lits')->select('id', 'numero', 'salle_id', 'statut')->orderBy('numero')->get();
 
         $symptomeMaladieMap = $symptomes->mapWithKeys(function ($s) {
             return [$s->id => $s->maladies->pluck('id')->toArray()];
@@ -204,7 +208,6 @@ class ConsultationController extends Controller
             'selectedGrossesseId'
         ));
     }
-
     /**
      * Store a newly created resource in storage.
      */
@@ -460,7 +463,7 @@ class ConsultationController extends Controller
         }
 
         $symptomes = Symptome::all();
-        $maladies = Maladie::with('protocole')->get();
+        $maladies  = Maladie::with('protocole')->get();
 
         $symptomeMaladieMap = Symptome::with('maladies')
             ->get()
@@ -468,8 +471,8 @@ class ConsultationController extends Controller
                 return [$s->id => $s->maladies->pluck('id')->toArray()];
             });
 
-        $medicaments = Medicament::all();
-        $salles = Salle::all();
+        $medicaments = DB::table('medicaments')->select('id', 'nom', 'prix_vente', 'stock')->orderBy('nom')->get();
+        $salles      = DB::table('salles')->select('id', 'nom', 'service_medical_id')->orderBy('nom')->get();
 
         // ✅ Chargement des relations
         $consultation->load([

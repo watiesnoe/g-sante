@@ -46,6 +46,7 @@
                         </div>
 
                         <div class="modal-body row">
+                            {{-- ID numérique envoyé au contrôleur --}}
                             <input type="hidden" id="hospitalisation_id" name="hospitalisation_id">
 
                             <div class="col-md-6 mb-3">
@@ -82,7 +83,9 @@
 
                             <div class="col-md-6 mb-3">
                                 <label>Montant reçu</label>
-                                <input type="number" id="montant_recu" name="montant_recu" class="form-control">
+                                {{-- 🛠️ CORRECTION : Ajout de l'attribut name="montant_recu" pour l'envoi AJAX --}}
+                                <input type="number" id="montant_recu" name="montant_recu" class="form-control"
+                                    min="0" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -105,20 +108,42 @@
 
 @section('scripts')
     <script>
-        $(function () {
+        $(function() {
 
             // ---------------- DataTable ----------------
             let table = $('#hospitalisationsTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '{{ route("hospitalisations.index") }}',
-                columns: [
-                    { data: 'patient', name: 'patient' },
-                    { data: 'salle_lit', name: 'salle_lit' },
-                    { data: 'date_entree', name: 'date_entree' },
-                    { data: 'motif', name: 'motif' },
-                    { data: 'etat', name: 'etat', orderable: false, searchable: false },
-                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },
+                ajax: '{{ route('hospitalisations.index') }}',
+                columns: [{
+                        data: 'patient',
+                        name: 'patient'
+                    },
+                    {
+                        data: 'salle_lit',
+                        name: 'salle_lit'
+                    },
+                    {
+                        data: 'date_entree',
+                        name: 'date_entree'
+                    },
+                    {
+                        data: 'motif',
+                        name: 'motif'
+                    },
+                    {
+                        data: 'etat',
+                        name: 'etat',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    },
                 ],
                 language: {
                     url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json',
@@ -128,8 +153,8 @@
                     }
                 },
                 dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
                 pagingType: 'simple_numbers'
             });
 
@@ -138,9 +163,10 @@
                 let id = $(this).data('id');
                 if (!id) return console.error('hospitalisation id manquant');
 
-                let url = '{{ route("hospitalisations.paiement.data", ":id") }}'.replace(':id', id);
+                let url = '{{ route('hospitalisations.paiement.data', ':id') }}'.replace(':id', id);
 
                 $.getJSON(url, function(response) {
+                    // Extraction propre de la date YYYY-MM-DD
                     let dateEntree = response.date_entree ? response.date_entree.split(' ')[0] : '';
                     let prixJour = response.prix_jour || 0;
 
@@ -148,6 +174,7 @@
                     $('#date_entree').val(dateEntree);
                     $('#montant_jour').val(prixJour);
 
+                    // Reset des champs dynamiques
                     $('#date_sortie').val('');
                     $('#montant_total').val('');
                     $('#montant_recu').val('');
@@ -160,7 +187,6 @@
                         title: 'Erreur',
                         text: 'Impossible de charger les informations de l’hospitalisation.'
                     });
-                    console.error('Erreur chargement paiement:', xhr.responseText);
                 });
             });
 
@@ -175,7 +201,11 @@
                     return 0;
                 }
 
-                let jours = Math.ceil((sortie - arrive) / (1000 * 3600 * 24));
+                // Calcul de la différence en jours (minimum 1 jour)
+                let diffTime = Math.abs(sortie - arrive);
+                let jours = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (jours === 0) jours = 1;
+
                 let total = jours * montantJour;
                 $('#montant_total').val(total.toFixed(2));
                 return total;
@@ -197,8 +227,8 @@
             $('#formPaiement').submit(function(e) {
                 e.preventDefault();
 
-                let url = '{{ route("paiements.hospitalisation") }}';
-                
+                // Utilise la route définie par votre méthode storePaiement
+                let url = '{{ route('paiements.hospitalisation') }}';
                 let formData = $(this).serialize();
 
                 $.ajax({
@@ -206,31 +236,34 @@
                     type: 'POST',
                     data: formData,
                     dataType: 'json',
-                    success: function(data) {
+                    success: function(response) {
                         Swal.fire({
                             icon: 'success',
-                            title: data.message,
+                            title: 'Succès !',
+                            text: response.message || 'Opération enregistrée.',
                             timer: 1500,
                             showConfirmButton: false
                         });
                         $('#modalPaiement').modal('hide');
-                        table.ajax.reload();
+                        table.ajax.reload(); // Rechargement de la table DataTables
                     },
                     error: function(xhr) {
                         console.error('Erreur AJAX:', xhr.responseJSON);
                         let msg = 'Une erreur inattendue s\'est produite.';
-                        if (xhr.responseJSON) {
-                            msg = xhr.responseJSON.message || xhr.responseJSON.error || Object.values(xhr.responseJSON.errors || {}).join("\n") || msg;
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            msg = Object.values(xhr.responseJSON.errors).map(e => e.join('\n'))
+                                .join('\n');
+                        } else if (xhr.responseJSON) {
+                            msg = xhr.responseJSON.message || xhr.responseJSON.error || msg;
                         }
                         Swal.fire({
                             icon: 'error',
-                            title: 'Erreur',
+                            title: 'Erreur ' + xhr.status,
                             text: msg
                         });
                     }
                 });
             });
-
         });
     </script>
 @endsection

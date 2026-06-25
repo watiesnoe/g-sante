@@ -1,111 +1,141 @@
 @extends('layouts.app')
 
-@section('titre', isset($commande) ? 'Éditer la commande' : 'Créer une commande')
+@section('titre', 'Nouvelle Hospitalisation')
 
 @section('content')
     <div class="container mt-4">
         <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white">
-                <h4>📝 {{ isset($commande) ? 'Modifier la commande' : 'Nouvelle commande' }}</h4>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fa fa-bed me-2"></i> Nouvelle Hospitalisation</h4>
+                <a href="{{ route('hospitalisations.index') }}" class="btn btn-light btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> Retour
+                </a>
             </div>
             <div class="card-body">
-                <form action="{{ isset($commande) ? route('commandes.update', $commande) : route('commandes.store') }}"
-                      method="POST" id="commandeForm">
+
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('hospitalisations.store') }}" method="POST" id="hospitalisationForm">
                     @csrf
-                    @if(isset($commande))
-                        @method('PUT')
-                    @endif
 
-                    <!-- Fournisseur -->
-                    <div class="mb-3">
-                        <label for="fournisseur_id" class="form-label">Fournisseur</label>
-                        <select name="fournisseur_id" id="fournisseur_id" class="form-control" required>
-                            <option value="">-- Sélectionnez un fournisseur --</option>
-                            @foreach($fournisseurs as $f)
-                                <option value="{{ $f->id }}" {{ isset($commande) && $commande->fournisseur_id == $f->id ? 'selected' : '' }}>
-                                    {{ $f->nom }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="row g-3">
+
+                        {{-- Consultation (Patient) --}}
+                        <div class="col-md-6">
+                            <label for="consultation_id" class="form-label fw-semibold">
+                                <i class="fa fa-user-md me-1"></i> Consultation / Patient <span class="text-danger">*</span>
+                            </label>
+                            <select name="consultation_id" id="consultation_id" class="form-select select2" required>
+                                <option value="">-- Sélectionnez une consultation --</option>
+                                @foreach($consultations as $c)
+                                    <option value="{{ $c->id }}" {{ old('consultation_id') == $c->id ? 'selected' : '' }}>
+                                        #{{ $c->id }} — {{ $c->patient->nom ?? '?' }} {{ $c->patient->prenom ?? '' }}
+                                        ({{ \Carbon\Carbon::parse($c->created_at)->format('d/m/Y') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Service médical --}}
+                        <div class="col-md-6">
+                            <label for="service_id" class="form-label fw-semibold">
+                                <i class="fa fa-hospital me-1"></i> Service médical <span class="text-danger">*</span>
+                            </label>
+                            <select name="service_id" id="service_id" class="form-select" required>
+                                <option value="">-- Sélectionnez un service --</option>
+                                @foreach($services as $s)
+                                    <option value="{{ $s->id }}" {{ old('service_id') == $s->id ? 'selected' : '' }}>
+                                        {{ $s->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Salle --}}
+                        <div class="col-md-6">
+                            <label for="salles_id" class="form-label fw-semibold">
+                                <i class="fa fa-door-open me-1"></i> Salle <span class="text-danger">*</span>
+                            </label>
+                            <select name="salles_id" id="salles_id" class="form-select" required>
+                                <option value="">-- Sélectionnez une salle --</option>
+                                @foreach($salles as $salle)
+                                    <option value="{{ $salle->id }}"
+                                        data-prix="{{ $salle->prix }}"
+                                        {{ old('salles_id') == $salle->id ? 'selected' : '' }}>
+                                        {{ $salle->nom }} — {{ number_format($salle->prix, 0, ',', ' ') }} FCFA/jour
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div id="prix-salle-info" class="form-text text-success fw-semibold mt-1" style="display:none;">
+                                Prix/jour : <span id="prix-salle-val">0</span> FCFA
+                            </div>
+                        </div>
+
+                        {{-- Lit --}}
+                        <div class="col-md-6">
+                            <label for="lit_id" class="form-label fw-semibold">
+                                <i class="fa fa-bed me-1"></i> Lit <span class="text-danger">*</span>
+                            </label>
+                            <select name="lit_id" id="lit_id" class="form-select" required>
+                                <option value="">-- Sélectionnez un lit --</option>
+                                @foreach($lits as $lit)
+                                    <option value="{{ $lit->id }}"
+                                        data-salle="{{ $lit->salle_id }}"
+                                        {{ old('lit_id') == $lit->id ? 'selected' : '' }}>
+                                        Lit N° {{ $lit->numero }}
+                                        @if($lit->salle) — {{ $lit->salle->nom }} @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Date d'entrée --}}
+                        <div class="col-md-6">
+                            <label for="date_entree" class="form-label fw-semibold">
+                                <i class="fa fa-calendar-alt me-1"></i> Date d'entrée <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" name="date_entree" id="date_entree" class="form-control"
+                                   value="{{ old('date_entree', now()->format('Y-m-d')) }}" required>
+                        </div>
+
+                        {{-- Motif --}}
+                        <div class="col-md-6">
+                            <label for="motif" class="form-label fw-semibold">
+                                <i class="fa fa-stethoscope me-1"></i> Motif d'hospitalisation
+                            </label>
+                            <input type="text" name="motif" id="motif" class="form-control"
+                                   placeholder="Ex : Surveillance post-opératoire"
+                                   value="{{ old('motif') }}">
+                        </div>
+
+                        {{-- Observations --}}
+                        <div class="col-12">
+                            <label for="observations" class="form-label fw-semibold">
+                                <i class="fa fa-notes-medical me-1"></i> Observations
+                            </label>
+                            <textarea name="observations" id="observations" class="form-control" rows="3"
+                                      placeholder="Notes cliniques, remarques...">{{ old('observations') }}</textarea>
+                        </div>
+
+                    </div>{{-- /.row --}}
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-success" id="btnSubmit">
+                            <i class="fa fa-save me-1"></i> Enregistrer l'hospitalisation
+                        </button>
+                        <a href="{{ route('hospitalisations.index') }}" class="btn btn-secondary">
+                            <i class="fa fa-times me-1"></i> Annuler
+                        </a>
                     </div>
 
-                    <!-- Date de commande -->
-                    <div class="mb-3">
-                        <label for="date_commande" class="form-label">Date de commande</label>
-                        <input type="date" name="date_commande" id="date_commande" class="form-control" required
-                               value="{{ isset($commande) ? \Carbon\Carbon::parse($commande->date_commande)->format('Y-m-d') : now()->format('Y-m-d') }}">
-                    </div>
-
-                    <!-- Tableau des médicaments -->
-                    <h5 class="mt-4">📦 Médicaments</h5>
-                    <table class="table table-bordered" id="medicamentsTable">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Médicament</th>
-                            <th>Quantité</th>
-                            <th>Prix Unitaire</th>
-                            <th>Sous-total</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @php $rowIndex = 0; @endphp
-                        @if(isset($commande) && $commande->medicaments)
-                            @foreach($commande->medicaments as $i => $med)
-                                <tr>
-                                    <td>
-                                        <select name="medicaments[{{ $i }}][medicament_id]" class="form-control selectMed" required>
-                                            <option value="">-- Choisir --</option>
-                                            @foreach($medicaments as $m)
-                                                <option value="{{ $m->id }}" {{ $med->id == $m->id ? 'selected' : '' }}>
-                                                    {{ $m->nom }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="medicaments[{{ $i }}][quantite]"
-                                               class="form-control quantite" value="{{ $med->pivot->quantite }}" min="1" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="medicaments[{{ $i }}][prix_unitaire]"
-                                               class="form-control prix" value="{{ $med->pivot->prix_unitaire }}" min="0" step="0.01" required>
-                                    </td>
-                                    <td class="sous-total">{{ number_format($med->pivot->quantite * $med->pivot->prix_unitaire, 2) }}</td>
-                                    <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-                                </tr>
-                                @php $rowIndex++; @endphp
-                            @endforeach
-                        @else
-                            <tr>
-                                <td>
-                                    <select name="medicaments[0][medicament_id]" class="form-control selectMed" required>
-                                        <option value="">-- Choisir --</option>
-                                        @foreach($medicaments as $m)
-                                            <option value="{{ $m->id }}">{{ $m->nom }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td><input type="number" name="medicaments[0][quantite]" class="form-control quantite" value="1" min="1" required></td>
-                                <td><input type="number" name="medicaments[0][prix_unitaire]" class="form-control prix" value="0" min="0" step="0.01" required></td>
-                                <td class="sous-total">0.00</td>
-                                <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-                            </tr>
-                            @php $rowIndex = 1; @endphp
-                        @endif
-                        </tbody>
-                    </table>
-
-                    <button type="button" class="btn btn-secondary" id="addRow">➕ Ajouter un médicament</button>
-
-                    <div class="mt-3">
-                        <h5>Total : <span id="total">0.00</span> CFA</h5>
-                        <input type="hidden" name="total" id="totalInput" value="{{ isset($commande) ? $commande->total : 0 }}">
-                    </div>
-
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-success">✅ {{ isset($commande) ? 'Mettre à jour' : 'Enregistrer' }}</button>
-                    </div>
                 </form>
             </div>
         </div>
@@ -113,75 +143,66 @@
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            let rowIndex = {{ $rowIndex ?? 1 }};
-            let medicamentIds = [];
+<script>
+$(document).ready(function () {
 
-            function calculerTotal() {
-                let total = 0;
-                $("#medicamentsTable tbody tr").each(function() {
-                    let q = parseFloat($(this).find(".quantite").val()) || 0;
-                    let p = parseFloat($(this).find(".prix").val()) || 0;
-                    let st = q * p;
-                    $(this).find(".sous-total").text(st.toFixed(2));
-                    total += st;
-                });
-                $("#total").text(total.toFixed(2));
-                $("#totalInput").val(total.toFixed(2));
+    // Afficher le prix de la salle sélectionnée
+    $('#salles_id').on('change', function () {
+        const prix = $(this).find(':selected').data('prix');
+        if (prix !== undefined && prix !== '') {
+            $('#prix-salle-val').text(parseFloat(prix).toLocaleString('fr-FR'));
+            $('#prix-salle-info').show();
+        } else {
+            $('#prix-salle-info').hide();
+        }
+
+        // Filtrer les lits selon la salle choisie
+        const salleId = $(this).val();
+        filterLits(salleId);
+    });
+
+    // Filtrer les lits : si une salle est sélectionnée, n'afficher que ses lits
+    function filterLits(salleId) {
+        $('#lit_id option').each(function () {
+            const litSalle = $(this).data('salle');
+            if (!salleId || !litSalle || String(litSalle) === String(salleId)) {
+                $(this).show();
+            } else {
+                $(this).hide();
             }
-
-            function updateMedicamentIds() {
-                medicamentIds = $(".selectMed").map(function() {
-                    return $(this).val();
-                }).get().filter(v => v);
-            }
-
-            // Ajouter une ligne
-            $("#addRow").click(function() {
-                let options = `@foreach($medicaments as $m)<option value="{{ $m->id }}">{{ $m->nom }}</option>@endforeach`;
-                let newRow = `<tr>
-            <td>
-                <select name="medicaments[${rowIndex}][medicament_id]" class="form-control selectMed" required>
-                    <option value="">-- Choisir --</option>
-                    ${options}
-                </select>
-            </td>
-            <td><input type="number" name="medicaments[${rowIndex}][quantite]" class="form-control quantite" value="1" min="1" required></td>
-            <td><input type="number" name="medicaments[${rowIndex}][prix_unitaire]" class="form-control prix" value="0" min="0" step="0.01" required></td>
-            <td class="sous-total">0.00</td>
-            <td><button type="button" class="btn btn-danger btn-sm removeRow">🗑</button></td>
-        </tr>`;
-                $("#medicamentsTable tbody").append(newRow);
-                rowIndex++;
-                updateMedicamentIds();
-            });
-
-            // Supprimer une ligne
-            $(document).on("click", ".removeRow", function() {
-                $(this).closest("tr").remove();
-                calculerTotal();
-                updateMedicamentIds();
-            });
-
-            // Vérifier la duplication
-            $(document).on("change", ".selectMed", function() {
-                let val = $(this).val();
-                if(medicamentIds.includes(val)) {
-                    alert("Ce médicament est déjà dans le panier !");
-                    $(this).val("");
-                } else {
-                    updateMedicamentIds();
-                }
-            });
-
-            // Recalcul automatique
-            $(document).on("input", ".quantite, .prix", function() {
-                calculerTotal();
-            });
-
-            calculerTotal();
-            updateMedicamentIds();
         });
-    </script>
+        // Réinitialiser la sélection si la valeur actuelle n'est plus visible
+        const currentLit = $('#lit_id option:selected');
+        const currentLitSalle = currentLit.data('salle');
+        if (salleId && currentLitSalle && String(currentLitSalle) !== String(salleId)) {
+            $('#lit_id').val('');
+        }
+    }
+
+    // Déclencher au chargement si old() est rempli
+    const initialSalle = $('#salles_id').val();
+    if (initialSalle) {
+        const prix = $('#salles_id').find(':selected').data('prix');
+        if (prix) {
+            $('#prix-salle-val').text(parseFloat(prix).toLocaleString('fr-FR'));
+            $('#prix-salle-info').show();
+        }
+        filterLits(initialSalle);
+    }
+
+    // Select2 pour la consultation si disponible
+    if (typeof $.fn.select2 !== 'undefined') {
+        $('#consultation_id').select2({
+            placeholder: '-- Sélectionnez une consultation --',
+            width: '100%',
+        });
+    }
+
+    // Confirmation avant envoi
+    $('#hospitalisationForm').on('submit', function (e) {
+        const btn = $('#btnSubmit');
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Enregistrement...');
+    });
+});
+</script>
 @endsection

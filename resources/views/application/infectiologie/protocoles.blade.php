@@ -164,6 +164,8 @@
         </div>
     </div>
 </div>
+
+@endsection
 @section('scripts')
     <script>
         $(document).ready(function() {
@@ -188,7 +190,7 @@
                     dropdownParent: $('#modalProtocole'),
                     width: '100%',
                     ajax: {
-                        url: '/api/medicaments-list', // Corrigé pour correspondre à la route
+                        url: "{{ route('api.medicaments.list') }}",
                         dataType: 'json',
                         delay: 250,
                         data: function (params) {
@@ -213,5 +215,4 @@
             }
         });
     </script>
-@endsection
 @endsection

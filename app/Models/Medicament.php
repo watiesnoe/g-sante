@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
 
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Medicament extends Model
 {
@@ -21,6 +22,16 @@ class Medicament extends Model
         'unite_id',
         'famille_id',
     ];
+
+    /**
+     * 🎯 SCOPE : Filtrer les médicaments en stock critique
+     */
+    public function scopeCritique(Builder $query): Builder
+    {
+        return $query->whereNotNull('stock')
+            ->whereNotNull('stock_min')
+            ->whereColumn('stock', '<=', 'stock_min');
+    }
 
     /**
      * 🔗 Un médicament appartient à une unité
@@ -55,13 +66,17 @@ class Medicament extends Model
     {
         return $this->hasMany(CommandeMedicaments::class, 'medicament_id');
     }
+
+    /**
+     * 🔗 Protocoles de traitement liés à ce médicament
+     */
     public function protocoles()
     {
         return $this->belongsToMany(
             ProtocoleTraitement::class,
             'protocole_medicament',
-            'medicament_id',        // Ta colonne dans la table pivot
-            'protocole_id'          // L'autre colonne (Correction ici)
+            'medicament_id',
+            'protocole_id'
         )
             ->using(ProtocoleMedicament::class)
             ->withPivot(['type', 'posologie', 'duree']);

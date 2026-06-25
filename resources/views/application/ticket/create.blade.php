@@ -91,6 +91,7 @@
                                 @foreach($prestations as $prestation)
                                     <option value="{{ $prestation->id }}"
                                             data-service="{{ $prestation->serviceMedical->nom ?? 'N/A' }}"
+                                            data-service-id="{{ $prestation->service_medical_id }}"
                                             data-prix="{{ $prestation->prix }}"
                                             data-quantifiable="{{ $prestation->quantifiable ? '1' : '0' }}">
                                         {{ $prestation->nom }} ({{ $prestation->serviceMedical->nom ?? 'N/A' }}) - {{ $prestation->prix }} FCFA
@@ -254,34 +255,44 @@
                 }
             });
 
-            // --- 0. Filtrage des médecins par service ---
+            // --- 0. Filtrage des médecins et prestations par service ---
             var allMedecinsOptions = $('#medecin option').clone();
+            var allPrestationsOptions = $('#prestation option').clone();
 
             $('#service_medical').on('change', function() {
                 var serviceId = $(this).val();
+
+                // Filtrer les médecins
                 var currentMedecin = $('#medecin').val();
-
-                // Vider le select
                 $('#medecin').empty();
-
-                // Ajouter les options filtrées
                 allMedecinsOptions.each(function() {
                     var optionServiceId = $(this).data('service-id');
-                    
                     if (!serviceId || !optionServiceId || optionServiceId == serviceId || $(this).val() == '') {
                         $('#medecin').append($(this).clone());
                     }
                 });
-
-                // Restaurer la sélection si possible
                 if ($('#medecin option[value="' + currentMedecin + '"]').length) {
                     $('#medecin').val(currentMedecin);
                 } else {
                     $('#medecin').val('');
                 }
-                
-                // Mettre à jour Select2
                 $('#medecin').trigger('change');
+
+                // Filtrer les prestations
+                var currentPrestation = $('#prestation').val();
+                $('#prestation').empty();
+                allPrestationsOptions.each(function() {
+                    var optionServiceId = $(this).data('service-id');
+                    if (!serviceId || !optionServiceId || optionServiceId == serviceId || $(this).val() == '') {
+                        $('#prestation').append($(this).clone());
+                    }
+                });
+                if ($('#prestation option[value="' + currentPrestation + '"]').length) {
+                    $('#prestation').val(currentPrestation);
+                } else {
+                    $('#prestation').val('');
+                }
+                $('#prestation').trigger('change');
             });
             
             // Initialisation au chargement si édition

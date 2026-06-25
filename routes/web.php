@@ -66,6 +66,10 @@ Route::middleware('auth')->group(function () {
     });
     Route::resource('tickets', TicketController::class)->except(['create', 'store']);
     Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
+    // Route spécifique pour l'admission directe depuis la liste d'attente (avec UUID)
+    Route::get('/consultations/create/{ticket_uuid?}', [ConsultationController::class, 'create'])
+        ->name('consultations.listeentente');
+    // Le reste des routes standards (index, store, show, edit, update, destroy)
     Route::resource('consultations', ConsultationController::class);
     Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
     Route::resource('suivis', SuiviController::class);
@@ -96,9 +100,9 @@ Route::middleware('auth')->group(function () {
         ->name('rendezvous.marquerRealise');
     Route::resource('ordonnances', OrdonnanceController::class);
     Route::get('ordonnances/{ordonnance}/pdf', [OrdonnanceController::class, 'pdf'])->name('ordonnances.pdf');
-    Route::get('paiement/{ordonnance}/ordonnance', [OrdonnanceController::class, 'paiementForm'])
+    Route::get('ordonnances/{ordonnance}/paiement', [OrdonnanceController::class, 'paiementForm'])
         ->name('ordonnances.paiement');
-    Route::post('/payer/{ordonnance}/ordonnance', [OrdonnanceController::class, 'payer'])->name('ordonnances.payer')->middleware('caisse.ouverte');
+    Route::post('ordonnances/{ordonnance}/payer', [OrdonnanceController::class, 'payer'])->name('ordonnances.payer')->middleware('caisse.ouverte');
     Route::get('/ordonnance/lespayer', [OrdonnanceController::class, 'lespayer'])->name('ordonnances.lespayer');
 
     Route::resource('hospitalisations', HospitalisationController::class);
@@ -106,14 +110,16 @@ Route::middleware('auth')->group(function () {
         ->name('paiements.hospitalisation')->middleware('caisse.ouverte');
 
     Route::get('/hospitalisations/{hospitalisation}/pdf', [HospitalisationController::class, 'generatePDF'])->name('hospitalisations.pdf');
-    Route::get('/paiement/{hospitalisation}/hospitalisations', [HospitalisationController::class, 'getPaiementData'])
+    Route::get('/hospitalisations/{hospitalisation}/paiement-data', [HospitalisationController::class, 'getPaiementData'])
         ->name('hospitalisations.paiement.data');
     Route::get('/hospitalisation/realise', [HospitalisationController::class, 'hopialisationrealise'])
         ->name('hospitalisations.realise');
 
     Route::resource('fournisseurs', FournisseurController::class);
     Route::resource('medicaments', MedicamentController::class);
+    Route::get('/familles/{famille}/medicaments', [MedicamentController::class, 'index'])->name('familles.medicaments');
     Route::resource('commandes', CommandeController::class);
+    Route::get('/commandes/{commande?}/paiements', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create')->middleware('caisse.ouverte');
     Route::post('/commandes/panier/ajouter', [CommandeController::class, 'ajouterAuPanier'])->name('commandes.panier.ajouter');
     Route::post('/commandes/panier/bulk-ajouter', [CommandeController::class, 'bulkAjouterAuPanier'])->name('commandes.panier.bulk-ajouter');
     Route::post('/commandes/panier/modifier', [CommandeController::class, 'modifierPanier'])->name('commandes.panier.modifier');
@@ -145,7 +151,6 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('paiementscommande')->group(function () {
         Route::get('/dashboard', [PaiementCommandeController::class, 'dashboard'])->name('paiementscommande.dashboard');
-        Route::get('/create', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create')->middleware('caisse.ouverte');
         Route::post('/store', [PaiementCommandeController::class, 'store'])->name('paiementscommande.store')->middleware('caisse.ouverte');
         Route::get('/history/{commande}', [PaiementCommandeController::class, 'history'])->name('paiementscommande.history');
         Route::get('/{paiement}', [PaiementCommandeController::class, 'show'])->name('paiementscommande.show');

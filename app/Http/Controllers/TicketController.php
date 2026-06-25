@@ -100,9 +100,15 @@ class TicketController extends Controller
         $prestations = Prestation::with('serviceMedical')->get();
 
         // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
-        $assurances = \App\Models\Assurance::all(); // Ajout des assurances
-        $medecins = \App\Models\User::role('medecin')->get();
-        $services = \App\Models\ServiceMedical::orderBy('nom')->get();
+        $assurances = DB::table('assurances')->select('id', 'nom', 'taux')->orderBy('nom')->get();
+        $medecins   = DB::table('users')
+            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('roles.name', 'medecin')
+            ->select('users.id', 'users.name', 'users.prenom', 'users.nom', 'users.service_medical_id')
+            ->orderBy('users.name')
+            ->get();
+        $services = DB::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
 
         // Passer les données à la vue
         return view('application.ticket.create', compact('prestations', 'assurances', 'medecins', 'services'));
@@ -239,9 +245,15 @@ class TicketController extends Controller
 
         $ticket->load(['patient', 'items.prestation.serviceMedical']);
         $prestations = Prestation::with('serviceMedical')->orderBy('nom')->get();
-        $assurances  = \App\Models\Assurance::all();
-        $medecins    = \App\Models\User::role('medecin')->get();
-        $services    = \App\Models\ServiceMedical::orderBy('nom')->get();
+        $assurances  = DB::table('assurances')->select('id', 'nom', 'taux')->orderBy('nom')->get();
+        $medecins    = DB::table('users')
+            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('roles.name', 'medecin')
+            ->select('users.id', 'users.name', 'users.prenom', 'users.nom', 'users.service_medical_id')
+            ->orderBy('users.name')
+            ->get();
+        $services    = DB::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
         return view('application.ticket.create', compact('ticket', 'prestations', 'assurances', 'medecins', 'services'));
     }
 

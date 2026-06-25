@@ -28,7 +28,7 @@
             @php
                 $atbFamille = \App\Models\Famille::where('nom', 'like', 'Antibiotique%')->first();
             @endphp
-            <a class="nav-main-link" href="{{ route('medicaments.index', ['famille_id' => $atbFamille?->id]) }}">
+            <a class="nav-main-link" href="{{ $atbFamille ? route('familles.medicaments', $atbFamille->uuid) : '#' }}">
                 <span class="nav-main-link-name">Gestion Antibiotiques</span>
             </a>
         </li>

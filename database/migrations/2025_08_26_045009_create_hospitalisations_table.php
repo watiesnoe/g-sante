@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('lit_id')->nullable()->constrained('lits')->onDelete('set null');
             $table->date('date_entree');
             $table->date('date_sortie')->nullable();
-            $table->enum('statut_sortie', ['en cours', 'paye', 'en attente', 'cloture'])->default('en attente');
+            $table->enum('statut_sortie', ['Guérison', 'Amélioration', 'Décès', 'Transfert', 'Évasion', 'Contre avis médical', 'en attente'])->default('en attente');
             $table->text('motif')->nullable();
             $table->enum('etat', ['en cours', 'terminé'])->default('en cours');
             $table->foreignId('service_id')->constrained('service_medicals')->onDelete('cascade');

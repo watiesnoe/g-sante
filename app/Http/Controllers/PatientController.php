@@ -56,32 +56,32 @@ class PatientController extends Controller
     }
 
  public function store(Request $request)
-{
-    abort_unless(Auth::user()->can('patients.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un patient.');
+    {
+        abort_unless(Auth::user()->can('patients.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un patient.');
 
-    $validated = $request->validate([
-        'nom' => 'required|string|max:255',
-        'prenom' => 'required|string|max:255',
-        'genre' => 'required|in:M,F',
-        'telephone' => 'required|string|max:20|unique:patients,telephone',
-        'ethnie' => 'required|string|max:255',
-        'age' => 'required|integer|min:0',
-        'assurance_id' => 'nullable|exists:assurances,id',
-        'numero_assurance' => 'nullable|string|max:255',
-        'fin_validite_assurance' => 'nullable|date',
-        'groupe_sanguin' => 'nullable|string|max:5', // Ajouté pour correspondre à la vue
-        'adresse' => 'nullable|string',               // Ajouté pour correspondre à la vue
-    ]);
+        $validated = $request->validate([
+            'nom'              => 'required|string|max:255',
+            'prenom'           => 'required|string|max:255',
+            'genre'            => 'required|in:M,F',
+            'telephone'        => 'required|string|max:20|unique:patients,telephone',
+            'ethnie'           => 'required|string|max:255',
+            'age'              => 'required|integer|min:0',
+            'assurance_id'     => 'nullable|exists:assurances,id',
+            'numero_assurance' => 'nullable|string|max:255',
+            'groupe_sanguin'   => 'nullable|string|max:5',
+            'adresse'          => 'nullable|string',
+        ]);
 
-    $patient = Patient::create($validated);
+        // Plus besoin de Str::uuid() ici ! 
+        // Votre modèle Patient utilise le Trait "HasUuid" qui s'en charge automatiquement.
+        $patient = Patient::create($validated);
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Le patient a été enregistré avec succès.',
-        'patient' => $patient
-    ]);
-}
-
+        return response()->json([
+            'success' => true,
+            'message' => 'Le patient a été enregistré avec succès.',
+            'patient' => $patient
+        ]);
+    }
     public function search(Request $request)
     {
         abort_unless(Auth::user()->can('patients.search'), 403, 'Accès non autorisé : vous n\'avez pas la permission de rechercher un patient.');
@@ -141,24 +141,33 @@ class PatientController extends Controller
         return view('application.patient.create', compact('patient'));
     }
 
-    public function update(Request $request, Patient $patient)
-    {
-        abort_unless(Auth::user()->can('patients.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un patient.');
+public function update(Request $request, Patient $patient)
+{
+    abort_unless(Auth::user()->can('patients.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un patient.');
 
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'genre' => 'required|in:M,F',
-            'telephone' => 'required|string|max:20|unique:patients,telephone,'.$patient->id,
-            'ethnie' => 'required|string|max:255',
-            'age' => 'required|integer|min:0',
-        ]);
+    $validated = $request->validate([
+        'nom' => 'required|string|max:255',
+        'prenom' => 'required|string|max:255',
+        'genre' => 'required|in:M,F',
+        'telephone' => 'required|string|max:20|unique:patients,telephone,'.$patient->id,
+        'ethnie' => 'required|string|max:255',
+        'age' => 'required|integer|min:0',
+        'assurance_id' => 'nullable|exists:assurances,id',
+        'numero_assurance' => 'nullable|string|max:255',
+        'groupe_sanguin' => 'nullable|string|max:5',
+        'adresse' => 'nullable|string',
+    ]);
 
-        $patient->update($validated);
+    // Mise à jour en base de données
+    $patient->update($validated);
 
-        return redirect()->route('patients.show', $patient)
-            ->with('success', 'Patient mis à jour.');
-    }
+    // CORRECTION FONDAMENTALE : On retourne du JSON pour que SweetAlert2 côté JS puisse s'exécuter
+    return response()->json([
+        'success' => true,
+        'message' => 'Le patient a été mis à jour avec succès.',
+        'patient' => $patient
+    ]);
+}
 
     public function destroy(Patient $patient)
     {

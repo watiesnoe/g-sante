@@ -18,25 +18,36 @@ class CommandeController extends Controller
     // Liste des commandes
    
 
-public function index(Request $request)
-{
-    abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des commandes.');
+    public function index(Request $request)
+    {
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des commandes.');
 
-    if ($request->ajax()) {
+        if ($request->ajax()) {
 
-        $commandes = Commande::with('fournisseur')->latest();
+            $commandes = DB::table('commandes')
+                ->join('fournisseurs', 'commandes.fournisseur_id', '=', 'fournisseurs.id')
+                ->select([
+                    'commandes.id',
+                    'commandes.uuid',
+                    'commandes.reference',
+                    'commandes.date_commande',
+                    'commandes.statut',
+                    'commandes.total',
+                    'fournisseurs.nom as fournisseur_nom'
+                ])
+                ->orderBy('commandes.created_at', 'desc');
 
-        return DataTables::of($commandes)
+            return DataTables::of($commandes)
 
-            // Référence
-            ->addColumn('reference', function ($row) {
-                return '<strong>'.$row->reference.'</strong>';
-            })
+                // Référence
+                ->addColumn('reference', function ($row) {
+                    return '<strong>'.$row->reference.'</strong>';
+                })
 
-            // Fournisseur
-            ->addColumn('fournisseur', function ($row) {
-                return $row->fournisseur->nom ?? '-';
-            })
+                // Fournisseur
+                ->addColumn('fournisseur', function ($row) {
+                    return $row->fournisseur_nom ?? '-';
+                })
 
             // Date formatée
             ->editColumn('date_commande', function ($row) {
@@ -66,13 +77,13 @@ public function index(Request $request)
                 $view = ''; $edit = ''; $pdf = ''; $delete = '';
 
                 if ($user->can('stock.commandes')) {
-                    $view   = '<a href="'.route('commandes.show', $row).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
-                    $pdf    = '<a href="'.route('commandes.pdf', $row).'" target="_blank" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i></a>';
+                    $view   = '<a href="'.route('commandes.show', $row->uuid).'" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fa fa-eye"></i></a>';
+                    $pdf    = '<a href="'.route('commandes.pdf', $row->uuid).'" target="_blank" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i></a>';
                 }
                 
                 // Assuming edit/delete fall under stock.commandes for now since there's no specific commande.edit permission
                 if ($user->can('stock.commandes') && $row->statut != 'valide') {
-                    $edit   = '<a href="'.route('commandes.edit', $row).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $edit   = '<a href="'.route('commandes.edit', $row->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                     $delete = '<button type="button" class="btn btn-sm btn-outline-danger btnSupprimer" data-id="'.$row->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
                 }
 
@@ -91,14 +102,14 @@ public function index(Request $request)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
-        $fournisseurs = Fournisseur::all();
-        $medicaments = Medicament::all();
+        $fournisseurs = DB::table('fournisseurs')->select('id', 'nom')->get();
+        $medicaments = DB::table('medicaments')->select('id', 'nom', 'prix_achat', 'stock')->get();
         $panier = session()->get('commande_panier', []);
 
         // Assurer la présence des prix pour les anciens paniers en session
         foreach($panier as $id => &$item) {
             if(!isset($item['prix_unitaire']) || $item['prix_unitaire'] <= 0) {
-                $m = Medicament::find($id);
+                $m = DB::table('medicaments')->where('id', $id)->first(['prix_achat']);
                 if($m) $item['prix_unitaire'] = $m->prix_achat;
             }
         }
@@ -261,8 +272,8 @@ public function index(Request $request)
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
         $commande->load('lignes.medicament');
-        $fournisseurs = Fournisseur::all();
-        $medicaments = Medicament::all();
+        $fournisseurs = DB::table('fournisseurs')->select('id', 'nom')->get();
+        $medicaments = DB::table('medicaments')->select('id', 'nom', 'prix_achat', 'stock')->get();
 
         // Charger les lignes dans le panier de session
         $panier = [];

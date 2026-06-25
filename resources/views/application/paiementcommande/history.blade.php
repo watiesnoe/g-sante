@@ -12,7 +12,7 @@
                     <h5 class="mb-0">Historique des paiements</h5>
                     <small class="text-muted">Commande : <strong>{{ $commande->reference }}</strong></small>
                 </div>
-                <a href="{{ route('paiementscommande.create', ['commande_id' => $commande->uuid]) }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('paiementscommande.create', $commande->uuid) }}" class="btn btn-primary btn-sm">
                     <i class="fa fa-plus me-1"></i> Nouveau Paiement
                 </a>
             </div>

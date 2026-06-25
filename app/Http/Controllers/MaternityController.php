@@ -95,7 +95,29 @@ class MaternityController extends Controller
             'prochain_rdv' => 'nullable|date',
         ]);
 
-        ConsultationPrenatale::create($validated);
+        $cpn = ConsultationPrenatale::create($validated);
+
+        // Si une date de prochain rdv est renseignée, enregistrer dans les rendez-vous
+        if ($request->filled('prochain_rdv')) {
+            $grossesse = Grossesse::findOrFail($validated['grossesse_id']);
+            
+            // Récupérer le médecin de la dernière consultation médicale du patient
+            $medecinId = \App\Models\Consultation::where('patient_id', $grossesse->patient_id)
+                ->whereNotNull('medecin_id')
+                ->latest()
+                ->value('medecin_id');
+
+            // Fallback : utilisateur connecté
+            $medecinId = $medecinId ?? Auth::id();
+
+            \App\Models\RendezVous::create([
+                'patient_id' => $grossesse->patient_id,
+                'medecin_id' => $medecinId,
+                'date_heure' => $request->prochain_rdv . ' 08:00:00', // Heure par défaut à 08:00
+                'motif'      => 'Consultation Prénatale (CPN ' . ($validated['numero_cpn'] + 1) . ')',
+                'statut'     => 'prevu',
+            ]);
+        }
 
         return back()->with('success', 'CPN enregistrée.');
     }

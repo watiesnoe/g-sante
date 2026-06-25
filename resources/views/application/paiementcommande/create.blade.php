@@ -34,17 +34,17 @@
                                                 id="commande_id" name="commande_id" required>
                                             <option value="">Sélectionner une commande</option>
                                             @foreach($commandes as $cmd)
-                                                <option value="{{ $cmd->id }}"
-                                                        data-total="{{ $cmd->total }}"
-                                                        data-paid="{{ $cmd->montantPaye() }}"
-                                                        data-remaining="{{ $cmd->reste_a_payer }}"
-                                                        data-statut="{{ $cmd->StatutPaiement }}"
-                                                    {{ isset($commande) && $commande->id == $cmd->id ? 'selected' : '' }}>
-                                                    @if($cmd->StatutPaiement !== 'payé')
-                                                    {{ $cmd->reference }} - {{ $cmd->fournisseur->nom ?? 'N/A' }} - {{ number_format($cmd->total, 2) }} €
-                                                    ({{ $cmd->payment_status_text }})
-                                                    @endif
-                                                </option>
+                                                @if($cmd->StatutPaiement !== 'total')
+                                                    <option value="{{ $cmd->id }}"
+                                                            data-total="{{ $cmd->total }}"
+                                                            data-paid="{{ $cmd->montantPaye() }}"
+                                                            data-remaining="{{ $cmd->reste_a_payer }}"
+                                                            data-statut="{{ $cmd->StatutPaiement }}"
+                                                        {{ isset($commande) && $commande->id == $cmd->id ? 'selected' : '' }}>
+                                                        {{ $cmd->reference }} - {{ $cmd->fournisseur->nom ?? 'N/A' }} - {{ number_format($cmd->total, 2) }} €
+                                                        ({{ $cmd->payment_status_text }})
+                                                    </option>
+                                                @endif
                                             @endforeach
                                         </select>
                                         @error('commande_id')

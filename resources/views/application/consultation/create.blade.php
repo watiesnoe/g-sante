@@ -1471,8 +1471,8 @@
                     litSelect.html('<option value="">-- Sélectionner une salle --</option>');
                     return;
                 }
-
-                $.get(`/salle/${salleId}/lits-libres`, function(data) {
+                let url = "{{ route('salles.litsLibres', ':salleId') }}".replace(':salleId', salleId);
+                $.get(url, function(data) {
                     litSelect.empty().append('<option value="">-- Sélectionner un lit --</option>');
                     if (data.length === 0) {
                         litSelect.append('<option value="" disabled>Aucun lit libre disponible</option>');

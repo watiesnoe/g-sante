@@ -21,12 +21,17 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm bg-danger text-white">
+                <div class="card border-0 shadow-sm bg-danger text-white" id="btnStockCritique"
+                    style="cursor: pointer; transition: all 0.2s;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <div class="text-uppercase small mb-1 opacity-75">Stock Critique</div>
-                                <h3 class="fw-bold mb-0 text-white">{{ $stockCritique }}</h3>
+                                <h3 class="fw-bold mb-0 text-white d-flex align-items-center">
+                                    {{ $stockCritique }}
+                                    <span id="badgeCritiqueActive"
+                                        class="badge bg-white text-danger ms-2 font-size-sm d-none">Filtré</span>
+                                </h3>
                             </div>
                             <i class="fas fa-exclamation-triangle fa-2x opacity-25"></i>
                         </div>
@@ -43,15 +48,17 @@
 
                     <select id="filterFamille" class="form-select form-select-sm" style="width:200px;">
                         <option value="">Toutes les Familles</option>
-                        @foreach($familles as $f)
-                            <option value="{{ $f->id }}" {{ request('famille_id') == $f->id ? 'selected' : '' }}>
+                        @foreach ($familles as $f)
+                            <option value="{{ $f->id }}"
+                                {{ (isset($selectedFamilleId) && $selectedFamilleId == $f->id) || request('famille_id') == $f->id ? 'selected' : '' }}>
                                 {{ $f->nom }}
                             </option>
                         @endforeach
                     </select>
 
                     {{-- Bulk commande --}}
-                    <form id="bulkCommandForm" action="{{ route('commandes.panier.bulk-ajouter') }}" method="POST" class="d-none">
+                    <form id="bulkCommandForm" action="{{ route('commandes.panier.bulk-ajouter') }}" method="POST"
+                        class="d-none">
                         @csrf
                         <div id="selectedMedicamentsInputs"></div>
                     </form>
@@ -89,9 +96,7 @@
 
     </div>
 
-    {{-- ════════════════════════════════════════════════════════════
-         MODAL — Ajouter / Modifier Médicament
-    ════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL — Ajouter / Modifier Médicament --}}
     <div class="modal fade" id="crudModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -102,23 +107,19 @@
                 <div class="modal-body">
                     <form id="crudForm">
                         @csrf
-                        {{-- Identifiant interne (UUID) --}}
                         <input type="hidden" name="id" id="id">
 
                         <div class="row g-3">
-                            {{-- Nom --}}
                             <div class="col-12">
                                 <label class="form-label">Nom <span class="text-danger">*</span></label>
                                 <input type="text" name="nom" id="nom" class="form-control" required>
                             </div>
 
-                            {{-- Description --}}
                             <div class="col-12">
                                 <label class="form-label">Description</label>
                                 <textarea name="description" id="description" class="form-control" rows="2"></textarea>
                             </div>
 
-                            {{-- Stocks --}}
                             <div class="col-md-6">
                                 <label class="form-label">Stock actuel <span class="text-danger">*</span></label>
                                 <input type="number" name="stock" id="stock" class="form-control" value="0" min="0" required>
@@ -128,7 +129,6 @@
                                 <input type="number" name="stock_min" id="stock_min" class="form-control" value="0" min="0" required>
                             </div>
 
-                            {{-- Prix --}}
                             <div class="col-md-6">
                                 <label class="form-label">Prix Achat <span class="text-danger">*</span></label>
                                 <input type="text" name="prix_achat" id="prix_achat" class="form-control price-input" value="0" required>
@@ -138,23 +138,21 @@
                                 <input type="text" name="prix_vente" id="prix_vente" class="form-control price-input" value="0" required>
                             </div>
 
-                            {{-- Unité --}}
                             <div class="col-md-6">
                                 <label class="form-label">Unité de vente <span class="text-danger">*</span></label>
                                 <select name="unite_id" id="unite_id" class="form-select" required>
                                     <option value="">-- Sélectionner --</option>
-                                    @foreach($unites as $u)
+                                    @foreach ($unites as $u)
                                         <option value="{{ $u->id }}">{{ $u->nom }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            {{-- Famille --}}
                             <div class="col-md-6">
                                 <label class="form-label">Famille <span class="text-danger">*</span></label>
                                 <select name="famille_id" id="famille_id" class="form-select" required>
                                     <option value="">-- Sélectionner --</option>
-                                    @foreach($familles as $f)
+                                    @foreach ($familles as $f)
                                         <option value="{{ $f->id }}">{{ $f->nom }}</option>
                                     @endforeach
                                 </select>
@@ -177,117 +175,129 @@
 @endsection
 
 @section('scripts')
-<script>
-$(function () {
+    <script>
+        $(function() {
+            let filterStockCritique = false;
 
-    // ── URLs via route names Laravel ───────────────────────────────
-    const ROUTES = {
-        index  : '{{ route("medicaments.index") }}',
-        store  : '{{ route("medicaments.store") }}',
-        show   : '{{ rtrim(url("medicaments"), "/") }}/:id',   // /medicaments/{uuid}
-        update : '{{ rtrim(url("medicaments"), "/") }}/:id',   // PUT /medicaments/{uuid}
-        destroy: '{{ rtrim(url("medicaments"), "/") }}/:id',   // DELETE /medicaments/{uuid}
-    };
+            const ROUTES = {
+                index: '{{ route('medicaments.index') }}',
+                store: '{{ route('medicaments.store') }}',
+                show: '{{ rtrim(url('medicaments'), '/') }}/:id',
+                update: '{{ rtrim(url('medicaments'), '/') }}/:id',
+                destroy: '{{ rtrim(url('medicaments'), '/') }}/:id',
+            };
 
-    // ── CrudHelper ─────────────────────────────────────────────────
-    var table = CrudHelper.init({
-        tableId   : '#medicamentsTable',
-        formId    : '#crudForm',
-        modalId   : '#crudModal',
-        modalLabel: '#modalTitle',
-        btnAddId  : '#btnAdd',
-        btnSaveId : '#btnSave',
-        hiddenId  : '#id',
-        editClass : '.edit',
-        deleteClass: '.delete',
-        viewClass : '.view',
-        addTitle  : '➕ Ajouter un Médicament',
-        editTitle : '✏️ Modifier le Médicament',
-        viewTitle : '🔍 Détails du Médicament',
+            var table = CrudHelper.init({
+                tableId: '#medicamentsTable',
+                formId: '#crudForm',
+                modalId: '#crudModal',
+                modalLabel: '#modalTitle',
+                btnAddId: '#btnAdd',
+                btnSaveId: '#btnSave',
+                hiddenId: '#id',
+                editClass: '.edit',
+                deleteClass: '.delete',
+                viewClass: '.view',
+                addTitle: '➕ Ajouter un Médicament',
+                editTitle: '✏️ Modifier le Médicament',
+                viewTitle: '🔍 Détails du Médicament',
 
-        // URLs
-        ajaxUrl   : ROUTES.index,
-        storeUrl  : ROUTES.store,
-        showUrl   : ROUTES.show,
-        updateUrl : ROUTES.update,
-        deleteUrl : ROUTES.destroy,
+                ajaxUrl: ROUTES.index,
+                storeUrl: ROUTES.store,
+                showUrl: ROUTES.show,
+                updateUrl: ROUTES.update,
+                deleteUrl: ROUTES.destroy,
 
-        // Colonnes DataTable
-        columns: [
-            { data: 'checkbox',    name: 'checkbox',    orderable: false, searchable: false, className: 'text-center' },
-            { data: 'nom',         name: 'nom' },
-            { data: 'unite',       name: 'unite' },
-            { data: 'famille',     name: 'famille' },
-            { data: 'stock',       name: 'stock' },
-            { data: 'stock_min',   name: 'stock_min' },
-            { data: 'prix_achat',  name: 'prix_achat' },
-            { data: 'prix_vente',  name: 'prix_vente' },
-            { data: 'actions',     name: 'actions', orderable: false, searchable: false, className: 'text-center' },
-        ],
+                columns: [
+                    { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'nom', name: 'nom' },
+                    { data: 'unite', name: 'unite' },
+                    { data: 'famille', name: 'famille' },
+                    { data: 'stock', name: 'stock' },
+                    { data: 'stock_min', name: 'stock_min' },
+                    { data: 'prix_achat', name: 'prix_achat' },
+                    { data: 'prix_vente', name: 'prix_vente' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' },
+                ],
 
-        // Filtre famille → envoyé au serveur à chaque requête DataTable
-        ajaxData: function (d) {
-            d.famille_id = $('#filterFamille').val();
-        },
+                ajaxData: function(d) {
+                    d.famille_id = $('#filterFamille').val();
+                    d.stock_critique = filterStockCritique ? 1 : 0;
+                },
 
-        // Mapping des données dans le formulaire modal
-        mapData: function (data) {
-            $('#nom').val(data.nom);
-            $('#description').val(data.description);
-            $('#stock').val(data.stock);
-            $('#stock_min').val(data.stock_min);
-            $('#prix_achat').val(data.prix_achat);
-            $('#prix_vente').val(data.prix_vente);
-            $('#unite_id').val(data.unite_id);
-            $('#famille_id').val(data.famille_id);
-        },
-    });
-
-    // ── Filtre famille → redessine le DataTable (ajax.data re-évalué) ──
-    $('#filterFamille').on('change', function () {
-        table.draw();
-    });
-
-    // ── Mise en rouge des lignes en stock critique ─────────────────
-    $('#medicamentsTable').on('draw.dt', function () {
-        table.rows().every(function () {
-            var d = this.data();
-            if (d.stock <= d.stock_min) {
-                $(this.node()).addClass('table-danger');
-            }
-        });
-    });
-
-    // ── Sélection en masse (checkboxes) ───────────────────────────
-    $('#checkAll').on('click', function () {
-        $('.medicament-checkbox').prop('checked', this.checked);
-        updateBulkButton();
-    });
-
-    $(document).on('change', '.medicament-checkbox', function () {
-        updateBulkButton();
-    });
-
-    function updateBulkButton() {
-        var count = $('.medicament-checkbox:checked').length;
-        $('#selectedCount').text(count);
-        $('#btnBulkCommand').toggleClass('d-none', count === 0);
-    }
-
-    $('#btnBulkCommand').on('click', function () {
-        var ids = $('.medicament-checkbox:checked').map(function () {
-            return $(this).val();
-        }).get();
-
-        if (ids.length) {
-            var container = $('#selectedMedicamentsInputs').empty();
-            ids.forEach(function (id) {
-                container.append('<input type="hidden" name="medicament_ids[]" value="' + id + '">');
+                mapData: function(data) {
+                    $('#nom').val(data.nom);
+                    $('#description').val(data.description);
+                    $('#stock').val(data.stock);
+                    $('#stock_min').val(data.stock_min);
+                    $('#prix_achat').val(data.prix_achat);
+                    $('#prix_vente').val(data.prix_vente);
+                    $('#unite_id').val(data.unite_id);
+                    $('#famille_id').val(data.famille_id);
+                },
             });
-            $('#bulkCommandForm').submit();
-        }
-    });
 
-});
-</script>
+            $('#filterFamille').on('change', function() {
+                table.draw();
+            });
+
+            // Bouton Stock Critique optimisé
+            $('#btnStockCritique').on('click', function() {
+                filterStockCritique = !filterStockCritique;
+                if (filterStockCritique) {
+                    $(this).css({
+                        'transform': 'scale(0.98)',
+                        'box-shadow': '0 0 10px rgba(220, 53, 69, 0.5)'
+                    }).addClass('border border-light');
+                    $('#badgeCritiqueActive').removeClass('d-none');
+                } else {
+                    $(this).css({
+                        'transform': '',
+                        'box-shadow': ''
+                    }).removeClass('border border-light');
+                    $('#badgeCritiqueActive').addClass('d-none');
+                }
+                table.draw(); // Relance la requête DataTable vers le serveur avec d.stock_critique mis à jour
+            });
+
+            $('#medicamentsTable').on('draw.dt', function() {
+                table.rows().every(function() {
+                    var d = this.data();
+                    // Ajout d'une sécurité au cas où les variables arriveraient en String depuis l'API en ligne
+                    if (parseInt(d.stock) <= parseInt(d.stock_min)) {
+                        $(this.node()).addClass('table-danger');
+                    }
+                });
+            });
+
+            $('#checkAll').on('click', function() {
+                $('.medicament-checkbox').prop('checked', this.checked);
+                updateBulkButton();
+            });
+
+            $(document).on('change', '.medicament-checkbox', function() {
+                updateBulkButton();
+            });
+
+            function updateBulkButton() {
+                var count = $('.medicament-checkbox:checked').length;
+                $('#selectedCount').text(count);
+                $('#btnBulkCommand').toggleClass('d-none', count === 0);
+            }
+
+            $('#btnBulkCommand').on('click', function() {
+                var ids = $('.medicament-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (ids.length) {
+                    var container = $('#selectedMedicamentsInputs').empty();
+                    ids.forEach(function(id) {
+                        container.append('<input type="hidden" name="medicament_ids[]" value="' + id + '">');
+                    });
+                    $('#bulkCommandForm').submit();
+                }
+            });
+        });
+    </script>
 @endsection

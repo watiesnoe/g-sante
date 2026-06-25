@@ -335,18 +335,25 @@ class RendezvousController extends Controller
     {
         abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
 
+        // 1. AJOUT de 'medecin_id' et 'statut' dans la validation
         $request->validate([
             'date_heure' => 'required|date',
             'motif'      => 'nullable|string|max:255',
+            'medecin_id' => 'required|exists:users,id', // s'adapte à votre table des médecins/utilisateurs
+            'statut'     => 'required|in:prevu,en_attente,realise,annule',
         ]);
 
+        // 2. Prise en compte de toutes les modifications
         $rendezvous->update([
             'date_heure' => $request->date_heure,
             'motif'      => $request->motif,
-            'statut'     => $request->statut ?? $rendezvous->statut,
+            'medecin_id' => $request->medecin_id,
+            'statut'     => $request->statut,
         ]);
 
-        return response()->json(['success' => true, 'data' => $rendezvous]);
+        // 3. CORRECTION : Redirection web classique plutôt qu'un retour JSON
+        return redirect()->route('rendezvous.index')
+            ->with('success', 'Le rendez-vous a été modifié avec succès.');
     }
 
     public function destroy(RendezVous $rendezvous)
