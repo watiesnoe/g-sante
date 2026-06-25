@@ -25,6 +25,11 @@ class OrdonnanceController extends Controller
                 ->select('ordonnances.*')
                 ->whereYear('ordonnances.created_at', $year)
                 ->whereNotIn('statutordo', ['paye', 'partiellement']) // 🔥 exclure ces statuts
+                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
+                    $query->whereHas('consultation', function ($q) use ($user) {
+                        $q->where('medecin_id', $user->id);
+                    });
+                })
                 ->distinct()
                 ->orderBy('ordonnances.created_at','desc');
 
@@ -299,10 +304,14 @@ class OrdonnanceController extends Controller
         abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
 
         if ($request->ajax()) {
+            $user = Auth::user();
             $ordonnances = DB::table('ordonnances')
                 ->join('consultations', 'ordonnances.consultation_id', '=', 'consultations.id')
                 ->join('patients', 'consultations.patient_id', '=', 'patients.id')
                 ->whereIn('ordonnances.statutordo', ['paye', 'partiellement'])
+                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
+                    $query->where('consultations.medecin_id', $user->id);
+                })
                 ->select(
                     'ordonnances.id',
                     'ordonnances.uuid',

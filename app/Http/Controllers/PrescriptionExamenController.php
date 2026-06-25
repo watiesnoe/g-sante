@@ -17,9 +17,15 @@ class PrescriptionExamenController extends Controller
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
+            $user = Auth::user();
             $examens = PrescriptionExamen::with('consultation.patient')
                 ->whereYear('created_at', $year)
                 ->where('statut', '!=', 'realise') // ✅ exclure les réalisés
+                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
+                    $query->whereHas('consultation', function ($q) use ($user) {
+                        $q->where('medecin_id', $user->id);
+                    });
+                })
                 ->latest();
 
     return datatables()->of($examens)

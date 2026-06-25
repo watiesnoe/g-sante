@@ -21,6 +21,7 @@ class HospitalisationController extends Controller
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
+            $user = Auth::user();
             $hospitalisations = DB::table('hospitalisations')
                 ->join('salles', 'hospitalisations.salles_id', '=', 'salles.id')
                 ->join('lits', 'hospitalisations.lit_id', '=', 'lits.id')
@@ -44,6 +45,9 @@ class HospitalisationController extends Controller
                 ])
                 ->whereYear('hospitalisations.created_at', $year)
                 ->where('hospitalisations.etat', 'en cours')
+                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
+                    $query->where('consultations.medecin_id', $user->id);
+                })
                 ->orderBy('hospitalisations.created_at', 'desc');
 
             return DataTables::of($hospitalisations)
@@ -105,6 +109,7 @@ class HospitalisationController extends Controller
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
+            $user = Auth::user();
             $hospitalisations = DB::table('hospitalisations')
                 ->join('salles', 'hospitalisations.salles_id', '=', 'salles.id')
                 ->join('lits', 'hospitalisations.lit_id', '=', 'lits.id')
@@ -130,6 +135,9 @@ class HospitalisationController extends Controller
                 ])
                 ->whereYear('hospitalisations.created_at', $year)
                 ->where('hospitalisations.etat', 'terminé')
+                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
+                    $query->where('consultations.medecin_id', $user->id);
+                })
                 ->orderBy('hospitalisations.created_at', 'desc');
 
             return DataTables::of($hospitalisations)
