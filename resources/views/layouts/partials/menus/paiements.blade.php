@@ -4,7 +4,8 @@
         <span class="nav-main-link-name">Paiements</span>
     </a>
     <ul class="nav-main-submenu">
-        <li class="nav-main-item"><a class="nav-main-link" href="{{route('paiementscommande.dashboard')}}"><span class="nav-main-link-name">Liste des paiements</span></a></li>
-        <li class="nav-main-item"><a class="nav-main-link" href="{{route('paiementscommande.create')}}"><span class="nav-main-link-name">Faire paiement</span></a></li>
+        <li class="nav-main-item"><a class="nav-main-link" href="{{ route('paiementscommande.dashboard') }}"><span
+                    class="nav-main-link-name">Liste des paiements</span></a></li>
+        {{-- <li class="nav-main-item"><a class="nav-main-link" href="{{route('paiementscommande.create')}}"><span class="nav-main-link-name">Faire paiement</span></a></li> --}}
     </ul>
 </li>

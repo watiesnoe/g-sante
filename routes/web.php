@@ -136,6 +136,10 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('receptions', ReceptionController::class);
 
+    // Inventaire médicaments
+    Route::resource('inventaires', \App\Http\Controllers\InventaireController::class);
+    Route::post('/inventaires/{inventaire}/valider', [\App\Http\Controllers\InventaireController::class, 'valider'])->name('inventaires.valider');
+
     //    Route::get('/receptions', [ReceptionController::class, 'index'])->name('receptions.index');
     //    Route::get('/receptions/create', [ReceptionController::class, 'create'])->name('receptions.create');
 
@@ -165,6 +169,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/caisse/ouvrir', [\App\Http\Controllers\CaisseController::class, 'storeOpen'])->name('caisse.storeOpen');
     Route::get('/caisse/cloturer', [\App\Http\Controllers\CaisseController::class, 'close'])->name('caisse.close');
     Route::post('/caisse/cloturer', [\App\Http\Controllers\CaisseController::class, 'storeClose'])->name('caisse.storeClose');
+    Route::get('/caisse/mouvement/{mouvement}', [\App\Http\Controllers\CaisseController::class, 'showMouvement'])->name('caisse.mouvement.show');
+    Route::get('/caisse/{session}', [\App\Http\Controllers\CaisseController::class, 'show'])->name('caisse.show');
 
     // Transferts
     Route::resource('transferts', \App\Http\Controllers\TransfertController::class)->only(['index', 'store', 'destroy']);

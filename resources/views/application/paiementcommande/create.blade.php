@@ -29,26 +29,27 @@
                                 <div class="block-content">
                                     <!-- Sélection de la commande -->
                                     <div class="mb-4">
-                                        <label class="form-label" for="commande_id">Commande <span class="text-danger">*</span></label>
+                                        <label class="form-label" for="commande_id">Commande <span
+                                                class="text-danger">*</span></label>
                                         <select class="form-select @error('commande_id') is-invalid @enderror"
-                                                id="commande_id" name="commande_id" required>
+                                            id="commande_id" name="commande_id" required>
                                             <option value="">Sélectionner une commande</option>
-                                            @foreach($commandes as $cmd)
-                                                @if($cmd->StatutPaiement !== 'total')
-                                                    <option value="{{ $cmd->id }}"
-                                                            data-total="{{ $cmd->total }}"
-                                                            data-paid="{{ $cmd->montantPaye() }}"
-                                                            data-remaining="{{ $cmd->reste_a_payer }}"
-                                                            data-statut="{{ $cmd->StatutPaiement }}"
+                                            @foreach ($commandes as $cmd)
+                                                @if ($cmd->StatutPaiement !== 'total')
+                                                    <option value="{{ $cmd->id }}" data-total="{{ $cmd->total }}"
+                                                        data-paid="{{ $cmd->montantPaye() }}"
+                                                        data-remaining="{{ $cmd->reste_a_payer }}"
+                                                        data-statut="{{ $cmd->StatutPaiement }}"
                                                         {{ isset($commande) && $commande->id == $cmd->id ? 'selected' : '' }}>
-                                                        {{ $cmd->reference }} - {{ $cmd->fournisseur->nom ?? 'N/A' }} - {{ number_format($cmd->total, 2) }} €
+                                                        {{ $cmd->reference }} - {{ $cmd->fournisseur->nom ?? 'N/A' }} -
+                                                        {{ number_format($cmd->total, 2) }} €
                                                         ({{ $cmd->payment_status_text }})
                                                     </option>
                                                 @endif
                                             @endforeach
                                         </select>
                                         @error('commande_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
 
@@ -76,7 +77,8 @@
                                             </div>
                                         </div>
                                         <div class="progress mt-2" style="height: 8px;">
-                                            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                                            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -92,17 +94,15 @@
                                 <div class="block-content">
                                     <!-- Montant -->
                                     <div class="mb-4">
-                                        <label class="form-label" for="montant">Montant <span class="text-danger">*</span></label>
+                                        <label class="form-label" for="montant">Montant <span
+                                                class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="text"
-                                                   class="form-control price-input @error('montant') is-invalid @enderror"
-                                                   id="montant"
-                                                   name="montant"
-                                                   placeholder="0.00"
-                                                   required>
+                                                class="form-control price-input @error('montant') is-invalid @enderror"
+                                                id="montant" name="montant" placeholder="0.00" required>
                                             <span class="input-group-text">€</span>
                                             @error('montant')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                         <small class="form-text text-muted">
@@ -112,43 +112,45 @@
 
                                     <!-- Mode de paiement -->
                                     <div class="mb-4">
-                                        <label class="form-label" for="mode">Mode de Paiement <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('mode') is-invalid @enderror"
-                                                id="mode" name="mode" required>
+                                        <label class="form-label" for="mode">Mode de Paiement <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select @error('mode') is-invalid @enderror" id="mode"
+                                            name="mode" required>
                                             <option value="">Sélectionner un mode</option>
-                                            <option value="espèce" {{ old('mode') == 'espèce' ? 'selected' : '' }}>💵 Espèces</option>
-                                            <option value="virement" {{ old('mode') == 'virement' ? 'selected' : '' }}>🏦 Virement Bancaire</option>
-                                            <option value="chèque" {{ old('mode') == 'chèque' ? 'selected' : '' }}>📄 Chèque</option>
-                                            <option value="carte" {{ old('mode') == 'carte' ? 'selected' : '' }}>💳 Carte Bancaire</option>
-                                            <option value="autre" {{ old('mode') == 'autre' ? 'selected' : '' }}>📋 Autre</option>
+                                            <option value="espèce" {{ old('mode') == 'espèce' ? 'selected' : '' }}>💵
+                                                Espèces</option>
+                                            <option value="virement" {{ old('mode') == 'virement' ? 'selected' : '' }}>🏦
+                                                Virement Bancaire</option>
+                                            <option value="chèque" {{ old('mode') == 'chèque' ? 'selected' : '' }}>📄
+                                                Chèque</option>
+                                            <option value="carte" {{ old('mode') == 'carte' ? 'selected' : '' }}>💳 Carte
+                                                Bancaire</option>
+                                            <option value="autre" {{ old('mode') == 'autre' ? 'selected' : '' }}>📋 Autre
+                                            </option>
                                         </select>
                                         @error('mode')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
 
                                     <!-- Date de paiement -->
                                     <div class="mb-4">
-                                        <label class="form-label" for="date_paiement">Date de Paiement <span class="text-danger">*</span></label>
+                                        <label class="form-label" for="date_paiement">Date de Paiement <span
+                                                class="text-danger">*</span></label>
                                         <input type="date"
-                                               class="form-control @error('date_paiement') is-invalid @enderror"
-                                               id="date_paiement"
-                                               name="date_paiement"
-                                               value="{{ old('date_paiement', date('Y-m-d')) }}"
-                                               required>
+                                            class="form-control @error('date_paiement') is-invalid @enderror"
+                                            id="date_paiement" name="date_paiement"
+                                            value="{{ old('date_paiement', date('Y-m-d')) }}" required>
                                         @error('date_paiement')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
 
                                     <!-- Référence (auto-générée mais affichée) -->
                                     <div class="mb-4">
                                         <label class="form-label" for="reference">Référence Paiement</label>
-                                        <input type="text"
-                                               class="form-control bg-light"
-                                               id="reference"
-                                               value="Générée automatiquement"
-                                               readonly>
+                                        <input type="text" class="form-control bg-light" id="reference"
+                                            value="Générée automatiquement" readonly>
                                         <small class="form-text text-muted">
                                             Cette référence sera générée automatiquement lors de l'enregistrement
                                         </small>
@@ -166,13 +168,10 @@
                                     <h4 class="block-title">Observations</h4>
                                 </div>
                                 <div class="block-content">
-                                <textarea class="form-control @error('observations') is-invalid @enderror"
-                                          id="observations"
-                                          name="observations"
-                                          rows="3"
-                                          placeholder="Notes supplémentaires sur ce paiement...">{{ old('observations') }}</textarea>
+                                    <textarea class="form-control @error('observations') is-invalid @enderror" id="observations" name="observations"
+                                        rows="3" placeholder="Notes supplémentaires sur ce paiement...">{{ old('observations') }}</textarea>
                                     @error('observations')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -197,7 +196,8 @@
                                 <div class="row mt-2">
                                     <div class="col-12">
                                         <strong>Nouveau solde:</strong><br>
-                                        <span id="summaryNewBalance" class="fw-bold fs-5 text-warning">0.00 € restant</span>
+                                        <span id="summaryNewBalance" class="fw-bold fs-5 text-warning">0.00 €
+                                            restant</span>
                                     </div>
                                 </div>
                             </div>
@@ -220,6 +220,14 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            // Helper local pour extraire proprement les valeurs numériques des inputs ou textes
+            function getRawNumericValue(value) {
+                if (!value) return 0;
+                // Remplace la virgule par un point et supprime tout ce qui n'est pas un chiffre, un point ou un signe moins
+                let cleanValue = value.toString().replace(',', '.').replace(/[^\d.-]/g, '');
+                return parseFloat(cleanValue) || 0;
+            }
+
             // Initialiser la date du jour si vide
             if (!$('#date_paiement').val()) {
                 $('#date_paiement').val(new Date().toISOString().split('T')[0]);
@@ -234,6 +242,9 @@
                 const statut = selectedOption.data('statut') || 'en_cours';
 
                 if (selectedOption.val()) {
+                    // Stocker la valeur brute dans un attribut de données pour éviter de parser le texte "X.XX €"
+                    $('#infoRemaining').data('raw-value', remaining);
+
                     // Afficher les informations
                     $('#commandeInfo').show();
                     $('#infoTotal').text(total.toFixed(2) + ' €');
@@ -251,7 +262,7 @@
                     // Changer la couleur de la barre selon le statut
                     updateProgressBarColor(statut);
 
-                    // Mettre à jour le montant maximum
+                    // Mettre à jour le montant maximum de l'input HTML5
                     $('#montant').attr('max', remaining);
 
                     // Réinitialiser et mettre à jour le résumé
@@ -259,19 +270,33 @@
                     updateSummary();
                 } else {
                     $('#commandeInfo').hide();
+                    $('#infoRemaining').data('raw-value', 0);
                 }
             });
 
             // Mettre à jour l'affichage du statut
             function updateStatutDisplay(statut, element) {
                 const statuts = {
-                    'total': { text: 'Totalement Payée', class: 'bg-success' },
-                    'partielle': { text: 'Partiellement Payée', class: 'bg-warning' },
-                    'en_cours': { text: 'En Cours de Paiement', class: 'bg-danger' }
+                    'total': {
+                        text: 'Totalement Payée',
+                        class: 'bg-success'
+                    },
+                    'partielle': {
+                        text: 'Partiellement Payée',
+                        class: 'bg-warning'
+                    },
+                    'en_cours': {
+                        text: 'En Cours de Paiement',
+                        class: 'bg-danger'
+                    }
                 };
 
-                const statutInfo = statuts[statut] || { text: statut, class: 'bg-secondary' };
-                element.text(statutInfo.text).removeClass('bg-success bg-warning bg-danger bg-secondary').addClass(statutInfo.class);
+                const statutInfo = statuts[statut] || {
+                    text: statut,
+                    class: 'bg-secondary'
+                };
+                element.text(statutInfo.text).removeClass('bg-success bg-warning bg-danger bg-secondary').addClass(
+                    statutInfo.class);
             }
 
             // Mettre à jour la couleur de la barre de progression
@@ -279,7 +304,7 @@
                 const progressBar = $('#progressBar');
                 progressBar.removeClass('bg-success bg-warning bg-danger');
 
-                switch(statut) {
+                switch (statut) {
                     case 'total':
                         progressBar.addClass('bg-success');
                         break;
@@ -299,18 +324,19 @@
             });
 
             function updateSummary() {
-                const amount = parseFloat(getRawNumericValue($('#montant').val())) || 0;
-                const remaining = parseFloat($('#infoRemaining').text()) || 0;
+                const amount = getRawNumericValue($('#montant').val());
+                // Récupération sécurisée via le data-attribute
+                const remaining = parseFloat($('#infoRemaining').data('raw-value')) || 0;
                 const newBalance = remaining - amount;
 
                 $('#summaryAmount').text(amount.toFixed(2) + ' €');
-                $('#summaryNewBalance').text(newBalance.toFixed(2) + ' € restant');
+                $('#summaryNewBalance').text(Math.max(0, newBalance).toFixed(2) + ' € restant');
 
                 // Déterminer le nouveau statut
                 let newStatut = 'en_cours';
                 let statutClass = 'text-danger';
 
-                if (newBalance <= 0) {
+                if (newBalance <= 0 && amount > 0) {
                     newStatut = 'Totalement Payée';
                     statutClass = 'text-success';
                 } else if (amount > 0) {
@@ -321,37 +347,41 @@
                     statutClass = 'text-danger';
                 }
 
-                $('#summaryNewStatut').text(newStatut).removeClass('text-success text-warning text-danger').addClass(statutClass);
+                $('#summaryNewStatut').text(newStatut).removeClass('text-success text-warning text-danger')
+                    .addClass(statutClass);
 
                 // Changer la couleur du nouveau solde
                 if (newBalance <= 0) {
                     $('#summaryNewBalance').removeClass('text-warning text-danger').addClass('text-success');
-                } else if (newBalance > 0) {
+                } else {
                     $('#summaryNewBalance').removeClass('text-success text-danger').addClass('text-warning');
                 }
             }
 
             function validateAmount() {
-                const amount = parseFloat(getRawNumericValue($('#montant').val())) || 0;
-                const remaining = parseFloat($('#infoRemaining').text()) || 0;
+                const amount = getRawNumericValue($('#montant').val());
+                const remaining = parseFloat($('#infoRemaining').data('raw-value')) || 0;
                 const submitBtn = $('#submitBtn');
 
                 if (amount > remaining) {
                     submitBtn.prop('disabled', true);
                     $('#montant').addClass('is-invalid');
-                    $('#montant').siblings('.invalid-feedback').remove();
-                    $('#montant').after('<div class="invalid-feedback">Le montant ne peut pas dépasser le reste à payer</div>');
+                    $('#montant').parent().siblings('.invalid-feedback').remove();
+                    // Ajout après le conteneur input-group pour un rendu Bootstrap propre
+                    $('#montant').parent().after(
+                        '<div class="invalid-feedback d-block">Le montant ne peut pas dépasser le reste à payer</div>'
+                        );
                 } else {
                     submitBtn.prop('disabled', false);
                     $('#montant').removeClass('is-invalid');
-                    $('#montant').siblings('.invalid-feedback').remove();
+                    $('#montant').parent().siblings('.invalid-feedback').remove();
                 }
             }
 
-            // Validation du formulaire
+            // Validation du formulaire à la soumission
             $('#paymentForm').on('submit', function(e) {
-                const amount = parseFloat(getRawNumericValue($('#montant').val())) || 0;
-                const remaining = parseFloat($('#infoRemaining').text()) || 0;
+                const amount = getRawNumericValue($('#montant').val());
+                const remaining = parseFloat($('#infoRemaining').data('raw-value')) || 0;
 
                 if (amount > remaining) {
                     e.preventDefault();
@@ -373,13 +403,14 @@
                     return false;
                 }
 
-                // Afficher un loader
-                $('#submitBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Enregistrement...');
+                // Afficher un loader et désactiver le bouton
+                $('#submitBtn').prop('disabled', true).html(
+                    '<i class="fa fa-spinner fa-spin me-1"></i> Enregistrement...');
             });
 
-            // Si une commande est présélectionnée, déclencher le changement
-            @if(isset($commande) && $commande)
-            $('#commande_id').trigger('change');
+            // Si une commande est présélectionnée au chargement
+            @if (isset($commande) && $commande)
+                $('#commande_id').trigger('change');
             @endif
         });
     </script>
@@ -389,19 +420,24 @@
             border: 1px solid #e5e7eb;
             border-radius: 10px;
         }
+
         .form-label {
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
+
         .bg-light {
             background-color: #f8f9fa !important;
         }
+
         .progress {
             background-color: #e9ecef;
         }
+
         .progress-bar {
             transition: width 0.3s ease;
         }
+
         .badge {
             font-size: 0.75rem;
         }

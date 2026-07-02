@@ -49,6 +49,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if ($user->statut !== 'actif') {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Votre compte est inactif ou suspendu. Veuillez contacter l\'administrateur.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

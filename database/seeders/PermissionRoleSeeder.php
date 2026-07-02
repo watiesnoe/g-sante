@@ -114,6 +114,7 @@ class PermissionRoleSeeder extends Seeder
             'stock.receptions'                   => 'Gérer les réceptions de stock',
             'stock.familles'                     => 'Gérer les familles de médicaments',
             'stock.unites'                       => 'Gérer les unités de mesure',
+            'stock.inventaire'                   => 'Réaliser et valider les inventaires',
 
             // ── Paiements / Caisse ────────────────────────────────────
             'paiements.view'                     => 'Voir les paiements',
@@ -199,7 +200,7 @@ class PermissionRoleSeeder extends Seeder
             'maternity.view',
             'infectiologie.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs', 'stock.commandes', 'stock.receptions',
-            'stock.familles', 'stock.unites',
+            'stock.familles', 'stock.unites', 'stock.inventaire',
             'paiements.view', 'paiements.create', 'caisse.view',
             'assurances.view', 'assurances.create', 'assurances.edit',
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
@@ -278,7 +279,7 @@ class PermissionRoleSeeder extends Seeder
         $pharmacien->syncPermissions([
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
-            'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites',
+            'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
             'assurances.view',
             'ordonnances.view', 'ordonnances.payer',
@@ -320,7 +321,7 @@ class PermissionRoleSeeder extends Seeder
         $gestionnaire->syncPermissions([
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
-            'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites',
+            'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit', 'fournisseurs.delete',
         ]);
         $this->command->info('✅ gestionnaire_stock → permissions configurées');

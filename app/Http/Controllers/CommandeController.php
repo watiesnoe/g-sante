@@ -56,14 +56,7 @@ class CommandeController extends Controller
 
             // Statut stylé
             ->editColumn('statut', function ($row) {
-                $color = match($row->statut) {
-                    'valide' => 'success',
-                    'en_attente' => 'warning',
-                    'annuler' => 'danger',
-                    default => 'secondary'
-                };
-
-                return '<span class="badge bg-'.$color.'">'.ucfirst($row->statut).'</span>';
+                return self::formatStatutBadge($row->statut);
             })
 
             // Total formaté
@@ -389,5 +382,33 @@ class CommandeController extends Controller
         });
 
         return response()->json($medicaments);
+    }
+    /**
+     * Formate un statut de commande en badge HTML lisible.
+     * Remplace les underscores par des espaces et capitalise.
+     */
+    public static function formatStatutBadge(string $statut): string
+    {
+        $map = [
+            'en_cours'    => ['label' => 'En cours',    'color' => 'primary'],
+            'en_attente'  => ['label' => 'En attente',  'color' => 'warning text-dark'],
+            'valide'      => ['label' => 'Validée',     'color' => 'success'],
+            'validée'     => ['label' => 'Validée',     'color' => 'success'],
+            'annuler'     => ['label' => 'Annulée',     'color' => 'danger'],
+            'annulée'     => ['label' => 'Annulée',     'color' => 'danger'],
+            'livraison'   => ['label' => 'En livraison','color' => 'info'],
+        ];
+
+        if (isset($map[$statut])) {
+            $info = $map[$statut];
+        } else {
+            // Fallback générique : underscore → espace + ucfirst
+            $info = [
+                'label' => ucfirst(str_replace('_', ' ', $statut)),
+                'color' => 'secondary',
+            ];
+        }
+
+        return '<span class="badge bg-' . $info['color'] . '">' . $info['label'] . '</span>';
     }
 }

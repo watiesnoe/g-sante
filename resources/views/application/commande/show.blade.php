@@ -26,16 +26,24 @@
                     </div>
                     <div class="col-md-6">
                         <p><strong>Statut :</strong>
-                            @if ($commande->statut == 'en_attente')
-                                <span class="badge bg-warning text-dark">En attente</span>
-                            @elseif ($commande->statut == 'validée')
-                                <span class="badge bg-success">Validée</span>
-                            @elseif ($commande->statut == 'annulée')
-                                <span class="badge bg-danger">Annulée</span>
-                            @else
-                                <span class="badge bg-secondary">Inconnu</span>
-                            @endif
+                            @php
+                                $statutMap = [
+                                    'en_cours'   => ['label' => 'En cours',    'class' => 'bg-primary'],
+                                    'en_attente' => ['label' => 'En attente',  'class' => 'bg-warning text-dark'],
+                                    'valide'     => ['label' => 'Validée',     'class' => 'bg-success'],
+                                    'validée'    => ['label' => 'Validée',     'class' => 'bg-success'],
+                                    'annuler'    => ['label' => 'Annulée',     'class' => 'bg-danger'],
+                                    'annulée'    => ['label' => 'Annulée',     'class' => 'bg-danger'],
+                                    'livraison'  => ['label' => 'En livraison','class' => 'bg-info'],
+                                ];
+                                $si = $statutMap[$commande->statut] ?? [
+                                    'label' => ucfirst(str_replace('_', ' ', $commande->statut)),
+                                    'class' => 'bg-secondary',
+                                ];
+                            @endphp
+                            <span class="badge {{ $si['class'] }}">{{ $si['label'] }}</span>
                         </p>
+
                         <p><strong>Montant total :</strong>
                             <span class="text-success fw-bold">{{ number_format($commande->total, 0, ',', ' ') }} F CFA</span>
                         </p>

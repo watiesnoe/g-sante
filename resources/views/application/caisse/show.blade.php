@@ -3,23 +3,17 @@
 @section('content')
     <main id="main-container">
         <div class="content">
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if (session('info'))
-                <div class="alert alert-info">{{ session('info') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
-
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="h3 fw-bold mb-0">Ma Caisse (Session en cours)</h2>
-                <a href="{{ route('caisse.close') }}" class="btn btn-danger">
-                    <i class="fa fa-lock me-1"></i> Clôturer ma Caisse
+                <div>
+                    <h2 class="h3 fw-bold mb-1">Détails de la Session de Caisse</h2>
+                    <p class="text-muted mb-0">Gérée par <strong>{{ $session->user->name }}</strong></p>
+                </div>
+                <a href="{{ route('caisse.index') }}" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left me-1"></i> Retour à la supervision
                 </a>
             </div>
 
+            <!-- Balances Cards -->
             <div class="row">
                 <div class="col-6 col-md-3 col-lg-3 col-xl-3">
                     <a class="block block-rounded block-link-pop border-start border-primary border-4"
@@ -64,25 +58,82 @@
                 </div>
             </div>
 
-            <div class="block block-rounded">
-                <div class="block-header block-header-default">
-                    <h3 class="block-title">Transactions de la session</h3>
-                </div>
-                <div class="block-content block-content-full">
-                    <div class="table-responsive">
-                        <table id="mouvementsTable" class="table table-bordered table-striped table-vcenter w-100">
-                            <thead>
-                                <tr>
-                                    <th>Date / Heure</th>
-                                    <th>Type</th>
-                                    <th>Motif</th>
-                                    <th class="text-end">Montant</th>
-                                    <th class="text-center" style="width: 100px;">Action</th> 
-                                </tr>
-                            </thead>
-                            <tbody>
+            <!-- Session Info -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="block block-rounded">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">Informations Générales</h3>
+                        </div>
+                        <div class="block-content pb-3">
+                            <table class="table table-striped table-borderless table-vcenter fs-sm">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-semibold" style="width: 40%;">Statut</td>
+                                        <td>
+                                            @if($session->statut == 'ouverte')
+                                                <span class="badge bg-success">Ouverte</span>
+                                            @else
+                                                <span class="badge bg-secondary">Fermée</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">Date d'ouverture</td>
+                                        <td>{{ $session->opened_at->format('d/m/Y H:i') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">Date de clôture</td>
+                                        <td>{{ $session->closed_at ? $session->closed_at->format('d/m/Y H:i') : '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">Solde Réel</td>
+                                        <td class="fw-bold">{{ $session->solde_reel ? number_format($session->solde_reel, 0, ',', ' ') . ' XOF' : '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">Écart</td>
+                                        <td>
+                                            @if($session->statut == 'fermee')
+                                                @if($session->ecart == 0)
+                                                    <span class="text-success fw-bold">0 XOF</span>
+                                                @elseif($session->ecart > 0)
+                                                    <span class="text-success fw-bold">+{{ number_format($session->ecart, 0, ',', ' ') }} XOF</span>
+                                                @else
+                                                    <span class="text-danger fw-bold">{{ number_format($session->ecart, 0, ',', ' ') }} XOF</span>
+                                                @endif
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
                                 </tbody>
-                        </table>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="block block-rounded">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">Historique des Opérations</h3>
+                        </div>
+                        <div class="block-content block-content-full">
+                            <div class="table-responsive">
+                                <table id="mouvementsTable" class="table table-bordered table-striped table-vcenter w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Date / Heure</th>
+                                            <th>Type</th>
+                                            <th>Motif</th>
+                                            <th class="text-end">Montant</th>
+                                            <th class="text-center" style="width: 100px;">Action</th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,8 +173,8 @@
                 processing: true,
                 serverSide: true,
                 responsive: true,
-                // Appelle la même route avec le paramètre Request $request géré côté contrôleur
-                ajax: "{{ route('caisse.my_session') }}",
+                // Appelle la route caisse.show pour cette session avec AJAX
+                ajax: "{{ route('caisse.show', $session->uuid) }}",
                 columns: [
                     { 
                         data: 'created_at', 

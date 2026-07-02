@@ -111,7 +111,7 @@ class PaiementCommandeController extends Controller
             $commandes->push($commande);
         }
 
-        return view('application.paiementcommande.create', compact('commandes', 'commande'));
+        return view('application.paiementcommande.create', compact('commande', 'commandes'));
     }
 
     public function store(Request $request)
@@ -171,7 +171,6 @@ class PaiementCommandeController extends Controller
 
             return redirect()->route('paiementscommande.dashboard')
                 ->with('success', 'Paiement enregistré avec succès!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors([
@@ -243,7 +242,6 @@ class PaiementCommandeController extends Controller
             }
 
             return redirect()->back()->with('success', 'Paiement supprimé avec succès');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -263,8 +261,8 @@ class PaiementCommandeController extends Controller
     public function getUnpaidOrders()
     {
         $unpaidOrders = Commande::with(['fournisseur', 'paiements'])
-            ->where(function($query) {
-                $query->whereHas('paiements', function($subQuery) {
+            ->where(function ($query) {
+                $query->whereHas('paiements', function ($subQuery) {
                     $subQuery->selectRaw('commande_id, SUM(montant) as total_paye')
                         ->groupBy('commande_id')
                         ->havingRaw('total_paye < commandes.total');
@@ -272,7 +270,7 @@ class PaiementCommandeController extends Controller
             })
             ->where('statut', '!=', 'annuler')
             ->get()
-            ->map(function($commande) {
+            ->map(function ($commande) {
                 return [
                     'id' => $commande->id,
                     'reference' => $commande->reference,
@@ -286,5 +284,4 @@ class PaiementCommandeController extends Controller
 
         return response()->json($unpaidOrders);
     }
-
 }

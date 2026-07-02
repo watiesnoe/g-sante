@@ -10,5 +10,8 @@
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('receptions.index')}}"><span class="nav-main-link-name">Réceptions</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('familles.index')}}"><span class="nav-main-link-name">Familles</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('unites.index')}}"><span class="nav-main-link-name">Unités</span></a></li>
+        @if(Auth::user()->hasRole(['super_admin', 'admin']) || Auth::user()->can('stock.inventaire'))
+        <li class="nav-main-item"><a class="nav-main-link {{ request()->routeIs('inventaires.*') ? 'active' : '' }}" href="{{route('inventaires.index')}}"><span class="nav-main-link-name">📋 Inventaire</span></a></li>
+        @endif
     </ul>
 </li>

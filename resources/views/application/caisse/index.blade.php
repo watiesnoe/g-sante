@@ -54,7 +54,7 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="javascript:void(0)" class="btn-sm" title="Voir détails">
+                                <a href="{{ route('caisse.show', $s->uuid) }}" class="btn btn-sm btn-alt-secondary" title="Voir détails">
                                     <i class="fa fa-eye text-primary"></i>
                                 </a>
                             </td>

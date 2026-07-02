@@ -92,34 +92,93 @@ class User extends Authenticatable
 
     /**
      * Vérifie si l'utilisateur a accès à un module spécifique.
-     * Les super_admin et admin ont toujours accès à tout, peu importe modules_access.
-     * Pour les autres rôles : si modules_access est défini, on l'utilise ; sinon fallback par rôle.
+     *
+     * Ordre de priorité :
+     * 1. super_admin / admin → accès total
+     * 2. Permissions Spatie (directes OU via rôle) → si au moins une permission
+     *    dont le préfixe correspond au module, l'accès est accordé
+     * 3. Champ modules_access (JSON) → liste explicite de modules autorisés
+     * 4. Fallback par rôle → règles par défaut par type de rôle
      */
     public function hasModuleAccess($module)
     {
-        // Super admin et admin : accès total, toujours
+        // 1. Super admin et admin : accès total, toujours
         if ($this->hasRole(['super_admin', 'superadmin', 'admin'])) {
             return true;
         }
 
-        // Pour les autres : utiliser modules_access si défini
+        // Correspondance module sidebar → préfixes de permissions en base
+        // (certains modules sont au singulier dans le sidebar, au pluriel dans les permissions)
+        $moduleMap = [
+            'patient'          => ['patients'],
+            'ticket'           => ['tickets'],
+            'consultation'     => ['consultations'],
+            'rendezvous'       => ['rendezvous'],
+            'ordonnance'       => ['ordonnances'],
+            'examens'          => ['examens'],
+            'hospitalisation'  => ['hospitalisations'],
+            'transfert'        => ['transferts'],
+            'maternity'        => ['maternity'],
+            'infectiologie'    => ['infectiologie'],
+            'stock'            => ['stock'],
+            'paiements'        => ['paiements'],
+            'caisse'           => ['caisse'],
+            'parametre'        => ['parametres'],
+            'dashboard'        => ['dashboard'],
+            'users'            => ['users'],
+            'roles'            => ['roles'],
+        ];
+
+        // Préfixes à chercher pour ce module
+        $prefixes = $moduleMap[$module] ?? [$module];
+
+        // 2. Vérifier via les permissions Spatie (directes + héritées du rôle)
+        $hasPermissionForModule = $this->getAllPermissions()->contains(function ($perm) use ($prefixes) {
+            $prefix = explode('.', $perm->name)[0];
+            return in_array($prefix, $prefixes);
+        });
+
+        if ($hasPermissionForModule) {
+            return true;
+        }
+
+        // 3. Champ modules_access (JSON) si défini explicitement
         if (is_array($this->modules_access) && !empty($this->modules_access)) {
             return in_array($module, $this->modules_access);
         }
 
-        // Fallback basé sur les rôles Spatie
+        // 4. Fallback basé sur les rôles Spatie
+        //    Utilisé UNIQUEMENT si aucune permission Spatie n'est configurée pour ce rôle.
+        //    Ces listes DOIVENT rester alignées avec PermissionRoleSeeder.
         if ($this->hasRole('gestionnaire_stock')) {
-            return true;
+            return in_array($module, ['stock']);
         }
         if ($this->hasRole('secretaire')) {
-            return in_array($module, ['patient', 'ticket', 'rendezvous', 'hospitalisation']);
+            return in_array($module, ['patient', 'ticket', 'rendezvous', 'hospitalisation', 'transfert', 'paiements', 'caisse', 'consultation']);
         }
         if ($this->hasRole('medecin')) {
-            return in_array($module, ['patient', 'consultation', 'ordonnance', 'examens', 'hospitalisation', 'maternity', 'infectiologie', 'transfert', 'rendezvous']);
+            return in_array($module, ['patient', 'ticket', 'consultation', 'ordonnance', 'examens', 'hospitalisation', 'maternity', 'infectiologie', 'transfert', 'rendezvous', 'stock']);
         }
         if ($this->hasRole('pharmacien')) {
-            return in_array($module, ['ordonnance', 'hospitalisation', 'stock', 'paiements', 'caisse']);
+            // ⚠️ pharmacien n'a PAS accès à hospitalisation (pas de permission hospitalisations.*)
+            return in_array($module, ['stock', 'ordonnance', 'paiements']);
         }
+        if ($this->hasRole('infirmier')) {
+            return in_array($module, ['patient', 'ticket', 'consultation', 'examens', 'hospitalisation', 'maternity', 'infectiologie']);
+        }
+        if ($this->hasRole('laborantin')) {
+            return in_array($module, ['patient', 'examens']);
+        }
+        if ($this->hasRole('comptable')) {
+            return in_array($module, ['paiements', 'caisse', 'ordonnance', 'hospitalisation']);
+        }
+        if ($this->hasRole('sage_femme')) {
+            return in_array($module, ['patient', 'maternity', 'consultation', 'infectiologie']);
+        }
+        if ($this->hasRole('visiteur')) {
+            return in_array($module, ['patient', 'consultation', 'rendezvous']);
+        }
+
         return false;
     }
 

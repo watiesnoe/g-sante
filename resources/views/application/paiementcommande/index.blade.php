@@ -23,9 +23,9 @@
                 <h2 class="mb-1">Dashboard Paiements Commandes</h2>
                 <p class="text-muted mb-0">Suivi des paiements fournisseurs et des soldes restants.</p>
             </div>
-            <a href="{{ route('paiementscommande.create') }}" class="btn btn-primary">
+            {{-- <a href="{{ route('paiementscommande.create') }}" class="btn btn-primary">
                 <i class="fa fa-plus me-1"></i> Nouveau paiement
-            </a>
+            </a> --}}
         </div>
 
         <div class="row g-3 mb-4">

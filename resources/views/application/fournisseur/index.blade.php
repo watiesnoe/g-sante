@@ -5,17 +5,12 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
-            <!-- Action Button Area -->
             <div class="d-flex justify-content-end mb-3">
                 <button class="btn btn-sm btn-primary" id="btnAdd">
                     <i class="fa fa-plus me-1"></i> Ajouter
                 </button>
             </div>
 
-            <!-- Sidebar gauche -->
-
-
-            <!-- Contenu principal -->
             <div class="col-xl-12 col-lg-12">
                 <div class="block block-rounded">
                     <div class="block-header block-header-default">
@@ -56,14 +51,16 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Contact</label>
-                                <input type="text" id="contact" name="contact" class="form-control" placeholder="Téléphone">
+                                <input type="text" id="contact" name="contact" class="form-control"
+                                    placeholder="Téléphone">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Adresse</label>
                                 <input type="text" id="adresse" name="adresse" class="form-control">
                             </div>
                             <div class="text-end border-top pt-3">
-                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="button" class="btn btn-sm btn-secondary"
+                                    data-bs-dismiss="modal">Fermer</button>
                                 <button type="submit" class="btn btn-sm btn-primary" id="btnSave">Enregistrer</button>
                             </div>
                         </form>
@@ -77,30 +74,50 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // 🎯 1. Élimination des alertes i18n intrusives en production
+            // 🎯 Configuration globale AJAX pour inclure le token CSRF sur toutes les requêtes (évite les erreurs 419/403)
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}'
+                }
+            });
+
+            // Élimination des alertes i18n intrusives en production
             $.fn.dataTable.ext.errMode = 'throw';
 
-            // 🎯 2. Définition des routes de l'API Resource Fournisseurs
+            // 🎯 Définition dynamique des routes pour s'adapter à n'importe quel hébergement (sous-dossiers compris)
             const ROUTES = {
                 index: "{{ route('fournisseurs.index') }}",
-                store: "/fournisseurs",
-                show: "/fournisseurs/:id",
-                update: "/fournisseurs/:id",
-                destroy: "/fournisseurs/:id",
+                store: "{{ url('fournisseurs') }}",
+                show: "{{ url('fournisseurs') }}/:id",
+                update: "{{ url('fournisseurs') }}/:id",
+                destroy: "{{ url('fournisseurs') }}/:id",
             };
 
-            // 🎯 3. Initialisation native de DataTables
+            // Initialisation native de DataTables
             var table = $('#fournisseurTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: ROUTES.index,
-                columns: [
-                    { data: 'nom', name: 'nom' },
-                    { data: 'contact', name: 'contact' },
-                    { data: 'adresse', name: 'adresse' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+                columns: [{
+                        data: 'nom',
+                        name: 'nom'
+                    },
+                    {
+                        data: 'contact',
+                        name: 'contact'
+                    },
+                    {
+                        data: 'adresse',
+                        name: 'adresse'
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    }
                 ],
-                // Traduction française intégrée en local
                 language: {
                     emptyTable: "Aucune donnée disponible dans le tableau",
                     info: "Affichage de l'élément _START_ à _END_ sur _TOTAL_ éléments",
@@ -117,8 +134,8 @@
                     }
                 },
                 dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
                 pagingType: 'simple_numbers'
             });
 
@@ -132,7 +149,7 @@
                 $('#crudModal').modal('show');
             });
 
-            // ── 🛠️ ACTION : CLIC SUR "VOIR" (S'il est présent dans vos actions) ──
+            // ── 🛠️ ACTION : CLIC SUR "VOIR" ─────────────────────────────────────
             $(document).on('click', '.view', function() {
                 let id = $(this).data('id');
                 let url = ROUTES.show.replace(':id', id);
@@ -143,13 +160,15 @@
                     $('#crudForm input').prop('disabled', true);
                     $('#btnSave').hide();
                     $('#crudModal').modal('show');
+                }).fail(function() {
+                    alert("Impossible de charger les détails du fournisseur.");
                 });
             });
 
             // ── 🛠️ ACTION : CLIC SUR "MODIFIER" (EDIT) ─────────────────────────
             $(document).on('click', '.edit', function() {
                 let id = $(this).data('id');
-                let url = ROUTES.show.replace(':id', id); 
+                let url = ROUTES.show.replace(':id', id);
 
                 $.get(url, function(data) {
                     $('#modalTitle').text('✏️ Modifier le fournisseur');
@@ -157,6 +176,8 @@
                     $('#crudForm input').prop('disabled', false);
                     $('#btnSave').show();
                     $('#crudModal').modal('show');
+                }).fail(function() {
+                    alert("Impossible de charger les données du fournisseur.");
                 });
             });
 
@@ -165,10 +186,10 @@
                 e.preventDefault();
                 let id = $('#id').val();
                 let url = id ? ROUTES.update.replace(':id', id) : ROUTES.store;
-                
+
                 let formData = $(this).serialize();
                 if (id) {
-                    formData += '&_method=PUT'; // Support natif pour la route PUT de Laravel
+                    formData += '&_method=PUT';
                 }
 
                 $.ajax({
@@ -177,15 +198,24 @@
                     data: formData,
                     success: function(response) {
                         $('#crudModal').modal('hide');
-                        table.ajax.reload(null, false); // Recharge le tableau sans perdre la page courante
+                        table.ajax.reload(null, false);
                         if (typeof Dashmix !== 'undefined') {
-                            Dashmix.helpers('jq-notify', {type: 'success', icon: 'fa fa-check me-1', message: response.message || 'Opération réussie ✅'});
+                            Dashmix.helpers('jq-notify', {
+                                type: 'success',
+                                icon: 'fa fa-check me-1',
+                                message: response.message || 'Opération réussie ✅'
+                            });
                         } else {
                             alert(response.message || 'Opération réussie ✅');
                         }
                     },
                     error: function(xhr) {
-                        alert("Une erreur est survenue lors de l'enregistrement.");
+                        // Permet de voir le message d'erreur précis renvoyé par Laravel en cas de validation échouée (Ex: status 422)
+                        let errorMsg = "Une erreur est survenue lors de l'enregistrement.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert(errorMsg);
                     }
                 });
             });
@@ -200,8 +230,7 @@
                         url: url,
                         type: 'POST',
                         data: {
-                            _method: 'DELETE',
-                            _token: '{{ csrf_token() }}'
+                            _method: 'DELETE'
                         },
                         success: function(response) {
                             table.ajax.reload(null, false);
@@ -216,7 +245,7 @@
 
             // Remplissage des données reçues dans les champs de la modale
             function mapDataToForm(data) {
-                $('#id').val(data.uuid || data.id); // S'adapte si vous utilisez des ID numériques ou des UUID
+                $('#id').val(data.uuid || data.id);
                 $('#nom').val(data.nom);
                 $('#contact').val(data.contact);
                 $('#adresse').val(data.adresse);
