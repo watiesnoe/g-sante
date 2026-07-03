@@ -156,6 +156,9 @@ class WhoGuidelinesSeeder extends Seeder
         // Ces protocoles sont ajoutés directement en base pour éviter la redondance
         $this->enrichWithPdfGuidelines($now);
         
+        // ENRICHISSEMENT: Ajout du Guide Thérapeutique de Terrain issu de public/index.html
+        $this->enrichWithGuideTherapeutique($now);
+        
         $this->command->info('WHO Guidelines seeded successfully with standardized treatments!');
     }
     
@@ -295,6 +298,150 @@ class WhoGuidelinesSeeder extends Seeder
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
+            }
+        }
+    }
+
+    /**
+     * Enrichit la base avec les pathologies, médicaments et protocoles cliniques
+     * extraits dynamiquement du Guide Thérapeutique de Terrain (public/index.html).
+     */
+    private function enrichWithGuideTherapeutique($now)
+    {
+        $indexPath = public_path('index.html');
+        if (!file_exists($indexPath)) {
+            $this->command->warn("Guide clinique (index.html) non trouvé.");
+            return;
+        }
+
+        $html = file_get_contents($indexPath);
+        if (!preg_match('/const DATA = \s*\[([\s\S]*?)\];/m', $html, $matches)) {
+            $this->command->error("DATA array non trouvé dans index.html");
+            return;
+        }
+
+        $jsData = trim($matches[1]);
+        // Supprime les commentaires JavaScript sur une ligne
+        $jsData = preg_replace('/\/\/.*$/m', '', $jsData);
+
+        // Convertit les clés d'objets JS en format JSON valide ("key":)
+        $jsonData = preg_replace('/(?<=[\{,])\s*([a-zA-Z0-9_]+)\s*:/', '"$1":', $jsData);
+        $jsonData = preg_replace('/,\s*\}/', '}', $jsonData);
+        $jsonData = preg_replace('/,\s*\]/', ']', $jsonData);
+
+        $finalJson = '[' . $jsonData . ']';
+        $items = json_decode($finalJson, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->command->error("Erreur de décodage JSON du guide : " . json_last_error_msg());
+            return;
+        }
+
+        $defaultUniteId = DB::table('unites')->value('id') ?? 1;
+
+        foreach ($items as $item) {
+            $category = trim($item['c'] ?? 'Général');
+            $urgent = (int)($item['u'] ?? 0);
+            $pathology = trim($item['t'] ?? '');
+            $diagnostic = trim($item['d'] ?? 'Diagnostic clinique.');
+            $medications = $item['m'] ?? [];
+            $treatment = trim($item['tx'] ?? '');
+
+            if (empty($pathology)) continue;
+
+            // 1. Créer ou trouver la maladie
+            $maladie = DB::table('maladies')->where('nom', $pathology)->first();
+            if (!$maladie) {
+                $maladieId = DB::table('maladies')->insertGetId([
+                    'nom' => $pathology,
+                    'uuid' => (string) Str::uuid(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                    'description' => "Guide Thérapeutique : " . $pathology
+                ]);
+            } else {
+                $maladieId = $maladie->id;
+                DB::table('maladies')->where('id', $maladieId)->update([
+                    'description' => "Guide Thérapeutique : " . $pathology,
+                    'updated_at' => $now
+                ]);
+            }
+
+            // 2. Gérer la famille thérapeutique (catégorie du guide)
+            $familleId = DB::table('familles')->where('nom', $category)->value('id');
+            if (!$familleId && !empty($category)) {
+                $familleId = DB::table('familles')->insertGetId([
+                    'nom' => $category,
+                    'uuid' => (string) Str::uuid(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                    'description' => "Catégorie : " . $category
+                ]);
+            }
+            $familleId = $familleId ?? 1;
+
+            // 3. Créer ou trouver le protocole de traitement
+            $protocol = DB::table('protocole_traitements')->where('maladie_id', $maladieId)->first();
+            
+            $protocolData = [
+                'maladie_id' => $maladieId,
+                'titre' => $urgent ? "URGENCE : " . $pathology : "Protocole : " . $pathology,
+                'diagnostics' => $diagnostic,
+                'traitement_principal' => Str::limit($treatment, 250), // Troncature pour varchar(255)
+                'posologie_principale' => $treatment, // Text complet dans la colonne text
+                'remarques' => $urgent ? "Alerte Urgence" : null,
+                'updated_at' => $now
+            ];
+
+            if (!$protocol) {
+                $protocolData['uuid'] = (string) Str::uuid();
+                $protocolData['created_at'] = $now;
+                $protocoleId = DB::table('protocole_traitements')->insertGetId($protocolData);
+            } else {
+                $protocoleId = $protocol->id;
+                DB::table('protocole_traitements')->where('id', $protocoleId)->update($protocolData);
+            }
+
+            // 4. Gérer les médicaments et liaisons
+            foreach ($medications as $medName) {
+                $medName = trim($medName);
+                if (empty($medName)) continue;
+
+                // Créer ou trouver le médicament
+                $medicament = DB::table('medicaments')->where('nom', $medName)->first();
+                if (!$medicament) {
+                    $medicamentId = DB::table('medicaments')->insertGetId([
+                        'nom' => $medName,
+                        'description' => "Molécule : " . $medName,
+                        'stock' => 100,
+                        'stock_min' => 10,
+                        'prix_achat' => 500,
+                        'prix_vente' => 1000,
+                        'unite_id' => $defaultUniteId,
+                        'famille_id' => $familleId,
+                        'uuid' => (string) Str::uuid(),
+                        'created_at' => $now,
+                        'updated_at' => $now
+                    ]);
+                } else {
+                    $medicamentId = $medicament->id;
+                }
+
+                // Lier le protocole au médicament
+                DB::table('protocole_medicament')->updateOrInsert(
+                    [
+                        'protocole_id' => $protocoleId,
+                        'medicament_id' => $medicamentId
+                    ],
+                    [
+                        'uuid' => (string) Str::uuid(),
+                        'type' => 'principal',
+                        'posologie' => 'Selon protocole',
+                        'duree' => 'Selon protocole',
+                        'created_at' => $now,
+                        'updated_at' => $now
+                    ]
+                );
             }
         }
     }
