@@ -21,7 +21,6 @@ class OrdonnanceController extends Controller
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
-            $user = Auth::user();
             $ordonnances = Ordonnance::with(['consultation.patient','medicaments'])
                 ->select('ordonnances.*')
                 ->whereYear('ordonnances.created_at', $year)
