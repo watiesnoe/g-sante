@@ -17,8 +17,6 @@ class DatabaseSeeder extends Seeder
             UniteSeeder::class,
             FamilleSeeder::class,
             AssuranceSeeder::class,
-            PathologiesSeeder::class,
-            DiseaseSeeder::class,
             
             // 2. Infrastructures et Personnel (Dépendent des services)
             SalleLitExamenSeeder::class,
@@ -27,21 +25,24 @@ class DatabaseSeeder extends Seeder
             
             // 3. Données de soins (Dépendent des référentiels)
             PatientSeeder::class,
-            MedicamentSeeder::class,
-            MedicamentsProtocolesSeeder::class, // ✅ Médicaments des protocoles OMS manquants
+            PrestationSeeder::class,
+            
+            // 4. Médicaments (Doivent être exécutés avant les protocoles et pathologies qui les lient)
+            MedicamentsSeeder::class,
+            
+            // 5. Maladies & Symptômes
+            DiseaseSeeder::class,
+            MaladiesSeeder::class,
+            SymptomesSeeder::class,
             MaladieSymptomeSeeder::class,
             
-            // 4. Protocoles et Spécialisations
-            // ProtocoleTraitementSeeder::class,  // Désactivé : noms de maladies différents
-            // InfectiologieSeeder::class,
-            PrestationSeeder::class,
+            // 6. Protocoles et Guidelines
+            ProtocoleTraitementsSeeder::class,
+            ProtocoleMedicamentSeeder::class,
             WhoGuidelinesSeeder::class,
-            ProtocoleEnrichmentSeeder::class,  // ✅ Enrichit les protocoles avec germes + traitements
-            SignesDiagnosticsSeeder::class,    // ✅ Enrichit les signes cliniques et examens diagnostics
-            ProtocoleMedicamentLinkSeeder::class, // ✅ Lie les médicaments aux protocoles (pivot)
-
-            // 5. Tests de performance (Optionnel - 1 Million de lignes)
-            // LargeDataSeeder::class,
+            InfectiologieSeeder::class,
+            PathologiesSeeder::class, // Exécuté à la fin pour lier les médicaments et maladies importés en JSON
         ]);
     }
 }
+
