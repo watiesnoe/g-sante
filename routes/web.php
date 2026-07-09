@@ -37,8 +37,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Page d'accueil après connexion
-
 // Routes protégées par authentification
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
@@ -66,23 +64,15 @@ Route::middleware('auth')->group(function () {
     });
     Route::resource('tickets', TicketController::class)->except(['create', 'store']);
     Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
-    // Route spécifique pour l'admission directe depuis la liste d'attente (avec UUID)
     Route::get('/consultations/create/{ticket_uuid?}', [ConsultationController::class, 'create'])
         ->name('consultations.listeentente');
-    // Le reste des routes standards (index, store, show, edit, update, destroy)
     Route::resource('consultations', ConsultationController::class);
     Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
     Route::resource('suivis', SuiviController::class);
     Route::resource('assurances', AssuranceController::class);
 
-    //    Route::get('suivis/create', [SuiviController::class, 'create'])->name('suivis.create');
-    // Route pour créer un suivi depuis une consultation
     Route::get('consultations/{consultation}/suivis/create', [SuiviController::class, 'create'])
         ->name('consultations.suivi.create');
-
-    // Stocker le suivi depuis la consultation
-    //    Route::post('suivis/{consultation}/suivis', [SuiviController::class, 'store'])
-    //        ->name('suivi.store');
 
     Route::get('/rendezvous/data', [RendezvousController::class, 'getData'])->name('rendezvous.data');
     Route::get('/rendezvous/disponible', [RendezvousController::class, 'disponible'])->name('rendezvous.disponible');
@@ -116,8 +106,13 @@ Route::middleware('auth')->group(function () {
         ->name('hospitalisations.realise');
 
     Route::resource('fournisseurs', FournisseurController::class);
+    
+    // Medicaments with custom AJAX routes
+    Route::get('medicaments/search', [MedicamentController::class, 'search'])->name('medicaments.search');
+    Route::get('medicaments/{medicament}/unites-api', [MedicamentController::class, 'getUnitesApi'])->name('medicaments.unites.api');
     Route::resource('medicaments', MedicamentController::class);
     Route::get('/familles/{famille}/medicaments', [MedicamentController::class, 'index'])->name('familles.medicaments');
+    
     Route::resource('commandes', CommandeController::class);
     Route::get('/commandes/{commande?}/paiements', [PaiementCommandeController::class, 'create'])->name('paiementscommande.create')->middleware('caisse.ouverte');
     Route::post('/commandes/panier/ajouter', [CommandeController::class, 'ajouterAuPanier'])->name('commandes.panier.ajouter');
@@ -126,31 +121,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/commandes/panier/supprimer', [CommandeController::class, 'supprimerDuPanier'])->name('commandes.panier.supprimer');
     Route::get('/commandes/{commande}/pdf', [CommandeController::class, 'pdf'])->name('commandes.pdf');
 
-    // Supprimer un médicament du panier (AJAX)
     Route::get('/consultations/{consultation}/print', [ConsultationController::class, 'print'])->name('consultations.print');
-
-    // Vider le panier
     Route::post('/commandes/panier/vider', [CommandeController::class, 'viderPanier'])->name('commandes.panier.vider');
-
     Route::get('/tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
 
     Route::resource('receptions', ReceptionController::class);
-
-    // Inventaire médicaments
     Route::resource('inventaires', \App\Http\Controllers\InventaireController::class);
     Route::post('/inventaires/{inventaire}/valider', [\App\Http\Controllers\InventaireController::class, 'valider'])->name('inventaires.valider');
-
-    //    Route::get('/receptions', [ReceptionController::class, 'index'])->name('receptions.index');
-    //    Route::get('/receptions/create', [ReceptionController::class, 'create'])->name('receptions.create');
-
     Route::get('/commandes/{commande}/produits', [ReceptionController::class, 'getProduits']); // pour AJAX
-
-    //    Route::post('/receptions', [ReceptionController::class, 'store'])->name('receptions.store');
-
     Route::get('/salle/{salleId}/lits-libres', [SalleController::class, 'litsLibres'])->name('salles.litsLibres');
-
-
-    // Route pour récupérer les médicaments d'une commande (Ajax)
     Route::get('commandes/{commande}/medicaments', [CommandeController::class, 'medicaments'])->name('commandes.medicaments');
 
     Route::prefix('paiementscommande')->group(function () {
@@ -161,8 +140,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{paiement}', [PaiementCommandeController::class, 'destroy'])->name('paiementscommande.destroy');
     });
 
-    // Caisse Globale
-    // Routes Caisse
     Route::get('/caisse', [\App\Http\Controllers\CaisseController::class, 'index'])->name('caisse.index');
     Route::get('/caisse/ma-session', [\App\Http\Controllers\CaisseController::class, 'mySession'])->name('caisse.my_session');
     Route::get('/caisse/ouvrir', [\App\Http\Controllers\CaisseController::class, 'open'])->name('caisse.open');
@@ -172,15 +149,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/caisse/mouvement/{mouvement}', [\App\Http\Controllers\CaisseController::class, 'showMouvement'])->name('caisse.mouvement.show');
     Route::get('/caisse/{session}', [\App\Http\Controllers\CaisseController::class, 'show'])->name('caisse.show');
 
-    // Transferts
     Route::resource('transferts', \App\Http\Controllers\TransfertController::class)->only(['index', 'store', 'destroy']);
-
-    // Dossiers Patients
     Route::resource('patients', PatientController::class);
     Route::get('/patients/{patient}/dossier', [PatientController::class, 'print'])->name('patients.medicales');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
-    // Routes statiques déclarées avant {user} pour éviter le conflit de wildcard
     Route::get('/users/datatable', [UserController::class, 'datatable'])->name('users.datatable');
     Route::get('/users/data', [UserController::class, 'getData'])->name('users.data');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
@@ -189,10 +162,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-
-    // Routes spécifiques pour les médecins
     Route::get('/medecins', [UserController::class, 'medecins'])->name('medecins.index');
-    // Modules demandés (Infectiologie & Traitements)
+
     Route::prefix('infectiologie')->group(function () {
         Route::get('/pathologies', [\App\Http\Controllers\InfectiologieController::class, 'pathologies'])->name('infectiologie.pathologies');
         Route::get('/pathogenes', [\App\Http\Controllers\InfectiologieController::class, 'pathogenes'])->name('infectiologie.pathogenes');
@@ -204,22 +175,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/protocoles/{protocole}', [\App\Http\Controllers\InfectiologieController::class, 'showProtocole'])->name('infectiologie.protocoles.show');
         Route::post('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'storeProtocole'])->name('infectiologie.protocoles.store');
         Route::delete('/protocoles/{protocole}', [\App\Http\Controllers\InfectiologieController::class, 'destroyProtocole'])->name('infectiologie.protocoles.destroy');
-
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');
         Route::get('/api/protocoles/{maladie}', [\App\Http\Controllers\InfectiologieController::class, 'getProtocole'])->name('infectiologie.get_protocole');
         Route::get('/api/medicaments-list', [\App\Http\Controllers\InfectiologieController::class, 'getMedicaments'])->name('api.medicaments.list');
     });
 
-    // 🔹 Diagnostic Intelligent
     Route::get('/api/clinical/interrogation', [\App\Http\Controllers\DiagnosticController::class, 'interrogate'])->name('clinical.interrogation');
     Route::get('/api/clinical/suggest-symptoms', [\App\Http\Controllers\DiagnosticController::class, 'suggestFollowUp'])->name('clinical.suggest_symptoms');
-
-    // 🔹 Suivi de Traitement (Evolution clinique)
     Route::post('/suivi-traitements-store', [\App\Http\Controllers\SuiviTraitementController::class, 'store'])->name('suivi.store');
     Route::get('/consultation/{id}/suivis', [\App\Http\Controllers\SuiviTraitementController::class, 'getByConsultation'])->name('suivi.get');
 
-    // 🔹 Maternité (Grossesse & CPN)
     Route::prefix('maternity')->name('maternity.')->group(function () {
         Route::get('/', [\App\Http\Controllers\MaternityController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\MaternityController::class, 'create'])->name('create');
@@ -230,26 +196,16 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Routes pour la gestion des rôles et permissions
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-
-    // Gestion des rôles
     Route::resource('roles', RolePermissionController::class);
-
-    // Gestion des permissions des rôles
     Route::put('roles/{role}/permissions', [RolePermissionController::class, 'updatePermissions'])
         ->name('roles.permissions.update');
-
-    // Gestion des permissions globales
     Route::get('permissions', [RolePermissionController::class, 'permissions'])
         ->name('permissions.index');
-
-    // Gestion des permissions des utilisateurs (API)
     Route::get('users/{user}/permissions', [RolePermissionController::class, 'getUserPermissions'])
         ->name('users.permissions');
     Route::post('users/{user}/permissions', [RolePermissionController::class, 'assignUserPermissions'])
         ->name('users.permissions.assign');
 });
 
-// Auth routes générées par Breeze ou Jetstream
 require __DIR__ . '/auth.php';

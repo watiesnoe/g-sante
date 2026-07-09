@@ -45,12 +45,22 @@
                             <td>{{ $medicament->description ?: 'Aucune description' }}</td>
                         </tr>
                         <tr>
+                            <th class="text-muted small text-uppercase">Code Barre</th>
+                            <td>
+                                @if($medicament->code_barre)
+                                    <span class="font-monospace fw-bold"><i class="fa fa-barcode me-1 text-muted"></i>{{ $medicament->code_barre }}</span>
+                                @else
+                                    <span class="text-muted small">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
                             <th class="text-muted small text-uppercase">Famille</th>
                             <td><span class="badge bg-info">{{ $medicament->famille->nom ?? '-' }}</span></td>
                         </tr>
                         <tr>
-                            <th class="text-muted small text-uppercase">Unité</th>
-                            <td>{{ $medicament->unite->nom ?? '-' }}</td>
+                            <th class="text-muted small text-uppercase">Unité par défaut</th>
+                            <td>{{ $medicament->uniteDefault->nom ?? ($medicament->unites->first()?->nom ?? '-') }}</td>
                         </tr>
                     </table>
                 </div>
@@ -108,7 +118,7 @@
                     <h5 class="mb-0"><i class="fa fa-boxes text-warning me-2"></i>Stock & Tarification</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center g-3">
+                    <div class="row text-center g-3 mb-4">
                         <div class="col-6">
                             <div class="p-3 rounded-3 {{ $medicament->stock <= $medicament->stock_min ? 'bg-danger bg-opacity-10 border border-danger' : 'bg-success bg-opacity-10 border border-success' }}">
                                 <small class="text-muted d-block mb-1">Stock actuel</small>
@@ -126,18 +136,35 @@
                                 <strong class="fs-4">{{ $medicament->stock_min }}</strong>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <small class="text-muted d-block mb-1">Prix d'achat</small>
-                                <strong class="fs-5">{{ number_format($medicament->prix_achat, 0, ',', ' ') }} F</strong>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary">
-                                <small class="text-muted d-block mb-1">Prix de vente</small>
-                                <strong class="fs-5 text-primary">{{ number_format($medicament->prix_vente, 0, ',', ' ') }} F</strong>
-                            </div>
-                        </div>
+                    </div>
+
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-uppercase small text-muted"><i class="fa fa-layer-group me-1 text-primary"></i> Conditionnements & Prix</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Unité</th>
+                                    <th style="width: 70px;" class="text-center">Facteur</th>
+                                    <th class="text-end">P. Achat</th>
+                                    <th class="text-end">P. Vente</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($medicament->unites as $unite)
+                                    <tr class="{{ $unite->is_default ? 'table-primary fw-bold' : '' }}">
+                                        <td>
+                                            {{ $unite->nom }} ({{ $unite->symbole }})
+                                            @if($unite->is_default)
+                                                <span class="badge bg-primary ms-1 small">Défaut</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">{{ $unite->facteur }}</td>
+                                        <td class="text-end">{{ number_format($unite->prix_achat, 2, ',', ' ') }} F</td>
+                                        <td class="text-end text-primary">{{ number_format($unite->prix_vente, 2, ',', ' ') }} F</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

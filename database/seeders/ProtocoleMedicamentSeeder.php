@@ -142,6 +142,55 @@ class ProtocoleMedicamentSeeder extends Seeder
             ],
         ];
 
+        // 1. Charger et parser public/index.html pour trouver les liens protocole-médicament
+        $htmlPath = base_path('public/index.html');
+        if (file_exists($htmlPath)) {
+            $html = file_get_contents($htmlPath);
+            if (preg_match('/const DATA = \[(.*?)\];/s', $html, $matches)) {
+                $dataStr = trim($matches[1]);
+                $lines = explode("\n", $dataStr);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    $nom = '';
+                    $meds = [];
+                    if (preg_match('/t:"([^"]*)"/', $line, $mTitle)) $nom = $mTitle[1];
+                    if (preg_match('/m:\[([^\]]*)\]/', $line, $mMeds)) {
+                        $medsStr = $mMeds[1];
+                        if (!empty($medsStr)) {
+                            $parts = explode(',', $medsStr);
+                            foreach ($parts as $part) {
+                                $medName = trim($part, ' "');
+                                if (!empty($medName)) {
+                                    $meds[] = [$medName, 'principal', 'Selon protocole', 'Selon protocole'];
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!empty($nom) && !empty($meds)) {
+                        if (!isset($liens[$nom])) {
+                            $liens[$nom] = $meds;
+                        } else {
+                            foreach ($meds as $newMed) {
+                                $exists = false;
+                                foreach ($liens[$nom] as $existingMed) {
+                                    if (strcasecmp($existingMed[0], $newMed[0]) === 0) {
+                                        $exists = true;
+                                        break;
+                                    }
+                                }
+                                if (!$exists) {
+                                    $liens[$nom][] = $newMed;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         foreach ($liens as $maladieNom => $meds) {
             $maladie = Maladie::where('nom', $maladieNom)->first();
             if (!$maladie) {

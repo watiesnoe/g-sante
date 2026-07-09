@@ -12,34 +12,19 @@ class InfectiologieSeeder extends Seeder
     /**
      * Données spécialisées infectiologie avec protocoles étendus
      * (méningites, tuberculose, candidose systémique).
-     *
-     * Ce seeder est autonome:
-     * - crée les unités/familles minimales si elles n'existent pas
-     * - crée les médicaments nécessaires s'ils sont absents
-     * - crée les symptômes et liaisons maladie/symptôme
-     * - crée les protocoles et les liaisons protocole/médicament
      */
     public function run(): void
     {
         $now = Carbon::now();
 
-        // Unités minimales requises
-        foreach (['comprimé', 'ampoule', 'capsule'] as $unite) {
-            DB::table('unites')->updateOrInsert(
-                ['nom' => $unite],
-                ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'uuid' => (string) Str::uuid(), 'updated_at' => $now]
-            );
-        }
-
         // Familles minimales requises
         foreach (['Antibiotiques', 'Antifongiques', 'Corticostéroïdes'] as $famille) {
             DB::table('familles')->updateOrInsert(
                 ['nom' => $famille],
-                ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'uuid' => (string) Str::uuid(), 'updated_at' => $now]
+                ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now]
             );
         }
 
-        $uniteIds = DB::table('unites')->pluck('id', 'nom');
         $familleIds = DB::table('familles')->pluck('id', 'nom');
 
         // Médicaments requis pour les protocoles infectiologie
@@ -127,18 +112,45 @@ class InfectiologieSeeder extends Seeder
         ];
 
         foreach ($medicaments as $medicament) {
-            DB::table('medicaments')->updateOrInsert(
-                ['nom' => $medicament['nom']],
-                [
+            $existingMed = DB::table('medicaments')->where('nom', $medicament['nom'])->first();
+            if (!$existingMed) {
+                $medUuid = (string) Str::uuid();
+                $medicamentId = DB::table('medicaments')->insertGetId([
+                    'nom' => $medicament['nom'],
                     'description' => $medicament['description'],
                     'stock' => $medicament['stock'],
                     'stock_min' => $medicament['stock_min'],
+                    'famille_id' => $familleIds[$medicament['famille']] ?? 1,
+                    'uuid' => $medUuid,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            } else {
+                $medicamentId = $existingMed->id;
+                $medUuid = $existingMed->uuid;
+                DB::table('medicaments')->where('id', $existingMed->id)->update([
+                    'description' => $medicament['description'],
+                    'stock' => $medicament['stock'],
+                    'stock_min' => $medicament['stock_min'],
+                    'famille_id' => $familleIds[$medicament['famille']] ?? 1,
+                    'updated_at' => $now,
+                ]);
+            }
+
+            // Créer/mettre à jour l'unité associée
+            DB::table('unites')->updateOrInsert(
+                [
+                    'nom' => $medicament['unite'],
+                    'medicament_id' => $medicamentId,
+                ],
+                [
+                    'symbole' => substr($medicament['unite'], 0, 3),
                     'prix_achat' => $medicament['prix_achat'],
                     'prix_vente' => $medicament['prix_vente'],
-                    'unite_id' => $uniteIds[$medicament['unite']] ?? 1,
-                    'famille_id' => $familleIds[$medicament['famille']] ?? 1,
-                    'uuid' => (string) Str::uuid(), 'created_at' => $now,
-                    'uuid' => (string) Str::uuid(), 'updated_at' => $now,
+                    'facteur' => 1.0,
+                    'is_default' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ]
             );
         }
@@ -162,7 +174,7 @@ class InfectiologieSeeder extends Seeder
         foreach ($symptomes as $nom => $description) {
             DB::table('symptomes')->updateOrInsert(
                 ['nom' => $nom],
-                ['description' => $description, 'uuid' => (string) Str::uuid(), 'created_at' => $now, 'uuid' => (string) Str::uuid(), 'updated_at' => $now]
+                ['description' => $description, 'uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now]
             );
         }
 
@@ -231,8 +243,7 @@ class InfectiologieSeeder extends Seeder
                 ['nom' => $p['maladie']],
                 [
                     'description' => $p['description'],
-                    'uuid' => (string) Str::uuid(), 'created_at' => $now,
-                    'uuid' => (string) Str::uuid(), 'updated_at' => $now,
+                    'uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now
                 ]
             );
 
@@ -247,8 +258,7 @@ class InfectiologieSeeder extends Seeder
                             'symptome_id' => $sId[$symptomeNom],
                         ],
                         [
-                            'uuid' => (string) Str::uuid(), 'created_at' => $now,
-                            'uuid' => (string) Str::uuid(), 'updated_at' => $now,
+                            'uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now
                         ]
                     );
                 }
@@ -264,8 +274,7 @@ class InfectiologieSeeder extends Seeder
                     'germes_nourrisson' => $p['protocole']['germes_nourrisson'],
                     'germes_adulte' => $p['protocole']['germes_adulte'],
                     'remarques' => $p['protocole']['remarques'],
-                    'uuid' => (string) Str::uuid(), 'created_at' => $now,
-                    'uuid' => (string) Str::uuid(), 'updated_at' => $now,
+                    'uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now
                 ]
             );
 
@@ -283,8 +292,7 @@ class InfectiologieSeeder extends Seeder
                             'type' => $t['type'],
                             'posologie' => $t['poso'],
                             'duree' => $t['duree'],
-                            'uuid' => (string) Str::uuid(), 'created_at' => $now,
-                            'uuid' => (string) Str::uuid(), 'updated_at' => $now,
+                            'uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now
                         ]
                     );
                 }

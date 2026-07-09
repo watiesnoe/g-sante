@@ -177,7 +177,19 @@ class ConsultationController extends Controller
         $patients    = DB::table('patients')->select('id', 'uuid', 'nom', 'prenom', 'genre', 'age')->orderBy('nom')->get();
         $symptomes   = Symptome::with('maladies')->get();
         $maladies    = Maladie::with(['protocole', 'symptomes'])->get();
-        $medicaments = DB::table('medicaments')->select('id', 'nom', 'prix_vente', 'stock')->orderBy('nom')->get();
+        $medicaments = DB::table('medicaments')
+            ->leftJoin('unites', function ($join) {
+                $join->on('unites.medicament_id', '=', 'medicaments.id')
+                     ->where('unites.is_default', true);
+            })
+            ->select(
+                'medicaments.id',
+                'medicaments.nom',
+                DB::raw('COALESCE(unites.prix_vente, 0) as prix_vente'),
+                DB::raw('COALESCE(unites.facteur, 1) as stock')
+            )
+            ->orderBy('medicaments.nom')
+            ->get();
         $salles      = DB::table('salles')->select('id', 'nom', 'type','service_medical_id')->orderBy('nom')->get();
         $lits        = DB::table('lits')->select('id', 'numero', 'salle_id', 'statut')->orderBy('numero')->get();
 
@@ -471,7 +483,19 @@ class ConsultationController extends Controller
                 return [$s->id => $s->maladies->pluck('id')->toArray()];
             });
 
-        $medicaments = DB::table('medicaments')->select('id', 'nom', 'prix_vente', 'stock')->orderBy('nom')->get();
+        $medicaments = DB::table('medicaments')
+            ->leftJoin('unites', function ($join) {
+                $join->on('unites.medicament_id', '=', 'medicaments.id')
+                     ->where('unites.is_default', true);
+            })
+            ->select(
+                'medicaments.id',
+                'medicaments.nom',
+                DB::raw('COALESCE(unites.prix_vente, 0) as prix_vente'),
+                DB::raw('COALESCE(unites.facteur, 1) as stock')
+            )
+            ->orderBy('medicaments.nom')
+            ->get();
         $salles      = DB::table('salles')->select('id', 'nom', 'service_medical_id')->orderBy('nom')->get();
 
         // ✅ Chargement des relations

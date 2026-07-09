@@ -533,6 +533,49 @@ class ProtocoleTraitementsSeeder extends Seeder
             ],
         ];
 
+        // 1. Charger et parser public/index.html pour trouver les protocoles
+        $htmlPath = base_path('public/index.html');
+        if (file_exists($htmlPath)) {
+            $html = file_get_contents($htmlPath);
+            if (preg_match('/const DATA = \[(.*?)\];/s', $html, $matches)) {
+                $dataStr = trim($matches[1]);
+                $lines = explode("\n", $dataStr);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    $nom = '';
+                    $category = '';
+                    $diag = '';
+                    $tx = '';
+                    if (preg_match('/t:"([^"]*)"/', $line, $mTitle)) $nom = $mTitle[1];
+                    if (preg_match('/c:"([^"]*)"/', $line, $mCat)) $category = $mCat[1];
+                    if (preg_match('/d:"([^"]*)"/', $line, $mDiag)) $diag = $mDiag[1];
+                    if (preg_match('/tx:"([^"]*)"/', $line, $mTx)) $tx = $mTx[1];
+                    
+                    if (!empty($nom)) {
+                        $exists = false;
+                        foreach ($protocoles as $maladieNom => $p) {
+                            if (strcasecmp($maladieNom, $nom) === 0) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+                        if (!$exists) {
+                            $protocoles[$nom] = [
+                                'titre' => "Protocole : " . $nom,
+                                'signes' => "Selon présentation clinique.",
+                                'diagnostics' => $diag,
+                                'traitement_principal' => $tx,
+                                'posologie_principale' => "Voir détails",
+                                'remarques' => "Catégorie : " . $category
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
         foreach ($protocoles as $maladieNom => $p) {
             $maladie = Maladie::where('nom', $maladieNom)->first();
             if (!$maladie) {

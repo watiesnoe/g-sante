@@ -15,9 +15,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('stock')->default(0);
             $table->integer('stock_min')->default(0);
-            $table->decimal('prix_achat', 10, 2)->default(0);
-            $table->decimal('prix_vente', 10, 2)->default(0);
-            $table->foreignId('unite_id')->constrained()->onDelete('cascade');
             $table->foreignId('famille_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });

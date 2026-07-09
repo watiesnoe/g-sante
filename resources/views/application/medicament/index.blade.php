@@ -66,12 +66,12 @@
                         <i class="fa fa-shopping-cart me-1"></i> Commander (<span id="selectedCount">0</span>)
                     </button>
 
-                    <button type="button" id="btnAdd" class="btn btn-sm btn-primary">
+                    <a href="{{ route('medicaments.create') }}" class="btn btn-sm btn-primary" id="btnAdd">
                         <i class="fa fa-plus me-1"></i> Nouveau
-                    </button>
+                    </a>
                 </div>
             </div>
-            <div class="block-content block-content-full">
+            <div class="block-content block-content-full ">
                 <div class="table-responsive small">
                     <table class="table table-bordered table-sm table-hover" id="medicamentsTable">
                         <thead class="bg-light">
@@ -96,88 +96,13 @@
 
     </div>
 
-    {{-- MODAL — Ajouter / Modifier Médicament --}}
-    <div class="modal fade" id="crudModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Ajouter un Médicament</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="crudForm">
-                        @csrf
-                        <input type="hidden" name="id" id="id">
-
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Nom <span class="text-danger">*</span></label>
-                                <input type="text" name="nom" id="nom" class="form-control" required>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Description</label>
-                                <textarea name="description" id="description" class="form-control" rows="2"></textarea>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Stock actuel <span class="text-danger">*</span></label>
-                                <input type="number" name="stock" id="stock" class="form-control" value="0" min="0" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Stock minimum <span class="text-danger">*</span></label>
-                                <input type="number" name="stock_min" id="stock_min" class="form-control" value="0" min="0" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Prix Achat <span class="text-danger">*</span></label>
-                                <input type="text" name="prix_achat" id="prix_achat" class="form-control price-input" value="0" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Prix Vente <span class="text-danger">*</span></label>
-                                <input type="text" name="prix_vente" id="prix_vente" class="form-control price-input" value="0" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Unité de vente <span class="text-danger">*</span></label>
-                                <select name="unite_id" id="unite_id" class="form-select" required>
-                                    <option value="">-- Sélectionner --</option>
-                                    @foreach ($unites as $u)
-                                        <option value="{{ $u->id }}">{{ $u->nom }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Famille <span class="text-danger">*</span></label>
-                                <select name="famille_id" id="famille_id" class="form-select" required>
-                                    <option value="">-- Sélectionner --</option>
-                                    @foreach ($familles as $f)
-                                        <option value="{{ $f->id }}">{{ $f->nom }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="text-end border-top pt-3 mt-3">
-                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
-                                <i class="fa fa-times me-1"></i> Fermer
-                            </button>
-                            <button type="submit" class="btn btn-sm btn-primary" id="btnSave">
-                                <i class="fa fa-save me-1"></i> Enregistrer
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(function() {
             let filterStockCritique = false;
+            let unitRowIndex = 0;
 
             const ROUTES = {
                 index: '{{ route('medicaments.index') }}',
@@ -186,6 +111,168 @@
                 update: '{{ rtrim(url('medicaments'), '/') }}/:id',
                 destroy: '{{ rtrim(url('medicaments'), '/') }}/:id',
             };
+
+            function toggleDeleteButtons() {
+                const rows = $('#modalUnitsBody .unit-row');
+                if (rows.length <= 1) {
+                    rows.find('.btn-delete-unit-row').hide();
+                } else {
+                    rows.find('.btn-delete-unit-row').show();
+                }
+            }
+
+            function addUnitRow(data = null) {
+                const body = $('#modalUnitsBody');
+                const idx = unitRowIndex++;
+
+                const idVal = data ? data.id : '';
+                const nomVal = data ? data.nom : '';
+                const symboleVal = data ? data.symbole : '';
+                const facteurVal = data ? data.facteur : (idx === 0 ? '1' : '');
+                const prixAchatVal = data ? data.prix_achat : '0';
+                const prixVenteVal = data ? data.prix_vente : '0';
+                const isDefault = data ? data.is_default : (idx === 0);
+
+                const rowHtml = `
+                    <tr class="unit-row" data-index="${idx}">
+                        <input type="hidden" name="unites[${idx}][id]" value="${idVal}">
+                        <td>
+                            <input type="text" name="unites[${idx}][nom]" class="form-control form-control-sm" value="${nomVal}" required placeholder="Nom">
+                        </td>
+                        <td>
+                            <input type="text" name="unites[${idx}][symbole]" class="form-control form-control-sm" value="${symboleVal}" required placeholder="Symb">
+                        </td>
+                        <td>
+                            <input type="number" name="unites[${idx}][facteur]" class="form-control form-control-sm factor-input" value="${facteurVal}" min="0.01" step="any" required placeholder="1">
+                        </td>
+                        <td>
+                            <input type="number" name="unites[${idx}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input" value="${prixAchatVal}" min="0" step="any" required>
+                        </td>
+                        <td>
+                            <input type="number" name="unites[${idx}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input" value="${prixVenteVal}" min="0" step="any" required>
+                        </td>
+                        <td class="text-center">
+                            <input type="radio" name="default_unit_idx" value="${idx}" class="form-check-input default-unit-radio" ${isDefault ? 'checked' : ''}>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-unit-row">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                body.append(rowHtml);
+                toggleDeleteButtons();
+            }
+
+            function populateModalUnits(unites) {
+                $('#modalUnitsBody').empty();
+                unitRowIndex = 0;
+                if (unites && unites.length > 0) {
+                    unites.forEach(u => addUnitRow(u));
+                } else {
+                    addUnitRow();
+                }
+            }
+
+            // ====== Auto-Calcul des prix selon facteur ======
+            function getBaseUnitPrices() {
+                // L'unité de base = celle dont le radio "Défaut" est coché
+                const defaultRow = $('#modalUnitsBody .default-unit-radio:checked').closest('.unit-row');
+                if (!defaultRow.length) return null;
+                const baseAchat = parseFloat(defaultRow.find('.prix-achat-input').val()) || 0;
+                const baseVente = parseFloat(defaultRow.find('.prix-vente-input').val()) || 0;
+                return {
+                    achat: baseAchat,
+                    vente: baseVente
+                };
+            }
+
+            function recalcAllNonBasePrices() {
+                const base = getBaseUnitPrices();
+                if (!base) return;
+                const defaultRow = $('#modalUnitsBody .default-unit-radio:checked').closest('.unit-row');
+                const baseFacteur = parseFloat(defaultRow.find('.factor-input').val()) || 1;
+
+                $('#modalUnitsBody .unit-row').each(function() {
+                    if ($(this).find('.default-unit-radio').is(':checked')) return; // skip base
+                    const facteur = parseFloat($(this).find('.factor-input').val()) || 1;
+                    const ratio = facteur / baseFacteur;
+                    $(this).find('.prix-achat-input').val(Math.round(base.achat * ratio));
+                    $(this).find('.prix-vente-input').val(Math.round(base.vente * ratio));
+                });
+            }
+
+            // Quand le facteur d'une ligne non-défaut change → recalcul de ses prix
+            $(document).on('change input', '#modalUnitsBody .factor-input', function() {
+                const row = $(this).closest('.unit-row');
+                if (row.find('.default-unit-radio').is(':checked')) {
+                    // Si c'est la ligne de base, recalc tout
+                    recalcAllNonBasePrices();
+                    return;
+                }
+                const base = getBaseUnitPrices();
+                if (!base) return;
+                const defaultRow = $('#modalUnitsBody .default-unit-radio:checked').closest('.unit-row');
+                const baseFacteur = parseFloat(defaultRow.find('.factor-input').val()) || 1;
+                const facteur = parseFloat($(this).val()) || 1;
+                const ratio = facteur / baseFacteur;
+                row.find('.prix-achat-input').val(Math.round(base.achat * ratio));
+                row.find('.prix-vente-input').val(Math.round(base.vente * ratio));
+            });
+
+            // Quand le prix de l'unité de base change → recalcul de toutes les autres
+            $(document).on('change input', '#modalUnitsBody .prix-achat-input, #modalUnitsBody .prix-vente-input',
+                function() {
+                    const row = $(this).closest('.unit-row');
+                    if (row.find('.default-unit-radio').is(':checked')) {
+                        recalcAllNonBasePrices();
+                    }
+                });
+
+            // Quand on change l'unité par défaut
+            $(document).on('change', '#modalUnitsBody .default-unit-radio', function() {
+                recalcAllNonBasePrices();
+            });
+
+            // Génération code barre aléatoire (EAN-like 13 chiffres) pour le médicament principal
+            $(document).on('click', '#btnGenMainBarcode', function() {
+                const randomCode = '200' + Math.floor(Math.random() * 9999999999).toString().padStart(10,
+                    '0');
+                $('#code_barre').val(randomCode.substring(0, 13));
+            });
+
+            // Bind dynamic row actions
+            $(document).on('click', '#btnAddUnitRow', function() {
+                addUnitRow();
+            });
+
+            $(document).on('click', '.btn-delete-unit-row', function() {
+                const row = $(this).closest('.unit-row');
+                const wasChecked = row.find('.default-unit-radio').is(':checked');
+                row.remove();
+                toggleDeleteButtons();
+                if (wasChecked) {
+                    $('#modalUnitsBody .default-unit-radio').first().prop('checked', true);
+                }
+            });
+
+            // Monitor view/edit state based on modal setup
+            $('#crudModal').on('show.bs.modal', function() {
+                const isView = $('#modalTitle').text().includes('Détails') || $('#modalTitle').text()
+                    .includes('🔍');
+                if (isView) {
+                    $('#btnAddUnitRow').hide();
+                    $('.btn-delete-unit-row').hide();
+                    $('#modalUnitsBody input').prop('disabled', true);
+                } else {
+                    $('#btnAddUnitRow').show();
+                    $('.btn-delete-unit-row').show();
+                    // Let CrudHelper handle standard fields, but make sure units inputs are enabled if not view mode
+                    $('#modalUnitsBody input').prop('disabled', false);
+                }
+            });
 
             var table = CrudHelper.init({
                 tableId: '#medicamentsTable',
@@ -208,16 +295,56 @@
                 updateUrl: ROUTES.update,
                 deleteUrl: ROUTES.destroy,
 
-                columns: [
-                    { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
-                    { data: 'nom', name: 'nom' },
-                    { data: 'unite', name: 'unite' },
-                    { data: 'famille', name: 'famille' },
-                    { data: 'stock', name: 'stock' },
-                    { data: 'stock_min', name: 'stock_min' },
-                    { data: 'prix_achat', name: 'prix_achat' },
-                    { data: 'prix_vente', name: 'prix_vente' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' },
+                columns: [{
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'nom',
+                        name: 'nom'
+                    },
+                    {
+                        data: 'unite',
+                        name: 'unite',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'famille',
+                        name: 'famille',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'stock',
+                        name: 'stock'
+                    },
+                    {
+                        data: 'stock_min',
+                        name: 'stock_min'
+                    },
+                    {
+                        data: 'prix_achat',
+                        name: 'prix_achat',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'prix_vente',
+                        name: 'prix_vente',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    },
                 ],
 
                 ajaxData: function(d) {
@@ -225,15 +352,18 @@
                     d.stock_critique = filterStockCritique ? 1 : 0;
                 },
 
+                onAdd: function() {
+                    populateModalUnits([]);
+                },
+
                 mapData: function(data) {
                     $('#nom').val(data.nom);
+                    $('#code_barre').val(data.code_barre || '');
                     $('#description').val(data.description);
                     $('#stock').val(data.stock);
                     $('#stock_min').val(data.stock_min);
-                    $('#prix_achat').val(data.prix_achat);
-                    $('#prix_vente').val(data.prix_vente);
-                    $('#unite_id').val(data.unite_id);
                     $('#famille_id').val(data.famille_id);
+                    populateModalUnits(data.unites);
                 },
             });
 
@@ -241,7 +371,7 @@
                 table.draw();
             });
 
-            // Bouton Stock Critique optimisé
+            // Bouton Stock Critique
             $('#btnStockCritique').on('click', function() {
                 filterStockCritique = !filterStockCritique;
                 if (filterStockCritique) {
@@ -257,13 +387,12 @@
                     }).removeClass('border border-light');
                     $('#badgeCritiqueActive').addClass('d-none');
                 }
-                table.draw(); // Relance la requête DataTable vers le serveur avec d.stock_critique mis à jour
+                table.draw();
             });
 
             $('#medicamentsTable').on('draw.dt', function() {
                 table.rows().every(function() {
                     var d = this.data();
-                    // Ajout d'une sécurité au cas où les variables arriveraient en String depuis l'API en ligne
                     if (parseInt(d.stock) <= parseInt(d.stock_min)) {
                         $(this.node()).addClass('table-danger');
                     }
@@ -293,7 +422,8 @@
                 if (ids.length) {
                     var container = $('#selectedMedicamentsInputs').empty();
                     ids.forEach(function(id) {
-                        container.append('<input type="hidden" name="medicament_ids[]" value="' + id + '">');
+                        container.append('<input type="hidden" name="medicament_ids[]" value="' +
+                            id + '">');
                     });
                     $('#bulkCommandForm').submit();
                 }

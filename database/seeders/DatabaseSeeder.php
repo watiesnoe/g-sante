@@ -8,41 +8,46 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
+     * Ordre important : respecter les dépendances FK.
      */
     public function run(): void
     {
         $this->call([
-            // 1. Référentiels de base (Sans dépendances)
+            // 1. Structure de base (services, salles, lits, examens)
             ServiceMedicalSeeder::class,
-            UniteSeeder::class,
-            FamilleSeeder::class,
-            AssuranceSeeder::class,
-            
-            // 2. Infrastructures et Personnel (Dépendent des services)
             SalleLitExamenSeeder::class,
-            PermissionRoleSeeder::class,
-            UserSeeder::class,
-            
-            // 3. Données de soins (Dépendent des référentiels)
-            PatientSeeder::class,
             PrestationSeeder::class,
-            
-            // 4. Médicaments (Doivent être exécutés avant les protocoles et pathologies qui les lient)
-            MedicamentsSeeder::class,
-            
+
+            // 2. Familles de médicaments (doit précéder MedicamentsSeederCustom)
+            FamilleSeeder::class,
+
+            // 3. Assurances
+            AssuranceSeeder::class,
+
+            // 4. Médicaments et leurs unités (médicament_id dans unites)
+            MedicamentsSeederCustom::class,
+
             // 5. Maladies & Symptômes
             DiseaseSeeder::class,
-            MaladiesSeeder::class,
-            SymptomesSeeder::class,
-            MaladieSymptomeSeeder::class,
-            
+            MaladiesSeederCustom::class,
+            SymptomesSeederCustom::class,
+            MaladieSymptomeSeederCustom::class,
+
             // 6. Protocoles et Guidelines
-            ProtocoleTraitementsSeeder::class,
-            ProtocoleMedicamentSeeder::class,
+            ProtocoleTraitementsSeederCustom::class,
+            ProtocoleMedicamentSeederCustom::class,
             WhoGuidelinesSeeder::class,
             InfectiologieSeeder::class,
-            PathologiesSeeder::class, // Exécuté à la fin pour lier les médicaments et maladies importés en JSON
+            PathologiesSeeder::class,
+
+            // 7. Permissions & Rôles (doit être avant les utilisateurs)
+            PermissionRoleSeeder::class,
+
+            // 8. Utilisateurs
+            UserSeeder::class,
+
+            // 9. Patients de démonstration (optionnel)
+            PatientSeeder::class,
         ]);
     }
 }
-

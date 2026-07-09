@@ -156,6 +156,41 @@ class MaladiesSeeder extends Seeder
             ['nom' => "Goitre endémique et carence en iode", 'description' => "Augmentation de volume de la thyroïde liée à une carence chronique en iode."],
         ];
 
+        // 1. Charger et parser public/index.html pour trouver de nouvelles maladies
+        $htmlPath = base_path('public/index.html');
+        if (file_exists($htmlPath)) {
+            $html = file_get_contents($htmlPath);
+            if (preg_match('/const DATA = \[(.*?)\];/s', $html, $matches)) {
+                $dataStr = trim($matches[1]);
+                $lines = explode("\n", $dataStr);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    $nom = '';
+                    $description = '';
+                    if (preg_match('/t:"([^"]*)"/', $line, $mTitle)) $nom = $mTitle[1];
+                    if (preg_match('/d:"([^"]*)"/', $line, $mDiag)) $description = $mDiag[1];
+                    
+                    if (!empty($nom)) {
+                        $exists = false;
+                        foreach ($maladies as $m) {
+                            if (strcasecmp($m['nom'], $nom) === 0) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+                        if (!$exists) {
+                            $maladies[] = [
+                                'nom' => $nom,
+                                'description' => $description ?: "Importé du guide thérapeutique."
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
         foreach ($maladies as $m) {
             Maladie::firstOrCreate(
                 ['nom' => $m['nom']],

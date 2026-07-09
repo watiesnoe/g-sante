@@ -1,21 +1,49 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Unite extends Model
 {
-    use HasUuid;
     use HasFactory;
 
-    protected $fillable = ['nom'];
+    protected $fillable = [
+        'nom',
+        'symbole',
+        'facteur',
+        'prix_achat',
+        'prix_vente',
+        'medicament_id',
+        'is_default',
+    ];
 
-    // Relation avec les médicaments si tu en as
-    public function medicaments()
+    protected $casts = [
+        'facteur'    => 'float',
+        'prix_achat' => 'float',
+        'prix_vente' => 'float',
+        'is_default' => 'boolean',
+    ];
+
+    // Relations
+    public function medicament()
     {
-        return $this->hasMany(Medicament::class);
+        return $this->belongsTo(Medicament::class);
+    }
+
+    public function commandeMedicaments()
+    {
+        return $this->hasMany(CommandeMedicaments::class);
+    }
+
+    public function ordonnanceMedicaments()
+    {
+        return $this->hasMany(OrdonnanceMedicament::class);
+    }
+
+    public function receptionLignes()
+    {
+        return $this->hasMany(ReceptionLigne::class);
     }
 }

@@ -2,83 +2,81 @@
 
 namespace App\Models;
 
-use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class Medicament extends Model
 {
-    use HasUuid;
     use HasFactory;
 
     protected $fillable = [
+        'uuid',
         'nom',
+        'code_barre',
         'description',
         'stock',
         'stock_min',
-        'prix_achat',
-        'prix_vente',
-        'unite_id',
         'famille_id',
     ];
 
-    /**
-     * 🎯 SCOPE : Filtrer les médicaments en stock critique
-     */
-    public function scopeCritique(Builder $query): Builder
-    {
-        return $query->whereNotNull('stock')
-            ->whereNotNull('stock_min')
-            ->whereColumn('stock', '<=', 'stock_min');
-    }
-
-    /**
-     * 🔗 Un médicament appartient à une unité
-     */
-    public function unite()
-    {
-        return $this->belongsTo(Unite::class);
-    }
-
-    /**
-     * 🔗 Un médicament appartient à une famille
-     */
+    // Relations
     public function famille()
     {
         return $this->belongsTo(Famille::class);
     }
 
     /**
-     * 🔗 Un médicament peut apparaître dans plusieurs commandes
+     * Les unités (conditionnements) disponibles pour ce médicament.
+     * Un médicament peut avoir plusieurs unités avec des prix différents.
      */
-    public function commandes()
+    public function unites()
     {
-        return $this->belongsToMany(Commande::class, 'commande_medicaments')
-            ->withPivot('quantite', 'prix_unitaire', 'total')
-            ->withTimestamps();
+        return $this->hasMany(Unite::class);
     }
 
     /**
-     * 🔗 Lignes de commande liées à ce médicament
+     * L'unité par défaut (facteur = 1, ou marquée comme default).
      */
-    public function lignesCommandes()
+    public function uniteDefault()
     {
-        return $this->hasMany(CommandeMedicaments::class, 'medicament_id');
+        return $this->hasOne(Unite::class)->where('is_default', true);
     }
 
     /**
-     * 🔗 Protocoles de traitement liés à ce médicament
+     * Alias for uniteDefault for ease of access (e.g. eager loading 'unite')
      */
+    public function unite()
+    {
+        return $this->uniteDefault();
+    }
+
+    public function commandeMedicaments()
+    {
+        return $this->hasMany(CommandeMedicaments::class);
+    }
+
+    public function ordonnanceMedicaments()
+    {
+        return $this->hasMany(OrdonnanceMedicament::class);
+    }
+
+    public function receptionLignes()
+    {
+        return $this->hasMany(ReceptionLigne::class);
+    }
+
     public function protocoles()
     {
-        return $this->belongsToMany(
-            ProtocoleTraitement::class,
-            'protocole_medicament',
-            'medicament_id',
-            'protocole_id'
-        )
-            ->using(ProtocoleMedicament::class)
-            ->withPivot(['type', 'posologie', 'duree']);
+        return $this->belongsToMany(ProtocoleTraitement::class, 'protocole_medicament')
+                    ->withPivot(['posologie', 'voie', 'duree', 'frequence', 'unite_id'])
+                    ->withTimestamps();
+    }
+
+    /**
+     * Scope a query to only include medications with critical stock levels.
+     */
+    public function scopeCritique($query)
+    {
+        return $query->whereColumn('stock', '<=', 'stock_min');
     }
 }
