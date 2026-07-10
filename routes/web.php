@@ -30,6 +30,7 @@ use App\Http\Controllers\UniteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssuranceController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\MigrationReportController;
 use Illuminate\Support\Facades\Route;
 
 // Quand on arrive sur la racine "/", on redirige vers le login
@@ -206,6 +207,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         ->name('users.permissions');
     Route::post('users/{user}/permissions', [RolePermissionController::class, 'assignUserPermissions'])
         ->name('users.permissions.assign');
+    Route::get('migrations/report-pdf', [MigrationReportController::class, 'downloadPdf'])
+        ->name('migrations.report-pdf');
 });
 
 require __DIR__ . '/auth.php';

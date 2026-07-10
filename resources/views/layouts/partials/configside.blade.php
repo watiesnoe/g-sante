@@ -136,6 +136,16 @@
                 </li>
                 @endcan
 
+                {{-- Rapport de Migrations --}}
+                @can('roles.view')
+                <li class="nav-item mb-1">
+                    <a class="nav-link text-danger" target="_blank"
+                       href="{{ route('admin.migrations.report-pdf') }}">
+                        <i class="fa fa-file-pdf me-1"></i> Rapport Migrations (PDF)
+                    </a>
+                </li>
+                @endcan
+
             </ul>
         </div>
     </div>
