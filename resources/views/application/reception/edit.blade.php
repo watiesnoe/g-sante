@@ -114,7 +114,6 @@
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @section('scripts')
@@ -147,7 +146,7 @@ $(document).ready(function () {
         e.preventDefault();
 
         $.ajax({
-            url: "{{ route('receptions.update', $reception->id) }}",
+            url: "{{ route('receptions.update', $reception) }}",
             type: "PUT",
             data: $(this).serialize(),
             success: function (response) {

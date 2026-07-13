@@ -21,7 +21,7 @@
                             <strong>Date:</strong> {{ \Carbon\Carbon::parse($reception->date_reception)->format('d/m/Y') }}<br>
                             <strong>Commande:</strong> 
                             @if($reception->commande)
-                                <a href="{{ route('commandes.show', $reception->commande_id) }}">
+                                <a href="{{ route('commandes.show', $reception->commande) }}">
                                     {{ $reception->commande->reference ?? 'CMD-'.$reception->commande_id }}
                                 </a>
                             @else
@@ -65,5 +65,4 @@
             </div>
         </div>
     </div>
-</div>
 @endsection

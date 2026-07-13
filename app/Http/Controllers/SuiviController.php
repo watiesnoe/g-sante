@@ -27,7 +27,15 @@ class SuiviController extends Controller
                 ->addColumn('date_heure', fn($s) => $s->date_heure ? \Carbon\Carbon::parse($s->date_heure)->format('d-m-Y H:i') : '-')
                 ->addColumn('motif', fn($s) => $s->motif ?? '-')
                 ->addColumn('resultat', fn($s) => $s->resultat ?? '-')
-                ->addColumn('statut', fn($s) => ucfirst($s->statut))
+                ->addColumn('statut', function($s) {
+                    $labels = [
+                        'prevu' => 'Prévu',
+                        'realise' => 'Réalisé',
+                        'annulé' => 'Annulé',
+                        'termine' => 'Terminé'
+                    ];
+                    return $labels[$s->statut] ?? ucfirst($s->statut);
+                })
                 ->addColumn('actions', function($s){
                     $user = Auth::user();
                     $html = '';
@@ -46,11 +54,11 @@ class SuiviController extends Controller
 
         return view('application.suiviconsultation.index');
     }
-    public function create($consultation_id)
+    public function create(Consultation $consultation)
     {
         abort_unless(Auth::user()->can('consultations.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi.');
 
-        $consultation = Consultation::with(['patient', 'medecin'])->findOrFail($consultation_id);
+        $consultation->load(['patient', 'medecin']);
 
         return view('application.suiviconsultation.create', [
             'consultation' => $consultation,
@@ -69,7 +77,7 @@ class SuiviController extends Controller
     $request->validate([
         'motif'      => 'nullable|string|max:255',
         'resultat'   => 'required|string',
-        'statut'     => 'required|in:prévu,réalisé,annulé',
+        'statut'     => 'required|in:prevu,realise,annulé',
     ]);
 
     $suivi = Suivi::create([

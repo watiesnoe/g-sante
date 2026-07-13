@@ -127,7 +127,7 @@
                         </p>
                     </div>
                     <div class="ms-auto">
-                        <a href="{{ route('consultations.show', $derniereConsultation->id) }}" class="btn btn-primary rounded-pill px-4">Détails du dossier</a>
+                        <a href="{{ route('consultations.show', $derniereConsultation) }}" class="btn btn-primary rounded-pill px-4">Détails du dossier</a>
                     </div>
                 </div>
                 @else

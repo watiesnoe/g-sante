@@ -71,10 +71,10 @@ class ReceptionController extends Controller
                     $actions = '';
 
                     if ($user->can('stock.receptions')) {
-                        $view   = '<a href="'.route('receptions.show', $row->id).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                        $view   = '<a href="'.route('receptions.show', $row).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
                         
                         if (!$row->commande || $row->commande->statut !== 'valide') {
-                            $edit = '<a href="'.route('receptions.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                            $edit = '<a href="'.route('receptions.edit', $row).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
                         } else {
                             $edit = '<button type="button" class="btn btn-sm btn-outline-secondary disabled" title="Modif. bloquée: commande totalement reçue" style="cursor:not-allowed;"><i class="fa fa-pencil-alt"></i></button>';
                         }
@@ -82,7 +82,7 @@ class ReceptionController extends Controller
                         $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')" title="Supprimer"><i class="fa fa-trash"></i></button>';
                         
                         $actions = '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
-                        $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row->id).'" style="display:none;">'.csrf_field().method_field('DELETE').'</form>';
+                        $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row).'" style="display:none;">'.csrf_field().method_field('DELETE').'</form>';
                     }
 
                     return $actions;
@@ -304,19 +304,19 @@ class ReceptionController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Reception $reception)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les réceptions.');
 
-        $reception = Reception::with(['commande.fournisseur', 'fournisseur', 'lignes.medicament', 'user'])->findOrFail($id);
+        $reception->load(['commande.fournisseur', 'fournisseur', 'lignes.medicament', 'user']);
         return view('application.reception.show', compact('reception'));
     }
 
-    public function edit($id)
+    public function edit(Reception $reception)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
 
-        $reception = Reception::with(['commande', 'fournisseur', 'lignes.medicament'])->findOrFail($id);
+        $reception->load(['commande', 'fournisseur', 'lignes.medicament']);
         
         if ($reception->commande && $reception->commande->statut === 'valide') {
             return redirect()->route('receptions.index')->with('error', 'Modification bloquée : La commande a déjà été totalement réceptionnée.');
@@ -352,7 +352,7 @@ class ReceptionController extends Controller
         return view('application.reception.edit', compact('reception', 'produits'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Reception $reception)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
 
@@ -364,7 +364,7 @@ class ReceptionController extends Controller
             'receptions.*.quantite_recue' => 'required|numeric|min:0',
         ]);
 
-        $reception = Reception::with('lignes')->findOrFail($id);
+        $reception->load('lignes');
         
         $reception->update([
             'date_reception' => $request->date_reception,
@@ -379,7 +379,7 @@ class ReceptionController extends Controller
 
                 if (!$commandeMedicament) continue;
 
-                $ligneReceptionExistante = $reception->lignes()->where('medicament_id', $ligne['medicament_id'])->first();
+                $ligneReceptionExistante = $reception->lignes->where('medicament_id', $ligne['medicament_id'])->first();
 
                 $nouvelleQuantiteRecue = $ligne['quantite_recue'];
 
@@ -434,11 +434,11 @@ class ReceptionController extends Controller
         return redirect()->route('receptions.index')->with('success', 'Réception mise à jour avec succès.');
     }
 
-    public function destroy($id)
+    public function destroy(Reception $reception)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
 
-        $reception = Reception::with('lignes')->findOrFail($id);
+        $reception->load('lignes');
         
         foreach ($reception->lignes as $ligne) {
             $commandeMedicament = DB::table('commande_medicaments')

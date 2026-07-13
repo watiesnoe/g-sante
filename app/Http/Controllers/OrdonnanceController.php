@@ -17,7 +17,8 @@ class OrdonnanceController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des ordonnances.');
+        $user = Auth::user();
+        abort_unless($user->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas accès à la gestion des ordonnances.');
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
@@ -316,14 +317,18 @@ class OrdonnanceController extends Controller
                     'ordonnances.id',
                     'ordonnances.uuid',
                     'ordonnances.created_at',
+                    'ordonnances.date',
                     'ordonnances.statutordo',
                     'patients.nom',
-                    'patients.prenom'
+                    'patients.prenom',
+                    DB::raw('(SELECT SUM(prix_total) FROM ordonnance_paiements WHERE ordonnance_paiements.ordonnance_id = ordonnances.id) as montant_paye')
                 )
                 ->orderByDesc('ordonnances.created_at');
 
             return datatables()->of($ordonnances)
                 ->addColumn('patient', fn($ord) => $ord->nom . ' ' . $ord->prenom)
+                ->addColumn('date', fn($ord) => $ord->date ? \Carbon\Carbon::parse($ord->date)->format('d/m/Y') : '-')
+                ->addColumn('montant_paye', fn($ord) => number_format($ord->montant_paye ?? 0, 0, ',', ' ') . ' FCFA')
                 ->addColumn('actions', function($ord) {
                     $user = Auth::user();
                     $html = '';

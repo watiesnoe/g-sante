@@ -71,7 +71,7 @@ class RendezvousController extends Controller
 
                     // 📋 Créer un suivi (consultations.suivi)
                     if ($user->can('consultations.suivi') && $rdv->consultation) {
-                        $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation->id) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                        $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
                     }
 
                     // 🗑 Supprimer (rendezvous.delete)
@@ -218,7 +218,7 @@ class RendezvousController extends Controller
 
                     // 📋 Créer un suivi (consultations.suivi)
                     if ($user->can('consultations.suivi') && $rdv->consultation) {
-                        $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation->id) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
+                        $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
                     }
 
                     // 🗑 Supprimer (rendezvous.delete)

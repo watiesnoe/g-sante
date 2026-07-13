@@ -34,14 +34,14 @@
                     <div class="mb-3">
                         <label>Statut</label>
                         <select name="statut" class="form-control" required>
-                            <option value="prévu">Prévu</option>
-                            <option value="réalisé">Réalisé</option>
+                            <option value="prevu">Prévu</option>
+                            <option value="realise">Réalisé</option>
                             <option value="annulé">Annulé</option>
                         </select>
                     </div>
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary me-2">Enregistrer</button>
-                        <a href="{{ route('consultations.show',$consultation->id) }}" class="btn btn-secondary">Annuler</a>
+                        <a href="{{ route('consultations.show',$consultation) }}" class="btn btn-secondary">Annuler</a>
                     </div>
                 </form>
             </div>

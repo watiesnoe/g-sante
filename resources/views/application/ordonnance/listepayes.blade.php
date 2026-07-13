@@ -15,6 +15,7 @@
                         <th>ID</th>
                         <th>Patient</th>
                         <th>Date Ordonnance</th>
+                        <th>Montant</th>
                         <th>Statut</th>
                         <th>Actions</th>
                     </tr>
@@ -39,6 +40,7 @@
                     { data: 'id', name: 'id' },
                     { data: 'patient', name: 'patient' },
                     { data: 'date', name: 'date' },
+                    { data: 'montant_paye', name: 'montant_paye' },
                     {
                         data: 'statutordo',
                         name: 'statutordo',
