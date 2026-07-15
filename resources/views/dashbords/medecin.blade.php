@@ -40,13 +40,23 @@
 <div class="row g-3 mb-4">
     @php
     $kpis = [
-        ['label'=>"Consultations Auj.", 'value'=>$stats['consultations_today']??0, 'sub'=>'Patients reçus',        'icon'=>'fa-stethoscope',        'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('consultations.index'),    'alert'=>false],
-        ['label'=>'Patients Totaux',    'value'=>$stats['total_patients']??0,      'sub'=>'Dossiers actifs',       'icon'=>'fa-user-injured',       'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('patients.index'),          'alert'=>false],
-        ['label'=>'Hospitalisés',       'value'=>$stats['active_hospitalisations']??0,'sub'=>'En cours',           'icon'=>'fa-procedures',         'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('hospitalisations.index'), 'alert'=>($stats['active_hospitalisations']??0) > 0],
+        ['label'=>"Consultations Auj.", 'value'=>$stats['consultations_today']??0, 'sub'=>'Patients reçus',        'icon'=>'fa-stethoscope',        'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('consultations.index'),    'alert'=>false, 'module'=>'consultation'],
+        ['label'=>'Patients Totaux',    'value'=>$stats['total_patients']??0,      'sub'=>'Dossiers actifs',       'icon'=>'fa-user-injured',       'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('patients.index'),          'alert'=>false, 'module'=>'patient'],
+        ['label'=>'Hospitalisés',       'value'=>$stats['active_hospitalisations']??0,'sub'=>'En cours',           'icon'=>'fa-procedures',         'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('hospitalisations.index'), 'alert'=>($stats['active_hospitalisations']??0) > 0, 'module'=>'hospitalisation'],
     ];
+    $kpis = array_filter($kpis, function($k) {
+        return auth()->user()->hasModuleAccess($k['module']);
+    });
+    $kpiCount = count($kpis);
+    $kpiColClass = match($kpiCount) {
+        3 => 'col-xl-4 col-md-4',
+        2 => 'col-xl-6 col-md-6',
+        1 => 'col-xl-12 col-md-12',
+        default => 'd-none',
+    };
     @endphp
     @foreach($kpis as $k)
-    <div class="col-xl-4 col-md-4">
+    <div class="{{ $kpiColClass }}">
         <a href="{{ $k['route'] }}" class="gs-kpi h-100">
             @if($k['alert'])<span class="gs-kpi-trend" style="background:var(--med-rose-light);color:var(--med-rose)"><span class="pulse-dot danger" style="width:7px;height:7px;margin-right:.3rem"></span>Alerte</span>@endif
             <div class="gs-kpi-icon" style="background:{{ $k['bg'] }};color:#fff"><i class="fas {{ $k['icon'] }}"></i></div>
@@ -60,8 +70,14 @@
 </div>
 
 {{-- CHART + RDV --}}
+@php
+    $hasConsultation = auth()->user()->hasModuleAccess('consultation');
+    $hasRendezvous = auth()->user()->hasModuleAccess('rendezvous');
+@endphp
+@if($hasConsultation || $hasRendezvous)
 <div class="row g-3 mb-4">
-    <div class="col-lg-8">
+    @if($hasConsultation)
+    <div class="{{ $hasRendezvous ? 'col-lg-8' : 'col-lg-12' }}">
         <div class="gs-card h-100">
             <div class="gs-card-header">
                 <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-teal-light);color:var(--med-teal);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-bar" style="font-size:.85rem"></i></span>Mes consultations — 6 derniers mois</h6>
@@ -70,7 +86,9 @@
             <div class="gs-card-body"><canvas id="consultations-chart" height="220"></canvas></div>
         </div>
     </div>
-    <div class="col-lg-4">
+    @endif
+    @if($hasRendezvous)
+    <div class="{{ $hasConsultation ? 'col-lg-4' : 'col-lg-12' }}">
         <div class="gs-card h-100">
             <div class="gs-card-header">
                 <h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:var(--med-violet-light);color:#7c3aed;display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-day" style="font-size:.85rem"></i></span>RDV d'aujourd'hui</h6>
@@ -94,9 +112,12 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
+@endif
 
 {{-- STOCK + HOSPITALISATIONS --}}
+@if(auth()->user()->hasModuleAccess('hospitalisation'))
 <div class="row g-3 mb-4">
     <div class="col-lg-12">
         <div class="gs-card">
@@ -122,13 +143,26 @@
         </div>
     </div>
 </div>
+@endif
 
 {{-- QUICK ACTIONS --}}
+@php
+    $actions = [
+        ['icon'=>'fa-stethoscope','label'=>'Nouvelle Consultation','desc'=>'Ouvrir un dossier','route'=>route('consultations.create'),'bg'=>'var(--grad-teal)', 'module'=>'consultation'],
+        ['icon'=>'fa-file-medical','label'=>'Ordonnance','desc'=>'Prescrire un traitement','route'=>route('ordonnances.create'),'bg'=>'var(--grad-green)', 'module'=>'ordonnance'],
+        ['icon'=>'fa-calendar-plus','label'=>'Rendez-vous','desc'=>'Planifier un suivi','route'=>route('rendezvous.index'),'bg'=>'var(--grad-violet)', 'module'=>'rendezvous'],
+        ['icon'=>'fa-procedures','label'=>'Hospitalisation','desc'=>'Admettre','route'=>route('hospitalisations.create'),'bg'=>'var(--grad-rose)', 'module'=>'hospitalisation'],
+        ['icon'=>'fa-clock','label'=>"File d'attente",'desc'=>'Patients en attente','route'=>route('liste.attente'),'bg'=>'var(--grad-dark)', 'module'=>'consultation']
+    ];
+    $actions = array_filter($actions, function($a) {
+        return auth()->user()->hasModuleAccess($a['module']);
+    });
+@endphp
+@if(count($actions) > 0)
 <div class="gs-card">
     <div class="gs-card-header"><h6 class="gs-card-title"><span style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center"><i class="fas fa-bolt" style="font-size:.85rem"></i></span>Actions Rapides</h6></div>
     <div class="gs-card-body">
         <div class="row g-2 justify-content-center">
-            @php $actions=[['icon'=>'fa-stethoscope','label'=>'Nouvelle Consultation','desc'=>'Ouvrir un dossier','route'=>route('consultations.create'),'bg'=>'var(--grad-teal)'],['icon'=>'fa-file-medical','label'=>'Ordonnance','desc'=>'Prescrire un traitement','route'=>route('ordonnances.create'),'bg'=>'var(--grad-green)'],['icon'=>'fa-calendar-plus','label'=>'Rendez-vous','desc'=>'Planifier un suivi','route'=>route('rendezvous.index'),'bg'=>'var(--grad-violet)'],['icon'=>'fa-procedures','label'=>'Hospitalisation','desc'=>'Admettre','route'=>route('hospitalisations.create'),'bg'=>'var(--grad-rose)'],['icon'=>'fa-clock','label'=>"File d'attente",'desc'=>'Patients en attente','route'=>route('liste.attente'),'bg'=>'var(--grad-dark)']]; @endphp
             @foreach($actions as $a)
             <div class="col-xl col-lg-4 col-md-4 col-6">
                 <a href="{{ $a['route'] }}" class="gs-module-btn">
@@ -141,3 +175,4 @@
         </div>
     </div>
 </div>
+@endif

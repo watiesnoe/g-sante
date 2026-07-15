@@ -43,14 +43,25 @@
 <div class="row g-3 mb-4">
     @php
     $defKPIs = [
-        ['label'=>'Ordonnances',   'value'=>$stats['total_ordonnances']??0, 'sub'=>'Enregistrées',       'icon'=>'fa-prescription-bottle', 'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('ordonnances.index')],
-        ['label'=>'Médicaments',   'value'=>$stats['total_medicaments']??0, 'sub'=>'En stock',            'icon'=>'fa-pills',              'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('medicaments.index')],
-        ['label'=>'Patients',      'value'=>$stats['total_patients']??0,    'sub'=>'Dossiers enregistrés','icon'=>'fa-user-injured',       'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index')],
-        ['label'=>'Tickets',       'value'=>$stats['total_tickets']??0,     'sub'=>'Salle d\'attente',    'icon'=>'fa-ticket-alt',         'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('tickets.index')],
+        ['label'=>'Ordonnances',   'value'=>$stats['total_ordonnances']??0, 'sub'=>'Enregistrées',       'icon'=>'fa-prescription-bottle', 'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('ordonnances.index'), 'module'=>'ordonnance'],
+        ['label'=>'Médicaments',   'value'=>$stats['total_medicaments']??0, 'sub'=>'En stock',            'icon'=>'fa-pills',              'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('medicaments.index'), 'module'=>'stock'],
+        ['label'=>'Patients',      'value'=>$stats['total_patients']??0,    'sub'=>'Dossiers enregistrés','icon'=>'fa-user-injured',       'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index'), 'module'=>'patient'],
+        ['label'=>'Tickets',       'value'=>$stats['total_tickets']??0,     'sub'=>'Salle d\'attente',    'icon'=>'fa-ticket-alt',         'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('tickets.index'), 'module'=>'ticket'],
     ];
+    $defKPIs = array_filter($defKPIs, function($k) {
+        return auth()->user()->hasModuleAccess($k['module']);
+    });
+    $kpiCount = count($defKPIs);
+    $kpiColClass = match($kpiCount) {
+        4 => 'col-xl-3 col-md-6',
+        3 => 'col-xl-4 col-md-6',
+        2 => 'col-xl-6 col-md-6',
+        1 => 'col-xl-12 col-md-12',
+        default => 'd-none',
+    };
     @endphp
     @foreach($defKPIs as $k)
-    <div class="col-xl-3 col-md-6">
+    <div class="{{ $kpiColClass }}">
         <a href="{{ $k['route'] }}" class="gs-kpi h-100">
             <div class="gs-kpi-icon" style="background:{{ $k['bg'] }};color:#fff">
                 <i class="fas {{ $k['icon'] }}"></i>
@@ -65,9 +76,28 @@
 </div>
 
 {{-- SECONDARY STATS --}}
+@php
+    $statsCols = [];
+    if (auth()->user()->hasModuleAccess('hospitalisation')) {
+        $statsCols[] = 'lits';
+    }
+    if (auth()->user()->hasModuleAccess('stock')) {
+        $statsCols[] = 'stock_alerts';
+        $statsCols[] = 'fournisseurs';
+    }
+    $statsCount = count($statsCols);
+    $statsColClass = match($statsCount) {
+        3 => 'col-xl-4 col-md-6',
+        2 => 'col-xl-6 col-md-6',
+        1 => 'col-xl-12 col-md-12',
+        default => 'd-none',
+    };
+@endphp
+@if($statsCount > 0)
 <div class="row g-3 mb-4">
     {{-- Occupation Lits --}}
-    <div class="col-xl-4 col-md-6">
+    @if(in_array('lits', $statsCols))
+    <div class="{{ $statsColClass }}">
         <div class="gs-card h-100">
             <div class="gs-card-body p-4">
                 <div class="d-flex align-items-center mb-3">
@@ -90,9 +120,11 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Alertes Stock --}}
-    <div class="col-xl-4 col-md-6">
+    @if(in_array('stock_alerts', $statsCols))
+    <div class="{{ $statsColClass }}">
         <div class="gs-card h-100">
             <div class="gs-card-body p-4">
                 <div class="d-flex align-items-center mb-3">
@@ -111,9 +143,11 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Fournisseurs --}}
-    <div class="col-xl-4 col-md-12">
+    @if(in_array('fournisseurs', $statsCols))
+    <div class="{{ $statsColClass }} @if($statsCount === 3) col-md-12 @endif">
         <div class="gs-card h-100">
             <div class="gs-card-body p-4">
                 <div class="d-flex align-items-center mb-3">
@@ -129,9 +163,29 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
+@endif
 
 {{-- QUICK ACTIONS --}}
+@php
+    $actionsCols = [];
+    if (auth()->user()->hasModuleAccess('ordonnance')) {
+        $actionsCols[] = 'ordonnance';
+    }
+    if (auth()->user()->hasModuleAccess('stock')) {
+        $actionsCols[] = 'pharmacy';
+        $actionsCols[] = 'suppliers';
+    }
+    $actionsColCount = count($actionsCols);
+    $actionsColClass = match($actionsColCount) {
+        3 => 'col-md-4',
+        2 => 'col-md-6',
+        1 => 'col-md-12',
+        default => 'd-none',
+    };
+@endphp
+@if($actionsColCount > 0)
 <div class="gs-card">
     <div class="gs-card-header">
         <h6 class="gs-card-title">
@@ -143,24 +197,31 @@
     </div>
     <div class="gs-card-body">
         <div class="row g-3">
-            <div class="col-md-4">
+            @if(in_array('ordonnance', $actionsCols))
+            <div class="{{ $actionsColClass }}">
                 <a href="{{ route('ordonnances.index') }}" class="gs-module-btn py-4">
                     <div class="gs-module-icon bg-primary-subtle text-primary"><i class="fas fa-prescription-bottle"></i></div>
                     <span style="font-size:.9rem;font-weight:700">Gestion Ordonnances</span>
                 </a>
             </div>
-            <div class="col-md-4">
+            @endif
+            @if(in_array('pharmacy', $actionsCols))
+            <div class="{{ $actionsColClass }}">
                 <a href="{{ route('medicaments.index') }}" class="gs-module-btn py-4">
                     <div class="gs-module-icon bg-success-subtle text-success"><i class="fas fa-pills"></i></div>
                     <span style="font-size:.9rem;font-weight:700">Pharmacie & Stock</span>
                 </a>
             </div>
-            <div class="col-md-4">
+            @endif
+            @if(in_array('suppliers', $actionsCols))
+            <div class="{{ $actionsColClass }}">
                 <a href="{{ route('fournisseurs.index') }}" class="gs-module-btn py-4">
                     <div class="gs-module-icon bg-info-subtle text-info"><i class="fas fa-truck"></i></div>
                     <span style="font-size:.9rem;font-weight:700">Fournisseurs</span>
                 </a>
             </div>
+            @endif
         </div>
     </div>
 </div>
+@endif

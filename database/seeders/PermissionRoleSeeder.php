@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 
 class PermissionRoleSeeder extends Seeder
 {
@@ -220,7 +220,6 @@ class PermissionRoleSeeder extends Seeder
         $medecin->syncPermissions([
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search', 'patients.dossier',
-            'tickets.view',
             'consultations.view', 'consultations.create', 'consultations.edit',
             'consultations.liste_attente', 'consultations.print', 'consultations.prescribe', 'consultations.suivi',
             'ordonnances.view', 'ordonnances.create', 'ordonnances.edit', 'ordonnances.pdf',
@@ -245,7 +244,6 @@ class PermissionRoleSeeder extends Seeder
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search',
             'tickets.view', 'tickets.create', 'tickets.edit', 'tickets.print',
-            'consultations.view', 'consultations.liste_attente',
             'rendezvous.view', 'rendezvous.create', 'rendezvous.edit',
             'rendezvous.delete', 'rendezvous.confirm',
             'hospitalisations.view',

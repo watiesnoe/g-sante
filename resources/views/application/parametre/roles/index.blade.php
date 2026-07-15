@@ -39,11 +39,11 @@
                                         <td class="text-center">{{ $role->users->count() }}</td>
                                         <td class="text-center">{{ $role->permissions->count() }}</td>
                                         <td class="text-center">
-                                            <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-sm btn-info" title="Modifier">
+                                            <a href="{{ route('admin.roles.edit', $role->uuid) }}" class="btn btn-sm btn-info" title="Modifier">
                                                 <i class="fa fa-pencil-alt"></i>
                                             </a>
                                             @if(!in_array($role->name, ['super_admin', 'admin']))
-                                                <button type="button" class="btn btn-sm btn-danger delete-role" data-id="{{ $role->id }}" title="Supprimer">
+                                                <button type="button" class="btn btn-sm btn-danger delete-role" data-id="{{ $role->uuid }}" title="Supprimer">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             @endif

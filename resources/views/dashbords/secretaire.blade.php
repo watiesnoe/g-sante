@@ -44,14 +44,25 @@
 <div class="row g-3 mb-4">
     @php
     $secStats = [
-        ['label'=>'Nouveaux Patients', 'value'=>$stats['new_patients_today']??0, 'sub'=>'Inscrits aujourd\'hui', 'icon'=>'fa-user-plus',    'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('patients.index')],
-        ['label'=>'RDV en Attente',    'value'=>$stats['rdv_attente']??0,    'sub'=>'À recevoir',         'icon'=>'fa-clock',        'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('rendezvous.index')],
-        ['label'=>'RDV Réalisés',      'value'=>$stats['rdv_realises']??0,   'sub'=>'Traités ce jour',    'icon'=>'fa-calendar-check','bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('rendezvous.index')],
-        ['label'=>'Total Patients',    'value'=>$stats['total_patients']??0,  'sub'=>'Base de données',    'icon'=>'fa-users',         'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index')],
+        ['label'=>'Nouveaux Patients', 'value'=>$stats['new_patients_today']??0, 'sub'=>'Inscrits aujourd\'hui', 'icon'=>'fa-user-plus',    'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('patients.index'), 'module'=>'patient'],
+        ['label'=>'RDV en Attente',    'value'=>$stats['rdv_attente']??0,    'sub'=>'À recevoir',         'icon'=>'fa-clock',        'bg'=>'var(--grad-amber)',  'bar'=>'#f59e0b', 'route'=>route('rendezvous.index'), 'module'=>'rendezvous'],
+        ['label'=>'RDV Réalisés',      'value'=>$stats['rdv_realises']??0,   'sub'=>'Traités ce jour',    'icon'=>'fa-calendar-check','bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('rendezvous.index'), 'module'=>'rendezvous'],
+        ['label'=>'Total Patients',    'value'=>$stats['total_patients']??0,  'sub'=>'Base de données',    'icon'=>'fa-users',         'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index'), 'module'=>'patient'],
     ];
+    $secStats = array_filter($secStats, function($s) {
+        return auth()->user()->hasModuleAccess($s['module']);
+    });
+    $kpiCount = count($secStats);
+    $kpiColClass = match($kpiCount) {
+        4 => 'col-xl-3 col-md-6',
+        3 => 'col-xl-4 col-md-6',
+        2 => 'col-xl-6 col-md-6',
+        1 => 'col-xl-12 col-md-12',
+        default => 'd-none',
+    };
     @endphp
     @foreach($secStats as $s)
-    <div class="col-xl-3 col-md-6">
+    <div class="{{ $kpiColClass }}">
         <a href="{{ $s['route'] }}" class="gs-kpi h-100">
             <div class="gs-kpi-icon" style="background:{{ $s['bg'] }};color:#fff">
                 <i class="fas {{ $s['icon'] }}"></i>
@@ -66,9 +77,17 @@
 </div>
 
 {{-- MAIN CONTENT --}}
+@php
+    $hasRendezvous = auth()->user()->hasModuleAccess('rendezvous');
+    $hasPatient = auth()->user()->hasModuleAccess('patient');
+    $hasTicket = auth()->user()->hasModuleAccess('ticket');
+    $hasActions = $hasRendezvous || $hasPatient || $hasTicket;
+@endphp
+@if($hasRendezvous || $hasActions)
 <div class="row g-3">
     {{-- Appointments List --}}
-    <div class="col-lg-8">
+    @if($hasRendezvous)
+    <div class="{{ $hasActions ? 'col-lg-8' : 'col-lg-12' }}">
         <div class="gs-card h-100">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -119,9 +138,11 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Quick Actions --}}
-    <div class="col-lg-4">
+    @if($hasActions)
+    <div class="{{ $hasRendezvous ? 'col-lg-4' : 'col-lg-12' }}">
         <div class="gs-card mb-3">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -132,6 +153,7 @@
                 </h6>
             </div>
             <div class="gs-card-body">
+                @if($hasRendezvous)
                 <a href="{{ route('rendezvous.index') }}" class="gs-action-btn" style="background:var(--med-teal-light);color:var(--med-teal-dark)">
                     <div class="icon-box" style="background:var(--med-teal);color:#fff"><i class="fas fa-calendar-plus"></i></div>
                     <div>
@@ -139,6 +161,8 @@
                         <div style="font-size:.72rem;opacity:.7">Planifier une visite</div>
                     </div>
                 </a>
+                @endif
+                @if($hasPatient)
                 <a href="{{ route('patients.create') }}" class="gs-action-btn" style="background:var(--med-green-light);color:#065f46">
                     <div class="icon-box" style="background:var(--med-green);color:#fff"><i class="fas fa-user-plus"></i></div>
                     <div>
@@ -146,6 +170,8 @@
                         <div style="font-size:.72rem;opacity:.7;color:#0f172a">Enregistrer un dossier</div>
                     </div>
                 </a>
+                @endif
+                @if($hasTicket)
                 <a href="{{ route('tickets.index') }}" class="gs-action-btn" style="background:var(--med-amber-light);color:#92400e">
                     <div class="icon-box" style="background:var(--med-amber);color:#fff"><i class="fas fa-ticket-alt"></i></div>
                     <div>
@@ -153,6 +179,7 @@
                         <div style="font-size:.72rem;opacity:.7;color:#0f172a">Gérer la file d'attente</div>
                     </div>
                 </a>
+                @endif
             </div>
         </div>
 
@@ -183,4 +210,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
+@endif

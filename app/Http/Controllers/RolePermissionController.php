@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class RolePermissionController extends Controller
@@ -23,7 +23,7 @@ class RolePermissionController extends Controller
     public function index()
     {
         $roles = Role::with(['permissions', 'users'])->paginate(15);
-        $allPermissions = Permission::all()->groupBy(function($perm) {
+        $allPermissions = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
         return view('application.parametre.roles.index', compact('roles', 'allPermissions'));
@@ -34,7 +34,7 @@ class RolePermissionController extends Controller
      */
     public function create()
     {
-        $permissions = Permission::all()->groupBy(function($perm) {
+        $permissions = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
         return view('application.parametre.roles.create', compact('permissions'));
@@ -46,15 +46,15 @@ class RolePermissionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:roles,name',
-            'libelle' => 'required|string|max:255',
-            'permissions' => 'array'
+            'name'        => 'required|unique:roles,name',
+            'libelle'     => 'required|string|max:255',
+            'permissions' => 'array',
         ]);
 
         $role = Role::create([
-            'name' => $request->name,
-            'libelle' => $request->libelle,
-            'guard_name' => 'web'
+            'name'       => $request->name,
+            'libelle'    => $request->libelle,
+            'guard_name' => 'web',
         ]);
 
         if ($request->has('permissions')) {
@@ -66,42 +66,35 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * Formulaire d'édition de rôle
+     * Formulaire d'édition de rôle (route model binding par UUID)
      */
-    public function edit($id)
+    public function edit(Role $role)
     {
-        $role = Role::findOrFail($id);
-        $permissions = Permission::all()->groupBy(function($perm) {
+        $permissions    = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
         $rolePermissions = $role->permissions->pluck('id')->toArray();
-        
+
         return view('application.parametre.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     /**
-     * Mettre à jour un rôle
+     * Mettre à jour un rôle (route model binding par UUID)
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Role $role)
     {
-        $role = Role::findOrFail($id);
-        
         $request->validate([
-            'name' => 'required|unique:roles,name,' . $id,
-            'libelle' => 'required|string|max:255',
-            'permissions' => 'array'
+            'name'        => 'required|unique:roles,name,' . $role->id,
+            'libelle'     => 'required|string|max:255',
+            'permissions' => 'array',
         ]);
 
         $role->update([
-            'name' => $request->name,
-            'libelle' => $request->libelle
+            'name'    => $request->name,
+            'libelle' => $request->libelle,
         ]);
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
-        } else {
-            $role->syncPermissions([]);
-        }
+        $role->syncPermissions($request->permissions ?? []);
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'Rôle mis à jour avec succès');
@@ -110,12 +103,10 @@ class RolePermissionController extends Controller
     /**
      * Mettre à jour les permissions d'un rôle (depuis le modal index)
      */
-    public function updatePermissions(Request $request, $id)
+    public function updatePermissions(Request $request, Role $role)
     {
-        $role = Role::findOrFail($id);
-
         $request->validate([
-            'permissions' => 'array'
+            'permissions' => 'array',
         ]);
 
         $role->syncPermissions($request->permissions ?? []);
@@ -127,23 +118,21 @@ class RolePermissionController extends Controller
     /**
      * Supprimer un rôle
      */
-    public function destroy($id)
+    public function destroy(Role $role)
     {
-        $role = Role::findOrFail($id);
-        
         // Empêcher la suppression des rôles système
         if (in_array($role->name, ['super_admin', 'admin'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ce rôle système ne peut pas être supprimé'
+                'message' => 'Ce rôle système ne peut pas être supprimé',
             ], 403);
         }
-        
+
         $role->delete();
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Rôle supprimé avec succès'
+            'message' => 'Rôle supprimé avec succès',
         ]);
     }
 
@@ -152,10 +141,10 @@ class RolePermissionController extends Controller
      */
     public function permissions()
     {
-        $permissions = Permission::all()->groupBy(function($perm) {
+        $permissions = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
-        
+
         return view('application.parametre.roles.permissions', compact('permissions'));
     }
 
@@ -165,16 +154,16 @@ class RolePermissionController extends Controller
     public function assignUserPermissions(Request $request, $userId)
     {
         $user = \App\Models\User::findOrFail($userId);
-        
+
         $request->validate([
-            'permissions' => 'array'
+            'permissions' => 'array',
         ]);
-        
+
         $user->syncPermissions($request->permissions);
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Permissions assignées avec succès'
+            'message' => 'Permissions assignées avec succès',
         ]);
     }
 
@@ -185,11 +174,11 @@ class RolePermissionController extends Controller
     {
         $user = \App\Models\User::findOrFail($userId);
         $directPermissions = $user->getDirectPermissions()->pluck('name')->toArray();
-        $allPermissions = $user->getAllPermissions()->pluck('name')->toArray();
-        
+        $allPermissions    = $user->getAllPermissions()->pluck('name')->toArray();
+
         return response()->json([
             'direct_permissions' => $directPermissions,
-            'all_permissions' => $allPermissions
+            'all_permissions'    => $allPermissions,
         ]);
     }
 }

@@ -29,9 +29,17 @@
     <i class="fas fa-heartbeat gs-banner-icon"></i>
 </div>
 
+@php
+    $hasRdv = auth()->user()->hasModuleAccess('rendezvous');
+    $hasOrdo = auth()->user()->hasModuleAccess('ordonnance');
+    $hasCons = auth()->user()->hasModuleAccess('consultation');
+@endphp
+
+@if($hasRdv || $hasOrdo)
 <div class="row g-3">
     {{-- Appointments --}}
-    <div class="col-lg-6">
+    @if($hasRdv)
+    <div class="{{ $hasOrdo ? 'col-lg-6' : 'col-lg-12' }}">
         <div class="gs-card h-100">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -66,9 +74,11 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Ordonnances --}}
-    <div class="col-lg-6">
+    @if($hasOrdo)
+    <div class="{{ $hasRdv ? 'col-lg-6' : 'col-lg-12' }}">
         <div class="gs-card h-100">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -101,8 +111,11 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
+@endif
 
+@if($hasCons)
 <div class="row g-3 mt-1">
     {{-- Last Consultation --}}
     <div class="col-12">
@@ -139,3 +152,4 @@
         </div>
     </div>
 </div>
+@endif

@@ -44,14 +44,25 @@
 <div class="row g-3 mb-4">
     @php
     $adminKPIs = [
-        ['label'=>'Personnel Actif',   'value'=>$stats['total_personnel']??0, 'sub'=>'Staff enregistré',      'icon'=>'fa-user-tie',    'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('users.index')],
-        ['label'=>'Consultations/mois','value'=>$stats['consultations_mois']??0,'sub'=>'Activité mensuelle',   'icon'=>'fa-stethoscope', 'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('consultations.index')],
-        ['label'=>'Alertes Stock',     'value'=>$stats['alertes_stock']??0,    'sub'=>'Articles critiques',   'icon'=>'fa-exclamation-triangle','bg'=>'var(--grad-rose)',   'bar'=>'#f43f5e', 'route'=>route('medicaments.index')],
-        ['label'=>'Total Patients',    'value'=>$stats['total_patients']??0,   'sub'=>'Base patients',       'icon'=>'fa-users',         'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index')],
+        ['label'=>'Personnel Actif',   'value'=>$stats['total_personnel']??0, 'sub'=>'Staff enregistré',      'icon'=>'fa-user-tie',    'bg'=>'var(--grad-teal)',   'bar'=>'#0891b2', 'route'=>route('users.index'), 'module'=>'users'],
+        ['label'=>'Consultations/mois','value'=>$stats['consultations_mois']??0,'sub'=>'Activité mensuelle',   'icon'=>'fa-stethoscope', 'bg'=>'var(--grad-green)',  'bar'=>'#10b981', 'route'=>route('consultations.index'), 'module'=>'consultation'],
+        ['label'=>'Alertes Stock',     'value'=>$stats['alertes_stock']??0,    'sub'=>'Articles critiques',   'icon'=>'fa-exclamation-triangle','bg'=>'var(--grad-rose)',   'bar'=>'#f43f5e', 'route'=>route('medicaments.index'), 'module'=>'stock'],
+        ['label'=>'Total Patients',    'value'=>$stats['total_patients']??0,   'sub'=>'Base patients',       'icon'=>'fa-users',         'bg'=>'var(--grad-violet)', 'bar'=>'#7c3aed', 'route'=>route('patients.index'), 'module'=>'patient'],
     ];
+    $adminKPIs = array_filter($adminKPIs, function($k) {
+        return auth()->user()->hasModuleAccess($k['module']);
+    });
+    $kpiCount = count($adminKPIs);
+    $kpiColClass = match($kpiCount) {
+        4 => 'col-xl-3 col-md-6',
+        3 => 'col-xl-4 col-md-6',
+        2 => 'col-xl-6 col-md-6',
+        1 => 'col-xl-12 col-md-12',
+        default => 'd-none',
+    };
     @endphp
     @foreach($adminKPIs as $k)
-    <div class="col-xl-3 col-md-6">
+    <div class="{{ $kpiColClass }}">
         <a href="{{ $k['route'] }}" class="gs-kpi h-100">
             @if($k['label'] == 'Alertes Stock' && $k['value'] > 0)
                 <span class="gs-kpi-trend bg-danger-subtle text-danger"><span class="pulse-dot danger" style="width:6px;height:6px"></span> CRITIQUE</span>
@@ -69,9 +80,21 @@
 </div>
 
 {{-- SECONDARY CONTENT --}}
+@php
+    $hasStock = auth()->user()->hasModuleAccess('stock');
+    $hasUsers = auth()->user()->hasModuleAccess('users');
+    $hasCaisse = auth()->user()->hasModuleAccess('caisse');
+    $hasParametre = auth()->user()->hasModuleAccess('parametre');
+    $hasPaiements = auth()->user()->hasModuleAccess('paiements');
+    $hasSystem = $hasUsers || $hasCaisse || $hasStock || $hasParametre;
+    $hasFinance = $hasCaisse || $hasPaiements;
+    $hasRightCol = $hasSystem || $hasFinance;
+@endphp
+@if($hasStock || $hasRightCol)
 <div class="row g-3">
     {{-- Stock Alerts --}}
-    <div class="col-lg-7">
+    @if($hasStock)
+    <div class="{{ $hasRightCol ? 'col-lg-7' : 'col-lg-12' }}">
         <div class="gs-card">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -119,9 +142,12 @@
             @endif
         </div>
     </div>
+    @endif
 
     {{-- Admin Actions --}}
-    <div class="col-lg-5">
+    @if($hasRightCol)
+    <div class="{{ $hasStock ? 'col-lg-5' : 'col-lg-12' }}">
+        @if($hasSystem)
         <div class="gs-card mb-3">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -133,34 +159,44 @@
             </div>
             <div class="gs-card-body">
                 <div class="row g-2">
+                    @if($hasUsers)
                     <div class="col-6">
                         <a href="{{ route('users.index') }}" class="gs-module-btn p-3">
                             <div class="gs-module-icon bg-primary-subtle text-primary"><i class="fas fa-users-cog"></i></div>
                             <span>Utilisateurs</span>
                         </a>
                     </div>
+                    @endif
+                    @if($hasCaisse)
                     <div class="col-6">
                         <a href="{{ route('caisse.index') }}" class="gs-module-btn p-3">
                             <div class="gs-module-icon bg-success-subtle text-success"><i class="fas fa-cash-register"></i></div>
                             <span>Caisse</span>
                         </a>
                     </div>
+                    @endif
+                    @if($hasStock)
                     <div class="col-6">
                         <a href="{{ route('medicaments.index') }}" class="gs-module-btn p-3">
                             <div class="gs-module-icon bg-info-subtle text-info"><i class="fas fa-pills"></i></div>
                             <span>Pharmacie</span>
                         </a>
                     </div>
+                    @endif
+                    @if($hasParametre)
                     <div class="col-6">
                         <a href="{{ route('configuration') }}" class="gs-module-btn p-3">
                             <div class="gs-module-icon bg-secondary-subtle text-secondary"><i class="fas fa-cogs"></i></div>
                             <span>Config</span>
                         </a>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($hasFinance)
         <div class="gs-card">
             <div class="gs-card-header">
                 <h6 class="gs-card-title">
@@ -183,5 +219,8 @@
                 </p>
             </div>
         </div>
+        @endif
     </div>
+    @endif
 </div>
+@endif
