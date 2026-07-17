@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <div class="block-content p-4">
-                        <form action="{{ isset($assurance) ? route('assurances.update', $assurance->id) : route('assurances.store') }}" method="POST">
+                        <form action="{{ isset($assurance) ? route('assurances.update', $assurance) : route('assurances.store') }}" method="POST">
                             @csrf
                             @if(isset($assurance))
                                 @method('PUT')

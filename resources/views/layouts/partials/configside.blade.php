@@ -47,14 +47,14 @@
                 @endcan
 
                 {{-- Configuration Examens --}}
-                @can('parametres.examens_config')
+                {{-- @can('parametres.examens_config')
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('examens.*') ? 'active' : '' }}"
                        href="{{ route('examens.index') }}">
                         <i class="fa fa-vials me-1"></i> Examens
                     </a>
                 </li>
-                @endcan
+                @endcan --}}
 
                 {{-- Assurances / Sécurité sociale --}}
                 @can('parametres.assurances')

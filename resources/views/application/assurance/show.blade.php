@@ -18,7 +18,7 @@
                             Détails de l'assurance : {{ $assurance->nom }}
                         </h3>
                         <div class="block-options">
-                            <a href="{{ route('assurances.edit', $assurance->id) }}" class="btn btn-sm btn-info">
+                            <a href="{{ route('assurances.edit', $assurance) }}" class="btn btn-sm btn-info">
                                 <i class="fa fa-pencil-alt me-1"></i> Modifier
                             </a>
                             <a href="{{ route('assurances.index') }}" class="btn btn-sm btn-secondary">
