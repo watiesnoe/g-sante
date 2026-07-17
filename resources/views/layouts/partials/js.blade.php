@@ -39,10 +39,44 @@
     <!-- Select2 init global -->
     <script>
         $(document).ready(function () {
-            $('.js-select2').select2({
-                placeholder: "-- Sélectionner un patient existant --",
-                allowClear: true,
-                width: '100%'
+            function initGlobalSelect2() {
+                $('select.form-select, select.form-control, select.js-select2')
+                    .not('.dataTables_length select')
+                    .not('.no-select2')
+                    .each(function() {
+                        let $select = $(this);
+                        if ($select.hasClass('select2-hidden-accessible')) {
+                            return;
+                        }
+
+                        let placeholderText = $select.attr('placeholder') || 
+                                              $select.find('option[value=""]').first().text() || 
+                                              $select.find('option').first().text() ||
+                                              "Sélectionner...";
+
+                        $select.select2({
+                            placeholder: placeholderText,
+                            allowClear: !$select.prop('required') && $select.find('option[value=""]').length > 0,
+                            width: '100%',
+                            dropdownParent: $select.closest('.modal').length ? $select.closest('.modal') : null
+                        });
+                    });
+            }
+
+            // Expose globally
+            window.initGlobalSelect2 = initGlobalSelect2;
+
+            // Run initial load
+            initGlobalSelect2();
+
+            // Run on bootstrap modals
+            $(document).on('shown.bs.modal', function() {
+                initGlobalSelect2();
+            });
+
+            // Run after any AJAX completes to handle dynamically loaded views/selects
+            $(document).ajaxComplete(function() {
+                initGlobalSelect2();
             });
         });
     </script>

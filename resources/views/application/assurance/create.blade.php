@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <div class="block-content p-4">
-                        <form action="{{ isset($assurance) ? route('assurances.update', $assurance) : route('assurances.store') }}" method="POST">
+                        <form id="assuranceForm" action="{{ isset($assurance) ? route('assurances.update', $assurance) : route('assurances.store') }}" method="POST">
                             @csrf
                             @if(isset($assurance))
                                 @method('PUT')
@@ -73,4 +73,77 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#assuranceForm').on('submit', function(e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let method = form.find('input[name="_method"]').val() || 'POST';
+                let btn = form.find('button[type="submit"]');
+
+                // Désactiver le bouton pendant l'envoi
+                btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Enregistrement...');
+
+                // Récupérer le numéro de téléphone nettoyé/formaté
+                let telephoneInput = form.find('input.phone-input');
+                let telephone = '';
+                if (telephoneInput.length && typeof window.getPhoneNumber === 'function') {
+                    telephone = window.getPhoneNumber(telephoneInput[0]);
+                }
+
+                // Préparer les données
+                let formData = form.serializeArray();
+                if (telephone) {
+                    formData = formData.map(function(item) {
+                        if (item.name === 'telephone') {
+                            return { name: 'telephone', value: telephone };
+                        }
+                        return item;
+                    });
+                }
+
+                $.ajax({
+                    url: form.attr('action'),
+                    method: method,
+                    data: formData,
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès !',
+                            text: response.message || 'Opération réussie avec succès.',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.href = "{{ route('assurances.index') }}";
+                        });
+                    },
+                    error: function(xhr) {
+                        btn.prop('disabled', false).html('<i class="fa fa-save me-1"></i> {{ isset($assurance) ? "Mettre à jour" : "Enregistrer" }}');
+                        
+                        let errorMessage = 'Une erreur est survenue lors de l\'enregistrement';
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMessage = '';
+                            $.each(xhr.responseJSON.errors, function(key, value) {
+                                errorMessage += '<div><i class="fa fa-times-circle me-1 text-danger"></i> ' + value[0] + '</div>';
+                            });
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            html: errorMessage,
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

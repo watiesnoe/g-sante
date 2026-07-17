@@ -21,8 +21,10 @@ class PrestationController extends Controller
                 ->join('service_medicals', 'prestations.service_medical_id', '=', 'service_medicals.id')
                 ->select([
                     'prestations.id',
+                    'prestations.uuid',
                     'prestations.nom',
                     'prestations.description',
+                    'prestations.quantifiable',
                     'prestations.prix',
                     'service_medicals.nom as service_medical_nom'
                 ]);
@@ -33,8 +35,8 @@ class PrestationController extends Controller
                     return $row->service_medical_nom ?? '';
                 })
                 ->addColumn('actions', function ($row) {
-                    $edit   = '<a href="'.route('prestations.edit', $row->id).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    $delete = '<button type="button" data-url="'.route('prestations.destroy', $row->id).'" class="btn btn-sm btn-outline-danger delete-btn" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $edit   = '<a href="'.route('prestations.edit', $row->uuid).'" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                    $delete = '<button type="button" data-url="'.route('prestations.destroy', $row->uuid).'" class="btn btn-sm btn-outline-danger delete-btn" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $edit . $delete . '</div>';
                 }) 
@@ -63,9 +65,13 @@ class PrestationController extends Controller
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
+            'quantifiable' => 'nullable|boolean',
         ]);
 
-        Prestation::create($request->all());
+        $data = $request->all();
+        $data['quantifiable'] = $request->has('quantifiable');
+
+        Prestation::create($data);
 
         return redirect()->route('prestations.index')
             ->with('success', 'Prestation créée avec succès.');
@@ -95,9 +101,13 @@ class PrestationController extends Controller
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
+            'quantifiable' => 'nullable|boolean',
         ]);
 
-        $prestation->update($request->all());
+        $data = $request->all();
+        $data['quantifiable'] = $request->has('quantifiable');
+
+        $prestation->update($data);
 
         return redirect()->route('prestations.index')
             ->with('success', 'Prestation modifiée avec succès.');

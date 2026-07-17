@@ -33,6 +33,11 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\MigrationReportController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/run-migrations-temp', function() {
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
+});
+
 // Quand on arrive sur la racine "/", on redirige vers le login
 Route::get('/', function () {
     return redirect()->route('login');

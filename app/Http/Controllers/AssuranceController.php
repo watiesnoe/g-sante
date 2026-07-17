@@ -41,9 +41,19 @@ class AssuranceController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'taux' => 'required|integer|min:0|max:100',
+            'telephone' => 'nullable|string|max:50',
+            'adresse' => 'nullable|string|max:255',
         ]);
-        // dd($request->all());
-        Assurance::create($request->all());
+        
+        $assurance = Assurance::create($request->all());
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Assurance ajoutée avec succès !',
+                'data' => $assurance
+            ]);
+        }
 
         return redirect()->route('assurances.index')->with('success', 'Assurance ajoutée avec succès !');
     }
@@ -68,9 +78,19 @@ class AssuranceController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'taux' => 'required|integer|min:0|max:100',
+            'telephone' => 'nullable|string|max:50',
+            'adresse' => 'nullable|string|max:255',
         ]);
 
         $assurance->update($request->all());
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Assurance mise à jour avec succès !',
+                'data' => $assurance
+            ]);
+        }
 
         return redirect()->route('assurances.index')->with('success', 'Assurance mise à jour avec succès !');
     }

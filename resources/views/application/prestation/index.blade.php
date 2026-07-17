@@ -35,6 +35,7 @@
                                         <th>Prestation</th>
                                         <th>Service Médical</th>
                                         <th class="text-center col-md">Description</th>
+                                        <th class="text-center">Quantifiable</th>
                                         <th class="text-center">Prix</th>
                                         <th class="text-center col-md">Actions</th>
                                     </tr>
@@ -59,6 +60,17 @@
                     { data: 'nom', name: 'nom' },
                     { data: 'service_medical', name: 'service_medical' },
                     { data: 'description', name: 'description' },
+                    { 
+                        data: 'quantifiable', 
+                        name: 'quantifiable',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (data == 1 || data === true) {
+                                return '<span class="badge bg-success">Oui</span>';
+                            }
+                            return '<span class="badge bg-secondary">Non</span>';
+                        }
+                    },
                     { data: 'prix', name: 'prix' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false }
                 ],

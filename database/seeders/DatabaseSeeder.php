@@ -14,31 +14,31 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // 1. Structure de base (services, salles, lits, examens)
-            ServiceMedicalSeeder::class,
-            SalleLitExamenSeeder::class,
-            PrestationSeeder::class,
+            // ServiceMedicalSeeder::class,
+            // SalleLitExamenSeeder::class,
+            // PrestationSeeder::class,
 
             // 2. Familles de médicaments (doit précéder MedicamentsSeederCustom)
-            FamilleSeeder::class,
+            // FamilleSeeder::class,
 
             // 3. Assurances
-            AssuranceSeeder::class,
+            // AssuranceSeeder::class,
 
             // 4. Médicaments et leurs unités (médicament_id dans unites)
-            MedicamentsSeederCustom::class,
+            // MedicamentsSeederCustom::class,
 
             // 5. Maladies & Symptômes
-            DiseaseSeeder::class,
-            MaladiesSeederCustom::class,
-            SymptomesSeederCustom::class,
-            MaladieSymptomeSeederCustom::class,
+            // DiseaseSeeder::class,
+            // MaladiesSeederCustom::class,
+            // SymptomesSeederCustom::class,
+            // MaladieSymptomeSeederCustom::class,
 
             // 6. Protocoles et Guidelines
-            ProtocoleTraitementsSeederCustom::class,
-            ProtocoleMedicamentSeederCustom::class,
-            WhoGuidelinesSeeder::class,
-            InfectiologieSeeder::class,
-            PathologiesSeeder::class,
+            // ProtocoleTraitementsSeederCustom::class,
+            // ProtocoleMedicamentSeederCustom::class,
+            // WhoGuidelinesSeeder::class,
+            // InfectiologieSeeder::class,
+            // PathologiesSeeder::class,
 
             // 7. Permissions & Rôles (doit être avant les utilisateurs)
             PermissionRoleSeeder::class,
@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
 
             // 9. Patients de démonstration (optionnel)
-            PatientSeeder::class,
+            // PatientSeeder::class,
         ]);
     }
 }

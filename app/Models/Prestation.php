@@ -11,7 +11,7 @@ class Prestation extends Model
     use HasUuid;
     use HasFactory;
 
-    protected $fillable = ['service_medical_id', 'nom', 'description', 'prix'];
+    protected $fillable = ['service_medical_id', 'nom', 'description', 'quantifiable', 'prix'];
 
     public function serviceMedical()
     {

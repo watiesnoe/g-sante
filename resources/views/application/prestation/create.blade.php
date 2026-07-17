@@ -26,7 +26,7 @@
                             <div class="alert alert-success">{{ session('success') }}</div>
                         @endif
 
-                        <form action="{{ isset($prestation) ? route('prestations.update', $prestation->id) : route('prestations.store') }}" id="prestationForm" class="mb-2" method="POST">
+                        <form action="{{ isset($prestation) ? route('prestations.update', $prestation->uuid) : route('prestations.store') }}" id="prestationForm" class="mb-2" method="POST">
                             @csrf
                             @if(isset($prestation))
                                 @method('PUT')
@@ -55,11 +55,20 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-12 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label for="prix" class="form-label">Prix (FCFA) <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control price-input @error('prix') is-invalid @enderror"
                                            id="prix" name="prix" value="{{ old('prix') ?? ($prestation->prix ?? '') }}" required placeholder="Ex: 15 000">
                                     @error('prix') <div class="text-danger">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-md-6 mb-3 d-flex align-items-center">
+                                    <div class="form-check form-switch pt-4">
+                                        <input class="form-check-input" type="checkbox" id="quantifiable" name="quantifiable" value="1"
+                                               {{ (old('quantifiable') ?? ($prestation->quantifiable ?? false)) ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold text-dark" for="quantifiable">
+                                            Prestation quantifiable (ex: consommables, médicaments...)
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
