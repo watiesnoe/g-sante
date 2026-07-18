@@ -31,6 +31,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssuranceController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\MigrationReportController;
+use App\Http\Controllers\ExportImportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/run-migrations-temp', function() {
@@ -217,3 +218,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 require __DIR__ . '/auth.php';
+
+// ── Export / Import generique ──────────────────────────────────────────────
+Route::middleware(['auth'])->group(function () {
+    Route::get('/export/{module}',  [ExportImportController::class, 'export'])->name('export.model');
+    Route::post('/import/{module}', [ExportImportController::class, 'import'])->name('import.model');
+});

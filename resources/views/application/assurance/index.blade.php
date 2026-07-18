@@ -5,21 +5,25 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
-            <!-- Action Button Area -->
-            <div class="d-flex justify-content-end mb-3">
-                <a href="{{ route('assurances.create') }}" class="btn btn-sm btn-primary shadow-sm rounded-pill">
-                    <i class="fa fa-plus me-1"></i> Ajouter une assurance
-                </a>
-            </div>
-
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
 
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8">
                 <div class="block block-rounded">
-                    <div class="block-header block-header-default">
+                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                         <h3 class="block-title">Liste des Assurances</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <a href="{{ route('export.model', 'assurances') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                                <i class="fa fa-file-excel me-1"></i> Exporter
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="assurances" data-label="Sécurité sociale">
+                                <i class="fa fa-file-import me-1"></i> Importer
+                            </button>
+                            <a href="{{ route('assurances.create') }}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-plus me-1"></i> Ajouter
+                            </a>
+                        </div>
                     </div>
                     <div class="block-content block-content-full">
                         <div class="table-responsive">
@@ -38,7 +42,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        @include('layouts.partials.import_modal')
     </div>
 @endsection
 

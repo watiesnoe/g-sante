@@ -6,18 +6,24 @@
     <div class="container mt-4">
         <div class="row">
             <!-- Sidebar gauche -->
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-sm btn-primary" id="btnAdd">
-                    <i class="fa fa-plus me-1"></i> Ajouter
-                </button>
-            </div>
             @include('layouts.partials.configside')
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8 ">
 
                 <div class="block block-rounded">
-                    <div class="block-header block-header-default">
+                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                         <h3 class="block-title">Liste des structure</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <a href="{{ route('export.model', 'services') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                                <i class="fa fa-file-excel me-1"></i> Exporter
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="services" data-label="Structures" title="Importer depuis Excel">
+                                <i class="fa fa-file-import me-1"></i> Importer
+                            </button>
+                            <button class="btn btn-sm btn-primary" id="btnAdd">
+                                <i class="fa fa-plus me-1"></i> Ajouter
+                            </button>
+                        </div>
                     </div>
                     <div class="block-content block-content-full">
                         <table id="servicesTable" class="table table-bordered table-striped">
@@ -65,6 +71,7 @@
                 </div>
             </div>
         </div>
+        @include('layouts.partials.import_modal')
     </div>
 @endsection
 @section('scripts')

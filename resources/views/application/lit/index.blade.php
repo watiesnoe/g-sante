@@ -5,18 +5,23 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-sm btn-primary" id="btnAdd">
-                    <i class="fa fa-plus me-1"></i> Ajouter
-                </button>
-            </div>
-
             @include('layouts.partials.configside')
 
             <div class="col-xl-9 col-lg-8">
                 <div class="block block-rounded">
-                    <div class="block-header block-header-default">
+                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                         <h3 class="block-title">Liste des lits</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <a href="{{ route('export.model', 'lits') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                                <i class="fa fa-file-excel me-1"></i> Exporter
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="lits" data-label="Lits">
+                                <i class="fa fa-file-import me-1"></i> Importer
+                            </button>
+                            <button class="btn btn-sm btn-primary" id="btnAdd">
+                                <i class="fa fa-plus me-1"></i> Ajouter
+                            </button>
+                        </div>
                     </div>
                     <div class="block-content block-content-full">
                         <div class="table-responsive">
@@ -35,6 +40,8 @@
                 </div>
             </div>
         </div>
+
+        @include('layouts.partials.import_modal')
 
         <div class="modal fade" id="crudModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">

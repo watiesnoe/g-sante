@@ -5,36 +5,30 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
-            <!-- Action Button Area -->
-            <div class="d-flex justify-content-end mb-3">
-                <a href="{{ route('users.create') }}" class="btn btn-sm btn-primary">
-                    <i class="fa fa-plus me-1"></i> Nouvel Utilisateur
-                </a>
-            </div>
-
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
 
             <!-- Contenu principal -->
             <div class="col-xl-9 col-lg-8">
                 <div class="block block-rounded">
-                    <div class="block-header block-header-default">
+                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                         <h3 class="block-title">Gestion des Utilisateurs</h3>
-                        <div class="block-options">
-                            <button type="button" class="btn-block-option" id="reload-table">
+                        <div class="d-flex gap-2 align-items-center">
+                            <a href="{{ route('export.model', 'users') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                                <i class="fa fa-file-excel me-1"></i> Exporter
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="users" data-label="Utilisateurs">
+                                <i class="fa fa-file-import me-1"></i> Importer
+                            </button>
+                            <button type="button" class="btn btn-sm btn-alt-secondary" id="reload-table" title="Rafraîcher">
                                 <i class="fa fa-sync"></i>
                             </button>
+                            <a href="{{ route('users.create') }}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-plus me-1"></i> Nouvel Utilisateur
+                            </a>
                         </div>
                     </div>
                     <div class="block-content block-content-full">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="export-csv"><i class="fa fa-file-csv me-1"></i>CSV</button>
-                                <button type="button" class="btn btn-outline-success btn-sm" id="export-excel"><i class="fa fa-file-excel me-1"></i>Excel</button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" id="export-pdf"><i class="fa fa-file-pdf me-1"></i>PDF</button>
-                            </div>
-                        </div>
-
                         <div class="table-responsive">
                             <table id="users-datatable" class="table table-bordered table-striped table-vcenter w-100">
                                 <thead>
@@ -56,6 +50,8 @@
     </div>
 
 
+
+    @include('layouts.partials.import_modal')
 
     <!-- Modal Suppression -->
     <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">

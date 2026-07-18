@@ -4,21 +4,27 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="d-flex justify-content-end mb-3">
-        @can('stock.familles')
-        <button class="btn btn-primary" id="btnAdd">
-            <i class="fa fa-plus me-1"></i> Ajouter une famille
-        </button>
-        @endcan
-    </div>
-<div class="row">
+    <div class="row">
     @include('layouts.partials.configside')
     <div class="col-xl-9 col-lg-8">
         <div class="block block-rounded">
-            <div class="block-header block-header-default">
+            <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                 <h3 class="block-title">
                     <i class="fa fa-users-cog me-2 text-primary"></i> Familles de Médicaments
                 </h3>
+                <div class="d-flex gap-2 align-items-center">
+                    <a href="{{ route('export.model', 'familles') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                        <i class="fa fa-file-excel me-1"></i> Exporter
+                    </a>
+                    @can('stock.familles')
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="familles" data-label="Familles médicaments">
+                        <i class="fa fa-file-import me-1"></i> Importer
+                    </button>
+                    <button class="btn btn-sm btn-primary" id="btnAdd">
+                        <i class="fa fa-plus me-1"></i> Ajouter
+                    </button>
+                    @endcan
+                </div>
             </div>
             <div class="block-content block-content-full">
                 <table id="familleTable" class="table table-bordered table-striped table-hover w-100">
@@ -36,6 +42,9 @@
     </div>  
 </div>
 </div>
+
+@include('layouts.partials.import_modal')
+
 {{-- Modal Ajout / Modification --}}
 <div class="modal fade" id="crudModal" tabindex="-1" aria-labelledby="modalTitleLabel" aria-hidden="true">
     <div class="modal-dialog">

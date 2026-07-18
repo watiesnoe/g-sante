@@ -66,6 +66,13 @@
                         <i class="fa fa-shopping-cart me-1"></i> Commander (<span id="selectedCount">0</span>)
                     </button>
 
+                    <a href="{{ route('export.model', 'medicaments') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                        <i class="fa fa-file-excel me-1"></i> Exporter
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="medicaments" data-label="Médicaments">
+                        <i class="fa fa-file-import me-1"></i> Importer
+                    </button>
+
                     <a href="{{ route('medicaments.create') }}" class="btn btn-sm btn-primary" id="btnAdd">
                         <i class="fa fa-plus me-1"></i> Nouveau
                     </a>
@@ -92,8 +99,7 @@
                     </table>
                 </div>
             </div>
-        </div>
-
+        @include('layouts.partials.import_modal')
     </div>
 
 @endsection

@@ -5,12 +5,6 @@
 @section('content')
     <div class="container mt-4">
         <div class="row">
-            <!-- Action Button Area -->
-            <div class="d-flex justify-content-end mb-3">
-                <a href="{{ route('prestations.create') }}" class="btn btn-sm btn-primary">
-                    <i class="fa fa-plus me-1"></i> Ajouter
-                </a>
-            </div>
 
             <!-- Sidebar gauche -->
             @include('layouts.partials.configside')
@@ -24,8 +18,19 @@
                     </div>
                 @endif
                 <div class="block block-rounded">
-                    <div class="block-header block-header-default">
+                    <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                         <h3 class="block-title">Liste des prestations</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <a href="{{ route('export.model', 'prestations') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                                <i class="fa fa-file-excel me-1"></i> Exporter
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="prestations" data-label="Prestations">
+                                <i class="fa fa-file-import me-1"></i> Importer
+                            </button>
+                            <a href="{{ route('prestations.create') }}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-plus me-1"></i> Ajouter
+                            </a>
+                        </div>
                     </div>
                     <div class="block-content block-content-full">
                         <div class="table-responsive">
@@ -45,7 +50,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        @include('layouts.partials.import_modal')
     </div>
 @endsection
 

@@ -11,9 +11,17 @@
             <div class="block block-rounded">
                 <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                     <h3 class="block-title">🛡️ Rôles & Permissions</h3>
-                    <a href="{{ route('admin.roles.create') }}" class="btn btn-sm btn-primary">
-                        <i class="fa fa-plus me-1"></i> Nouveau Rôle
-                    </a>
+                    <div class="d-flex gap-2 align-items-center">
+                        <a href="{{ route('export.model', 'roles') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
+                            <i class="fa fa-file-excel me-1"></i> Exporter
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="roles" data-label="Rôles">
+                            <i class="fa fa-file-import me-1"></i> Importer
+                        </button>
+                        <a href="{{ route('admin.roles.create') }}" class="btn btn-sm btn-primary">
+                            <i class="fa fa-plus me-1"></i> Nouveau Rôle
+                        </a>
+                    </div>
                 </div>
                 <div class="block-content">
                     @if(session('success'))
@@ -66,7 +74,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    @include('layouts.partials.import_modal')
 </div>
 @endsection
 
