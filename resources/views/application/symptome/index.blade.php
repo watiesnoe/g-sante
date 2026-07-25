@@ -119,7 +119,7 @@ $(document).ready(function() {
         e.preventDefault();
 
         let id = $('#id').val();
-        let url = id ? '/symptomes/' + id : '/symptomes';
+        let url = id ? "{{ url('symptomes') }}/" + id : "{{ route('symptomes.store') }}";
         let method = id ? 'PUT' : 'POST';
 
         $.ajax({
@@ -129,10 +129,22 @@ $(document).ready(function() {
             success: function(res) {
                 $('#crudModal').modal('hide');
                 table.ajax.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Succès',
+                    text: res.message || 'Symptôme enregistré avec succès !',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             },
             error: function(err) {
                 console.log(err);
-                alert('Erreur...');
+                let errMsg = err.responseJSON && err.responseJSON.message ? err.responseJSON.message : 'Erreur lors de l\'enregistrement.';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur',
+                    text: errMsg
+                });
             }
         });
     });
@@ -141,7 +153,7 @@ $(document).ready(function() {
     $('#symptomeTable').on('click', '.edit', function() {
         let id = $(this).data('id');
 
-        $.get('/symptomes/' + id + '/edit', function(data) {
+        $.get("{{ url('symptomes') }}/" + id + '/edit', function(data) {
             $('#modalTitle').text('Modifier le symptôme');
             $('#id').val(data.id);
             $('#nom').val(data.nom);
@@ -154,18 +166,39 @@ $(document).ready(function() {
     $('#symptomeTable').on('click', '.delete', function() {
         let id = $(this).data('id');
 
-        if(confirm('Supprimer ce symptôme ?')) {
-            $.ajax({
-                url: '/symptomes/' + id,
-                method: 'DELETE',
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function() {
-                    table.ajax.reload();
-                }
-            });
-        }
+        Swal.fire({
+            title: 'Êtes-vous sûr ?',
+            text: "Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ url('symptomes') }}/" + id,
+                    method: 'DELETE',
+                    data: {
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function(res) {
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Supprimé!',
+                            text: res.message || 'Le symptôme a été supprimé.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    },
+                    error: function() {
+                        Swal.fire('Erreur', 'Impossible de supprimer ce symptôme.', 'error');
+                    }
+                });
+            }
+        });
     });
 
     // RESET MODAL

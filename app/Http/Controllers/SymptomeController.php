@@ -20,9 +20,9 @@ class SymptomeController extends Controller
             return Datatables::of($symptomes)
                 ->addIndexColumn()
                 ->addColumn('actions', function($row){
-                    $view   = '<a href="'.route('symptomes.show', $row->id).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
-                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->id.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
-                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->id.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                    $view   = '<a href="'.route('symptomes.show', $row->uuid).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                    $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->uuid.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
+                    $delete = '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="'.$row->uuid.'" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
                 })

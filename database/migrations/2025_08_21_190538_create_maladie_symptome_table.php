@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('maladie_symptome', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique();
+            // $table->uuid('uuid')->unique();
             $table->foreignId('maladie_id')->constrained()->onDelete('cascade');
             $table->foreignId('symptome_id')->constrained()->onDelete('cascade');
             $table->timestamps();

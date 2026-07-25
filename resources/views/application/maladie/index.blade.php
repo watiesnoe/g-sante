@@ -64,7 +64,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Symptômes :</label>
-                                <select name="symptomes[]" id="symptomes" class="form-control select2" multiple>
+                                <select name="symptomes[]" id="symptomes" class="form-control no-select2" multiple>
                                     @foreach ($symptomes as $symptome)
                                         <option value="{{ $symptome->id }}">{{ $symptome->nom }}</option>
                                     @endforeach
@@ -92,11 +92,15 @@
                 }
             });
 
-            // Initialisation Select2
-            $('#symptomes').select2({
-                dropdownParent: $('#crudModal'),
-                width: '100%',
-                placeholder: 'Sélectionner les symptômes'
+            // Initialisation Select2 à l'ouverture du modal pour garantir le focus et l'affichage
+            $('#crudModal').on('shown.bs.modal', function () {
+                if (!$('#symptomes').hasClass("select2-hidden-accessible")) {
+                    $('#symptomes').select2({
+                        dropdownParent: $('#crudModal'),
+                        width: '100%',
+                        placeholder: 'Sélectionner les symptômes'
+                    });
+                }
             });
 
             // 1. Initialisation de DataTable
@@ -162,6 +166,10 @@
                             for (let key in errors) {
                                 errorMsg += errors[key][0] + '<br>';
                             }
+                        } else if (xhr.responseJSON?.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else {
+                            errorMsg = 'Statut ' + xhr.status + ' : ' + xhr.statusText;
                         }
                         Swal.fire({
                             icon: 'error',

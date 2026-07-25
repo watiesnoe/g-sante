@@ -63,83 +63,98 @@
 </div>
 
 <script>
-    (function() {
-        // Open modal and configure it for the clicked module
-        $(document).on('click', '.btn-open-import-modal', function (e) {
-            e.preventDefault();
-            var module = $(this).data('module');
-            var label  = $(this).data('label') || 'les données';
+    document.addEventListener("DOMContentLoaded", function() {
+        function initImportModal() {
+            if (typeof window.jQuery === 'undefined') {
+                setTimeout(initImportModal, 50);
+                return;
+            }
+            var $ = window.jQuery;
 
-            $('#importModule').val(module);
-            $('#importExcelModalLabel').html('<i class="fa fa-file-import me-2"></i> Importer ' + label);
-            $('#downloadTemplateLink').attr('href', '/export/' + module + '?template=1');
-            $('#importExcelForm')[0].reset();
+            // Open modal and configure it for the clicked module
+            $(document).on('click', '.btn-open-import-modal', function (e) {
+                e.preventDefault();
+                var module = $(this).data('module');
+                var label  = $(this).data('label') || 'les données';
 
-            $('#importExcelModal').modal('show');
-        });
+                $('#importModule').val(module);
+                $('#importExcelModalLabel').html('<i class="fa fa-file-import me-2"></i> Importer ' + label);
+                
+                // Dynamically generate the template URL using Laravel route helper to support subdirectory hosting (e.g. XAMPP)
+                var templateUrl = "{{ route('export.model', ':module') }}?template=1".replace(':module', module);
+                $('#downloadTemplateLink').attr('href', templateUrl);
+                $('#importExcelForm')[0].reset();
 
-        // AJAX form submit
-        $('#importExcelForm').on('submit', function (e) {
-            e.preventDefault();
-
-            var $btn    = $('#btnSubmitImport');
-            var $spinner = $('#importSpinner');
-            var $icon   = $('#importIcon');
-            var module  = $('#importModule').val();
-
-            $btn.prop('disabled', true);
-            $spinner.removeClass('d-none');
-            $icon.addClass('d-none');
-
-            $.ajax({
-                url: '/import/' + module,
-                type: 'POST',
-                data: new FormData(this),
-                processData: false,
-                contentType: false,
-                success: function (data) {
-                    $btn.prop('disabled', false);
-                    $spinner.addClass('d-none');
-                    $icon.removeClass('d-none');
-
-                    if (data.success) {
-                        $('#importExcelModal').modal('hide');
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Importation réussie !',
-                                text: data.message,
-                                timer: 2500,
-                                showConfirmButton: false
-                            }).then(function () { window.location.reload(); });
-                        } else {
-                            alert(data.message);
-                            window.location.reload();
-                        }
-                    } else {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({ icon: 'error', title: 'Erreur', text: data.message || 'Une erreur est survenue.' });
-                        } else {
-                            alert(data.message || 'Erreur.');
-                        }
-                    }
-                },
-                error: function (xhr) {
-                    $btn.prop('disabled', false);
-                    $spinner.addClass('d-none');
-                    $icon.removeClass('d-none');
-
-                    var msg = (xhr.responseJSON && xhr.responseJSON.message)
-                        ? xhr.responseJSON.message
-                        : 'Erreur de communication avec le serveur.';
-
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'error', title: 'Erreur', text: msg });
-                    } else {
-                        alert(msg);
-                    }
-                }
+                $('#importExcelModal').modal('show');
             });
-        });
-    })();
+
+            // AJAX form submit (using event delegation on document for maximum reliability)
+            $(document).on('submit', '#importExcelForm', function (e) {
+                e.preventDefault();
+
+                var $btn    = $('#btnSubmitImport');
+                var $spinner = $('#importSpinner');
+                var $icon   = $('#importIcon');
+                var module  = $('#importModule').val();
+
+                $btn.prop('disabled', true);
+                $spinner.removeClass('d-none');
+                $icon.addClass('d-none');
+
+                // Dynamically generate the import URL using Laravel route helper
+                var importUrl = "{{ route('import.model', ':module') }}".replace(':module', module);
+
+                $.ajax({
+                    url: importUrl,
+                    type: 'POST',
+                    data: new FormData(this),
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        $btn.prop('disabled', false);
+                        $spinner.addClass('d-none');
+                        $icon.removeClass('d-none');
+
+                        if (data.success) {
+                            $('#importExcelModal').modal('hide');
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Importation réussie !',
+                                    text: data.message,
+                                    timer: 2500,
+                                    showConfirmButton: false
+                                }).then(function () { window.location.reload(); });
+                            } else {
+                                alert(data.message);
+                                window.location.reload();
+                            }
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'error', title: 'Erreur', text: data.message || 'Une erreur est survenue.' });
+                            } else {
+                                alert(data.message || 'Erreur.');
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        $btn.prop('disabled', false);
+                        $spinner.addClass('d-none');
+                        $icon.removeClass('d-none');
+
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                            ? xhr.responseJSON.message
+                            : 'Erreur de communication avec le serveur.';
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Erreur', text: msg });
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                });
+            });
+        }
+        initImportModal();
+    });
 </script>

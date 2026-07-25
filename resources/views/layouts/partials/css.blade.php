@@ -9,6 +9,7 @@
     <!-- <link rel="stylesheet" id="css-theme" href="asset/css/themes/xwork.min.css"> -->
     <!-- END Stylesheets -->
       <link rel="stylesheet" href="{{ asset('admin/js/plugins/select2/css/select2.min.css') }}">
+      <link rel="stylesheet" href="{{ asset('admin/js/plugins/sweetalert2/sweetalert2.min.css') }}">
 
     <!-- Load and set color theme + dark mode preference (blocking script to prevent flashing) -->
     <script src="{{ asset('admin/js/setTheme.js') }}"></script>
