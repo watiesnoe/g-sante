@@ -87,12 +87,11 @@
                                     <input type="checkbox" class="form-check-input" id="checkAll">
                                 </th>
                                 <th>Nom</th>
-                                <th>Unité</th>
                                 <th>Famille</th>
                                 <th>Stock</th>
                                 <th>Stock Min</th>
-                                <th>Prix Achat</th>
-                                <th>Prix Vente</th>
+                                <th>Unité</th>
+                                <th class="text-end">P. Vente</th>
                                 <th width="120" class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -313,12 +312,6 @@
                         name: 'nom'
                     },
                     {
-                        data: 'unite',
-                        name: 'unite',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
                         data: 'famille',
                         name: 'famille',
                         orderable: false,
@@ -333,16 +326,17 @@
                         name: 'stock_min'
                     },
                     {
-                        data: 'prix_achat',
-                        name: 'prix_achat',
+                        data: 'unite_select',
+                        name: 'unite_select',
                         orderable: false,
                         searchable: false
                     },
                     {
-                        data: 'prix_vente',
-                        name: 'prix_vente',
+                        data: 'prix_vente_display',
+                        name: 'prix_vente_display',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        className: 'text-end'
                     },
                     {
                         data: 'actions',
@@ -434,6 +428,14 @@
                     $('#bulkCommandForm').submit();
                 }
             });
+            // Mise à jour des prix quand on change l'unité dans le select
+            $(document).on('change', '.unite-select', function() {
+                const selected = $(this).find('option:selected');
+                const row = $(this).closest('tr');
+                row.find('.price-achat').text(selected.data('achat') || '-');
+                row.find('.price-vente').text(selected.data('vente') || '-');
+            });
+
         });
     </script>
 @endsection

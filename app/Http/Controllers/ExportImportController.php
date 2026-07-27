@@ -58,7 +58,9 @@ class ExportImportController extends Controller
         $rows[] = $exportColumns; // header
 
         if (! $isTemplate) {
-            $records = $modelClass::with('symptomes')->get();
+            $records = $module === 'maladies'
+                ? $modelClass::with('symptomes')->get()
+                : $modelClass::all();
             foreach ($records as $record) {
                 $row = [];
                 foreach ($exportColumns as $col) {

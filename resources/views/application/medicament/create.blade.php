@@ -83,8 +83,8 @@
                                                 <th style="min-width: 150px;">Nom <span class="text-danger">*</span></th>
                                                 <th style="min-width: 80px;">Symbole <span class="text-danger">*</span></th>
                                                 <th style="min-width: 110px;">Facteur <span class="text-danger">*</span></th>
-                                                <th style="min-width: 120px;">P. Achat <span class="text-danger">*</span></th>
-                                                <th style="min-width: 120px;">P. Vente <span class="text-danger">*</span></th>
+                                                <th style="min-width: 140px;">P. Achat <span class="text-danger">*</span></th>
+                                                <th style="min-width: 140px;">P. Vente <span class="text-danger">*</span></th>
                                                 <th class="text-center" style="min-width: 70px;">Défaut</th>
                                                 <th class="text-center" style="min-width: 50px;"></th>
                                             </tr>
@@ -104,10 +104,10 @@
                                                             <input type="number" name="unites[{{ $index }}][facteur]" class="form-control form-control-sm factor-input" value="{{ $unite->facteur }}" min="0.01" step="any" required placeholder="1">
                                                         </td>
                                                         <td>
-                                                            <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input" value="{{ $unite->prix_achat }}" required>
+                                                            <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="{{ $unite->prix_achat }}" required>
                                                         </td>
                                                         <td>
-                                                            <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input" value="{{ $unite->prix_vente }}" required>
+                                                            <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="{{ $unite->prix_vente }}" required>
                                                         </td>
                                                         <td class="text-center">
                                                             <input type="radio" name="default_unit_idx" value="{{ $index }}" class="form-check-input default-unit-radio" {{ $unite->is_default ? 'checked' : '' }}>
@@ -131,10 +131,10 @@
                                                         <input type="number" name="unites[0][facteur]" class="form-control form-control-sm factor-input" value="1" min="0.01" step="any" required placeholder="1">
                                                     </td>
                                                     <td>
-                                                        <input type="text" inputmode="numeric" name="unites[0][prix_achat]" class="form-control form-control-sm price-input prix-achat-input" value="0" required>
+                                                        <input type="text" inputmode="numeric" name="unites[0][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="0" required>
                                                     </td>
                                                     <td>
-                                                        <input type="text" inputmode="numeric" name="unites[0][prix_vente]" class="form-control form-control-sm price-input prix-vente-input" value="0" required>
+                                                        <input type="text" inputmode="numeric" name="unites[0][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="0" required>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="radio" name="default_unit_idx" value="0" class="form-check-input default-unit-radio" checked>
@@ -197,10 +197,10 @@
                             <input type="number" name="unites[${idx}][facteur]" class="form-control form-control-sm factor-input" value="1" min="0.01" step="any" required placeholder="1">
                         </td>
                         <td>
-                            <input type="text" inputmode="numeric" name="unites[${idx}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input" value="0" required>
+                            <input type="text" inputmode="numeric" name="unites[${idx}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="0" required>
                         </td>
                         <td>
-                            <input type="text" inputmode="numeric" name="unites[${idx}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input" value="0" required>
+                            <input type="text" inputmode="numeric" name="unites[${idx}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="0" required>
                         </td>
                         <td class="text-center">
                             <input type="radio" name="default_unit_idx" value="${idx}" class="form-check-input default-unit-radio">

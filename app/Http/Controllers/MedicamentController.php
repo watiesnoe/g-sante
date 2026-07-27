@@ -29,7 +29,7 @@ class MedicamentController extends Controller
         $filterStockCritique = $request->input('stock_critique') == 1 || $request->input('stock_critique') === '1';
 
         if ($request->ajax()) {
-            $query = Medicament::with(['unite', 'famille']);
+            $query = Medicament::with(['unites', 'famille']);
 
             if ($selectedFamilleId) {
                 $query->where('famille_id', $selectedFamilleId);
@@ -44,11 +44,36 @@ class MedicamentController extends Controller
                 ->addColumn('checkbox', function ($m) {
                     return '<input type="checkbox" class="form-check-input medicament-checkbox" value="' . $m->uuid . '">';
                 })
-                ->addColumn('unite', function ($m) {
-                    return $m->unite?->nom ?? '-';
-                })
                 ->addColumn('famille', function ($m) {
                     return $m->famille?->nom ?? '-';
+                })
+                ->addColumn('unite_select', function ($m) {
+                    if ($m->unites->isEmpty()) return '<span class="text-muted">-</span>';
+
+                    $options = '';
+                    foreach ($m->unites as $u) {
+                        $label   = e($u->nom) . ' (' . e($u->symbole) . ')';
+                        $selected = $u->is_default ? 'selected' : '';
+                        $achat   = number_format($u->prix_achat, 0, ',', '\u00a0');
+                        $vente   = number_format($u->prix_vente, 0, ',', '\u00a0');
+                        $options .= '<option value="' . $u->id . '" '
+                            . 'data-achat="' . $achat . '" '
+                            . 'data-vente="' . $vente . '" '
+                            . $selected . '>'
+                            . $label . '</option>';
+                    }
+
+                    return '<select class="form-select form-select-sm unite-select">' . $options . '</select>';
+                })
+                ->addColumn('prix_achat_display', function ($m) {
+                    $default = $m->unites->firstWhere('is_default', true) ?? $m->unites->first();
+                    $val = $default ? number_format($default->prix_achat, 0, ',', '\u00a0') : '-';
+                    return '<span class="price-achat">' . $val . '</span>';
+                })
+                ->addColumn('prix_vente_display', function ($m) {
+                    $default = $m->unites->firstWhere('is_default', true) ?? $m->unites->first();
+                    $val = $default ? number_format($default->prix_vente, 0, ',', '\u00a0') : '-';
+                    return '<span class="price-vente fw-semibold text-success">' . $val . '</span>';
                 })
                 ->addColumn('actions', function ($m) {
                     $user = Auth::user();
@@ -62,7 +87,7 @@ class MedicamentController extends Controller
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
                 })
-                ->rawColumns(['actions', 'checkbox'])
+                ->rawColumns(['actions', 'checkbox', 'unite_select', 'prix_achat_display', 'prix_vente_display'])
                 ->make(true);
         }
 
@@ -112,24 +137,46 @@ class MedicamentController extends Controller
     {
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un médicament.');
 
-        $validated = $request->validate([
-            'nom'         => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'stock'       => 'required|integer|min:0',
-            'stock_min'   => 'required|integer|min:0',
-            'prix_achat'  => 'required|numeric|min:0',
-            'prix_vente'  => 'required|numeric|min:0',
-            'unite_id'    => 'required|exists:unites,id',
-            'famille_id'  => 'required|exists:familles,id',
+        $request->validate([
+            'nom'                      => 'required|string|max:255',
+            'description'              => 'nullable|string',
+            'stock'                    => 'required|integer|min:0',
+            'stock_min'                => 'required|integer|min:0',
+            'famille_id'               => 'required|exists:familles,id',
+            'unites'                   => 'required|array|min:1',
+            'unites.*.nom'             => 'required|string|max:100',
+            'unites.*.symbole'         => 'required|string|max:20',
+            'unites.*.facteur'         => 'required|numeric|min:0.01',
+            'unites.*.prix_achat'      => 'required|numeric|min:0',
+            'unites.*.prix_vente'      => 'required|numeric|min:0',
         ]);
 
-        $medicament = Medicament::create($validated);
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Médicament ajouté avec succès ✅',
-            'data'    => $medicament,
+        $medicament = Medicament::create([
+            'uuid'        => (string) \Illuminate\Support\Str::uuid(),
+            'nom'         => $request->nom,
+            'code_barre'  => $request->code_barre,
+            'description' => $request->description,
+            'stock'       => $request->stock,
+            'stock_min'   => $request->stock_min,
+            'famille_id'  => $request->famille_id,
         ]);
+
+        $defaultIdx = (int) $request->input('default_unit_idx', 0);
+        $unitesData = array_values($request->input('unites', []));
+
+        foreach ($unitesData as $i => $u) {
+            $medicament->unites()->create([
+                'nom'        => $u['nom'],
+                'symbole'    => $u['symbole'],
+                'facteur'    => $u['facteur'],
+                'prix_achat' => $this->parsePrice($u['prix_achat']),
+                'prix_vente' => $this->parsePrice($u['prix_vente']),
+                'is_default' => ($i === $defaultIdx),
+            ]);
+        }
+
+        return redirect()->route('medicaments.index')
+            ->with('success', 'Médicament ajouté avec succès ✅');
     }
 
     public function edit($id)
@@ -149,23 +196,63 @@ class MedicamentController extends Controller
 
         $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
 
-        $validated = $request->validate([
-            'nom'         => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'stock'       => 'required|integer|min:0',
-            'stock_min'   => 'required|integer|min:0',
-            'prix_achat'  => 'required|numeric|min:0',
-            'prix_vente'  => 'required|numeric|min:0',
-            'unite_id'    => 'required|exists:unites,id',
-            'famille_id'  => 'required|exists:familles,id',
+        $request->validate([
+            'nom'                      => 'required|string|max:255',
+            'description'              => 'nullable|string',
+            'stock'                    => 'required|integer|min:0',
+            'stock_min'                => 'required|integer|min:0',
+            'famille_id'               => 'required|exists:familles,id',
+            'unites'                   => 'required|array|min:1',
+            'unites.*.nom'             => 'required|string|max:100',
+            'unites.*.symbole'         => 'required|string|max:20',
+            'unites.*.facteur'         => 'required|numeric|min:0.01',
+            'unites.*.prix_achat'      => 'required|numeric|min:0',
+            'unites.*.prix_vente'      => 'required|numeric|min:0',
         ]);
 
-        $medicament->update($validated);
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Médicament mis à jour avec succès ✏️',
+        $medicament->update([
+            'nom'         => $request->nom,
+            'code_barre'  => $request->code_barre,
+            'description' => $request->description,
+            'stock'       => $request->stock,
+            'stock_min'   => $request->stock_min,
+            'famille_id'  => $request->famille_id,
         ]);
+
+        $defaultIdx      = (int) $request->input('default_unit_idx', 0);
+        $unitesData      = array_values($request->input('unites', []));
+        $existingIds     = $medicament->unites()->pluck('id')->toArray();
+        $submittedIds    = [];
+
+        foreach ($unitesData as $i => $u) {
+            $unitId = isset($u['id']) && $u['id'] ? (int) $u['id'] : null;
+
+            $data = [
+                'nom'        => $u['nom'],
+                'symbole'    => $u['symbole'],
+                'facteur'    => $u['facteur'],
+                'prix_achat' => $this->parsePrice($u['prix_achat']),
+                'prix_vente' => $this->parsePrice($u['prix_vente']),
+                'is_default' => ($i === $defaultIdx),
+            ];
+
+            if ($unitId && in_array($unitId, $existingIds)) {
+                Unite::where('id', $unitId)->update($data);
+                $submittedIds[] = $unitId;
+            } else {
+                $newUnite = $medicament->unites()->create($data);
+                $submittedIds[] = $newUnite->id;
+            }
+        }
+
+        // Supprimer les unités retirées
+        $toDelete = array_diff($existingIds, $submittedIds);
+        if ($toDelete) {
+            Unite::whereIn('id', $toDelete)->delete();
+        }
+
+        return redirect()->route('medicaments.index')
+            ->with('success', 'Médicament mis à jour avec succès ✏️');
     }
 
     public function destroy($id)
@@ -179,5 +266,38 @@ class MedicamentController extends Controller
             'success' => true,
             'message' => 'Médicament supprimé avec succès 🗑️',
         ]);
+    }
+
+    /**
+     * Parse un prix formaté (ex: "20 000" ou "20,000") en float.
+     */
+    private function parsePrice($val): float
+    {
+        if (!$val && $val !== '0') return 0;
+        $str = str_replace([' ', "\xc2\xa0"], '', (string) $val); // retire les espaces et NBSP
+        $str = str_replace(',', '.', $str);
+        return (float) $str ?: 0;
+    }
+
+    public function search(Request $request)
+    {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403);
+
+        $query = $request->get('q', '');
+        $medicaments = Medicament::with('unite')
+            ->where('nom', 'like', "%{$query}%")
+            ->orWhere('code_barre', 'like', "%{$query}%")
+            ->limit(20)
+            ->get();
+
+        return response()->json($medicaments);
+    }
+
+    public function getUnitesApi($id)
+    {
+        abort_unless(Auth::user()->can('stock.medicaments'), 403);
+
+        $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
+        return response()->json($medicament->unites);
     }
 }
