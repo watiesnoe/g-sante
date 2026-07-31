@@ -31,6 +31,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AssuranceController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\MigrationReportController;
+use App\Http\Controllers\EmploiDuTempsController;
 use App\Http\Controllers\ExportImportController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,6 +84,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/rendezvous/data', [RendezvousController::class, 'getData'])->name('rendezvous.data');
     Route::get('/rendezvous/disponible', [RendezvousController::class, 'disponible'])->name('rendezvous.disponible');
+
+    // Emploi du temps des médecins
+    Route::get('/emploi-du-temps', [EmploiDuTempsController::class, 'index'])->name('emploi-du-temps.index');
+    Route::post('/emploi-du-temps', [EmploiDuTempsController::class, 'store'])->name('emploi-du-temps.store');
+    Route::delete('/emploi-du-temps/{emploiDuTemp}', [EmploiDuTempsController::class, 'destroy'])->name('emploi-du-temps.destroy');
+    Route::get('/emploi-du-temps/disponibles', [EmploiDuTempsController::class, 'disponiblesParJour'])->name('emploi-du-temps.disponibles');
+    Route::get('/emploi-du-temps/medecin-creneaux', [EmploiDuTempsController::class, 'getMedecinCreneaux'])->name('emploi-du-temps.creneaux');
     Route::get('/rendezvous/annuler', [RendezvousController::class, 'annuler'])->name('rendezvous.annuler');
     Route::get('/rendezvous', [RendezvousController::class, 'index'])->name('rendezvous.index');
     Route::get('/rendezvous/patient/{patient}', [RendezvousController::class, 'create'])->name('rendezvous.maternite');

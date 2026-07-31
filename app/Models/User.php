@@ -164,6 +164,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relation : emploi du temps du médecin
+     */
+    public function emploiDuTemps()
+    {
+        return $this->hasMany(EmploiDuTemps::class, 'medecin_id');
+    }
+
+    /**
      * Get the user's photo URL
      */
     public function getPhotoUrlAttribute()
