@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('maladie_symptome', function (Blueprint $table) {
-            $table->dropColumn('uuid');
-        });
+        if (Schema::hasColumn('maladie_symptome', 'uuid')) {
+            Schema::table('maladie_symptome', function (Blueprint $table) {
+                $table->dropColumn('uuid');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('maladie_symptome', function (Blueprint $table) {
-            $table->uuid('uuid')->nullable()->unique();
-        });
+        if (!Schema::hasColumn('maladie_symptome', 'uuid')) {
+            Schema::table('maladie_symptome', function (Blueprint $table) {
+                $table->uuid('uuid')->nullable()->unique();
+            });
+        }
     }
 };

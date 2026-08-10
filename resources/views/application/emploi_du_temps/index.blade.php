@@ -407,11 +407,18 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Type de service</label>
-                        <input type="text" name="service" id="service" class="form-control" placeholder="Ex: Consultation, Garde, Urgence…">
+                        <select name="service" id="service" class="form-select" onchange="onServiceChange(this.value)">
+                            <option value="">-- Sélectionner un service --</option>
+                            @foreach ($servicesList as $s)
+                                <option value="{{ $s->nom }}">{{ $s->nom }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Lieu / Salle</label>
-                        <input type="text" name="lieu" id="lieu" class="form-control" placeholder="Ex: Cabinet 3, Salle A…">
+                        <select name="lieu" id="lieu" class="form-select">
+                            <option value="">-- Sélectionner d'abord un service --</option>
+                        </select>
                     </div>
                     <div class="mb-2">
                         <label class="form-label fw-semibold">Notes</label>
@@ -433,19 +440,65 @@
 
 @section('scripts')
 <script>
-/* ── Données JSON pour les créneaux (pour edition) ── */
-const allCreneaux = @json(
-    \App\Models\EmploiDuTemps::with('medecin')->get()->map(fn($c) => [
-        'id'           => $c->id,
-        'medecin_id'   => $c->medecin_id,
-        'jour_semaine' => $c->jour_semaine,
-        'heure_debut'  => substr($c->heure_debut, 0, 5),
-        'heure_fin'    => substr($c->heure_fin, 0, 5),
-        'service'      => $c->service,
-        'lieu'         => $c->lieu,
-        'notes'        => $c->notes,
-    ])
-);
+/* ── Données JSON ── */
+const allCreneaux  = @json($allCreneaux);
+const servicesList = @json($servicesList);
+const allSalles    = @json($allSalles);
+
+/* ════════════════════════════════════════
+   Mise à jour dynamique des salles selon le service
+════════════════════════════════════════ */
+function onServiceChange(serviceNom, currentLieuNom = '') {
+    const lieuSelect = document.getElementById('lieu');
+    if (!lieuSelect) return;
+
+    lieuSelect.innerHTML = '';
+
+    if (!serviceNom) {
+        lieuSelect.innerHTML = '<option value="">-- Sélectionner d\'abord un service --</option>';
+        return;
+    }
+
+    const selectedService = servicesList.find(s => s.nom === serviceNom);
+    let salles = [];
+
+    if (selectedService && selectedService.salles && selectedService.salles.length > 0) {
+        salles = selectedService.salles;
+    } else if (selectedService) {
+        salles = allSalles.filter(sal => sal.service_medical_id == selectedService.id);
+    }
+
+    lieuSelect.innerHTML = '<option value="">-- Sélectionner une salle --</option>';
+
+    if (salles.length > 0) {
+        salles.forEach(sal => {
+            const opt = document.createElement('option');
+            opt.value = sal.nom;
+            opt.textContent = sal.nom + (sal.type ? ' (' + sal.type + ')' : '');
+            lieuSelect.appendChild(opt);
+        });
+    } else {
+        // Fallback: toutes les salles si aucune salle spécifique liée
+        allSalles.forEach(sal => {
+            const opt = document.createElement('option');
+            opt.value = sal.nom;
+            opt.textContent = sal.nom + (sal.type ? ' (' + sal.type + ')' : '');
+            lieuSelect.appendChild(opt);
+        });
+    }
+
+    // Préserver la valeur sélectionnée si elle existe
+    if (currentLieuNom) {
+        let exists = Array.from(lieuSelect.options).some(o => o.value === currentLieuNom);
+        if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = currentLieuNom;
+            opt.textContent = currentLieuNom;
+            lieuSelect.appendChild(opt);
+        }
+        lieuSelect.value = currentLieuNom;
+    }
+}
 
 /* ════════════════════════════════════════
    Gestion des vues (par jour / par médecin)
@@ -468,11 +521,8 @@ function setView(view) {
    Basculer entre les jours
 ════════════════════════════════════════ */
 function switchDay(jour) {
-    // Masquer tous les panels
     document.querySelectorAll('.day-panel').forEach(el => el.style.display = 'none');
-    // Désactiver tous les onglets
     document.querySelectorAll('.day-tab').forEach(el => el.classList.remove('active'));
-    // Afficher le bon panel et activer l'onglet
     document.getElementById('jour-' + jour).style.display = 'block';
     document.querySelector('.day-tab[data-jour="' + jour + '"]').classList.add('active');
 }
@@ -484,6 +534,7 @@ function openModal() {
     document.getElementById('edtForm').reset();
     document.getElementById('creneau_id').value = '';
     document.querySelector('#edtModalLabel').innerHTML = '<i class="fa fa-calendar-plus me-2"></i>Ajouter un créneau';
+    onServiceChange('');
     new bootstrap.Modal(document.getElementById('edtModal')).show();
 }
 
@@ -499,7 +550,7 @@ function editCreneau(id) {
     document.getElementById('heure_debut').value   = c.heure_debut;
     document.getElementById('heure_fin').value     = c.heure_fin;
     document.getElementById('service').value       = c.service || '';
-    document.getElementById('lieu').value          = c.lieu || '';
+    onServiceChange(c.service || '', c.lieu || '');
     document.getElementById('notes').value         = c.notes || '';
     document.querySelector('#edtModalLabel').innerHTML = '<i class="fa fa-pencil-alt me-2"></i>Modifier le créneau';
     new bootstrap.Modal(document.getElementById('edtModal')).show();

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\EmploiDuTemps;
 use App\Models\User;
+use App\Models\ServiceMedical;
+use App\Models\Salle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,7 +36,25 @@ class EmploiDuTempsController extends Controller
         // Jour courant de la semaine (1 = Lundi)
         $jourCourant = Carbon::now()->dayOfWeekIso; // 1-7
 
-        return view('application.emploi_du_temps.index', compact('medecins', 'jours', 'parJour', 'jourCourant'));
+        $allCreneaux = EmploiDuTemps::with('medecin')->get()->map(function ($c) {
+            return [
+                'id'           => $c->id,
+                'medecin_id'   => $c->medecin_id,
+                'jour_semaine' => $c->jour_semaine,
+                'heure_debut'  => substr($c->heure_debut, 0, 5),
+                'heure_fin'    => substr($c->heure_fin, 0, 5),
+                'service'      => $c->service,
+                'lieu'         => $c->lieu,
+                'notes'        => $c->notes,
+            ];
+        });
+
+        $servicesList = ServiceMedical::with('salles')->orderBy('nom')->get();
+        $allSalles = Salle::orderBy('nom')->get();
+
+        return view('application.emploi_du_temps.index', compact(
+            'medecins', 'jours', 'parJour', 'jourCourant', 'allCreneaux', 'servicesList', 'allSalles'
+        ));
     }
 
     /**

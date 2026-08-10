@@ -262,6 +262,9 @@ class ExportImportController extends Controller
                         $record->update($data);
                         $updated++;
                     } else {
+                        if (empty($data['uuid']) && in_array('uuid', $fillable)) {
+                            $data['uuid'] = (string) Str::uuid();
+                        }
                         $record = $modelClass::create($data);
                         $created++;
                     }

@@ -18,9 +18,9 @@ class ServiceMedical extends Model
     {
         return $this->belongsToMany(User::class, 'service_user');
     }
-    public function salle()
+    public function salles()
     {
-        return $this->belongsToMany(Salle::class, 'salles');
+        return $this->hasMany(Salle::class, 'service_medical_id');
     }
 
     public function prestations()
