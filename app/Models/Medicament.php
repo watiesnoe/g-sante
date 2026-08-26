@@ -68,9 +68,15 @@ class Medicament extends Model
 
     public function protocoles()
     {
-        return $this->belongsToMany(ProtocoleTraitement::class, 'protocole_medicament')
-                    ->withPivot(['posologie', 'voie', 'duree', 'frequence', 'unite_id'])
-                    ->withTimestamps();
+        return $this->belongsToMany(
+            ProtocoleTraitement::class,
+            'protocole_medicament',
+            'medicament_id',
+            'protocole_id'
+        )
+        ->using(ProtocoleMedicament::class)
+        ->withPivot(['type', 'posologie', 'duree'])
+        ->withTimestamps();
     }
 
     /**

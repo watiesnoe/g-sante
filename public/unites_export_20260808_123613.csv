@@ -1,0 +1,1111 @@
+﻿nom,symbole,facteur,prix_achat,prix_vente,medicament_id,is_default
+Comprimé,Cp,1,,,DAFALGAN 500 mg,1
+Comprimé,Cp,1,,,DOLIPRANE 500 mg,1
+Comprimé,Cp,1,,,DOLKO 500 mg,1
+Comprimé effervescent,Cp eff,1,,,EFFERALGANMED 500 mg,1
+Comprimé,Cp,1,,,CLARADOL 500 mg,1
+Gélule,Gél,1,,,GELUPRANE 500 mg,1
+Lyoc,Lyoc,1,,,PARALYOC 500 mg,1
+Comprimé,Cp,1,,,DAFALGAN 1 g,1
+Comprimé,Cp,1,,,DOLKO 1 g,1
+Comprimé/Gélule,Cp/Gél,1,,,DOLIPRANE 1 000 mg,1
+Comprimé effervescent,Cp eff,1,,,EFFERALGANMED 1 000 mg,1
+Comprimé effervescent,Cp eff,1,,,DOLIPRANE VITAMINE C,1
+Comprimé,Cp,1,,,CLARADOL Caféiné,1
+Comprimé,Cp,1,,,PRONTADOL,1
+Suppositoire,Suppo,1,,,DOLIPRANE 1 000 mg suppos,1
+Suppositoire,Suppo,1,,,DAFALGAN 600 mg suppos,1
+Perfusion IV,Perf,1,,,PERFALGAN 1 000 mg,1
+Poudre,Poudre,1,,,DAFALGAN Poudre,1
+Poudre,Poudre,1,,,DOUPRANE Poudre,1
+Poudre,Poudre,1,,,EFFERALGAN Poudre,1
+Comprimé,Cp,1,,,EFFERALGANMED 250 mg,1
+Lyoc,Lyoc,1,,,PARALYOC 250 mg,1
+Solution,Sol,1,,,DAFALGAN Solution buvable,1
+Suspension,Susp,1,,,DOUPRANE Suspension buvable,1
+Solution buvable,Sol buv,1,,,EFFERALGAN Pédiatrique,1
+Solution,Sol,1,,,DOLKO Solution buvable,1
+Suspension,Susp,1,,,DOLSTIC Suspension buvable,1
+Suppositoire,Suppo,1,,,EFFERALGANMED Suppositoires,1
+Suppositoire,Suppo,1,,,DOLIPRANE Suppositoires,1
+Perfusion IV,Perf,1,,,PERFALGAN ENFANTS,1
+Sachet,Sach,1,,,ASPÉGIC 500 mg,1
+Sachet,Sach,1,,,ASPÉGIC 1 000 mg,1
+Comprimé effervescent,Cp eff,1,,,ASPIRINE 500 mg,1
+Comprimé effervescent,Cp eff,1,,,ASPIRINE 1 000 mg,1
+Sachet,Sach,1,,,MIGPRIV,1
+Sachet,Sach,1,,,ASPÉGIC 250 mg,1
+Sachet,Sach,1,,,ASPÉGIC 100 mg,1
+Injectable,Inj,1,,,ASPÉGIC Injectable,1
+Ampoule,Amp,1,,,ACUPAN,1
+Comprimé,Cp,1,,,DICODIN LP 60 mg,1
+Comprimé,Cp,1,,,PADERYL,1
+Comprimé,Cp,1,,,CODOLIPRANE,1
+Comprimé,Cp,1,,,DAFALGAN-CODÉINE,1
+Comprimé effervescent,Cp eff,1,,,PARACÉTAMOL-CODÉINE,1
+Comprimé,Cp,1,,,KLIPAL-CODÉINE,1
+Comprimé,Cp,1,,,LINDILANE,1
+Comprimé,Cp,1,,,CLARADOL-CODÉINE,1
+Comprimé,Cp,1,,,PRONTALGINE,1
+Comprimé,Cp,1,,,ANTARÈNE-CODÉINE,1
+Gélule,Gél,1,,,CONTRAMAL,1
+Comprimé,Cp,1,,,TOPALGIC,1
+Comprimé orodispersible,Cp orodisp,1,,,OROZAMUDOL,1
+Comprimé effervescent,Cp eff,1,,,BIODALGIC,1
+Comprimé effervescent,Cp eff,1,,,ZUMALGIC,1
+Comprimé effervescent,Cp eff,1,,,TAKADOL,1
+Gélule/Comprimé,Gél/Cp,1,,,CONTRAMAL LP,1
+Gélule,Gél,1,,,MONOCRIXO LP,1
+Comprimé,Cp,1,,,MONOALGIC LP,1
+Solution buvable,Sol buv,1,,,CONTRAMAL Buvable,1
+Ampoule,Amp,1,,,CONTRAMAL Injectable,1
+Comprimé,Cp,1,,,IXPRIM,1
+Comprimé,Cp,1,,,ZALDIAR,1
+Comprimé,Cp,1,,,SKUDEXUM,1
+Gélule,Gél,1,,,LAMALINE Gélule,1
+Suppositoire,Suppo,1,,,LAMALINE Suppositoire,1
+Gélule,Gél,1,,,IZALGI,1
+Ampoule,Amp,1,,,MORPHINE INJECTABLE,1
+Gélule,Gél,1,,,ACTISKENAN,1
+Solution buvable,Sol buv,1,,,ORAMORPH,1
+Comprimé,Cp,1,,,SEVREDOL,1
+Comprimé/Gélule,Cp/Gél,1,,,MOSCONTIN LP,1
+Gélule,Gél,1,,,SKENAN LP,1
+Gélule,Gél,1,,,ZORYON,1
+Gélule,Gél,1,,,SOPHIDONE LP,1
+Comprimé,Cp,1,,,PALEXIA,1
+Gélule/Comprimé,Gél/Cp,1,,,OXYNORM,1
+Comprimé orodispersible,Cp orodisp,1,,,OXYNORMORO,1
+Comprimé,Cp,1,,,OXYCONTIN LP,1
+Comprimé,Cp,1,,,OXSYNIA,1
+Ampoule,Amp,1,,,OXYNORM Injectable,1
+Patch,Patch,1,,,DUROGÉSIC,1
+Patch,Patch,1,,,MATRIFEN,1
+Dispositif iontophorétique,Disp ionto,1,,,IONSYS,1
+Comprimé transmuqueux,Cp transm,1,,,ACTIQ,1
+Film orodispersible,Film,1,,,BREAKYL,1
+Comprimé sublingual,Cp subl,1,,,ABSTRAL,1
+Comprimé gingival,Cp ging,1,,,EFFENTORA,1
+Comprimé sublingual,Cp subl,1,,,RECIVIT,1
+Solution nasale,Sol nas,1,,,INSTANYL,1
+Solution nasale,Sol nas,1,,,PECFENT,1
+Ampoule,Amp,1,,,FENTANYL injectable,1
+Comprimé sublingual,Cp subl,1,,,TEMGÉSIC Sublingual,1
+Ampoule,Amp,1,,,TEMGÉSIC Injectable,1
+Ampoule,Amp,1,,,NALBUPHINE,1
+Comprimé sublingual,Cp subl,1,,,ZALVISO,1
+Flacon,Fl,1,,,PRIALT,1
+Bouteille,Bout,1,,,ACTYNOX,1
+Bouteille,Bout,1,,,ANTASOL,1
+Bouteille,Bout,1,,,ENTONOX,1
+Bouteille,Bout,1,,,KALINOX,1
+Bouteille,Bout,1,,,OXYNOX,1
+Flacon,Fl,1,,,PENTHROX,1
+Comprimé/Gélule,Cp/Gél,1,,,DEBRIDAT,1
+Comprimé,Cp,1,,,DICETEL,1
+Gélule/Comprimé,Gél/Cp,1,,,DUSPATALIN,1
+Comprimé,Cp,1,,,SPASFON,1
+Comprimé orodispersible,Cp orodisp,1,,,SPASMOCALM,1
+Ampoule,Amp,1,,,PAPAVÉRINE,1
+Gélule,Gél,1,,,COLPERMIN,1
+Comprimé,Cp,1,,,LIBRAX,1
+Ampoule,Amp,1,,,SCOBUREN,1
+Ampoule,Amp,1,,,SCOPOLAMINE,1
+Patch,Patch,1,,,SCOPODERM TTS,1
+Comprimé/Gélule,Cp/Gél,1,,,ADVIL 200,1
+Comprimé/Gélule,Cp/Gél,1,,,ANTARÈNE 200,1
+Comprimé,Cp,1,,,NUROFEN 200,1
+Comprimé,Cp,1,,,SPIFEN 200,1
+Gélule,Gél,1,,,ADVILMED 400,1
+Comprimé,Cp,1,,,ANTARÈNE 400,1
+Comprimé,Cp,1,,,NUREFLEX 400,1
+Comprimé,Cp,1,,,SPIFEN 400,1
+Comprimé,Cp,1,,,ADVILMED 100 mg,1
+Suspension buvable,Susp buv,1,,,ADVILMED 20 mg/ml,1
+Comprimé,Cp,1,,,IPRAFÉINE,1
+Comprimé,Cp,1,,,TOPREC,1
+Sirop,Sir,1,,,TOPREC Sirop,1
+Comprimé,Cp,1,,,PROFEMIGR,1
+Pastille,Pastille,1,,,STREFEN,1
+Gélule,Gél,1,,,PONSTYL,1
+Comprimé,Cp,1,,,NALGESIC,1
+Comprimé,Cp,1,,,VOLTARÈNE,1
+Comprimé,Cp,1,,,VOLTARÈNE LP,1
+Suppositoire,Suppo,1,,,VOLTARÈNE 100 mg Suppos,1
+Comprimé,Cp,1,,,FLECTOR,1
+Comprimé,Cp,1,,,CARTREX,1
+Comprimé,Cp,1,,,CÉBUTID,1
+Comprimé,Cp,1,,,ANTADYS,1
+Comprimé,Cp,1,,,BRUFEN 400,1
+Perfusion IV,Perf,1,,,IBUPROFENE Injectable,1
+Ampoule,Amp,1,,,PEDEA,1
+Comprimé,Cp,1,,,NABUCOX,1
+Gélule,Gél,1,,,PROFÉNID,1
+Comprimé,Cp,1,,,KETUM,1
+Comprimé,Cp,1,,,BI-PROFÉNID LP,1
+Comprimé/Gélule,Cp/Gél,1,,,PROFÉNID LP,1
+Ampoule,Amp,1,,,PROFÉNID IM,1
+Flacon,Fl,1,,,PROFÉNID Perfusion,1
+Comprimé,Cp,1,,,KETESSE,1
+Sachet,Sach,1,,,ENANTYUM,1
+Ampoule,Amp,1,,,KETESSE Injectable,1
+Comprimé,Cp,1,,,APRANAX,1
+Comprimé,Cp,1,,,ANTALNOX,1
+Comprimé,Cp,1,,,NAPROSYNE,1
+Comprimé,Cp,1,,,LODINE,1
+Comprimé,Cp,1,,,SURGAM,1
+Gélule,Gél,1,,,NIFLURIL,1
+Suppositoire,Suppo,1,,,NIFLURIL Adulte suppos,1
+Suppositoire,Suppo,1,,,NIFLURIL Enfant suppos,1
+Gélule,Gél,1,,,CELEBREX,1
+Comprimé,Cp,1,,,ARCOXIA,1
+Flacon,Fl,1,,,DYNASTAT,1
+Comprimé,Cp,1,,,MOBIC,1
+Ampoule,Amp,1,,,MOBIC Injectable,1
+Gélule,Gél,1,,,FELDENE,1
+Suppositoire,Suppo,1,,,FELDENE Suppos,1
+Ampoule,Amp,1,,,FELDENE Injectable,1
+Comprimé,Cp,1,,,BREXIN,1
+Comprimé,Cp,1,,,CYCLADOL,1
+Comprimé,Cp,1,,,TILCOTIL,1
+Gélule,Gél,1,,,INDOCID,1
+Suppositoire,Suppo,1,,,INDOCID Suppositoires,1
+Gélule,Gél,1,,,CHRONO-INDOCID,1
+Comprimé,Cp,1,,,ARTHROCINE,1
+Gel,Gel,1,,,VOLTARÈNE EMUGEL,1
+Gel,Gel,1,,,FLECTOR GEL,1
+Emplâtre,Emplâtre,1,,,VOLTARENPLAST,1
+Gel,Gel,1,,,KETUM Gel,1
+Gel,Gel,1,,,ADVILMED Gel,1
+Gel,Gel,1,,,ANTARÈNE Gel,1
+Gel,Gel,1,,,IBUFETUM Gel,1
+Gel,Gel,1,,,CLIPTOL,1
+Emplâtre,Emplâtre,1,,,NUROFENPLAST,1
+Gel,Gel,1,,,GELDENE,1
+Gel,Gel,1,,,NIFLUGEL,1
+Crème,Crème,1,,,ALGÉSAL SURACTIVÉ,1
+Crème,Crème,1,,,BAUMEAROMA,1
+Crème,Crème,1,,,CORTISAL,1
+Gel,Gel,1,,,REPARIL,1
+Flacon,Fl,1,,,XYLOCAÏNE,1
+Flacon,Fl,1,,,XYLOCAÏNE-ADRÉNALINE,1
+Ampoule,Amp,1,,,LIDOCAÏNE-ADRÉNALINE,1
+Ampoule,Amp,1,,,CARBOCAÏNE,1
+Ampoule,Amp,1,,,NAROPEINE,1
+Cartouche,Cart,1,,,DELTAZINE,1
+Cartouche,Cart,1,,,SEPTANEST-ADRÉNALINÉE,1
+Flacon,Fl,1,,,XYLOCAINE à 5%,1
+Flacon,Fl,1,,,XYLOCAÏNE à 5% EN NÉBULISEUR,1
+Tube,Tube,1,,,XYLOCAÏNE VISQUEUSE,1
+Crème,Crème,1,,,DYNEXAN 2%,1
+Crème,Crème,1,,,EMLA 5%,1
+Crème,Crème,1,,,ANESDERM 5%,1
+Pansement,Pans,1,,,EMLAPATCH,1
+Emplâtre,Emplâtre,1,,,VERSATIS,1
+Patch,Patch,1,,,QUTENZA,1
+Flacon,Fl,1,,,PÉNICILLINE G,1
+Comprimé,Cp,1,,,ORACILLINE,1
+Flacon,Fl,1,,,EXTENCILLINE,1
+Gélule,Gél,1,,,ORBÉNINE,1
+Flacon,Fl,1,,,ISTOPEN,1
+Gélule,Gél,1,,,AMODEX,1
+Comprimé,Cp,1,,,CLAMOXYL,1
+Comprimé,Cp,1,,,AUGMENTIN,1
+Flacon,Fl,1,,,AUGMENTIN injectable,1
+Flacon,Fl,1,,,UNACIM,1
+Flacon,Fl,1,,,TICARPEN,1
+Flacon,Fl,1,,,NEGABAN,1
+Flacon,Fl,1,,,TIMENTIN,1
+Flacon,Fl,1,,,TAZOCILLINE,1
+Gélule/Comprimé,Gél/Cp,1,,,CÉFADROXIL,1
+Comprimé,Cp,1,,,KEFORAL,1
+Gélule,Gél,1,,,ALFATIL,1
+Flacon,Fl,1,,,CÉFAZOLINE,1
+Comprimé,Cp,1,,,ZINNAT,1
+Flacon,Fl,1,,,CEFAMANDOLE,1
+Flacon,Fl,1,,,CEFOXITINE,1
+Flacon,Fl,1,,,CEFOTAXIME,1
+Flacon,Fl,1,,,ROCEPHINE,1
+Flacon,Fl,1,,,TRIACEFAN,1
+Flacon,Fl,1,,,ZERBAXA,1
+Flacon,Fl,1,,,FORTUM,1
+Flacon,Fl,1,,,ZAVICEFTA,1
+Comprimé,Cp,1,,,OROKEN,1
+Comprimé,Cp,1,,,ORELOX,1
+Flacon,Fl,1,,,AXEPIM,1
+Flacon,Fl,1,,,MABELIO,1
+Flacon,Fl,1,,,ZINFORO,1
+Flacon,Fl,1,,,INVANZ,1
+Flacon,Fl,1,,,TIENAM,1
+Flacon,Fl,1,,,RECARBRIO,1
+Flacon,Fl,1,,,MERONEM,1
+Flacon,Fl,1,,,VABOREM,1
+Flacon,Fl,1,,,AZACTAM,1
+Flacon,Fl,1,,,CAYSTON,1
+Ampoule,Amp,1,,,GENTAMICINE,1
+Flacon,Fl,1,,,NEBCINE,1
+Flacon,Fl,1,,,AMIKACINE,1
+Ampoule,Amp,1,,,TOBI,1
+Poudre,Poudre,1,,,TOBI PODHALER,1
+Comprimé,Cp,1,,,ERY,1
+Gélule,Gél,1,,,EGERY,1
+Flacon,Fl,1,,,ÉRYTHROMYCINE injectable,1
+Comprimé,Cp,1,,,RULID,1
+Comprimé,Cp,1,,,ZECLAR,1
+Flacon,Fl,1,,,ZECLAR IV,1
+Comprimé/Gélule,Cp/Gél,1,,,ZITHROMAX,1
+Comprimé,Cp,1,,,AZADOSE,1
+Comprimé orodispersible,Cp orodisp,1,,,ORDIPHA,1
+Comprimé,Cp,1,,,ROVAMYCINE,1
+Flacon,Fl,1,,,ROVAMYCINE IV,1
+Comprimé,Cp,1,,,JOSACINE,1
+Comprimé,Cp,1,,,PYOSTACINE,1
+Comprimé,Cp,1,,,FUCIDINE,1
+Suspension,Susp,1,,,FUCIDINE Enfant,1
+Suspension,Susp,1,,,FUCIDINE Nourrisson,1
+Flacon,Fl,1,,,FUSIDATE DE SODIUM,1
+Gélule,Gél,1,,,DALACINE,1
+Ampoule,Amp,1,,,DALACINE Injectable,1
+Flacon,Fl,1,,,FOSFOCINE,1
+Flacon,Fl,1,,,VANCOMYCINE,1
+Flacon,Fl,1,,,TARGOCID,1
+Flacon,Fl,1,,,XYDALBA,1
+Comprimé,Cp,1,,,ZYVOXID,1
+Comprimé,Cp,1,,,SIVEXTRO,1
+Flacon,Fl,1,,,CUBICIN,1
+Flacon,Fl,1,,,TYGACIL,1
+Comprimé,Cp,1,,,DIFICLIR,1
+Flacon,Fl,1,,,ZINPLAVA,1
+Comprimé,Cp,1,,,DOXY,1
+Comprimé,Cp,1,,,DOXYLIS,1
+Comprimé,Cp,1,,,GRANUDOXY,1
+Comprimé,Cp,1,,,SPANOR,1
+Comprimé,Cp,1,,,TOLEXINE,1
+Comprimé,Cp,1,,,DOXYPALU,1
+Gélule,Gél,1,,,MYNOCINE,1
+Comprimé,Cp,1,,,TETRALYSAL,1
+Ampoule,Amp,1,,,VIBRAVEINEUSE,1
+Comprimé,Cp,1,,,THIOPHÉNICOL,1
+Flacon,Fl,1,,,THIOPHÉNICOL Injectable,1
+Flacon,Fl,1,,,COLIMYCINE,1
+Gélule,Gél,1,,,COLOBREATHE,1
+Flacon,Fl,1,,,TADIM,1
+Comprimé,Cp,1,,,CIFLOX,1
+Comprimé,Cp,1,,,UNIFLOX,1
+Flacon,Fl,1,,,CIFLOX injectable,1
+Comprimé,Cp,1,,,TAVANIC,1
+Flacon,Fl,1,,,TAVANIC perfusion,1
+Comprimé,Cp,1,,,OFLOCET,1
+Comprimé,Cp,1,,,MONOFLOCET,1
+Comprimé,Cp,1,,,DECALOGIFLOX,1
+Comprimé,Cp,1,,,LOGIFLOX,1
+Comprimé,Cp,1,,,IZILOX,1
+Comprimé,Cp,1,,,NORFLOXACINE,1
+Comprimé,Cp,1,,,FLAGYL,1
+Flacon,Fl,1,,,"FLAGYL 0,5% Injectable",1
+Comprimé,Cp,1,,,TIBÉRAL,1
+Comprimé,Cp,1,,,BIRODOGYL,1
+Comprimé,Cp,1,,,RODOGYL,1
+Comprimé,Cp,1,,,BACTRIM FORTE,1
+Comprimé,Cp,1,,,BACTRIM,1
+Ampoule,Amp,1,,,BACTRIM PERFUSION,1
+Comprimé,Cp,1,,,DELPRIM,1
+Sachet,Sach,1,,,MONURIL,1
+Sachet,Sach,1,,,FOSFOPHARM,1
+Sachet,Sach,1,,,URIDOZ,1
+Comprimé,Cp,1,,,SELEXID,1
+Gélule,Gél,1,,,FURADANTINE,1
+Comprimé,Cp,1,,,PIRILENE,1
+Comprimé,Cp,1,,,RIMIFON,1
+Comprimé,Cp,1,,,RIFINAH,1
+Comprimé,Cp,1,,,RIFATER,1
+Gélule,Gél,1,,,RIFADINE,1
+Suspension,Susp,1,,,RIMACTAN,1
+Gélule,Gél,1,,,ANSATIPINE,1
+Comprimé,Cp,1,,,MYAMBUTOL,1
+Comprimé,Cp,1,,,DEXAMBUTOL,1
+Sachet,Sach,1,,,GRANUPAS,1
+Comprimé,Cp,1,,,SIRTURO,1
+Comprimé,Cp,1,,,DELTYBA,1
+Comprimé,Cp,1,,,DISULONE,1
+Flacon,Fl,1,,,HANSOLAR,1
+Gélule,Gél,1,,,LAMPRÈNE,1
+Suspension,Susp,1,,,FUNGIZONE Orale,1
+Suspension,Susp,1,,,MYCOSTATINE,1
+Flacon,Fl,1,,,FUNGIZONE Injectable,1
+Flacon,Fl,1,,,ABELCET,1
+Flacon,Fl,1,,,AMBISOME,1
+Comprimé,Cp,1,,,ANCOTIL,1
+Flacon,Fl,1,,,ANCOTIL Injectable,1
+Flacon,Fl,1,,,CASPOFUNGINE,1
+Flacon,Fl,1,,,MYCAMINE,1
+Flacon,Fl,1,,,ECALTA,1
+Gélule,Gél,1,,,TRIFLUCAN,1
+Gélule,Gél,1,,,BEAGYNE,1
+Gélule,Gél,1,,,OROFLUCO,1
+Gélule,Gél,1,,,SPORANOX,1
+Comprimé,Cp,1,,,VFEND,1
+Comprimé,Cp,1,,,NOXAFIL,1
+Gélule,Gél,1,,,CRESEMBA,1
+Gel,Gel,1,,,DAKTARIN Gel,1
+Comprimé gingival,Cp ging,1,,,LORAMYC,1
+Flacon,Fl,1,,,FUZEON,1
+Comprimé,Cp,1,,,CELSENTRI,1
+Flacon,Fl,1,,,TROGARZO,1
+Gélule,Gél,1,,,RETROVIR,1
+Flacon,Fl,1,,,RETROVIR IV,1
+Comprimé,Cp,1,,,EPIVIR,1
+Comprimé,Cp,1,,,COMBIVIR,1
+Gélule,Gél,1,,,EMTRIVA,1
+Comprimé,Cp,1,,,ZIAGEN,1
+Comprimé,Cp,1,,,KIVEXA,1
+Comprimé,Cp,1,,,TRIZIVIR,1
+Comprimé,Cp,1,,,TRIUMEQ,1
+Comprimé,Cp,1,,,VIREAD,1
+Comprimé,Cp,1,,,TRUVADA,1
+Comprimé,Cp,1,,,ATRIPLA,1
+Comprimé,Cp,1,,,EVIPLERA,1
+Comprimé,Cp,1,,,DESCOVY,1
+Comprimé,Cp,1,,,ODEFSEY,1
+Comprimé,Cp,1,,,BIKTARVY,1
+Comprimé,Cp,1,,,GENVOYA,1
+Gélule,Gél,1,,,SUSTIVA,1
+Comprimé,Cp,1,,,EDURANT,1
+Comprimé,Cp,1,,,INTELENCE,1
+Comprimé,Cp,1,,,VIRAMUNE,1
+Comprimé,Cp,1,,,PIFELTRO,1
+Comprimé,Cp,1,,,DELSTRIGO,1
+Comprimé,Cp,1,,,PREZISTA,1
+Comprimé,Cp,1,,,NORVIR,1
+Comprimé,Cp,1,,,KALETRA,1
+Comprimé,Cp,1,,,TELZIR,1
+Gélule,Gél,1,,,REYATAZ,1
+Gélule,Gél,1,,,APTIVUS,1
+Comprimé,Cp,1,,,ISENTRESS,1
+Comprimé,Cp,1,,,STRIBILD,1
+Comprimé,Cp,1,,,TIVICAY,1
+Comprimé,Cp,1,,,DOVATO,1
+Comprimé,Cp,1,,,JULUCA,1
+Gélule,Gél,1,,,TAMIFLU,1
+Suspension,Susp,1,,,EBILFUMIN,1
+Flacon,Fl,1,,,OSELTAMIVIR,1
+Rotadisk,Rotadisk,1,,,RELENZA,1
+Flacon,Fl,1,,,DECTOVA,1
+Comprimé,Cp,1,,,ROVALCYTE,1
+Flacon,Fl,1,,,CYMEVAN,1
+Flacon,Fl,1,,,FOSCAVIR,1
+Comprimé,Cp,1,,,ZOVIRAX,1
+Comprimé,Cp,1,,,ZELITREX,1
+Comprimé,Cp,1,,,ORAVIR,1
+Comprimé,Cp,1,,,PREVYMIS,1
+Flacon,Fl,1,,,SYNAGIS,1
+Flacon,Fl,1,,,VEKLURY,1
+Gélule,Gél,1,,,CHLORAMINOPHÈNE,1
+Comprimé,Cp,1,,,ALKÉRAN,1
+Flacon,Fl,1,,,ALKÉRAN injectable,1
+Gélule,Gél,1,,,ESTRACYT,1
+Flacon,Fl,1,,,HOLOXAN,1
+Comprimé,Cp,1,,,ENDOXAN,1
+Flacon,Fl,1,,,ENDOXAN injectable,1
+Flacon,Fl,1,,,MUPHORAN,1
+Gélule,Gél,1,,,BÉLUSTINE,1
+Flacon,Fl,1,,,BICNU,1
+Implant,Impl,1,,,GLIADEL,1
+Flacon,Fl,1,,,STREPTOZOCINE,1
+Flacon,Fl,1,,,CISPLATINE,1
+Flacon,Fl,1,,,CARBOPLATINE,1
+Flacon,Fl,1,,,ELOXATINE,1
+Flacon,Fl,1,,,THIOTÉPA,1
+Flacon,Fl,1,,,TEPADINA,1
+Gélule,Gél,1,,,HEXASTAT,1
+Gélule,Gél,1,,,NATULAN,1
+Gélule,Gél,1,,,TEMODAL,1
+Flacon,Fl,1,,,DETICENE,1
+Comprimé,Cp,1,,,MYLERAN,1
+Ampoule,Amp,1,,,BUSILVEX,1
+Flacon,Fl,1,,,TRECONDI,1
+Flacon,Fl,1,,,MITOMYCINE,1
+Flacon,Fl,1,,,BENDAMUSTINE,1
+Flacon,Fl,1,,,MÉTHOTREXATE,1
+Flacon,Fl,1,,,TOMUDEX,1
+Flacon,Fl,1,,,ALIMTA,1
+Comprimé,Cp,1,,,PURINÉTHOL,1
+Suspension,Susp,1,,,XALUPRINE,1
+Comprimé,Cp,1,,,LANVIS,1
+Flacon,Fl,1,,,EVOLTRA,1
+Flacon,Fl,1,,,NIPENT,1
+Flacon,Fl,1,,,LEUSTATINE,1
+Flacon,Fl,1,,,LITAK,1
+Comprimé,Cp,1,,,FLUDARA,1
+Flacon,Fl,1,,,FLUDARA injectable,1
+Flacon,Fl,1,,,ATRIANCE,1
+Flacon,Fl,1,,,VIDAZA,1
+Flacon,Fl,1,,,FLUORO-URACILE,1
+Comprimé,Cp,1,,,LONSURF,1
+Comprimé,Cp,1,,,XELODA,1
+Flacon,Fl,1,,,ARACYTINE,1
+Flacon,Fl,1,,,VYXEOS,1
+Gélule,Gél,1,,,HYDREA,1
+Comprimé,Cp,1,,,SIKLOS,1
+Flacon,Fl,1,,,GEMZAR,1
+Flacon,Fl,1,,,CAMPTO,1
+Flacon,Fl,1,,,ONIVYDE,1
+Gélule,Gél,1,,,HYCAMTIN,1
+Flacon,Fl,1,,,HYCAMTIN injectable,1
+Flacon,Fl,1,,,FARMORUBICINE,1
+Gélule,Gél,1,,,ZAVEDOS,1
+Flacon,Fl,1,,,ZAVEDOS Injectable,1
+Flacon,Fl,1,,,ADRIBLASTINE,1
+Flacon,Fl,1,,,CAELYX,1
+Flacon,Fl,1,,,CÉRUBIDINE,1
+Flacon,Fl,1,,,NOVANTRONE,1
+Flacon,Fl,1,,,PIXUVRI,1
+Flacon,Fl,1,,,COSMEGEN,1
+Gélule,Gél,1,,,CELLTOP,1
+Flacon,Fl,1,,,ÉTOPOSIDE,1
+Flacon,Fl,1,,,ÉTOPOPHOS,1
+Flacon,Fl,1,,,BLÉOMYCINE,1
+Flacon,Fl,1,,,JAVLOR,1
+Ampoule,Amp,1,,,NAVELBINE,1
+Flacon,Fl,1,,,ELDISINE,1
+Flacon,Fl,1,,,ONCOVIN,1
+Flacon,Fl,1,,,VELBÉ,1
+Flacon,Fl,1,,,PACLITAXEL,1
+Flacon,Fl,1,,,ABRAXANE,1
+Flacon,Fl,1,,,TAXOTERE,1
+Flacon,Fl,1,,,JEVTANA,1
+Flacon,Fl,1,,,HALAVEN,1
+Gélule,Gél,1,,,VESANOID,1
+Gélule,Gél,1,,,TARGRETIN,1
+Flacon,Fl,1,,,BLINCYTO,1
+Flacon,Fl,1,,,MABTHERA,1
+Flacon,Fl,1,,,RIXATHON,1
+Flacon,Fl,1,,,TRUXIMA,1
+Flacon,Fl,1,,,GAZYVARO,1
+Flacon,Fl,1,,,BESPONSA,1
+Flacon,Fl,1,,,ADCETRIS,1
+Flacon,Fl,1,,,MYLOTARG,1
+Flacon,Fl,1,,,DARZALEX,1
+Flacon,Fl,1,,,HERCEPTIN,1
+Flacon,Fl,1,,,HERZUMA,1
+Flacon,Fl,1,,,KANJINTI,1
+Flacon,Fl,1,,,KADCYLA,1
+Flacon,Fl,1,,,PERJETA,1
+Flacon,Fl,1,,,AVASTIN,1
+Flacon,Fl,1,,,AYBINTIO,1
+Flacon,Fl,1,,,MVASI,1
+Flacon,Fl,1,,,ZYRABEV,1
+Flacon,Fl,1,,,CYRAMZA,1
+Flacon,Fl,1,,,ERBITUX,1
+Flacon,Fl,1,,,VECTIBIX,1
+Flacon,Fl,1,,,YERVOY,1
+Flacon,Fl,1,,,KEYTRUDA,1
+Flacon,Fl,1,,,OPDIVO,1
+Flacon,Fl,1,,,LIBTAYO,1
+Flacon,Fl,1,,,BAVENCIO,1
+Flacon,Fl,1,,,TECENTRIQ,1
+Flacon,Fl,1,,,IMFINZI,1
+Flacon,Fl,1,,,QARZIBA,1
+Flacon,Fl,1,,,POTELIGEO,1
+Flacon,Fl,1,,,ZEVALIN,1
+Flacon,Fl,1,,,QUADRAMET,1
+Flacon,Fl,1,,,METASTRON,1
+Flacon,Fl,1,,,XOFIGO,1
+Gélule,Gél,1,,,THALIDOMIDE,1
+Gélule,Gél,1,,,REVLIMID,1
+Gélule,Gél,1,,,IMNOVID,1
+Gélule,Gél,1,,,NINLARO,1
+Flacon,Fl,1,,,KYPROLIS,1
+Flacon,Fl,1,,,VELCADE,1
+Comprimé,Cp,1,,,GLIVEC,1
+Comprimé,Cp,1,,,SPRYCEL,1
+Gélule,Gél,1,,,TASIGNA,1
+Comprimé,Cp,1,,,BOSULIF,1
+Comprimé,Cp,1,,,ICLUSIG,1
+Gélule,Gél,1,,,RYDAPT,1
+Comprimé,Cp,1,,,IRESSA,1
+Comprimé,Cp,1,,,TARCEVA,1
+Comprimé,Cp,1,,,TAGRISSO,1
+Comprimé,Cp,1,,,GIOTRIF,1
+Comprimé,Cp,1,,,TYVERB,1
+Gélule,Gél,1,,,SUTENT,1
+Comprimé,Cp,1,,,VOTRIENT,1
+Comprimé,Cp,1,,,INLYTA,1
+Comprimé,Cp,1,,,CABOMETYX,1
+Comprimé,Cp,1,,,NEXAVAR,1
+Comprimé,Cp,1,,,STIVARGA,1
+Gélule,Gél,1,,,LENVIMA,1
+Comprimé,Cp,1,,,CAPRELSA,1
+Gélule,Gél,1,,,ZYKADIA,1
+Gélule,Gél,1,,,ALECENSA,1
+Gélule,Gél,1,,,XALKORI,1
+Comprimé,Cp,1,,,LORVIQUA,1
+Comprimé,Cp,1,,,ALUNBRIG,1
+Comprimé,Cp,1,,,JAKAVI,1
+Comprimé,Cp,1,,,ZELBORAF,1
+Gélule,Gél,1,,,BRAFTOVI,1
+Gélule,Gél,1,,,TAFINLAR,1
+Comprimé,Cp,1,,,MEKTOVI,1
+Comprimé,Cp,1,,,COTELLIC,1
+Comprimé,Cp,1,,,MEKINIST,1
+Comprimé,Cp,1,,,AFINITOR,1
+Comprimé,Cp,1,,,VOTUBIA,1
+Flacon,Fl,1,,,TORISEL,1
+Comprimé,Cp,1,,,ZYDELIG,1
+Gélule,Gél,1,,,IMBRUVICA,1
+Gélule,Gél,1,,,IBRANCE,1
+Comprimé,Cp,1,,,KISQALI,1
+Comprimé,Cp,1,,,VERZENIOS,1
+Gélule,Gél,1,,,VITRAKVI,1
+Gélule,Gél,1,,,ERIVEDGE,1
+Gélule,Gél,1,,,ODOMZO,1
+Flacon,Fl,1,,,ZALTRAP,1
+Gélule,Gél,1,,,FARYDAK,1
+Gélule,Gél,1,,,TALZENNA,1
+Comprimé,Cp,1,,,RUBRACA,1
+Comprimé,Cp,1,,,LYNPARZA,1
+Gélule,Gél,1,,,ZEJULA,1
+Comprimé,Cp,1,,,VENCLYXTO,1
+Poche,Poche,1,,,YESCARTA,1
+Poche,Poche,1,,,KYMRIAH,1
+Flacon,Fl,1,,,ONCASPAR,1
+Flacon,Fl,1,,,KIDROLASE,1
+Flacon,Fl,1,,,SPECTRILA,1
+Flacon,Fl,1,,,ERWINASE,1
+Gélule,Gél,1,,,XAGRID,1
+Flacon,Fl,1,,,TRISENOX,1
+Comprimé,Cp,1,,,LYSODREN,1
+Flacon,Fl,1,,,YONDELIS,1
+Flacon,Fl,1,,,PROLEUKIN,1
+Flacon,Fl,1,,,DÉPO-PRODASONE,1
+Comprimé,Cp,1,,,MEGACE,1
+Comprimé,Cp,1,,,NOLVADEX,1
+Comprimé,Cp,1,,,FARESTON,1
+Seringue,Ser,1,,,FASLODEX,1
+Comprimé,Cp,1,,,FEMARA,1
+Comprimé,Cp,1,,,ARIMIDEX,1
+Comprimé,Cp,1,,,AROMASINE,1
+Comprimé,Cp,1,,,ZYTIGA,1
+Comprimé,Cp,1,,,CASODEX,1
+Comprimé,Cp,1,,,ANANDRON,1
+Comprimé,Cp,1,,,ERLEADA,1
+Comprimé,Cp,1,,,ANDROCUR,1
+Seringue,Ser,1,,,FIRMAGON,1
+Ampoule,Amp,1,,,DÉCAPEPTYL,1
+Flacon,Fl,1,,,DÉCAPEPTYL LP,1
+Seringue,Ser,1,,,GONAPEPTYL LP,1
+Flacon,Fl,1,,,SALVACYL LP,1
+Flacon,Fl,1,,,ENANTONE LP,1
+Seringue,Ser,1,,,ELIGARD,1
+Seringue,Ser,1,,,LEPTOPROL,1
+Solution nasale,Sol nas,1,,,SYNAREL,1
+Implant,Impl,1,,,ZOLADEX,1
+Ampoule,Amp,1,,,UROMITEXAN,1
+Flacon,Fl,1,,,ETHYOL,1
+Flacon,Fl,1,,,CARDIOXANE,1
+Flacon,Fl,1,,,SAVENE,1
+Flacon,Fl,1,,,MOZOBIL,1
+Seringue,Ser,1,,,NEUPOGEN,1
+Seringue,Ser,1,,,NIVESTIM,1
+Seringue,Ser,1,,,RATIOGRASTIM,1
+Seringue,Ser,1,,,TEVAGRASTIM,1
+Seringue,Ser,1,,,ZARZIO,1
+Seringue,Ser,1,,,ACCOFIL,1
+Seringue,Ser,1,,,CEGFILA,1
+Seringue,Ser,1,,,FULPHILA,1
+Seringue,Ser,1,,,NEULASTA,1
+Seringue,Ser,1,,,PELGRAZ,1
+Seringue,Ser,1,,,PELMEG,1
+Seringue,Ser,1,,,ZIEXTENZO,1
+Seringue,Ser,1,,,LONQUEX,1
+Flacon,Fl,1,,,GRANOCYTE,1
+Comprimé,Cp,1,,,CORGARD,1
+Comprimé,Cp,1,,,PROPRANOLOL,1
+Gélule,Gél,1,,,PROPRANOLOL LP,1
+Comprimé,Cp,1,,,TIMACOR,1
+Comprimé,Cp,1,,,MODUCREN,1
+Comprimé,Cp,1,,,VISKEN,1
+Comprimé,Cp,1,,,KREDEX,1
+Comprimé,Cp,1,,,TRANDATE,1
+Comprimé,Cp,1,,,SOTALEX,1
+Comprimé,Cp,1,,,ARTEX,1
+Comprimé,Cp,1,,,TÉNORMINE,1
+Comprimé,Cp,1,,,TÉNORETIC,1
+Comprimé,Cp,1,,,KERLONE,1
+Comprimé,Cp,1,,,DETENSIEL,1
+Comprimé,Cp,1,,,CARDENSIEL,1
+Comprimé,Cp,1,,,BISOCE,1
+Comprimé,Cp,1,,,LODOZ,1
+Comprimé,Cp,1,,,LOPRESSOR,1
+Comprimé,Cp,1,,,SELOKEN,1
+Comprimé,Cp,1,,,SELOZOK LP,1
+Comprimé,Cp,1,,,SECTRAL,1
+Comprimé,Cp,1,,,SECTRAL LP,1
+Solution buvable,Sol buv,1,,,SECTRAL ENFANTS,1
+Comprimé,Cp,1,,,CÉLECTOL,1
+Comprimé,Cp,1,,,NEBILOX,1
+Comprimé,Cp,1,,,TEMERIT,1
+Comprimé,Cp,1,,,CONEBILOX,1
+Comprimé,Cp,1,,,MAVITAGLOU,1
+Comprimé,Cp,1,,,TEMERITDUO,1
+Ampoule,Amp,1,,,KARNODYL,1
+Flacon,Fl,1,,,BRÉVIBLOC,1
+Ampoule,Amp,1,,,RAPIBLOC,1
+Ampoule,Amp,1,,,TRANDATE injectable,1
+Ampoule,Amp,1,,,RISORDAN injectable,1
+Ampoule,Amp,1,,,NITRONAL,1
+Flacon,Fl,1,,,NATISPRAY,1
+Comprimé,Cp,1,,,RISORDAN,1
+Flacon,Fl,1,,,ISOCARD SPRAY,1
+Patch,Patch,1,,,DISCOTRINE,1
+Patch,Patch,1,,,EPINITRIL,1
+Patch,Patch,1,,,NITRIDERM TTS,1
+Patch,Patch,1,,,TRINIPATCH,1
+Comprimé,Cp,1,,,LONOTEN,1
+Ampoule,Amp,1,,,NEPRESSOL,1
+Gélule,Gél,1,,,EUPRESSYL,1
+Gélule,Gél,1,,,MÉDIATENSYL,1
+Comprimé,Cp,1,,,ALPRESS LP,1
+Comprimé,Cp,1,,,HYPERIUM,1
+Comprimé,Cp,1,,,PHYSIOTENS,1
+Comprimé,Cp,1,,,CATAPRESSAN,1
+Comprimé,Cp,1,,,ALDOMET,1
+Comprimé,Cp,1,,,CORVASAL,1
+Comprimé,Cp,1,,,IKOREL,1
+Comprimé,Cp,1,,,PROCORALAN,1
+Comprimé,Cp,1,,,CARVECORAL,1
+Ampoule,Amp,1,,,ADRÉNALINE,1
+Auto-injecteur,Auto-inj,1,,,ANAPEN,1
+Stylo,Stylo,1,,,EMERADE,1
+Stylo,Stylo,1,,,EPIPEN,1
+Stylo,Stylo,1,,,JEXT,1
+Ampoule,Amp,1,,,NORADRÉNALINE,1
+Ampoule,Amp,1,,,ISUPREL,1
+Ampoule,Amp,1,,,DOPAMINE,1
+Flacon,Fl,1,,,DOBUTAMINE,1
+Ampoule,Amp,1,,,COROTROPE,1
+Ampoule,Amp,1,,,PERFANE,1
+Flacon,Fl,1,,,ZIMINO,1
+Comprimé,Cp,1,,,DIGOXINE,1
+Comprimé,Cp,1,,,HÉMIGOXINE,1
+Comprimé,Cp,1,,,ÉNALAPRIL,1
+Comprimé,Cp,1,,,ÉNALAPRIL-HYDROCHLOROTHIAZIDE,1
+Comprimé,Cp,1,,,ZANEXTRA,1
+Comprimé,Cp,1,,,LERCAPRESS,1
+Comprimé,Cp,1,,,ZESTRIL,1
+Comprimé,Cp,1,,,ZESTORETIC,1
+Gélule,Gél,1,,,ODRIK,1
+Comprimé,Cp,1,,,TARKA LP,1
+Comprimé,Cp,1,,,ACUITEL,1
+Comprimé,Cp,1,,,ACUILIX,1
+Comprimé,Cp,1,,,CIBACENE,1
+Comprimé,Cp,1,,,CIBADREX,1
+Comprimé,Cp,1,,,COVERSYL,1
+Comprimé,Cp,1,,,PERINDOPRIL,1
+Comprimé,Cp,1,,,PRETERAX,1
+Comprimé,Cp,1,,,BIPRETERAX,1
+Comprimé,Cp,1,,,COVERAM,1
+Comprimé,Cp,1,,,TRIPLIXAM,1
+Comprimé,Cp,1,,,COSIMPREL,1
+Comprimé,Cp,1,,,FOSINOPRIL,1
+Comprimé,Cp,1,,,FOSINOPRIL-HYDROCHLOROTHIAZIDE,1
+Comprimé,Cp,1,,,TRIATEC,1
+Comprimé,Cp,1,,,COTRIATEC,1
+Gélule,Gél,1,,,RAMINOVA,1
+Comprimé,Cp,1,,,ZOFENIL,1
+Comprimé,Cp,1,,,ZOFENILDUO,1
+Comprimé,Cp,1,,,CAPTOPRIL,1
+Solution buvable,Sol buv,1,,,NOYADA,1
+Comprimé,Cp,1,,,CAPTOPRIL-HYDROCHLOROTHIAZIDE,1
+Comprimé,Cp,1,,,COZAAR,1
+Comprimé,Cp,1,,,NISIS,1
+Comprimé,Cp,1,,,TAREG,1
+Comprimé,Cp,1,,,APROVEL,1
+Comprimé,Cp,1,,,ATACAND,1
+Comprimé,Cp,1,,,KENZEN,1
+Comprimé,Cp,1,,,MICARDIS,1
+Comprimé,Cp,1,,,PRITOR,1
+Comprimé,Cp,1,,,TEVETEN,1
+Comprimé,Cp,1,,,ALTEIS,1
+Comprimé,Cp,1,,,OLMETEC,1
+Comprimé,Cp,1,,,ALTEISDUO,1
+Comprimé,Cp,1,,,COOLMETEC,1
+Comprimé,Cp,1,,,AXELER,1
+Comprimé,Cp,1,,,SEVIKAR,1
+Comprimé,Cp,1,,,COAPROVEL,1
+Comprimé,Cp,1,,,COKENZEN,1
+Comprimé,Cp,1,,,HYTACAND,1
+Comprimé,Cp,1,,,COTAREG,1
+Comprimé,Cp,1,,,NISISCO,1
+Comprimé,Cp,1,,,EXFORGE,1
+Comprimé,Cp,1,,,EXFORGE HCT,1
+Comprimé,Cp,1,,,HYZAAR,1
+Comprimé,Cp,1,,,FORTZAAR,1
+Comprimé,Cp,1,,,MICARDISPLUS,1
+Comprimé,Cp,1,,,PRITORPLUS,1
+Comprimé,Cp,1,,,TWYNSTA,1
+Comprimé,Cp,1,,,ENTRESTO,1
+Comprimé,Cp,1,,,LASILIX,1
+Solution,Sol,1,,,LASILIX BUVABLE,1
+Gélule,Gél,1,,,LASILIX RETARD,1
+Ampoule,Amp,1,,,LASILIX Injectable,1
+Ampoule,Amp,1,,,LASILIX SPÉCIAL,1
+Comprimé,Cp,1,,,BURINEX,1
+Ampoule,Amp,1,,,BURINEX injectable,1
+Gélule,Gél,1,,,EURELIX LP,1
+Comprimé,Cp,1,,,ESIDREX,1
+Comprimé,Cp,1,,,TENSIONORME,1
+Comprimé,Cp,1,,,FLUDEX,1
+Comprimé,Cp,1,,,FLUDEX LP,1
+Gélule,Gél,1,,,TENSTATEN,1
+Comprimé,Cp,1,,,ALDACTONE,1
+Comprimé,Cp,1,,,ALDACTAZINE,1
+Comprimé,Cp,1,,,INSPRA,1
+Flacon,Fl,1,,,SOLUDACTONE,1
+Comprimé,Cp,1,,,MODAMIDE,1
+Comprimé,Cp,1,,,LOGIRENE,1
+Comprimé,Cp,1,,,ISOBAR,1
+Gélule,Gél,1,,,PRESTOLE,1
+Comprimé,Cp,1,,,TILDIEM,1
+Comprimé,Cp,1,,,BI-TILDIEM,1
+Gélule,Gél,1,,,MONO-TILDIEM LP,1
+Flacon,Fl,1,,,TILDIEM Injectable,1
+Comprimé/Gélule,Cp/Gél,1,,,ISOPTINE,1
+Comprimé,Cp,1,,,ISOPTINE LP,1
+Ampoule,Amp,1,,,ISOPTINE injectable,1
+Gélule,Gél,1,,,AMLOR,1
+Comprimé,Cp,1,,,CADUET,1
+Comprimé,Cp,1,,,FLODIL LP,1
+Comprimé,Cp,1,,,LOGIMAX,1
+Gélule,Gél,1,,,ICAZ LP,1
+Comprimé,Cp,1,,,LOXEN,1
+Gélule,Gél,1,,,LOXEN LP,1
+Ampoule,Amp,1,,,LOXEN injectable,1
+Comprimé,Cp,1,,,NITRENDIPINE,1
+Comprimé,Cp,1,,,LERCAN,1
+Comprimé,Cp,1,,,ZANIDIP,1
+Comprimé,Cp,1,,,IPERTEN,1
+Comprimé,Cp,1,,,NIFÉDIPINE LP,1
+Gélule,Gél,1,,,NIFÉDIPINE + ATÉNOLOL,1
+Flacon,Fl,1,,,CLÉVIPREX,1
+Gélule,Gél,1,,,RYTHMODAN,1
+Comprimé,Cp,1,,,RYTHMODAN LP,1
+Gélule,Gél,1,,,ISORYTHM LP,1
+Gélule,Gél,1,,,SÉRÉCOR,1
+Ampoule,Amp,1,,,XYLOCARD,1
+Comprimé,Cp,1,,,EXACOR,1
+Comprimé,Cp,1,,,RYTHMOL,1
+Comprimé,Cp,1,,,FLECAÏNE,1
+Gélule,Gél,1,,,FLECAÏNE LP,1
+Ampoule,Amp,1,,,FLECAÏNE injectable,1
+Ampoule,Amp,1,,,GILURYTMAL,1
+Comprimé,Cp,1,,,MULTAQ,1
+Comprimé,Cp,1,,,CORDARONE,1
+Ampoule,Amp,1,,,CORDARONE injectable,1
+Ampoule,Amp,1,,,KRENOSIN,1
+Ampoule,Amp,1,,,ADENOSCAN,1
+Flacon,Fl,1,,,RAPISCAN,1
+Ampoule,Amp,1,,,STRIADYNE,1
+Ampoule,Amp,1,,,ATROPINE,1
+Comprimé,Cp,1,,,GUTRON,1
+Comprimé,Cp,1,,,EFFORTIL,1
+Comprimé,Cp,1,,,HEPTAMINOL,1
+Ampoule,Amp,1,,,ILOMÉDINE,1
+Comprimé,Cp,1,,,TANAKAN,1
+Solution,Sol,1,,,VITALOGINK,1
+Comprimé,Cp,1,,,GINKOGINK,1
+Comprimé,Cp,1,,,PENTOXIFYLLINE LP,1
+Comprimé,Cp,1,,,CARLYTENE,1
+Gélule,Gél,1,,,NAFTILUX,1
+Comprimé,Cp,1,,,VASTAREL,1
+Ampoule,Amp,1,,,PROSTINE VR,1
+Sachet,Sach,1,,,KARDÉGIC,1
+Comprimé,Cp,1,,,ASPIRINE PROTECT,1
+Comprimé,Cp,1,,,RÉSITUNE,1
+Flacon,Fl,1,,,KARDÉGIC injectable,1
+Comprimé,Cp,1,,,PLAVIX,1
+Comprimé,Cp,1,,,DUOPLAVIN,1
+Comprimé,Cp,1,,,TICLID,1
+Comprimé,Cp,1,,,EFIENT,1
+Comprimé,Cp,1,,,PERSANTINE,1
+Comprimé,Cp,1,,,BRILIQUE,1
+Flacon,Fl,1,,,KENGREXAL,1
+Flacon,Fl,1,,,INTEGRILIN,1
+Flacon,Fl,1,,,AGRASTAT,1
+Flacon,Fl,1,,,ACTILYSE,1
+Flacon,Fl,1,,,METALYSE,1
+Flacon,Fl,1,,,ACTOSOLV,1
+Ampoule,Amp,1,,,SCLEREMO,1
+Ampoule,Amp,1,,,AETOXISCLEROL,1
+Ampoule,Amp,1,,,TROMBOVAR,1
+Flacon,Fl,1,,,FIBROVEIN,1
+Gélule,Gél,1,,,CYCLO 3 FORT,1
+Comprimé,Cp,1,,,DAFLON,1
+Comprimé,Cp,1,,,DIO,1
+Comprimé,Cp,1,,,DIOVENOR,1
+Comprimé,Cp,1,,,MEDIVEINE,1
+Comprimé,Cp,1,,,VENACLAR,1
+Comprimé,Cp,1,,,DIFRAREL,1
+Comprimé,Cp,1,,,DOXIUM,1
+Comprimé,Cp,1,,,ENDOTELON,1
+Comprimé,Cp,1,,,ESBERIVEN FORT,1
+Comprimé,Cp,1,,,BICIRKAN,1
+Comprimé,Cp,1,,,VELITEN,1
+Comprimé,Cp,1,,,ETIOVEN,1
+Gélule,Gél,1,,,GINKOR FORT,1
+Gélule,Gél,1,,,INTERCYTON,1
+Sachet,Sach,1,,,RHÉOFLUX,1
+Sachet,Sach,1,,,VEINAMITOL,1
+Shampoing,Shamp,1,,,CLOBEX,1
+Crème,Crème,1,,,DERMOVAL,1
+Crème,Crème,1,,,CLARELUX,1
+Pommade,Pom,1,,,DIPROLENE,1
+Crème,Crème,1,,,BETNEVAL,1
+Crème,Crème,1,,,DIPROSONE,1
+Crème,Crème,1,,,EFFICORT,1
+Crème,Crème,1,,,EPITOPIC,1
+Crème,Crème,1,,,FLIXOVATE,1
+Crème,Crème,1,,,NERISONE,1
+Crème,Crème,1,,,DESONIDE,1
+Crème,Crème,1,,,LOCAPRED,1
+Crème,Crème,1,,,LOCATOP,1
+Crème,Crème,1,,,LOCOÏD,1
+Crème,Crème,1,,,TRIDESONIT,1
+Crème,Crème,1,,,CORTAPAISYL,1
+Crème,Crème,1,,,NERISONE C,1
+Crème,Crème,1,,,PEVISONE,1
+Pommade,Pom,1,,,PROTOPIC,1
+Pommade,Pom,1,,,TAKROZEM,1
+Gel,Gel,1,,,CUTACNYL,1
+Gel,Gel,1,,,CURASPOT,1
+Gel,Gel,1,,,PANNOGEL,1
+Solution,Sol,1,,,ERYFLUID,1
+Gel,Gel,1,,,ÉRYTHROGEL,1
+Gel,Gel,1,,,ZINDACLINE,1
+Gel,Gel,1,,,ZANEA,1
+Crème,Crème,1,,,EFFEDERM,1
+Gel,Gel,1,,,ERYLIK,1
+Crème,Crème,1,,,KÉTREL,1
+Crème,Crème,1,,,RETACNYL,1
+Gel,Gel,1,,,ROACCUTANE GEL,1
+Crème,Crème,1,,,DIFFERINE,1
+Gel,Gel,1,,,EPIDUO,1
+Crème,Crème,1,,,AKLIEF,1
+Crème,Crème,1,,,SKINOREN,1
+Gélule,Gél,1,,,EFFIZINC,1
+Gélule,Gél,1,,,RUBOZINC,1
+Ampoule,Amp,1,,,GRANIONS DE ZINC,1
+Gélule,Gél,1,,,ACNETRAIT,1
+Gélule,Gél,1,,,CONTRACNÉ,1
+Gélule,Gél,1,,,CURACNÉ,1
+Gélule,Gél,1,,,PROCUTA,1
+Comprimé,Cp,1,,,DIANE 35,1
+Comprimé,Cp,1,,,EPAVAR,1
+Comprimé,Cp,1,,,MINERVA,1
+Crème,Crème,1,,,ROZEX,1
+Crème,Crème,1,,,ROZACRÈME,1
+Gel,Gel,1,,,ROZAGEL,1
+Gel,Gel,1,,,FINACEA,1
+Gel,Gel,1,,,MIRVASO,1
+Crème,Crème,1,,,SOOLANTRA,1
+Gel,Gel,1,,,ZORAC,1
+Pommade,Pom,1,,,VASELINE SALICYLÉE,1
+Crème,Crème,1,,,COLD-CREAM SALICYLÉ,1
+Pommade,Pom,1,,,DIPROSALIC,1
+Lotion,Lot,1,,,DIPROSALIC Lotion,1
+Gélule,Gél,1,,,SORIATANE,1
+Crème,Crème,1,,,DAIVONEX,1
+Pommade,Pom,1,,,DAIVOBET,1
+Mousse,Mousse,1,,,ENSTILAR,1
+Gel,Gel,1,,,XAMIOL,1
+Pommade,Pom,1,,,SILKIS,1
+Comprimé,Cp,1,,,MÉLADININE,1
+Pommade,Pom,1,,,LEUCODININE B,1
+Pommade,Pom,1,,,ANY,1
+Préparation,Prép,1,,,TRIO-DÉPIGMENTANT,1
+Solution,Sol,1,,,ALOPEXY,1
+Solution,Sol,1,,,ALOSTIL,1
+Solution,Sol,1,,,UNIPEXIL,1
+Comprimé,Cp,1,,,PROPECIA,1
+Comprimé,Cp,1,,,CYSTINE B6,1
+Gélule,Gél,1,,,GÉLUCYSTINE,1
+Gel,Gel,1,,,LITHIODERM,1
+Solution,Sol,1,,,BÉTADINE,1
+Solution,Sol,1,,,ALCOOL IODÉ,1
+Solution,Sol,1,,,AMUKINE,1
+Solution,Sol,1,,,DAKIN COOPER,1
+Solution,Sol,1,,,CYTÉAL,1
+Solution,Sol,1,,,HEXOMÉDINE,1
+Solution,Sol,1,,,BISEPTINE,1
+Solution,Sol,1,,,CHLORAPREP,1
+Solution,Sol,1,,,CHLORHEXIDINE,1
+Spray,Spray,1,,,DIASEPTYL,1
+Solution,Sol,1,,,HIBIDIL,1
+Solution,Sol,1,,,HIBITANE,1
+Solution,Sol,1,,,HIBISCRUB,1
+Solution,Sol,1,,,MERCRYL,1
+Solution,Sol,1,,,PLUREXID,1
+Solution,Sol,1,,,SEPTÉAL,1
+Solution,Sol,1,,,SEPTIVON,1
+Solution,Sol,1,,,ALCOOL ÉTHYLIQUE,1
+Solution,Sol,1,,,EAU OXYGÉNÉE,1
+Sachet,Sach,1,,,PERMANGANATE DE POTASSIUM,1
+Solution,Sol,1,,,ÉOSINE,1
+Solution,Sol,1,,,SOLUTION DE MILIAN,1
+Solution,Sol,1,,,STERLANE,1
+Solution,Sol,1,,,STÉRILÈNE,1
+Crème,Crème,1,,,CETAVLON,1
+Préparation,Prép,1,,,CRÈME DE DALIBOUR,1
+Pommade,Pom,1,,,DERMOCUIVRE,1
+Solution,Sol,1,,,NITRATE D'ARGENT,1
+Solution,Sol,1,,,MERCURESCÉINE,1
+Pommade,Pom,1,,,AURÉOMYCINE,1
+Pommade,Pom,1,,,BACTROBAN,1
+Pommade,Pom,1,,,MUPIDERM,1
+Pommade,Pom,1,,,DIACUTIS,1
+Crème,Crème,1,,,FLAMMAZINE,1
+Crème,Crème,1,,,FLAMMACÉRIUM,1
+Crème,Crème,1,,,ZOVIRAX crème,1
+Crème,Crème,1,,,ACTIVIR,1
+Crème,Crème,1,,,HERPÉSÉDERMYL,1
+Crème,Crème,1,,,KENDIX,1
+Comprimé,Cp,1,,,SITAVIG,1
+Crème,Crème,1,,,ERAZABAN,1
+Gel,Gel,1,,,CLAREVA,1
+Préparation,Prép,1,,,COLLODION SALICYLÉ,1
+Préparation,Prép,1,,,DUOFILM,1
+Préparation,Prép,1,,,VERRUFILM,1
+Préparation,Prép,1,,,KÉRAFILM,1
+Solution,Sol,1,,,VERRUTOP,1
+Dispositif transdermique,Disp transd,1,,,TRANSVERCID,1
+Solution,Sol,1,,,CONDYLINE,1
+Poudre,Poudre,1,,,AMYCOR,1
+Poudre,Poudre,1,,,DAKTARIN,1
+Crème,Crème,1,,,FAZOL,1
+Crème,Crème,1,,,FONX,1
+Poudre,Poudre,1,,,FONGAMIL,1
+Crème,Crème,1,,,KÉTODERM,1
+Crème,Crème,1,,,LOMEXIN,1
+Crème,Crème,1,,,MONAZOL,1
+Crème,Crème,1,,,MYCOHYDRALIN,1
+Poudre,Poudre,1,,,PÉVARYL,1
+Crème,Crème,1,,,DERMAZOL,1
+Spray,Spray,1,,,FONGILÉINE,1
+Crème,Crème,1,,,GYNOPURA,1
+Crème,Crème,1,,,MYCOSEDERMYL,1
+Crème,Crème,1,,,MYCOAPAISYL,1
+Crème,Crème,1,,,TROSYD,1
+Pommade,Pom,1,,,AMYCOR ONYCHOSET,1
+Solution,Sol,1,,,LOCERYL,1
+Solution,Sol,1,,,CURANAIL,1
+Solution,Sol,1,,,MYCOSTER,1
+Solution,Sol,1,,,MYCONAIL,1
+Solution,Sol,1,,,MYCOSKIN,1
+Vernis,Vernis,1,,,ONYTEC,1
+Shampoing,Shamp,1,,,SEBIPROX,1
+Crème,Crème,1,,,LAMISIL,1
+Gel,Gel,1,,,LAMISILDERMGEL,1
+Solution,Sol,1,,,LAMISILATE,1
+Suspension,Susp,1,,,SELSUN,1
+Suspension,Susp,1,,,SELSUN BLUE,1
+Gel,Gel,1,,,APAISYL,1
+Crème,Crème,1,,,SÉDERMYL,1
+Crème,Crème,1,,,PHÉNERGAN crème,1
+Émulsion,Émuls,1,,,ASCABIOL,1
+Crème,Crème,1,,,TOPISCAB,1
+Shampoing,Shamp,1,,,NYDA,1
+Mousse,Mousse,1,,,POUXIT,1
+Plaque,Plaque,1,,,ALGOPLAQUE,1
+Plaque,Plaque,1,,,COMFEEL PLUS,1
+Plaque,Plaque,1,,,DUODERM,1
+Plaque,Plaque,1,,,HYDROCOLL STANDARD,1
+Plaque,Plaque,1,,,SUPRASORB H,1
+Plaque,Plaque,1,,,TEGADERM HYDROCOLLOID,1
+Plaque,Plaque,1,,,ULTEC PRO,1
+Mousse,Mousse,1,,,ALLEVYN,1
+Mousse,Mousse,1,,,BIATAIN,1
+Mousse,Mousse,1,,,COMBIDERM,1
+Mousse,Mousse,1,,,CUTINOVA HYDRO,1
+Mousse,Mousse,1,,,HYDROPHAR,1
+Mousse,Mousse,1,,,HYDROTAC CONFORT,1
+Mousse,Mousse,1,,,PERMAFOAM,1
+Mousse,Mousse,1,,,SUPRASORB P,1
+Mousse,Mousse,1,,,TIELLE,1
+Mousse,Mousse,1,,,URGOTUL ABSORB,1
+Mousse,Mousse,1,,,VERSIVA XC,1
+Pansement,Pans,1,,,URGOSTART,1
+Compresse,Compr,1,,,ALGISITE,1
+Compresse,Compr,1,,,ALGOSTÉRIL,1
+Compresse,Compr,1,,,KALTOSTAT,1
+Compresse,Compr,1,,,MELGISORB,1
+Compresse,Compr,1,,,SORBALGON,1
+Plaque,Plaque,1,,,AQUAFLO,1
+Gel,Gel,1,,,CURAFIL,1
+Gel,Gel,1,,,DUODERM HYDROGEL,1
+Gel,Gel,1,,,HYDROCLEAN,1
+Gel,Gel,1,,,INTRASITE,1
+Gel,Gel,1,,,NORMLGEL,1
+Gel,Gel,1,,,PURILON GEL,1
+Gel,Gel,1,,,SUPRASORB GEL,1
+Gel,Gel,1,,,TEGADERM HYDROGEL,1
+Gel,Gel,1,,,URGO HYDROGEL,1
+Compresse,Compr,1,,,AQUACEL,1
+Compresse,Compr,1,,,URGOCLEAN,1
+Compresse,Compr,1,,,CARBONET,1
+Compresse,Compr,1,,,CARBOSORB,1
+Compresse,Compr,1,,,ACTISORB,1
+Plaque,Plaque,1,,,ADAPTIC,1
+Plaque,Plaque,1,,,HYDROTUL,1
+Plaque,Plaque,1,,,MÉPITEL,1
+Plaque,Plaque,1,,,PHYSIOTULLE,1
+Plaque,Plaque,1,,,URGOTUL,1
+Plaque,Plaque,1,,,URGOTUL LITE,1
+Plaque,Plaque,1,,,URGOTUL Ag,1
+Plaque,Plaque,1,,,URGOCLEAN Ag,1
+Pansement,Pans,1,,,GRASSOLIND,1
+Pansement,Pans,1,,,JELONET,1
+Pansement,Pans,1,,,TULLE GRAS,1
+Crème,Crème,1,,,IALUSET,1
+Plaque,Plaque,1,,,CLIP DERM,1
+Plaque,Plaque,1,,,HYDROFILM,1
+Plaque,Plaque,1,,,MERIFORM,1
+Plaque,Plaque,1,,,OPSITE,1
+Plaque,Plaque,1,,,POLYSKIN,1
+Plaque,Plaque,1,,,TÉGADERM,1
+Applicateur,Applic,1,,,DERMABOND,1
+Applicateur,Applic,1,,,INDERMIL,1
+Crème,Crème,1,,,BEPANTHEN,1
+Crème,Crème,1,,,ÉRYTHÉDERMYL,1
+Crème,Crème,1,,,DEXTOPIA,1
+Gélule,Gél,1,,,TOCTINO,1
+Gélule,Gél,1,,,ALIZEM,1
+Solution,Sol,1,,,HÉMANGIOL,1
+Crème,Crème,1,,,ALDARA,1
+Gel,Gel,1,,,SOLARAZE,1
+Crème,Crème,1,,,EFUDIX,1
+Crème,Crème,1,,,TOLAK,1
+Crème,Crème,1,,,METVIXIA,1
+Crème,Crème,1,,,VANIOA,1
+Flacon,Fl,1,,,ACTRAPID,1
+Flacon,Fl,1,,,UMULINE Rapide,1
+Flacon,Fl,1,,,APIDRA,1
+Flacon,Fl,1,,,HUMALOG,1
+Stylo,Stylo,1,,,LYUMJEV,1
+Flacon,Fl,1,,,NOVORAPID,1
+Stylo,Stylo,1,,,FIASP,1
+Flacon,Fl,1,,,INSUMAN,1
+Flacon,Fl,1,,,INSULATARD,1
+Flacon,Fl,1,,,UMULINE NPH,1
+Stylo,Stylo,1,,,HUMALOG MIX,1
+Stylo,Stylo,1,,,NOVOMIX,1
+Flacon,Fl,1,,,MIXTARD,1
+Stylo,Stylo,1,,,UMULINE PROFIL,1
+Flacon,Fl,1,,,LANTUS,1
+Stylo,Stylo,1,,,ABASAGLAR,1
+Stylo,Stylo,1,,,TOUJEO,1
+Stylo,Stylo,1,,,LEVEMIR,1
+Stylo,Stylo,1,,,TRESIBA,1
+Comprimé,Cp,1,,,GLUCOPHAGE,1
+Comprimé,Cp,1,,,STAGID,1
+Comprimé,Cp,1,,,GLUCOVANCE,1
+Comprimé,Cp,1,,,GLUCOR,1

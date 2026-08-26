@@ -4,20 +4,42 @@
 
 @section('content')
     <div class="container mt-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold">
-                    {{ isset($medicament) ? '✏️ Modifier Médicament' : '➕ Ajouter Médicament' }}
-                </h5>
-                <a href="{{ route('medicaments.index') }}" class="btn btn-light btn-sm text-primary fw-bold">↩️ Retour à la liste</a>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 fw-bold mb-1">
+                    <i class="fa fa-pills me-2 text-primary"></i>{{ isset($medicament) ? 'Modifier Médicament : ' . $medicament->nom : 'Nouveau Médicament' }}
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 small">
+                        <li class="breadcrumb-item"><a href="{{ route('medicaments.index') }}">Médicaments</a></li>
+                        <li class="breadcrumb-item active">{{ isset($medicament) ? 'Modifier' : 'Créer' }}</li>
+                    </ol>
+                </nav>
             </div>
-            <div class="card-body p-4">
-                <form action="{{ isset($medicament) ? route('medicaments.update', $medicament) : route('medicaments.store') }}" method="POST">
-                    @csrf
-                    @if(isset($medicament)) @method('PUT') @endif
+            <div class="d-flex gap-2">
+                @if(isset($medicament))
+                    <a href="{{ route('medicaments.show', $medicament->uuid ?? $medicament->id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa fa-eye me-1"></i> Voir Détails
+                    </a>
+                @endif
+                <a href="{{ route('medicaments.index') }}" class="btn btn-sm btn-secondary">
+                    <i class="fa fa-arrow-left me-1"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
 
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-12">
+        <form action="{{ isset($medicament) ? route('medicaments.update', $medicament) : route('medicaments.store') }}" method="POST">
+            @csrf
+            @if(isset($medicament)) @method('PUT') @endif
+
+            <div class="row g-4">
+                {{-- Informations générales --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="mb-0"><i class="fa fa-info-circle text-primary me-2"></i>Informations générales</h5>
+                        </div>
+                        <div class="card-body p-4">
                             <!-- Nom & Code Barre -->
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -66,104 +88,105 @@
                                 <textarea name="description" class="form-control" rows="3" placeholder="Description ou remarques importantes...">{{ $medicament->description ?? old('description') }}</textarea>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="col-md-12">
-                            <!-- Conditionnements / Unités -->
-                            <div class="card border border-light-dark shadow-sm">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-                                    <span class="fw-bold text-primary"><i class="fa fa-boxes me-1"></i>Conditionnements / Unités</span>
-                                    <button type="button" id="btnAddUnitRow" class="btn btn-xs btn-primary">
-                                        <i class="fa fa-plus me-1"></i> Ajouter une unité
-                                    </button>
-                                </div>
-                                <div class="card-body p-0 table-responsive" style="max-height: 400px; overflow: auto;">
-                                    <table class="table table-sm table-striped align-middle mb-0" id="createUnitsTable">
-                                        <thead class="table-light sticky-top">
-                                            <tr>
-                                                <th style="min-width: 150px;">Nom <span class="text-danger">*</span></th>
-                                                <th style="min-width: 80px;">Symbole <span class="text-danger">*</span></th>
-                                                <th style="min-width: 110px;">Facteur <span class="text-danger">*</span></th>
-                                                <th style="min-width: 140px;">P. Achat <span class="text-danger">*</span></th>
-                                                <th style="min-width: 140px;">P. Vente <span class="text-danger">*</span></th>
-                                                <th class="text-center" style="min-width: 70px;">Défaut</th>
-                                                <th class="text-center" style="min-width: 50px;"></th>
+                {{-- Conditionnements / Unités --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                            <h5 class="mb-0"><i class="fa fa-layer-group text-warning me-2"></i>Conditionnements & Unités</h5>
+                            <button type="button" id="btnAddUnitRow" class="btn btn-sm btn-primary">
+                                <i class="fa fa-plus me-1"></i> Ajouter une unité
+                            </button>
+                        </div>
+                        <div class="card-body p-0 table-responsive" style="max-height: 450px; overflow: auto;">
+                            <table class="table table-sm table-striped align-middle mb-0" id="createUnitsTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="min-width: 130px;">Nom <span class="text-danger">*</span></th>
+                                        <th style="min-width: 70px;">Symb. <span class="text-danger">*</span></th>
+                                        <th style="min-width: 80px;">Facteur <span class="text-danger">*</span></th>
+                                        <th style="min-width: 110px;">P. Achat <span class="text-danger">*</span></th>
+                                        <th style="min-width: 110px;">P. Vente <span class="text-danger">*</span></th>
+                                        <th class="text-center" style="min-width: 60px;">Défaut</th>
+                                        <th class="text-center" style="min-width: 40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="createUnitsBody">
+                                    @if(isset($medicament) && $medicament->unites->count() > 0)
+                                        @foreach($medicament->unites as $index => $unite)
+                                            <tr class="unit-row" data-index="{{ $index }}">
+                                                <input type="hidden" name="unites[{{ $index }}][id]" value="{{ $unite->id }}">
+                                                <td>
+                                                    <input type="text" name="unites[{{ $index }}][nom]" class="form-control form-control-sm" value="{{ $unite->nom }}" required placeholder="Nom">
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="unites[{{ $index }}][symbole]" class="form-control form-control-sm" value="{{ $unite->symbole }}" required placeholder="Symb">
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="unites[{{ $index }}][facteur]" class="form-control form-control-sm factor-input" value="{{ $unite->facteur }}" min="0.01" step="any" required placeholder="1">
+                                                </td>
+                                                <td>
+                                                    <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="{{ $unite->prix_achat }}" required>
+                                                </td>
+                                                <td>
+                                                    <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="{{ $unite->prix_vente }}" required>
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="radio" name="default_unit_idx" value="{{ $index }}" class="form-check-input default-unit-radio" {{ $unite->is_default ? 'checked' : '' }}>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-unit-row">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody id="createUnitsBody">
-                                            @if(isset($medicament) && $medicament->unites->count() > 0)
-                                                @foreach($medicament->unites as $index => $unite)
-                                                    <tr class="unit-row" data-index="{{ $index }}">
-                                                        <input type="hidden" name="unites[{{ $index }}][id]" value="{{ $unite->id }}">
-                                                        <td>
-                                                            <input type="text" name="unites[{{ $index }}][nom]" class="form-control form-control-sm" value="{{ $unite->nom }}" required placeholder="Nom">
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" name="unites[{{ $index }}][symbole]" class="form-control form-control-sm" value="{{ $unite->symbole }}" required placeholder="Symb">
-                                                        </td>
-                                                        <td>
-                                                            <input type="number" name="unites[{{ $index }}][facteur]" class="form-control form-control-sm factor-input" value="{{ $unite->facteur }}" min="0.01" step="any" required placeholder="1">
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="{{ $unite->prix_achat }}" required>
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" inputmode="numeric" name="unites[{{ $index }}][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="{{ $unite->prix_vente }}" required>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <input type="radio" name="default_unit_idx" value="{{ $index }}" class="form-check-input default-unit-radio" {{ $unite->is_default ? 'checked' : '' }}>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-unit-row">
-                                                                <i class="fa fa-trash"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            @else
-                                                <tr class="unit-row" data-index="0">
-                                                    <td>
-                                                        <input type="text" name="unites[0][nom]" class="form-control form-control-sm" value="" required placeholder="Nom">
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="unites[0][symbole]" class="form-control form-control-sm" value="" required placeholder="Symb">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="unites[0][facteur]" class="form-control form-control-sm factor-input" value="1" min="0.01" step="any" required placeholder="1">
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" inputmode="numeric" name="unites[0][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="0" required>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" inputmode="numeric" name="unites[0][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="0" required>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <input type="radio" name="default_unit_idx" value="0" class="form-check-input default-unit-radio" checked>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete-unit-row">
-                                                            <i class="fa fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endif
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                        @endforeach
+                                    @else
+                                        <tr class="unit-row" data-index="0">
+                                            <td>
+                                                <input type="text" name="unites[0][nom]" class="form-control form-control-sm" value="" required placeholder="Nom">
+                                            </td>
+                                            <td>
+                                                <input type="text" name="unites[0][symbole]" class="form-control form-control-sm" value="" required placeholder="Symb">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="unites[0][facteur]" class="form-control form-control-sm factor-input" value="1" min="0.01" step="any" required placeholder="1">
+                                            </td>
+                                            <td>
+                                                <input type="text" inputmode="numeric" name="unites[0][prix_achat]" class="form-control form-control-sm price-input prix-achat-input w-100" value="0" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" inputmode="numeric" name="unites[0][prix_vente]" class="form-control form-control-sm price-input prix-vente-input w-100" value="0" required>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="radio" name="default_unit_idx" value="0" class="form-check-input default-unit-radio" checked>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-unit-row">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-                    <!-- Boutons -->
-                    <div class="d-flex justify-content-between border-top pt-3">
-                        <a href="{{ route('medicaments.index') }}" class="btn btn-secondary">↩️ Annuler</a>
-                        <button type="submit" class="btn btn-success fw-bold">
-                            {{ isset($medicament) ? '💾 Mettre à jour' : '✅ Enregistrer' }}
-                        </button>
-                    </div>
-
-                </form>
+                </div>
             </div>
-        </div>
+
+            <!-- Barre d'actions bas de page -->
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row justify-content-between align-items-center mb-4">
+                <a href="{{ route('medicaments.index') }}" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left me-1"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-success fw-bold px-4">
+                    <i class="fa fa-check me-1"></i> {{ isset($medicament) ? 'Mettre à jour' : 'Enregistrer' }}
+                </button>
+            </div>
+        </form>
     </div>
 @endsection
 

@@ -80,9 +80,9 @@ class MedicamentController extends Controller
                     $html = '';
 
                     if ($user->can('stock.medicaments')) {
-                        $html .= '<button type="button" class="btn btn-sm btn-outline-primary view"   data-id="' . $m->uuid . '" title="Détails"><i class="fa fa-eye"></i></button>';
-                        $html .= '<button type="button" class="btn btn-sm btn-outline-info edit"    data-id="' . $m->uuid . '" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
-                        $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="' . $m->uuid . '" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $html .= '<a href="' . route('medicaments.show', $m->uuid ?? $m->id) . '" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
+                        $html .= '<a href="' . route('medicaments.edit', $m->uuid ?? $m->id) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" data-id="' . ($m->uuid ?? $m->id) . '" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';

@@ -20,7 +20,7 @@ class ExportImportController extends Controller
         'maladies'    => ['model' => \App\Models\Maladie::class,         'permission' => 'parametres.maladies',  'unique_by' => 'nom',    'label' => 'Maladies'],
         'medicaments' => ['model' => \App\Models\Medicament::class,      'permission' => 'stock.medicaments',    'unique_by' => 'nom',    'label' => 'Médicaments'],
         'familles'    => ['model' => \App\Models\Famille::class,         'permission' => 'stock.familles',       'unique_by' => 'nom',    'label' => 'Familles'],
-        'unites'      => ['model' => \App\Models\Unite::class,           'permission' => 'stock.unites',         'unique_by' => 'nom',    'label' => 'Unités'],
+        'unites'      => ['model' => \App\Models\Unite::class,           'permission' => 'stock.unites',         'unique_by' => ['nom', 'medicament_id'], 'label' => 'Unités'],
         'roles'       => ['model' => \Spatie\Permission\Models\Role::class,'permission'=> 'roles.view',          'unique_by' => 'name',   'label' => 'Rôles'],
         'users'       => ['model' => \App\Models\User::class,            'permission' => 'users.view',           'unique_by' => 'email',  'label' => 'Utilisateurs'],
     ];
@@ -116,7 +116,7 @@ class ExportImportController extends Controller
 
         $config     = $this->modules[$module];
         $modelClass = $config['model'];
-        $uniqueBy   = $config['unique_by'];
+        $uniqueBy   = $config['unique_by']; // may be string or array of fields
 
         try {
             $handle  = fopen($file->getPathname(), 'r');
@@ -251,13 +251,29 @@ class ExportImportController extends Controller
                     }
                 }
 
-                if (empty($data) || ! isset($data[$uniqueBy])) {
+                // Build unique-by check (supports single field or composite array)
+                $uniqueFields = is_array($uniqueBy) ? $uniqueBy : [$uniqueBy];
+                $missingUniqueField = false;
+                foreach ($uniqueFields as $uf) {
+                    if (! isset($data[$uf])) {
+                        $missingUniqueField = true;
+                        break;
+                    }
+                }
+
+                if (empty($data) || $missingUniqueField) {
                     $skipped++;
                     continue;
                 }
 
                 try {
-                    $record = $modelClass::where($uniqueBy, $data[$uniqueBy])->first();
+                    // Build composite unique query
+                    $query = $modelClass::query();
+                    foreach ($uniqueFields as $uf) {
+                        $query->where($uf, $data[$uf]);
+                    }
+                    $record = $query->first();
+
                     if ($record) {
                         $record->update($data);
                         $updated++;
