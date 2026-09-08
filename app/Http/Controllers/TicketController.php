@@ -145,8 +145,29 @@ class TicketController extends Controller
                 ], 403);
             }
 
-            // Calcul du total côté serveur (plus fiable)
-            $totalTicket = collect($request->items)->sum('sous_total');
+            // 🔒 Recalcul des prix côté serveur à partir de la Prestation en base
+            // (ne jamais faire confiance à prix_unitaire/sous_total envoyés par le client,
+            // qui pourraient être falsifiés pour sous-facturer un patient)
+            $itemsData = [];
+            $totalTicket = 0;
+            foreach ($request->items as $item) {
+                $prestation = Prestation::findOrFail($item['prestation_id']);
+                $quantite = (int) $item['quantite'];
+                $remise = (float) $item['remise'];
+                $prixUnitaire = (float) $prestation->prix;
+                $sousTotal = round($prixUnitaire * $quantite * (1 - $remise / 100), 2);
+
+                $itemsData[] = [
+                    'prestation_id' => $prestation->id,
+                    'service'       => $item['service'] ?? 'N/A',
+                    'prix_unitaire' => $prixUnitaire,
+                    'quantite'      => $quantite,
+                    'remise'        => $remise,
+                    'sous_total'    => $sousTotal,
+                ];
+
+                $totalTicket += $sousTotal;
+            }
 
             $assuranceId = $request->assurance_id;
             $tauxCouverture = 0;
@@ -172,15 +193,8 @@ class TicketController extends Controller
                     'medecin_id' => $request->medecin_id
                 ]);
 
-            foreach ($request->items as $item) {
-                $ticket->items()->create([
-                    'prestation_id' => $item['prestation_id'],
-                    'service'       => $item['service'] ?? 'N/A', // Valeur par défaut si vide
-                    'prix_unitaire' => $item['prix_unitaire'],
-                    'quantite'      => $item['quantite'],
-                    'remise'        => $item['remise'],
-                    'sous_total'    => $item['sous_total'],
-                ]);
+            foreach ($itemsData as $data) {
+                $ticket->items()->create($data);
             }
 
             // Enregistrement dans la caisse
@@ -203,10 +217,10 @@ class TicketController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Erreur création ticket : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'success' => false,
-                // On retourne le message d'erreur réel pour débugger
-                'message' => 'Erreur SQL: ' . $e->getMessage() 
+                'message' => 'Une erreur est survenue lors de l\'enregistrement du ticket.'
             ], 500);
         }
     }
@@ -277,10 +291,8 @@ class TicketController extends Controller
         $request->validate([
             'items' => 'required|array|min:1',
             'items.*.prestation_id' => 'required|exists:prestations,id',
-            'items.*.prix_unitaire' => 'required|integer',
-            'items.*.quantite' => 'required|integer',
-            'items.*.remise' => 'required|numeric',
-            'items.*.sous_total' => 'required|integer',
+            'items.*.quantite' => 'required|integer|min:1',
+            'items.*.remise' => 'required|numeric|min:0|max:100',
             'items.*.service' => 'required|string',
             'description' => 'nullable|string',
             'assurance_id' => 'nullable|exists:assurances,id',
@@ -289,7 +301,29 @@ class TicketController extends Controller
 
         DB::beginTransaction();
         try {
-            $totalTicket = collect($request->items)->sum(fn($i) => $i['sous_total']);
+            // 🔒 Recalcul des prix côté serveur à partir de la Prestation en base
+            // (ne jamais faire confiance à prix_unitaire/sous_total envoyés par le client)
+            $itemsData = [];
+            $totalTicket = 0;
+            foreach ($request->items as $item) {
+                $prestation = Prestation::findOrFail($item['prestation_id']);
+                $quantite = (int) $item['quantite'];
+                $remise = (float) $item['remise'];
+                $prixUnitaire = (float) $prestation->prix;
+                $sousTotal = round($prixUnitaire * $quantite * (1 - $remise / 100), 2);
+
+                $itemsData[] = [
+                    'prestation_id' => $prestation->id,
+                    'service'       => $item['service'],
+                    'prix_unitaire' => $prixUnitaire,
+                    'quantite'      => $quantite,
+                    'remise'        => $remise,
+                    'sous_total'    => $sousTotal,
+                ];
+
+                $totalTicket += $sousTotal;
+            }
+
             $assuranceId = $request->assurance_id;
             $tauxCouverture = 0;
             if ($assuranceId) {
@@ -315,8 +349,8 @@ class TicketController extends Controller
 
             // On supprime les anciens items et on recrée
             $ticket->items()->delete();
-            foreach($request->items as $item){
-                $ticket->items()->create($item);
+            foreach ($itemsData as $data) {
+                $ticket->items()->create($data);
             }
 
             DB::commit();
@@ -328,9 +362,10 @@ class TicketController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Erreur mise à jour ticket : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Une erreur est survenue lors de la mise à jour du ticket.'
             ], 500);
         }
     }

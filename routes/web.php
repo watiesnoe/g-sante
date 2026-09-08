@@ -35,11 +35,6 @@ use App\Http\Controllers\EmploiDuTempsController;
 use App\Http\Controllers\ExportImportController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/run-migrations-temp', function() {
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
-});
-
 // Quand on arrive sur la racine "/", on redirige vers le login
 Route::get('/', function () {
     return redirect()->route('login');
@@ -140,6 +135,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/commandes/panier/vider', [CommandeController::class, 'viderPanier'])->name('commandes.panier.vider');
     Route::get('/tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
 
+    Route::get('/receptions/{reception}/pdf', [ReceptionController::class, 'pdf'])->name('receptions.pdf');
     Route::resource('receptions', ReceptionController::class);
     Route::resource('inventaires', \App\Http\Controllers\InventaireController::class);
     Route::post('/inventaires/{inventaire}/valider', [\App\Http\Controllers\InventaireController::class, 'valider'])->name('inventaires.valider');

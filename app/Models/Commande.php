@@ -55,6 +55,11 @@ class Commande extends Model
         return $this->hasMany(PaiementCommande::class);
     }
 
+    public function receptions()
+    {
+        return $this->hasMany(Reception::class, 'commande_id');
+    }
+
     /**
      * Pour récupérer le montant total payé
      */

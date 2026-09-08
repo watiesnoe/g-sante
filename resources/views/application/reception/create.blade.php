@@ -5,8 +5,11 @@
 @section('content')
     <div class="container mt-4">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5>Réception de Commande</h5>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Réception de Commande</h5>
+                <a href="{{ route('receptions.index') }}" class="btn btn-light btn-sm">
+                    <i class="fa fa-list me-1"></i> Liste des Réceptions
+                </a>
             </div>
             <div class="card-body">
 
@@ -61,8 +64,13 @@
                     {{-- Produits --}}
                     <div id="produitsContainer" class="mt-4"></div>
 
-                    {{-- Bouton Valider --}}
-                    <button type="submit" class="btn btn-success mt-4" id="btnValider">✅ Valider</button>
+                    {{-- Boutons d'action --}}
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{{ route('receptions.index') }}" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left me-1"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success" id="btnValider" disabled>✅ Valider</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -73,11 +81,53 @@
     <script>
         $(document).ready(function () {
 
+            // Échappe le HTML pour éviter toute injection via des noms de médicament/unité (XSS)
+            function escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, function (s) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+                });
+            }
+
+            function checkQuantitesValidite() {
+                let inputs = $('.quantite-recue');
+                if (inputs.length === 0) {
+                    $('#btnValider').prop('disabled', true);
+                    return false;
+                }
+
+                let auMoinsUneValide = false;
+                let aUneErreur = false;
+
+                inputs.each(function () {
+                    let val = parseFloat($(this).val()) || 0;
+                    let max = parseFloat($(this).data('quantite-restante')) || 0;
+                    let messageErreur = $(this).siblings('.message-erreur');
+
+                    if (val > max || val < 0) {
+                        $(this).css('border', '2px solid red');
+                        messageErreur.removeClass('d-none');
+                        aUneErreur = true;
+                    } else {
+                        $(this).css('border', '');
+                        messageErreur.addClass('d-none');
+                    }
+
+                    if (val > 0 && val <= max) {
+                        auMoinsUneValide = true;
+                    }
+                });
+
+                let estValide = auMoinsUneValide && !aUneErreur;
+                $('#btnValider').prop('disabled', !estValide);
+                return estValide;
+            }
+
             // Lorsqu'on sélectionne une commande
             $('#commandeSelect').on('change', function () {
                 let commandeId = $(this).val();
                 $('#commande_id').val(commandeId);
                 $('#produitsContainer').html('');
+                $('#btnValider').prop('disabled', true);
 
                 if (!commandeId) return;
 
@@ -91,6 +141,7 @@
 
                         if (!data.produits || data.produits.length === 0) {
                             $('#produitsContainer').html('<p class="text-muted">✅ Tous les produits de cette commande ont déjà été reçus.</p>');
+                            $('#btnValider').prop('disabled', true);
                             return;
                         }
 
@@ -104,6 +155,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Médicament</th>
+                                <th>Unité</th>
                                 <th>Stock</th>
                                 <th>Quantité commandée</th>
                                 <th>Quantité restante</th>
@@ -116,9 +168,11 @@
                 `;
 
                         data.produits.forEach((p, index) => {
+                            let uniteBadge = p.unite_nom ? `<span class="badge bg-secondary">${escapeHtml(p.unite_nom)}</span>` : '-';
                             html += `
                                     <tr>
-                                        <td>${p.nom}</td>
+                                        <td>${escapeHtml(p.nom)}</td>
+                                        <td>${uniteBadge}</td>
                                         <td>${p.stock_ancien}</td>
                                         <td>${p.quantite_commandee}</td>
                                         <td class="text-primary fw-bold">${p.quantite_restante}</td>
@@ -136,6 +190,7 @@
                                             <!-- 🟢 Identifiants nécessaires -->
                                             <input type="hidden" name="receptions[${index}][commande_medicament_id]" value="${p.commande_medicament_id}">
                                             <input type="hidden" name="receptions[${index}][medicament_id]" value="${p.medicament_id}">
+                                            <input type="hidden" name="receptions[${index}][unite_id]" value="${p.unite_id || ''}">
                                             <input type="hidden" name="receptions[${index}][quantite_commandee]" value="${p.quantite_commandee}">
                                             <input type="hidden" name="receptions[${index}][prix_unitaire]" value="${p.prix_unitaire}">
                                         </td>
@@ -148,39 +203,33 @@
 
                         html += `</tbody></table>`;
                         $('#produitsContainer').html(html);
+                        checkQuantitesValidite();
                     },
                     error: function (xhr, status, error) {
                         console.error("❌ Erreur AJAX :", status, error);
                         $('#produitsContainer').html('<p class="text-danger">Erreur lors du chargement des produits.</p>');
+                        $('#btnValider').prop('disabled', true);
                     }
                 });
             });
 
             // Vérification des quantités reçues
-            $(document).on('input', '.quantite-recue', function () {
-                let quantiteRestante = parseInt($(this).data('quantite-restante'));
-                let quantiteRecue = parseInt($(this).val());
-                let messageErreur = $(this).siblings('.message-erreur');
-
-                if (quantiteRecue > quantiteRestante) {
-                    $(this).css('border', '2px solid red');
-                    messageErreur.removeClass('d-none');
-                    $('#btnValider').prop('disabled', true);
-                } else {
-                    $(this).css('border', '');
-                    messageErreur.addClass('d-none');
-
-                    // Vérifie si toutes les autres saisies sont valides avant d'activer
-                    let erreurExistante = $('.quantite-recue').toArray().some(input => {
-                        return parseInt($(input).val()) > parseInt($(input).data('quantite-restante'));
-                    });
-                    $('#btnValider').prop('disabled', erreurExistante);
-                }
+            $(document).on('input change', '.quantite-recue', function () {
+                checkQuantitesValidite();
             });
 
             // Soumission du formulaire AJAX
             $('#formReception').on('submit', function (e) {
                 e.preventDefault();
+
+                if (!checkQuantitesValidite()) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Quantité requise',
+                        text: 'Veuillez saisir au moins une quantité reçue supérieure à 0.',
+                    });
+                    return false;
+                }
 
                 const $form = $(this);
                 const $btn  = $('#btnValider');

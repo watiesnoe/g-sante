@@ -63,7 +63,6 @@
                             <th>Commande</th>
                             <th>Fournisseur</th>
                             <th>Date</th>
-                            <th class="text-center">Avancement Cmd.</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -94,7 +93,6 @@ $(document).ready(function() {
             { data: 'commande', name: 'commande.reference' },
             { data: 'fournisseur', name: 'fournisseur.nom' },
             { data: 'date', name: 'date_reception' },
-            { data: 'pourcentage', orderable: false, searchable: false },
             { data: 'actions', orderable: false, searchable: false }
         ],
 

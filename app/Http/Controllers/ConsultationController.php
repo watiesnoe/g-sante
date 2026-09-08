@@ -391,9 +391,10 @@ class ConsultationController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Erreur création consultation : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'success' => false,
-                'error'   => $e->getMessage()
+                'error'   => 'Une erreur est survenue lors de l\'enregistrement de la consultation.'
             ], 500);
         }
     }
@@ -658,9 +659,10 @@ class ConsultationController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Erreur mise à jour consultation : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'success' => false,
-                'error'   => $e->getMessage()
+                'error'   => 'Une erreur est survenue lors de la mise à jour de la consultation.'
             ], 500);
         }
     }

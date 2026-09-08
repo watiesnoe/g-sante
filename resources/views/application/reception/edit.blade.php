@@ -58,6 +58,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Médicament</th>
+                                    <th>Unité</th>
                                     <th>Stock</th>
                                     <th>Qte Cmd</th>
                                     <th>Déjà Reçu (Global)</th>
@@ -75,6 +76,13 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $p['nom'] }}</td>
+                                    <td>
+                                        @if(!empty($p['unite_nom']))
+                                            <span class="badge bg-secondary">{{ $p['unite_nom'] }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td>{{ $p['stock_ancien'] }}</td>
                                     <td>{{ $p['quantite_commandee'] }}</td>
                                     <td>{{ $deja_recu_global }}</td>
@@ -93,6 +101,7 @@
 
                                         <input type="hidden" name="receptions[{{ $index }}][commande_medicament_id]" value="{{ $p['commande_medicament_id'] }}">
                                         <input type="hidden" name="receptions[{{ $index }}][medicament_id]" value="{{ $p['medicament_id'] }}">
+                                        <input type="hidden" name="receptions[{{ $index }}][unite_id]" value="{{ $p['unite_id'] ?? '' }}">
                                         <input type="hidden" name="receptions[{{ $index }}][quantite_commandee]" value="{{ $p['quantite_commandee'] }}">
                                         <input type="hidden" name="receptions[{{ $index }}][prix_unitaire]" value="{{ $p['prix_unitaire'] }}">
                                     </td>
@@ -119,31 +128,60 @@
 @section('scripts')
 <script>
 $(document).ready(function () {
-    // Vérification des quantités reçues
-    $(document).on('input', '.quantite-recue', function () {
-        let quantiteRestante = parseInt($(this).data('quantite-restante'));
-        let quantiteRecue = parseInt($(this).val());
-        let messageErreur = $(this).siblings('.message-erreur');
-
-        if (quantiteRecue > quantiteRestante) {
-            $(this).css('border', '2px solid red');
-            messageErreur.removeClass('d-none');
+    function checkQuantitesValidite() {
+        let inputs = $('.quantite-recue');
+        if (inputs.length === 0) {
             $('#btnValider').prop('disabled', true);
-        } else {
-            $(this).css('border', '');
-            messageErreur.addClass('d-none');
-
-            // Vérifie si toutes les autres saisies sont valides avant d'activer
-            let erreurExistante = $('.quantite-recue').toArray().some(input => {
-                return parseInt($(input).val()) > parseInt($(input).data('quantite-restante'));
-            });
-            $('#btnValider').prop('disabled', erreurExistante);
+            return false;
         }
+
+        let auMoinsUneValide = false;
+        let aUneErreur = false;
+
+        inputs.each(function () {
+            let val = parseFloat($(this).val()) || 0;
+            let max = parseFloat($(this).data('quantite-restante')) || 0;
+            let messageErreur = $(this).siblings('.message-erreur');
+
+            if (val > max || val < 0) {
+                $(this).css('border', '2px solid red');
+                messageErreur.removeClass('d-none');
+                aUneErreur = true;
+            } else {
+                $(this).css('border', '');
+                messageErreur.addClass('d-none');
+            }
+
+            if (val > 0 && val <= max) {
+                auMoinsUneValide = true;
+            }
+        });
+
+        let estValide = auMoinsUneValide && !aUneErreur;
+        $('#btnValider').prop('disabled', !estValide);
+        return estValide;
+    }
+
+    // Vérification au chargement
+    checkQuantitesValidite();
+
+    // Vérification des quantités reçues à la saisie
+    $(document).on('input change', '.quantite-recue', function () {
+        checkQuantitesValidite();
     });
 
     // Soumission du formulaire AJAX
     $('#formReception').on('submit', function (e) {
         e.preventDefault();
+
+        if (!checkQuantitesValidite()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Quantité requise',
+                text: 'Veuillez saisir au moins une quantité reçue supérieure à 0.',
+            });
+            return false;
+        }
 
         $.ajax({
             url: "{{ route('receptions.update', $reception) }}",

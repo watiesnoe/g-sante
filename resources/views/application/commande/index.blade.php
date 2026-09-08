@@ -3,6 +3,21 @@
 
 @section('content')
     <div class="container mt-4">
+        {{-- Alertes Session --}}
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                <i class="fa fa-exclamation-circle me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="d-flex justify-content-end mb-3">
             <a href="{{ route('commandes.create') }}" class="btn btn-sm btn-primary">
                 <i class="fa fa-plus me-1"></i> Ajouter
@@ -23,6 +38,7 @@
                                 <th>Fournisseur</th>
                                 <th>Date Commande</th>
                                 <th>Statut livraison</th>
+                                <th class="text-center">Avancement</th>
                                 <th>Total</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -42,11 +58,12 @@
                 processing: true,
                 serverSide: true,
                 ajax: '{{ route("commandes.index") }}',
-               columns: [
-                    { data: 'reference', name: 'reference' }, // ✅ AJOUT
+                columns: [
+                    { data: 'reference', name: 'reference' },
                     { data: 'fournisseur', name: 'fournisseur.nom' },
                     { data: 'date_commande', name: 'date_commande' },
                     { data: 'statut', name: 'statut' },
+                    { data: 'avancement', name: 'avancement', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'total', name: 'total' },
                     { data: 'actions', orderable: false, searchable: false, className: 'text-center' }
                 ],
@@ -67,20 +84,44 @@
 
             // Suppression AJAX avec confirmation
             $(document).on('click', '.btnSupprimer', function () {
-                if (confirm('Voulez-vous vraiment supprimer cette commande ?')) {
-                    let id = $(this).data('id');
-                    $.ajax({
-                        url: `/commandes/${id}`,
-                        type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function () {
-                            table.ajax.reload(null, false);
-                        },
-                        error: function() {
-                            alert('Erreur lors de la suppression.');
-                        }
-                    });
-                }
+                let id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Êtes-vous sûr ?',
+                    text: 'Voulez-vous vraiment supprimer cette commande ?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Oui, supprimer',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/commandes/${id}`,
+                            type: 'DELETE',
+                            data: { _token: '{{ csrf_token() }}' },
+                            success: function (response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Supprimée !',
+                                    text: response.message || 'Commande supprimée avec succès.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                table.ajax.reload(null, false);
+                            },
+                            error: function (xhr) {
+                                let message = xhr.responseJSON?.message || 'Erreur lors de la suppression de la commande.';
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Suppression impossible',
+                                    text: message
+                                });
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>

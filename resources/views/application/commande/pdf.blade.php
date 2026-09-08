@@ -64,11 +64,12 @@
     <table class="main-table">
         <thead>
             <tr>
-                <th width="40">#</th>
+                <th width="30">#</th>
                 <th>Médicament</th>
-                <th width="80" class="text-right">Qté</th>
-                <th width="100" class="text-right">P.U (FCFA)</th>
-                <th width="120" class="text-right">Total (FCFA)</th>
+                <th width="100">Unité</th>
+                <th width="70" class="text-right">Qté</th>
+                <th width="90" class="text-right">P.U (FCFA)</th>
+                <th width="110" class="text-right">Total (FCFA)</th>
             </tr>
         </thead>
         <tbody>
@@ -79,6 +80,7 @@
                         <div style="font-weight: bold;">{{ $ligne->medicament->nom ?? '—' }}</div>
                         <div style="font-size: 9px; color: #888;">{{ $ligne->medicament->famille->nom ?? '' }}</div>
                     </td>
+                    <td>{{ $ligne->unite->nom ?? 'Standard' }}</td>
                     <td class="text-right">{{ $ligne->quantite }}</td>
                     <td class="text-right">{{ number_format($ligne->prix_unitaire, 0, ',', ' ') }}</td>
                     <td class="text-right">{{ number_format($ligne->total, 0, ',', ' ') }}</td>

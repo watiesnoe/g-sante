@@ -98,25 +98,53 @@
             text-align: center;
         }
 
-        .form-floating>label {
-            padding-left: 1.25rem;
+        .form-label {
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .input-group-text {
+            border-radius: 12px 0 0 12px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-end-0: none;
             color: #6c757d;
+            padding: 0.85rem 1.1rem;
         }
 
         .form-control {
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
+            border-radius: 0 12px 12px 0;
+            padding: 0.85rem 1.1rem;
             border: 1px solid #e2e8f0;
+            border-start-0: none;
             background-color: #f8fafc;
-            height: calc(3.8rem + 2px);
             font-size: 1rem;
             transition: all 0.2s;
         }
 
-        .form-control:focus {
+        .input-group .form-control:focus {
             background-color: #ffffff;
             border-color: #1c61e7;
-            box-shadow: 0 0 0 4px rgba(28, 97, 231, 0.1);
+            box-shadow: none;
+        }
+
+        .input-group:focus-within .input-group-text,
+        .input-group:focus-within .form-control,
+        .input-group:focus-within .btn-toggle-password {
+            border-color: #1c61e7;
+            background-color: #ffffff;
+        }
+
+        .btn-toggle-password {
+            border-radius: 0 12px 12px 0;
+            border: 1px solid #e2e8f0;
+            border-start-0: none;
+            background-color: #f8fafc;
+            color: #6c757d;
+            padding: 0.85rem 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .btn-login {
@@ -187,7 +215,7 @@
         <!-- Côté Droit : Formulaire de Connexion -->
         <div class="login-right">
             <div class="form-container">
-                <div class="text-center mb-5">
+                <div class="text-center mb-4">
                     <div class="brand-logo">
                         <img src="{{ asset('image/logo/logo.png') }}" style="max-height: 80px;" alt="Mali Kènèya Hub">
                     </div>
@@ -212,23 +240,37 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
 
-                    <!-- Adresse Email -->
-                    <div class="form-floating mb-4">
-                        <input type="email" class="form-control fw-medium" id="email" name="email"
-                            value="{{ old('email') }}" placeholder="nom@hopital.com" required autofocus
-                            autocomplete="username">
-                        <label for="email"><i class="fas fa-envelope text-muted me-2"></i>Adresse Email</label>
+                    <!-- Disposition verticale (en colonne) pour l'Adresse Email -->
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-semibold text-secondary">
+                            <i class="fas fa-envelope text-primary me-2"></i>Adresse Email
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-at"></i></span>
+                            <input type="email" class="form-control fw-medium" id="email" name="email"
+                                value="{{ old('email') }}" placeholder="ex: nom@hopital.com" required autofocus
+                                autocomplete="username">
+                        </div>
                     </div>
 
-                    <!-- Mot de passe -->
-                    <div class="form-floating mb-3">
-                        <input type="password" class="form-control fw-medium" id="password" name="password"
-                            placeholder="Mot de passe" required autocomplete="current-password">
-                        <label for="password"><i class="fas fa-lock text-muted me-2"></i>Mot de passe</label>
+                    <!-- Disposition verticale (en colonne) pour le Mot de passe -->
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold text-secondary">
+                            <i class="fas fa-lock text-primary me-2"></i>Mot de passe
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="password" class="form-control fw-medium" id="password" name="password"
+                                placeholder="Votre mot de passe" required autocomplete="current-password"
+                                style="border-radius: 0;">
+                            <button class="btn-toggle-password" type="button" id="togglePassword">
+                                <i class="fas fa-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Mémoriser & Mdp oublié -->
-                    <div class="d-flex justify-content-between align-items-center mb-5">
+                    <!-- Options (Se souvenir de moi & Mot de passe oublié) -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="form-check custom-checkbox">
                             <input class="form-check-input" type="checkbox" name="remember" id="remember_me">
                             <label class="form-check-label text-muted fw-medium user-select-none" for="remember_me"
@@ -258,6 +300,22 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (togglePassword && passwordInput && toggleIcon) {
+                togglePassword.addEventListener('click', function () {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    toggleIcon.classList.toggle('fa-eye');
+                    toggleIcon.classList.toggle('fa-eye-slash');
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

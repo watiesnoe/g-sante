@@ -46,4 +46,73 @@ class Patient extends Model {
     public function getNomCompletAttribute() {
         return "{$this->prenom} {$this->nom}";
     }
+
+    /**
+     * Scope pour filtrer les patients selon la structure / le médecin connecté.
+     * Seuls le super admin et l'admin peuvent voir tous les patients.
+     * Les médecins ne voient que les patients liés à leur structure (service/médecin).
+     */
+    public function scopeForUserStructure($query, $user = null)
+    {
+        $user = $user ?? auth()->user();
+        if (!$user) {
+            return $query;
+        }
+
+        // Seuls le super_admin et l'admin ont accès à TOUS les patients
+        if ($user->hasRole(['super_admin', 'superadmin', 'admin'])) {
+            return $query;
+        }
+
+        $medecinId = $user->id;
+
+        // Collecter les services de l'utilisateur
+        $serviceIds = [];
+        if ($user->service_medical_id) {
+            $serviceIds[] = $user->service_medical_id;
+        }
+        if (method_exists($user, 'services')) {
+            $pivotServices = $user->services()->pluck('service_medicals.id')->toArray();
+            $serviceIds = array_unique(array_merge($serviceIds, $pivotServices));
+        }
+
+        // Médecins de la même structure/service
+        $medecinIdsInService = [$medecinId];
+        if (!empty($serviceIds)) {
+            $doctorsInService = User::where(function ($q) use ($serviceIds) {
+                $q->whereIn('service_medical_id', $serviceIds)
+                  ->orWhereHas('services', function ($sq) use ($serviceIds) {
+                      $sq->whereIn('service_medicals.id', $serviceIds);
+                  });
+            })->pluck('id')->toArray();
+            $medecinIdsInService = array_unique(array_merge($medecinIdsInService, $doctorsInService));
+        }
+
+        return $query->where(function ($q) use ($medecinId, $medecinIdsInService, $serviceIds) {
+            $q->whereHas('consultations', function ($cq) use ($medecinIdsInService) {
+                $cq->whereIn('medecin_id', $medecinIdsInService);
+            })
+            ->orWhereHas('rendezVous', function ($rq) use ($medecinIdsInService) {
+                $rq->whereIn('medecin_id', $medecinIdsInService);
+            })
+            ->orWhereHas('tickets', function ($tq) use ($medecinIdsInService) {
+                $tq->whereIn('medecin_id', $medecinIdsInService);
+            })
+            ->orWhereHas('transferts', function ($trq) use ($medecinIdsInService, $serviceIds) {
+                $trq->whereIn('dest_medecin_id', $medecinIdsInService)
+                    ->orWhereIn('source_medecin_id', $medecinIdsInService);
+                if (!empty($serviceIds)) {
+                    $trq->orWhereIn('dest_service_id', $serviceIds)
+                        ->orWhereIn('source_service_id', $serviceIds);
+                }
+            });
+
+            if (!empty($serviceIds)) {
+                $q->orWhereHas('hospitalisations', function ($hq) use ($serviceIds) {
+                    $hq->whereIn('service_id', $serviceIds);
+                });
+            }
+        });
+    }
 }
+

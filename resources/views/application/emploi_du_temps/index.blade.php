@@ -188,7 +188,11 @@
     <div class="edt-toolbar">
         <div class="edt-title">
             <i class="fa fa-calendar-week"></i>
-            Emploi du Temps des Médecins
+            @if(isset($isMedecinOnly) && $isMedecinOnly)
+                Mon Emploi du Temps
+            @else
+                Emploi du Temps des Médecins
+            @endif
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="view-toggle">
@@ -199,7 +203,7 @@
                     <i class="fa fa-user-md me-1"></i> Par Médecin
                 </button>
             </div>
-            @if(Auth::user()->hasRole(['admin','super_admin']))
+            @if(Auth::user()->hasRole(['admin','super_admin','superadmin']))
             <button class="btn btn-sm btn-success" onclick="openModal()">
                 <i class="fa fa-plus me-1"></i> Ajouter un créneau
             </button>
@@ -267,7 +271,7 @@
                                             <div class="mt-1"><i class="fa fa-map-marker-alt me-1" style="opacity:.5;"></i>{{ $creneau->lieu }}</div>
                                         @endif
                                     </div>
-                                    @if(Auth::user()->hasRole(['admin','super_admin']))
+                                    @if(Auth::user()->hasRole(['admin','super_admin','superadmin']))
                                     <div class="ms-auto d-flex gap-1">
                                         <button class="btn btn-sm btn-outline-info p-1" style="font-size:.7rem;" onclick="editCreneau({{ $creneau->id }})" title="Modifier">
                                             <i class="fa fa-pencil-alt"></i>
@@ -286,7 +290,13 @@
             @else
                 <div class="no-disponible">
                     <i class="fa fa-calendar-times d-block mb-2 text-muted"></i>
-                    <p class="text-muted mb-0">Aucun médecin disponible ce jour-là.</p>
+                    <p class="text-muted mb-0">
+                        @if(isset($isMedecinOnly) && $isMedecinOnly)
+                            Vous n'avez aucun créneau programmé ce jour-là.
+                        @else
+                            Aucun médecin disponible ce jour-là.
+                        @endif
+                    </p>
                 </div>
             @endif
         </div>
@@ -312,47 +322,50 @@
                                 <th>Heure fin</th>
                                 <th>Service</th>
                                 <th>Lieu</th>
-                                @if(Auth::user()->hasRole(['admin','super_admin']))
+                                @if(Auth::user()->hasRole(['admin','super_admin','superadmin']))
                                 <th class="text-center">Actions</th>
                                 @endif
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($medecins as $medecin)
-                                @foreach ($medecin->emploiDuTemps->sortBy(['jour_semaine','heure_debut']) as $idx => $creneau)
-                                <tr>
-                                    @if($idx === 0)
-                                    <td rowspan="{{ $medecin->emploiDuTemps->count() }}" style="vertical-align:middle;">
-                                        <div class="d-flex align-items-center gap-2">
-                                            @if($medecin->photo)
-                                                <img src="{{ asset('storage/'.$medecin->photo) }}" class="rounded-circle" width="36" height="36" style="object-fit:cover;">
-                                            @else
-                                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;font-size:.85rem;font-weight:700;background:var(--edt-primary)!important;">
-                                                    {{ strtoupper(substr($medecin->prenom,0,1).substr($medecin->nom,0,1)) }}
+                            @php $totalCreneaux = $medecins->pluck('emploiDuTemps')->flatten()->count(); @endphp
+                            @if($totalCreneaux > 0)
+                                @foreach ($medecins as $medecin)
+                                    @foreach ($medecin->emploiDuTemps->sortBy(['jour_semaine','heure_debut']) as $idx => $creneau)
+                                    <tr>
+                                        @if($idx === 0)
+                                        <td rowspan="{{ $medecin->emploiDuTemps->count() }}" style="vertical-align:middle;">
+                                            <div class="d-flex align-items-center gap-2">
+                                                @if($medecin->photo)
+                                                    <img src="{{ asset('storage/'.$medecin->photo) }}" class="rounded-circle" width="36" height="36" style="object-fit:cover;">
+                                                @else
+                                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;font-size:.85rem;font-weight:700;background:var(--edt-primary)!important;">
+                                                        {{ strtoupper(substr($medecin->prenom,0,1).substr($medecin->nom,0,1)) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <strong>Dr. {{ $medecin->prenom }} {{ $medecin->nom }}</strong>
                                                 </div>
-                                            @endif
-                                            <div>
-                                                <strong>Dr. {{ $medecin->prenom }} {{ $medecin->nom }}</strong>
                                             </div>
-                                        </div>
-                                    </td>
-                                    @endif
-                                    <td><span class="jour-pill">{{ $creneau->jour_nom }}</span></td>
-                                    <td>{{ substr($creneau->heure_debut,0,5) }}</td>
-                                    <td>{{ substr($creneau->heure_fin,0,5) }}</td>
-                                    <td>{{ $creneau->service ?? '-' }}</td>
-                                    <td>{{ $creneau->lieu ?? '-' }}</td>
-                                    @if(Auth::user()->hasRole(['admin','super_admin']))
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-info" onclick="editCreneau({{ $creneau->id }})" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCreneau({{ $creneau->id }})" title="Supprimer"><i class="fa fa-trash"></i></button>
-                                    </td>
-                                    @endif
-                                </tr>
+                                        </td>
+                                        @endif
+                                        <td><span class="jour-pill">{{ $creneau->jour_nom }}</span></td>
+                                        <td>{{ substr($creneau->heure_debut,0,5) }}</td>
+                                        <td>{{ substr($creneau->heure_fin,0,5) }}</td>
+                                        <td>{{ $creneau->service ?? '-' }}</td>
+                                        <td>{{ $creneau->lieu ?? '-' }}</td>
+                                        @if(Auth::user()->hasRole(['admin','super_admin','superadmin']))
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-info" onclick="editCreneau({{ $creneau->id }})" title="Modifier"><i class="fa fa-pencil-alt"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCreneau({{ $creneau->id }})" title="Supprimer"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                        @endif
+                                    </tr>
+                                    @endforeach
                                 @endforeach
-                            @empty
-                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun planning enregistré.</td></tr>
-                            @endforelse
+                            @else
+                                <tr><td colspan="{{ Auth::user()->hasRole(['admin','super_admin','superadmin']) ? 7 : 6 }}" class="text-center text-muted py-4">Aucun planning enregistré.</td></tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -365,7 +378,7 @@
 {{-- ══════════════════════════════════════════
      MODAL : Ajouter / Modifier un créneau
 ══════════════════════════════════════════ --}}
-@if(Auth::user()->hasRole(['admin','super_admin']))
+@if(Auth::user()->hasRole(['admin','super_admin','superadmin']))
 <div class="modal fade" id="edtModal" tabindex="-1" aria-labelledby="edtModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form id="edtForm">

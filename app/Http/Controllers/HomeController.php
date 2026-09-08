@@ -140,15 +140,51 @@ class HomeController extends Controller
 
     private function medecinDashboard()
     {
-        $medecinId = Auth::id();
+        $user = Auth::user();
+        $medecinId = $user->id;
+
+        // Collecter les services de l'utilisateur
+        $serviceIds = [];
+        if ($user->service_medical_id) {
+            $serviceIds[] = $user->service_medical_id;
+        }
+        if (method_exists($user, 'services')) {
+            $pivotServices = $user->services()->pluck('service_medicals.id')->toArray();
+            $serviceIds = array_unique(array_merge($serviceIds, $pivotServices));
+        }
+
+        // Médecins de la même structure/service
+        $medecinIdsInService = [$medecinId];
+        if (!empty($serviceIds)) {
+            $doctorsInService = User::where(function ($q) use ($serviceIds) {
+                $q->whereIn('service_medical_id', $serviceIds)
+                  ->orWhereHas('services', function ($sq) use ($serviceIds) {
+                      $sq->whereIn('service_medicals.id', $serviceIds);
+                  });
+            })->pluck('id')->toArray();
+            $medecinIdsInService = array_unique(array_merge($medecinIdsInService, $doctorsInService));
+        }
+
+        // Requête Patients pour la structure du médecin
+        $patientsQuery = Patient::forUserStructure($user);
+
+        // Hospitalisations de la structure / du médecin
+        $hospitalisationsQuery = Hospitalisation::where(function ($q) use ($medecinIdsInService, $serviceIds) {
+            $q->whereHas('consultation', function ($cq) use ($medecinIdsInService) {
+                $cq->whereIn('medecin_id', $medecinIdsInService);
+            });
+            if (!empty($serviceIds)) {
+                $q->orWhereIn('service_id', $serviceIds);
+            }
+        });
 
         $stats = [
             'consultations_today'     => DB::table('consultations')->where('medecin_id', $medecinId)->whereDate('created_at', today())->count(),
-            'total_patients'          => DB::table('patients')->count(),
+            'total_patients'          => (clone $patientsQuery)->count(),
             'total_consultations'     => DB::table('consultations')->where('medecin_id', $medecinId)->count(),
-            'total_hospitalisations'  => DB::table('hospitalisations')->count(),
-            'new_patients_today'      => DB::table('patients')->whereDate('created_at', today())->count(),
-            'active_hospitalisations' => DB::table('hospitalisations')->where('etat', 'en cours')->count(),
+            'total_hospitalisations'  => (clone $hospitalisationsQuery)->count(),
+            'new_patients_today'      => (clone $patientsQuery)->whereDate('patients.created_at', today())->count(),
+            'active_hospitalisations' => (clone $hospitalisationsQuery)->where('etat', 'en cours')->count(),
         ];
 
         $todayAppointments = RendezVous::with('patient')
@@ -159,9 +195,17 @@ class HomeController extends Controller
 
         $activeHospitalisations = Hospitalisation::with(['consultation.patient', 'salle', 'service'])
             ->where('etat', 'en cours')
+            ->where(function ($q) use ($medecinIdsInService, $serviceIds) {
+                $q->whereHas('consultation', function ($cq) use ($medecinIdsInService) {
+                    $cq->whereIn('medecin_id', $medecinIdsInService);
+                });
+                if (!empty($serviceIds)) {
+                    $q->orWhereIn('service_id', $serviceIds);
+                }
+            })
             ->get();
 
-        $consultationStats = $this->getConsultationStats();
+        $consultationStats = $this->getConsultationStats($medecinId);
 
         return view('dashboard', compact(
             'stats',
@@ -303,13 +347,17 @@ class HomeController extends Controller
             ->get(['nom', 'stock', 'stock_min']);
     }
 
-    private function getConsultationStats()
+    private function getConsultationStats($medecinId = null)
     {
-        // 1 seule requête GROUP BY au lieu de 6 requêtes en boucle
-        $results = Consultation::selectRaw(
+        $query = Consultation::where('date_consultation', '>=', Carbon::now()->subMonths(5)->startOfMonth());
+
+        if ($medecinId) {
+            $query->where('medecin_id', $medecinId);
+        }
+
+        $results = $query->selectRaw(
                 'YEAR(date_consultation) as yr, MONTH(date_consultation) as mo, COUNT(*) as total'
             )
-            ->where('date_consultation', '>=', Carbon::now()->subMonths(5)->startOfMonth())
             ->groupByRaw('YEAR(date_consultation), MONTH(date_consultation)')
             ->orderByRaw('yr ASC, mo ASC')
             ->get()

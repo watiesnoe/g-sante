@@ -16,8 +16,9 @@ class PatientController extends Controller
 
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
-            $patients = Patient::select(['id', 'uuid', 'nom', 'prenom', 'genre', 'telephone', 'created_at'])
-                ->whereYear('created_at', $year);
+            $patients = Patient::forUserStructure(Auth::user())
+                ->select(['patients.id', 'patients.uuid', 'patients.nom', 'patients.prenom', 'patients.genre', 'patients.telephone', 'patients.created_at'])
+                ->whereYear('patients.created_at', $year);
 
             return datatables()->of($patients)
                 ->addIndexColumn()
@@ -86,7 +87,7 @@ class PatientController extends Controller
     {
         abort_unless(Auth::user()->can('patients.search'), 403, 'Accès non autorisé : vous n\'avez pas la permission de rechercher un patient.');
 
-        $query = Patient::where(function($q) use ($request) {
+        $query = Patient::forUserStructure(Auth::user())->where(function($q) use ($request) {
             $q->where('nom', 'like', '%'.$request->q.'%')
               ->orWhere('prenom', 'like', '%'.$request->q.'%')
               ->orWhere('telephone', 'like', '%'.$request->q.'%');
@@ -102,7 +103,7 @@ class PatientController extends Controller
         }
 
         $patients = $query->limit(20)
-            ->get(['id', 'uuid','nom','prenom','telephone','age','genre','assurance_id','numero_assurance','fin_validite_assurance']);
+            ->get(['patients.id', 'patients.uuid','patients.nom','patients.prenom','patients.telephone','patients.age','patients.genre','patients.assurance_id','patients.numero_assurance','patients.fin_validite_assurance']);
 
         return response()->json($patients);
     }
@@ -113,6 +114,12 @@ class PatientController extends Controller
     public function show(Patient $patient)
     {
         abort_unless(Auth::user()->can('patients.dossier'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les dossiers patients.');
+
+        $user = Auth::user();
+        if (!$user->hasRole(['super_admin', 'superadmin', 'admin'])) {
+            $isAuthorized = Patient::forUserStructure($user)->where('patients.id', $patient->id)->exists();
+            abort_unless($isAuthorized, 403, 'Accès non autorisé : ce patient ne fait pas partie de votre structure.');
+        }
 
         $patient->load([
             'consultations.ordonnances',

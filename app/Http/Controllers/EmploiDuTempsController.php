@@ -13,15 +13,28 @@ use Illuminate\Support\Facades\Auth;
 class EmploiDuTempsController extends Controller
 {
     /**
-     * Affiche la vue principale (planning hebdomadaire de tous les médecins)
+     * Affiche la vue principale
+     * - Pour un médecin: affiche son propre emploi du temps.
+     * - Pour un admin/superadmin: affiche l'emploi du temps de tous les médecins et permet la planification.
      */
     public function index(Request $request)
     {
-        $medecins = User::role('medecin')
-            ->where('statut', 'actif')
-            ->with(['emploiDuTemps' => fn($q) => $q->actif()->orderBy('jour_semaine')->orderBy('heure_debut')])
-            ->orderBy('nom')
-            ->get();
+        $user = Auth::user();
+
+        $isAdmin = $user->hasRole(['super_admin', 'superadmin', 'admin']);
+        $isMedecinOnly = $user->hasRole('medecin') && !$isAdmin;
+
+        if ($isMedecinOnly) {
+            $medecins = User::where('id', $user->id)
+                ->with(['emploiDuTemps' => fn($q) => $q->actif()->orderBy('jour_semaine')->orderBy('heure_debut')])
+                ->get();
+        } else {
+            $medecins = User::role('medecin')
+                ->where('statut', 'actif')
+                ->with(['emploiDuTemps' => fn($q) => $q->actif()->orderBy('jour_semaine')->orderBy('heure_debut')])
+                ->orderBy('nom')
+                ->get();
+        }
 
         $jours = EmploiDuTemps::$jours;
 
@@ -36,7 +49,12 @@ class EmploiDuTempsController extends Controller
         // Jour courant de la semaine (1 = Lundi)
         $jourCourant = Carbon::now()->dayOfWeekIso; // 1-7
 
-        $allCreneaux = EmploiDuTemps::with('medecin')->get()->map(function ($c) {
+        $allCreneauxQuery = EmploiDuTemps::with('medecin');
+        if ($isMedecinOnly) {
+            $allCreneauxQuery->where('medecin_id', $user->id);
+        }
+
+        $allCreneaux = $allCreneauxQuery->get()->map(function ($c) {
             return [
                 'id'           => $c->id,
                 'medecin_id'   => $c->medecin_id,
@@ -53,7 +71,7 @@ class EmploiDuTempsController extends Controller
         $allSalles = Salle::orderBy('nom')->get();
 
         return view('application.emploi_du_temps.index', compact(
-            'medecins', 'jours', 'parJour', 'jourCourant', 'allCreneaux', 'servicesList', 'allSalles'
+            'medecins', 'jours', 'parJour', 'jourCourant', 'allCreneaux', 'servicesList', 'allSalles', 'isMedecinOnly', 'isAdmin'
         ));
     }
 
@@ -62,7 +80,12 @@ class EmploiDuTempsController extends Controller
      */
     public function getMedecinCreneaux(Request $request)
     {
+        $user = Auth::user();
         $medecinId = $request->medecin_id;
+
+        if ($user->hasRole('medecin') && !$user->hasRole(['super_admin', 'superadmin', 'admin'])) {
+            $medecinId = $user->id;
+        }
 
         $creneaux = EmploiDuTemps::where('medecin_id', $medecinId)
             ->actif()
@@ -118,10 +141,17 @@ class EmploiDuTempsController extends Controller
     }
 
     /**
-     * Enregistre ou met à jour un créneau
+     * Enregistre ou met à jour un créneau (réservé aux admins/superadmins)
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasRole(['super_admin', 'superadmin', 'admin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé. Seuls les administrateurs peuvent planifier l\'emploi du temps.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'medecin_id'   => 'required|exists:users,id',
             'jour_semaine' => 'required|integer|between:1,7',
@@ -145,10 +175,17 @@ class EmploiDuTempsController extends Controller
     }
 
     /**
-     * Supprime (désactive) un créneau
+     * Supprime (désactive) un créneau (réservé aux admins/superadmins)
      */
     public function destroy(EmploiDuTemps $emploiDuTemp)
     {
+        if (!Auth::user()->hasRole(['super_admin', 'superadmin', 'admin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé. Seuls les administrateurs peuvent modifier l\'emploi du temps.'
+            ], 403);
+        }
+
         $emploiDuTemp->delete();
 
         return response()->json(['success' => true, 'message' => 'Créneau supprimé.']);

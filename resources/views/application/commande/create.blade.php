@@ -10,6 +10,25 @@
 
 @section('content')
 <div class="container-fluid">
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-3 mt-3" role="alert">
+            <i class="fa fa-exclamation-circle me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-3 mt-3" role="alert">
+            <i class="fa fa-exclamation-triangle me-2"></i> Veuillez corriger les erreurs ci-dessous :
+            <ul class="mb-0 mt-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <form method="POST" action="{{ isset($commande) ? route('commandes.update', $commande) : route('commandes.store') }}">
         @csrf
         @if(isset($commande)) @method('PUT') @endif
@@ -71,9 +90,10 @@
                     <thead>
                         <tr>
                             <th>Médicament</th>
+                            <th width="20%">Unité</th>
                             <th width="15%">Qté</th>
-                            <th width="20%">P.U (FCFA)</th>
-                            <th width="20%">Total (FCFA)</th>
+                            <th width="18%">P.U (FCFA)</th>
+                            <th width="18%">Total (FCFA)</th>
                             <th width="50"></th>
                         </tr>
                     </thead>
@@ -82,7 +102,7 @@
 
                     <tfoot>
                         <tr>
-                            <th colspan="3" class="text-end">Total :</th>
+                            <th colspan="4" class="text-end">Total :</th>
                             <th id="total_general">0</th>
                             <th></th>
                         </tr>
@@ -105,6 +125,13 @@
 <script>
 $(function(){
 
+    // Échappe le HTML pour éviter toute injection via des noms de médicament/unité (XSS)
+    function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, function (s) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+        });
+    }
+
     $.ajaxSetup({
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
     });
@@ -120,7 +147,9 @@ $(function(){
             id: {{ $l->medicament_id }},
             nom: "{{ $l->medicament->nom }}",
             quantite: {{ $l->quantite }},
-            prix_unitaire: {{ $l->prix_unitaire }}
+            unite_id: {{ $l->unite_id ?? 'null' }},
+            prix_unitaire: {{ $l->prix_unitaire }},
+            unites: {!! json_encode($l->medicament ? $l->medicament->unites->map(fn($u) => ['id'=>$u->id, 'nom'=>$u->nom, 'prix_achat'=>$u->prix_achat, 'is_default'=>$u->is_default]) : []) !!}
         };
         @endforeach
     @else
@@ -150,22 +179,52 @@ $(function(){
         });
     });
 
+    // CHANGEMENT D'UNITE
+    $('#table-panier').on('change','.select-unite',function(){
+        let tr = $(this).closest('tr');
+        let id = tr.data('id');
+        let selectedOption = $(this).find('option:selected');
+        let prix = parseFloat(selectedOption.data('prix')) || 0;
+        let uniteId = $(this).val();
+
+        if (prix > 0) {
+            tr.find('.prix').val(Math.round(prix));
+        }
+
+        let qte = parseInt(tr.find('.quantite').val()) || 1;
+        let newPrix = parseFloat(tr.find('.prix').val()) || 0;
+
+        $.post("{{ route('commandes.panier.modifier') }}", { 
+            medicament_id: id, 
+            quantite: qte, 
+            prix_unitaire: newPrix,
+            unite_id: uniteId
+        }, function(data){
+            panier = data;
+            let total = qte * newPrix;
+            tr.find('.total').text(Math.round(total).toLocaleString('fr-FR'));
+            calculTotal();
+        });
+    });
+
     // MODIFIER (SANS RELOAD)
     $('#table-panier').on('input','.quantite, .prix',function(){
         let tr = $(this).closest('tr');
         let id = tr.data('id');
         let qte = parseInt(tr.find('.quantite').val()) || 1;
         let prix = parseFloat(tr.find('.prix').val()) || 0;
+        let uniteId = tr.find('.select-unite').val();
 
         $.post("{{ route('commandes.panier.modifier') }}", { 
             medicament_id: id, 
             quantite: qte, 
-            prix_unitaire: prix 
+            prix_unitaire: prix,
+            unite_id: uniteId
         }, function(data){
             panier = data;
             // update ligne
             let total = qte * prix;
-            tr.find('.total').text(Math.round(total));
+            tr.find('.total').text(Math.round(total).toLocaleString('fr-FR'));
             calculTotal();
         });
     });
@@ -176,11 +235,28 @@ $(function(){
 
         Object.values(panier).forEach(item=>{
             let pUnit = parseFloat(item.prix_unitaire) || 0;
+            let unitesOptions = '';
+            
+            if (item.unites && Array.isArray(item.unites) && item.unites.length > 0) {
+                item.unites.forEach(u => {
+                    let selected = (item.unite_id == u.id || (!item.unite_id && u.is_default)) ? 'selected' : '';
+                    unitesOptions += `<option value="${u.id}" data-prix="${u.prix_achat}" ${selected}>${escapeHtml(u.nom)}</option>`;
+                });
+            } else {
+                unitesOptions = `<option value="">Standard</option>`;
+            }
+
             tbody.append(`
                 <tr data-id="${item.id}">
                     <td>
                         <input type="hidden" name="medicament_id[]" value="${item.id}">
-                        <div class="fw-bold">${item.nom}</div>
+                        <div class="fw-bold">${escapeHtml(item.nom)}</div>
+                    </td>
+
+                    <td>
+                        <select name="unite_id[]" class="form-select form-select-sm select-unite">
+                            ${unitesOptions}
+                        </select>
                     </td>
 
                     <td>
@@ -193,7 +269,7 @@ $(function(){
                                 value="${Math.round(pUnit)}" step="1">
                     </td>
 
-                    <td class="total text-end fw-bold">${Math.round(item.quantite * pUnit)}</td>
+                    <td class="total text-end fw-bold">${Math.round(item.quantite * pUnit).toLocaleString('fr-FR')}</td>
 
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm remove" data-id="${item.id}">

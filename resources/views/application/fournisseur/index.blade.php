@@ -51,8 +51,9 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Contact</label>
-                                <input type="text" id="contact" name="contact" class="form-control"
-                                    placeholder="Téléphone">
+                                <input type="tel" id="contact" name="contact" class="form-control phone-input"
+                                    placeholder="Téléphone" required>
+                                <div class="invalid-feedback" id="contactFeedback"></div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Adresse</label>
@@ -104,7 +105,19 @@
                     },
                     {
                         data: 'contact',
-                        name: 'contact'
+                        name: 'contact',
+                        render: function(data) {
+                            // Affiche le numéro formaté selon son pays (drapeau + indicatif) dès que la librairie est chargée
+                            if (!data) return '-';
+                            if (window.intlTelInputUtils) {
+                                try {
+                                    return window.intlTelInputUtils.formatNumber(data, null, window.intlTelInputUtils.numberFormat.INTERNATIONAL);
+                                } catch (e) {
+                                    return data;
+                                }
+                            }
+                            return data;
+                        }
                     },
                     {
                         data: 'adresse',
@@ -139,10 +152,32 @@
                 pagingType: 'simple_numbers'
             });
 
+            // Une fois la librairie de formatage téléphonique (utils.js, chargée en
+            // asynchrone par intl-tel-input) disponible, on réaffiche le tableau pour
+            // que les numéros déjà rendus passent au format international.
+            (function pollPhoneUtils(attemptsLeft) {
+                if (window.intlTelInputUtils) {
+                    table.draw(false);
+                    return;
+                }
+                if (attemptsLeft <= 0) return;
+                setTimeout(function() { pollPhoneUtils(attemptsLeft - 1); }, 200);
+            })(25);
+
+            // Récupère l'instance intl-tel-input (drapeau + indicatif pays) du champ contact
+            function getContactIti() {
+                var input = document.getElementById('contact');
+                return (window.intlTelInputGlobals && input) ? window.intlTelInputGlobals.getInstance(input) : null;
+            }
+
             // ── 🛠️ ACTION : CLIC SUR "AJOUTER" ─────────────────────────────────
             $('#btnAdd').on('click', function() {
                 $('#crudForm')[0].reset();
                 $('#id').val('');
+                $('#contact').removeClass('is-valid is-invalid');
+                $('#contactFeedback').text('').hide();
+                let iti = getContactIti();
+                if (iti) iti.setNumber('');
                 $('#modalTitle').text('➕ Ajouter un fournisseur');
                 $('#btnSave').show();
                 $('#crudForm input').prop('disabled', false);
@@ -181,12 +216,42 @@
                 });
             });
 
+            // Validation en direct du numéro selon le pays sélectionné
+            // (affichage explicite car intl-tel-input enveloppe l'input, ce qui casse
+            // le sélecteur CSS Bootstrap ".is-invalid ~ .invalid-feedback")
+            $(document).on('input blur countrychange', '#contact', function() {
+                let iti = getContactIti();
+                if (!iti || this.value.trim() === '') {
+                    $(this).removeClass('is-invalid is-valid');
+                    $('#contactFeedback').text('').hide();
+                    return;
+                }
+                if (iti.isValidNumber()) {
+                    $(this).removeClass('is-invalid').addClass('is-valid');
+                    $('#contactFeedback').text('').hide();
+                } else {
+                    $(this).removeClass('is-valid').addClass('is-invalid');
+                    $('#contactFeedback').text('Numéro invalide pour le pays sélectionné').show();
+                }
+            });
+
             // ── 🛠️ ACTION : SOUMISSION DU FORMULAIRE (AJOUT / MODIFICATION) ────
             $('#crudForm').on('submit', function(e) {
                 e.preventDefault();
+
+                let iti = getContactIti();
+                if (iti && !iti.isValidNumber()) {
+                    $('#contact').addClass('is-invalid');
+                    $('#contactFeedback').text('Numéro invalide pour le pays sélectionné').show();
+                    alert('Veuillez entrer un numéro de téléphone valide pour le pays sélectionné.');
+                    return;
+                }
+
                 let id = $('#id').val();
                 let url = id ? ROUTES.update.replace(':id', id) : ROUTES.store;
 
+                // Le champ contact est automatiquement converti au format international (+E.164)
+                // avant sérialisation par le script global (voir js.blade.php)
                 let formData = $(this).serialize();
                 if (id) {
                     formData += '&_method=PUT';
@@ -212,7 +277,9 @@
                     error: function(xhr) {
                         // Permet de voir le message d'erreur précis renvoyé par Laravel en cas de validation échouée (Ex: status 422)
                         let errorMsg = "Une erreur est survenue lors de l'enregistrement.";
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMsg = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
                         }
                         alert(errorMsg);
@@ -247,7 +314,15 @@
             function mapDataToForm(data) {
                 $('#id').val(data.uuid || data.id);
                 $('#nom').val(data.nom);
-                $('#contact').val(data.contact);
+                $('#contact').removeClass('is-valid is-invalid');
+                $('#contactFeedback').text('').hide();
+                let iti = getContactIti();
+                if (iti) {
+                    // setNumber positionne aussi le bon drapeau/pays selon l'indicatif du numéro
+                    iti.setNumber(data.contact || '');
+                } else {
+                    $('#contact').val(data.contact);
+                }
                 $('#adresse').val(data.adresse);
             }
         });

@@ -11,6 +11,7 @@ class ReceptionLigne extends Model
     protected $fillable = [
         'reception_id',
         'medicament_id',
+        'unite_id',
         'quantite_commandee',
         'quantite_recue',
         'prix_unitaire',
@@ -26,5 +27,10 @@ class ReceptionLigne extends Model
     public function reception()
     {
         return $this->belongsTo(Reception::class);
+    }
+
+    public function unite()
+    {
+        return $this->belongsTo(Unite::class, 'unite_id');
     }
 }

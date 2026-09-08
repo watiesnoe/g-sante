@@ -60,6 +60,7 @@
                         <tr>
                             <th>#</th>
                             <th>Nom du Médicament</th>
+                            <th>Unité</th>
                             <th>Quantité</th>
                             <th>Prix Unitaire (F CFA)</th>
                             <th>Total (F CFA)</th>
@@ -69,14 +70,15 @@
                         @forelse ($commande->lignes as $index => $ligne)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $ligne->medicament->nom ?? 'N/A' }}</td>
+                                <td class="fw-bold">{{ $ligne->medicament->nom ?? 'N/A' }}</td>
+                                <td><span class="badge bg-info">{{ $ligne->unite->nom ?? 'Standard' }}</span></td>
                                 <td>{{ $ligne->quantite }}</td>
                                 <td>{{ number_format($ligne->prix_unitaire, 0, ',', ' ') }}</td>
                                 <td>{{ number_format($ligne->total, 0, ',', ' ') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted">Aucun médicament dans cette commande.</td>
+                                <td colspan="6" class="text-center text-muted">Aucun médicament dans cette commande.</td>
                             </tr>
                         @endforelse
 

@@ -11,7 +11,7 @@
         </div>
         <div class="card-body">
             <form id="formFournisseur"
-                  action="{{ isset($fournisseur) ? route('fournisseurs.update', $fournisseur->id) : route('fournisseurs.store') }}"
+                  action="{{ isset($fournisseur) ? route('fournisseurs.update', $fournisseur) : route('fournisseurs.store') }}"
                   method="POST">
                 @csrf
                 @if(isset($fournisseur))
@@ -35,7 +35,7 @@
                         </label>
                         <input type="tel" id="contact" name="contact" class="form-control phone-input"
                                value="{{ $fournisseur->contact ?? old('contact') }}" required>
-                        <div class="invalid-feedback"></div>
+                        <div class="invalid-feedback" id="contactFeedback"></div>
                     </div>
 
                     <div class="mb-3 col-md-4">
@@ -73,102 +73,37 @@ $(document).ready(function() {
     });
 
     // ============================================
-    // Formatage simple des numéros de téléphone
+    // Téléphone international (drapeau + indicatif selon le pays)
+    // Le formatage/la validation sont gérés par intl-tel-input,
+    // initialisé globalement sur tout input.phone-input (voir js.blade.php).
     // ============================================
-    
-    // Fonction pour formater le numéro en groupes de 2 chiffres
-    function formatPhoneNumber(input) {
-        let value = input.value.replace(/\D/g, ''); // Garder uniquement les chiffres
-        
-        if (value.length === 0) {
-            input.value = '';
+
+    function getContactIti() {
+        var input = document.getElementById('contact');
+        return (window.intlTelInputGlobals && input) ? window.intlTelInputGlobals.getInstance(input) : null;
+    }
+
+    // Retour visuel de validité pendant la saisie
+    // (affichage explicite via un id car intl-tel-input enveloppe l'input,
+    // ce qui casse à la fois le sélecteur CSS Bootstrap ".is-invalid ~ .invalid-feedback"
+    // et le sélecteur jQuery .siblings())
+    var $contactFeedback = $('#contactFeedback');
+    $('#contact').on('input blur countrychange', function() {
+        let iti = getContactIti();
+        if (!iti || this.value.trim() === '') {
+            $(this).removeClass('is-invalid is-valid');
+            $contactFeedback.html('').hide();
             return;
         }
-        
-        // Ajouter le + si le numéro commence par 223 ou autre code
-        let formatted = '';
-        
-        // Si le numéro commence par 223 (Mali) ou un code pays
-        if (value.startsWith('223') && value.length >= 3) {
-            formatted = '+' + value.substring(0, 3);
-            let rest = value.substring(3);
-            // Grouper par 2 chiffres
-            let groups = rest.match(/.{1,2}/g);
-            if (groups) {
-                formatted += ' ' + groups.join(' ');
-            }
-        } 
-        // Si le numéro commence déjà par + (cas où l'utilisateur a tapé +)
-        else if (input.value.startsWith('+')) {
-            // Extraire le code pays
-            let codeMatch = value.match(/^(\d{1,4})(.*)$/);
-            if (codeMatch) {
-                formatted = '+' + codeMatch[1];
-                let rest = codeMatch[2];
-                let groups = rest.match(/.{1,2}/g);
-                if (groups) {
-                    formatted += ' ' + groups.join(' ');
-                }
-            }
+
+        if (iti.isValidNumber()) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $contactFeedback.html('').hide();
+        } else {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $contactFeedback.html('<i class="fa fa-exclamation-circle me-1"></i> Numéro invalide pour le pays sélectionné').show();
         }
-        // Numéro local sans code pays
-        else {
-            let groups = value.match(/.{1,2}/g);
-            if (groups) {
-                formatted = groups.join(' ');
-            }
-        }
-        
-        input.value = formatted;
-        
-        // Validation simple
-        if (value.length > 0 && value.length < 8) {
-            input.classList.add('is-invalid');
-            input.classList.remove('is-valid');
-            $(input).siblings('.invalid-feedback').html(`
-                <i class="fa fa-exclamation-circle me-1"></i> 
-                Numéro incomplet (minimum 8 chiffres)
-            `);
-        } else if (value.length >= 8 && value.length <= 15) {
-            input.classList.remove('is-invalid');
-            input.classList.add('is-valid');
-            $(input).siblings('.invalid-feedback').html('');
-        } else if (value.length > 15) {
-            input.classList.add('is-invalid');
-            input.classList.remove('is-valid');
-            $(input).siblings('.invalid-feedback').html(`
-                <i class="fa fa-exclamation-circle me-1"></i> 
-                Numéro trop long
-            `);
-        }
-    }
-    
-    // Événement de saisie
-    $('#contact').on('input', function(e) {
-        let cursorPos = this.selectionStart;
-        let oldLength = this.value.length;
-        
-        formatPhoneNumber(this);
-        
-        // Ajuster la position du curseur
-        let newLength = this.value.length;
-        let diff = newLength - oldLength;
-        this.setSelectionRange(cursorPos + diff, cursorPos + diff);
     });
-    
-    // Validation avant soumission
-    function validatePhone(phone) {
-        if (!phone) return false;
-        
-        let digits = phone.replace(/\D/g, '');
-        // Accepter les numéros avec 8 à 15 chiffres
-        return digits.length >= 8 && digits.length <= 15;
-    }
-    
-    // Initialisation si valeur existante
-    if ($('#contact').val()) {
-        formatPhoneNumber($('#contact')[0]);
-    }
 
     // ============================================
     // Soumission du formulaire
@@ -180,24 +115,14 @@ $(document).ready(function() {
         let url = form.attr('action');
         let method = form.find('input[name="_method"]').val() || 'POST';
         let btn = form.find('button[type="submit"]');
-        let phone = $('#contact').val().trim();
-        let phoneDigits = phone.replace(/\D/g, '');
-        
-        // Validation finale du téléphone
-        if (!validatePhone(phone)) {
+        let iti = getContactIti();
+
+        // Validation finale du téléphone (selon le pays sélectionné dans le drapeau)
+        if (iti && !iti.isValidNumber()) {
             Swal.fire({
                 icon: 'error',
                 title: 'Numéro invalide',
-                html: `
-                    <div class="text-start">
-                        <p class="mb-2"><strong>Veuillez entrer un numéro valide :</strong></p>
-                        <ul class="mb-0">
-                            <li><code>+223 12 34 56 78</code> - Format international</li>
-                            <li><code>12 34 56 78</code> - Format local</li>
-                            <li><code>12345678</code> - 8 chiffres</li>
-                        </ul>
-                    </div>
-                `,
+                text: 'Veuillez entrer un numéro de téléphone valide pour le pays sélectionné.',
                 confirmButtonText: '<i class="fa fa-check me-1"></i> OK',
                 confirmButtonColor: '#1bc5bd'
             });
@@ -208,10 +133,9 @@ $(document).ready(function() {
         // Désactiver le bouton pendant l'envoi
         btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Enregistrement en cours...');
 
-        // Envoyer le numéro sans espaces
+        // Le champ contact est automatiquement converti au format international (+E.164)
+        // avant sérialisation par le script global (voir js.blade.php)
         let formData = form.serialize();
-        // Remplacer le numéro formaté par sa version sans espaces
-        formData = formData.replace(/contact=[^&]*/, 'contact=' + encodeURIComponent(phoneDigits));
 
         // Envoi AJAX
         $.ajax({

@@ -16,6 +16,7 @@ class CommandeMedicaments extends Model
     protected $fillable = [
         'commande_id',
         'medicament_id',
+        'unite_id',
         'quantite',
         'prix_unitaire',
         'total',
@@ -36,5 +37,13 @@ class CommandeMedicaments extends Model
     public function medicament()
     {
         return $this->belongsTo(Medicament::class, 'medicament_id');
+    }
+
+    /**
+     * 🔗 Chaque ligne est associée à une unité/conditionnement
+     */
+    public function unite()
+    {
+        return $this->belongsTo(Unite::class, 'unite_id');
     }
 }

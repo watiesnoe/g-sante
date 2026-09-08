@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Fournisseur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
 class FournisseurController extends Controller
 {
@@ -41,13 +42,27 @@ class FournisseurController extends Controller
     {
         abort_unless(Auth::user()->can('stock.fournisseurs'), 403, 'Accès non autorisé.');
 
-        $request->validate([
+        $data = $request->validate([
             'nom' => 'required|string|max:255',
-            'contact' => 'nullable|string|max:255',
+            'contact' => 'required|string|max:255|unique:fournisseurs,contact',
+            'email' => 'nullable|email|max:255',
             'adresse' => 'nullable|string|max:255',
+        ], [
+            'contact.required' => 'Le numéro de téléphone est obligatoire.',
+            'contact.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre fournisseur.',
         ]);
 
-        $fournisseur = Fournisseur::create($request->all());
+        try {
+            $fournisseur = Fournisseur::create($data);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Ce numéro de téléphone est déjà utilisé par un autre fournisseur.',
+                ], 422);
+            }
+            throw $e;
+        }
 
         return response()->json([
             'status' => 'success',
@@ -67,13 +82,27 @@ class FournisseurController extends Controller
     {
         abort_unless(Auth::user()->can('stock.fournisseurs'), 403, 'Accès non autorisé.');
 
-        $request->validate([
+        $data = $request->validate([
             'nom' => 'required|string|max:255',
-            'contact' => 'nullable|string|max:255',
+            'contact' => ['required', 'string', 'max:255', Rule::unique('fournisseurs', 'contact')->ignore($fournisseur->id)],
+            'email' => 'nullable|email|max:255',
             'adresse' => 'nullable|string|max:255',
+        ], [
+            'contact.required' => 'Le numéro de téléphone est obligatoire.',
+            'contact.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre fournisseur.',
         ]);
 
-        $fournisseur->update($request->all());
+        try {
+            $fournisseur->update($data);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Ce numéro de téléphone est déjà utilisé par un autre fournisseur.',
+                ], 422);
+            }
+            throw $e;
+        }
 
         return response()->json([
             'status' => 'success',
