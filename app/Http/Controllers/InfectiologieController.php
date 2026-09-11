@@ -55,6 +55,20 @@ class InfectiologieController extends Controller
         return view('application.infectiologie.pathogenes', compact('pathologies'));
     }
 
+    /**
+     * Liste JSON des maladies, utilisée par l'aide à la prescription.
+     */
+    public function pathologiesApi()
+    {
+        abort_unless(
+            Auth::user()->can('infectiologie.view') || Auth::user()->can('infectiologie.aide_prescription'),
+            403,
+            'Accès non autorisé.'
+        );
+
+        return response()->json(Maladie::all());
+    }
+
     public function protocoles()
     {
         abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
@@ -105,6 +119,8 @@ class InfectiologieController extends Controller
 
     public function getMedicaments(Request $request)
     {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
+
         $search = $request->q;
         $medicaments = \App\Models\Medicament::select('id', 'nom')
             ->when($search, function($query) use ($search) {
@@ -150,6 +166,14 @@ class InfectiologieController extends Controller
 
     public function getProtocole($maladieId)
     {
+        // Utilisé à la fois par le module infectiologie et par la suggestion
+        // automatique de protocole lors de la création d'une consultation.
+        abort_unless(
+            Auth::user()->can('infectiologie.view') || Auth::user()->can('consultations.create'),
+            403,
+            'Accès non autorisé.'
+        );
+
         $protocoles = ProtocoleTraitement::with('medicaments')->where('maladie_id', $maladieId)->get();
         if ($protocoles->count() > 0) {
             return response()->json([

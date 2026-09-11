@@ -36,7 +36,7 @@
                         <select name="statut" class="form-control" required>
                             <option value="prevu">Prévu</option>
                             <option value="realise">Réalisé</option>
-                            <option value="annulé">Annulé</option>
+                            <option value="annule">Annulé</option>
                         </select>
                     </div>
                     <div class="d-flex justify-content-end">

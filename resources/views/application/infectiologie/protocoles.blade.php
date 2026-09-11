@@ -6,9 +6,17 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h4 fw-bold mb-0">Protocoles de Traitement</h2>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalProtocole">
-            <i class="fa fa-plus me-1"></i> Nouveau Protocole
-        </button>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{{ route('export.model', 'protocoles') }}" class="btn btn-sm btn-outline-primary" title="Exporter en CSV">
+                <i class="fa fa-file-excel me-1"></i> Exporter
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="protocoles" data-label="Protocoles">
+                <i class="fa fa-file-import me-1"></i> Importer
+            </button>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalProtocole">
+                <i class="fa fa-plus me-1"></i> Nouveau Protocole
+            </button>
+        </div>
     </div>
 
     <div class="block block-rounded shadow-sm">
@@ -163,6 +171,8 @@
             </form>
         </div>
     </div>
+
+    @include('layouts.partials.import_modal')
 </div>
 
 @endsection

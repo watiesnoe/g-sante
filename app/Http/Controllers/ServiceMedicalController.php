@@ -72,12 +72,12 @@ class ServiceMedicalController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.services'), 403, 'Accès non autorisé.');
 
-        $request->validate([
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $service = ServiceMedical::create($request->all());
+        $service = ServiceMedical::create($validated);
 
         return response()->json([
             'success' => true,
@@ -99,11 +99,11 @@ class ServiceMedicalController extends Controller
         abort_unless(Auth::user()->can('parametres.services'), 403, 'Accès non autorisé.');
 
         $service = ServiceMedical::where('uuid', $id)->firstOrFail();
-        $request->validate([
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
-        $service->update($request->all());
+        $service->update($validated);
         return response()->json(['success' => true, 'message' => 'Service modifié avec succès !']);
     }
 

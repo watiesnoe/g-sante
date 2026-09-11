@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class ExportImportController extends Controller
@@ -18,6 +19,7 @@ class ExportImportController extends Controller
         'assurances'  => ['model' => \App\Models\Assurance::class,       'permission' => 'parametres.assurances','unique_by' => 'nom',    'label' => 'Assurances'],
         'symptomes'   => ['model' => \App\Models\Symptome::class,        'permission' => 'parametres.symptomes', 'unique_by' => 'nom',    'label' => 'Symptômes'],
         'maladies'    => ['model' => \App\Models\Maladie::class,         'permission' => 'parametres.maladies',  'unique_by' => 'nom',    'label' => 'Maladies'],
+        'protocoles'  => ['model' => \App\Models\ProtocoleTraitement::class, 'permission' => 'infectiologie.aide_prescription', 'unique_by' => 'maladie_id', 'label' => 'Protocoles de traitement'],
         'medicaments' => ['model' => \App\Models\Medicament::class,      'permission' => 'stock.medicaments',    'unique_by' => 'nom',    'label' => 'Médicaments'],
         'familles'    => ['model' => \App\Models\Famille::class,         'permission' => 'stock.familles',       'unique_by' => 'nom',    'label' => 'Familles'],
         'unites'      => ['model' => \App\Models\Unite::class,           'permission' => 'stock.unites',         'unique_by' => ['nom', 'medicament_id'], 'label' => 'Unités'],
@@ -36,6 +38,12 @@ class ExportImportController extends Controller
         }
 
         $config   = $this->modules[$module];
+
+        // 🔒 Chaque module déclare sa permission dédiée : elle doit être vérifiée
+        // avant tout export (sans quoi n'importe quel utilisateur connecté pourrait
+        // exporter des données sensibles comme la table des utilisateurs).
+        abort_unless(Auth::user()->can($config['permission']), 403, 'Accès non autorisé.');
+
         $isTemplate = $request->boolean('template');
         $label    = $config['label'];
         $modelClass = $config['model'];
@@ -44,9 +52,10 @@ class ExportImportController extends Controller
         $instance = new $modelClass();
         $fillable = $instance->getFillable();
 
-        // Remove UUID / foreign key noise for template
+        // Remove UUID / foreign key noise for template — et jamais le mot de passe,
+        // même haché, qui ne doit jamais figurer dans un export téléchargeable.
         $exportColumns = collect($fillable)->filter(fn($f) =>
-            ! in_array($f, ['uuid', 'deleted_at'])
+            ! in_array($f, ['uuid', 'deleted_at', 'password'])
         )->values()->toArray();
 
         if ($module === 'maladies') {
@@ -104,6 +113,20 @@ class ExportImportController extends Controller
             return response()->json(['success' => false, 'message' => 'Module inconnu.'], 404);
         }
 
+        $config = $this->modules[$module];
+
+        // 🔒 Sans ce contrôle, n'importe quel utilisateur connecté pouvait importer un CSV
+        // "users" avec une colonne password pour écraser le mot de passe de n'importe quel
+        // compte (y compris super_admin) via la correspondance sur l'email.
+        abort_unless(Auth::user()->can($config['permission']), 403, 'Accès non autorisé.');
+
+        // 🔒 Le module "users" ne doit jamais pouvoir être modifié par ce mécanisme
+        // d'import générique (mot de passe, statut, service... doivent passer par les
+        // flux dédiés avec leurs propres règles métier et journalisation).
+        if ($module === 'users') {
+            return response()->json(['success' => false, 'message' => 'L\'import n\'est pas autorisé pour ce module.'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|max:10240',
         ]);
@@ -114,7 +137,6 @@ class ExportImportController extends Controller
             return response()->json(['success' => false, 'message' => 'Le fichier doit être au format CSV ou TXT.'], 422);
         }
 
-        $config     = $this->modules[$module];
         $modelClass = $config['model'];
         $uniqueBy   = $config['unique_by']; // may be string or array of fields
 
@@ -232,6 +254,15 @@ class ExportImportController extends Controller
                                         ]);
                                     }
                                     $val = $famille->id;
+                                } elseif ($field === 'maladie_id' && ! is_numeric($val)) {
+                                    $maladie = \App\Models\Maladie::where('nom', 'like', $val)->first();
+                                    if (! $maladie) {
+                                        $maladie = \App\Models\Maladie::create([
+                                            'nom' => $val,
+                                            'description' => 'Créée automatiquement via import.'
+                                        ]);
+                                    }
+                                    $val = $maladie->id;
                                 } elseif ($field === 'medicament_id' && ! is_numeric($val)) {
                                     $medicament = \App\Models\Medicament::where('nom', 'like', $val)->first();
                                     if (! $medicament) {

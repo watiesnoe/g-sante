@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('prescriptions', PrescriptionExamenController::class);
     Route::resource('reponses', ResultatExamenController::class);
     Route::get('reponses/{id}/create', [ResultatExamenController::class, 'reponse'])->name('reponse.create');
+    Route::get('reponses/{resultatExamen}/fichier', [ResultatExamenController::class, 'download'])->name('reponses.fichier');
     Route::resource('unites', UniteController::class);
     Route::resource('familles', FamilleController::class)->except(['create']);
     Route::resource('maladies', MaladieController::class)->except(['create']);
@@ -71,7 +72,11 @@ Route::middleware('auth')->group(function () {
         ->name('consultations.listeentente');
     Route::resource('consultations', ConsultationController::class);
     Route::get('liste-attente', [ConsultationController::class, 'listeAttente'])->name('liste.attente');
-    Route::resource('suivis', SuiviController::class);
+    // "Suivi" est un rendez-vous rattaché à une consultation (voir RendezVous) :
+    // seules index/store/create sont exposées, le détail/l'édition/la suppression
+    // se font depuis le module Rendez-vous (rendezvous.show/edit/destroy).
+    Route::get('suivis', [SuiviController::class, 'index'])->name('suivis.index');
+    Route::post('suivis', [SuiviController::class, 'store'])->name('suivis.store');
     Route::resource('assurances', AssuranceController::class);
 
     Route::get('consultations/{consultation}/suivis/create', [SuiviController::class, 'create'])
@@ -178,9 +183,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('infectiologie')->group(function () {
         Route::get('/pathologies', [\App\Http\Controllers\InfectiologieController::class, 'pathologies'])->name('infectiologie.pathologies');
         Route::get('/pathogenes', [\App\Http\Controllers\InfectiologieController::class, 'pathogenes'])->name('infectiologie.pathogenes');
-        Route::get('/pathologies-api', function () {
-            return response()->json(\App\Models\Maladie::all());
-        })->name('infectiologie.pathologies.api');
+        Route::get('/pathologies-api', [\App\Http\Controllers\InfectiologieController::class, 'pathologiesApi'])
+            ->name('infectiologie.pathologies.api');
         Route::get('/statistiques', [\App\Http\Controllers\InfectiologieController::class, 'statistiques'])->name('infectiologie.statistiques');
         Route::get('/protocoles', [\App\Http\Controllers\InfectiologieController::class, 'protocoles'])->name('infectiologie.protocoles');
         Route::get('/protocoles/{protocole}', [\App\Http\Controllers\InfectiologieController::class, 'showProtocole'])->name('infectiologie.protocoles.show');

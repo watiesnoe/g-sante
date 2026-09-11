@@ -196,15 +196,9 @@ class MigrationReportController extends Controller
         $pdf->getDomPDF()->set_option('isHtml5ParserEnabled', true);
         $pdf->getDomPDF()->set_option('isRemoteEnabled', true);
 
-        // Save a copy in public folder for easy local access
-        try {
-            $pdfContent = $pdf->output();
-            $publicPath = public_path('rapport_migrations.pdf');
-            file_put_contents($publicPath, $pdfContent);
-        } catch (\Exception $e) {
-            // Suppress error if public folder is read-only
-        }
-
+        // 🔒 Ne jamais enregistrer ce rapport (schéma complet de la base de données)
+        // dans le dossier public : il serait alors accessible sans authentification
+        // à quiconque connaît l'URL. On se contente de le renvoyer en téléchargement direct.
         return $pdf->download('rapport_migrations_g_sante.pdf');
     }
 }

@@ -146,17 +146,14 @@
 
     <script>
         $(document).ready(function() {
-            // 1. Initialisation d'intl-tel-input configurée pour la sous-région (Guinée, Mali, Sénégal, etc.)
+            // Téléphone international (drapeau + indicatif selon le pays) : géré par le
+            // mécanisme global intl-tel-input déjà initialisé sur tout input.phone-input
+            // (voir layouts/partials/js.blade.php). On ne réinitialise pas ici pour éviter
+            // un double-wrapping du champ (deux drapeaux superposés).
             const phoneInput = document.getElementById('telephone');
-            let iti = null;
 
-            if (phoneInput) {
-                iti = window.intlTelInput(phoneInput, {
-                    initialCountry: "gn", // Pays par défaut (Guinée)
-                    preferredCountries: ["gn", "ml", "sn", "ci"], // Choix rapides prioritaires
-                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.1/build/js/utils.js",
-                    autoPlaceholder: "polite"
-                });
+            function getPhoneIti() {
+                return (window.intlTelInputGlobals && phoneInput) ? window.intlTelInputGlobals.getInstance(phoneInput) : null;
             }
 
             // 2. Gestion de la soumission du formulaire via AJAX
@@ -165,6 +162,7 @@
 
                 let $form = $(this);
                 let actionUrl = $form.attr('action');
+                let iti = getPhoneIti();
 
                 // EXTRACTION SOUPLE DU NUMÉRO SANS BLOCAGE INTRINSÈQUE
                 if (iti) {

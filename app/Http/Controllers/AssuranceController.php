@@ -33,19 +33,23 @@ class AssuranceController extends Controller
 
     public function create()
     {
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé.');
+
         return view('application.assurance.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé.');
+
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'taux' => 'required|integer|min:0|max:100',
             'telephone' => 'nullable|string|max:50',
             'adresse' => 'nullable|string|max:255',
         ]);
-        
-        $assurance = Assurance::create($request->all());
+
+        $assurance = Assurance::create($validated);
 
         if ($request->ajax()) {
             return response()->json([
@@ -70,19 +74,23 @@ class AssuranceController extends Controller
 
     public function edit(Assurance $assurance)
     {
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé.');
+
         return view('application.assurance.create', compact('assurance'));
     }
 
     public function update(Request $request, Assurance $assurance)
     {
-        $request->validate([
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé.');
+
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'taux' => 'required|integer|min:0|max:100',
             'telephone' => 'nullable|string|max:50',
             'adresse' => 'nullable|string|max:255',
         ]);
 
-        $assurance->update($request->all());
+        $assurance->update($validated);
 
         if ($request->ajax()) {
             return response()->json([
@@ -97,6 +105,8 @@ class AssuranceController extends Controller
 
     public function destroy(Assurance $assurance)
     {
+        abort_unless(Auth::user()->can('parametres.assurances'), 403, 'Accès non autorisé.');
+
         $assurance->delete();
 
         return response()->json(['success' => true, 'message' => 'Assurance supprimée avec succès !']);

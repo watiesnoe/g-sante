@@ -102,7 +102,19 @@
                     {
                         data: 'telephone',
                         name: 'telephone',
-                        className: 'd-none d-sm-table-cell'
+                        className: 'd-none d-sm-table-cell',
+                        render: function(data) {
+                            // Affiche le numéro formaté selon son pays (drapeau + indicatif) dès que la librairie est chargée
+                            if (!data) return '-';
+                            if (window.intlTelInputUtils) {
+                                try {
+                                    return window.intlTelInputUtils.formatNumber(data, null, window.intlTelInputUtils.numberFormat.INTERNATIONAL);
+                                } catch (e) {
+                                    return data;
+                                }
+                            }
+                            return data;
+                        }
                     },
                     {
                         data: 'created_at',
@@ -141,6 +153,18 @@
                 pageLength: 15,
                 order: [[5, 'desc']]
             });
+
+            // Une fois la librairie de formatage téléphonique (utils.js, chargée en
+            // asynchrone par intl-tel-input) disponible, on réaffiche le tableau pour
+            // que les numéros déjà rendus passent au format international.
+            (function pollPhoneUtils(attemptsLeft) {
+                if (window.intlTelInputUtils) {
+                    $('#patients-table').DataTable().draw(false);
+                    return;
+                }
+                if (attemptsLeft <= 0) return;
+                setTimeout(function() { pollPhoneUtils(attemptsLeft - 1); }, 200);
+            })(25);
         }
 
         function refreshTable() {

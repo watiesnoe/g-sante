@@ -189,7 +189,14 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            
+
+            // Échappe le HTML pour éviter toute injection via des noms de patient (XSS)
+            function escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, function (s) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+                });
+            }
+
             // Initialisation de Select2 avec AJAX pour le patient
             $('#patient').select2({
                 placeholder: "-- Rechercher un patient (nom ou tel) --",
@@ -407,7 +414,7 @@
                 $("#ticketForm input[name^='items']").remove();
                 items.forEach((item, index) => {
                     for (const [key, value] of Object.entries(item)) {
-                        $("#ticketForm").append(`<input type="hidden" name="items[${index}][${key}]" value="${value}">`);
+                        $("#ticketForm").append(`<input type="hidden" name="items[${index}][${key}]" value="${escapeHtml(value)}">`);
                     }
                 });
             }
@@ -701,10 +708,10 @@
                                     <div class="mb-3">
                                         <i class="fa fa-check-circle fa-4x text-success"></i>
                                     </div>
-                                    <h5 class="mb-2 fw-bold">${p.nom} ${p.prenom}</h5>
+                                    <h5 class="mb-2 fw-bold">${escapeHtml(p.nom)} ${escapeHtml(p.prenom)}</h5>
                                     <div class="d-flex justify-content-center gap-3 text-muted small">
-                                        ${p.telephone ? `<span><i class="fa fa-phone"></i> ${p.telephone}</span>` : ''}
-                                        <span><i class="fa fa-id-card"></i> ID: ${p.id}</span>
+                                        ${p.telephone ? `<span><i class="fa fa-phone"></i> ${escapeHtml(p.telephone)}</span>` : ''}
+                                        <span><i class="fa fa-id-card"></i> ID: ${escapeHtml(p.id)}</span>
                                     </div>
                                 </div>
                             `,

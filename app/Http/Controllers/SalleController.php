@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Salle;
 use App\Models\ServiceMedical;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
@@ -15,6 +16,8 @@ class SalleController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
         if ($request->ajax()) {
             $salles = DB::table('salles')
                 ->join('service_medicals', 'salles.service_medical_id', '=', 'service_medicals.id')
@@ -62,11 +65,15 @@ class SalleController extends Controller
      */
     public function create()
     {
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
         $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.create', compact('services'));
     }
     public function litsLibres($salleId)
     {
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
         try {
             $salle = Salle::findOrFail($salleId);
 
@@ -88,14 +95,16 @@ class SalleController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'type' => 'required|string',
             'service_medical_id' => 'required|exists:service_medicals,id',
             'capacite' => 'required|integer|min:1',
         ]);
 
-        $salle = Salle::create($request->all());
+        $salle = Salle::create($validated);
 
         return response()->json([
             'success' => true,
@@ -109,6 +118,8 @@ class SalleController extends Controller
      */
     public function edit(Salle $salle)
     {
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
         $services = DB::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.create', compact('salle', 'services'));
     }
@@ -118,14 +129,16 @@ class SalleController extends Controller
      */
     public function update(Request $request, Salle $salle)
     {
-        $request->validate([
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'type' => 'required|string',
             'service_medical_id' => 'required|exists:service_medicals,id',
             'capacite' => 'required|integer|min:1',
         ]);
 
-        $salle->update($request->all());
+        $salle->update($validated);
 
         return response()->json([
             'success' => true,
@@ -139,12 +152,16 @@ class SalleController extends Controller
      */
     public function destroy(Salle $salle)
     {
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
         $salle->delete();
 
         return response()->json(['success' => true, 'message' => 'Salle supprimée avec succès !']);
     }
 
     public function show($id) {
+        abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
+
         $salle = Salle::with('serviceMedical')->findOrFail($id);
         return response()->json($salle);
     }

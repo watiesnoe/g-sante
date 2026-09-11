@@ -68,13 +68,13 @@ class PrescriptionExamenController extends Controller
     {
         abort_unless(Auth::user()->can('examens.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de prescrire un examen.');
 
-        $request->validate([
+        $validated = $request->validate([
             'consultation_id' => 'required|exists:consultations,id',
             'examen' => 'required|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
-        PrescriptionExamen::create($request->all());
+        PrescriptionExamen::create($validated);
 
         return redirect()->route('examens.index')->with('success', 'Examen prescrit avec succès.');
     }

@@ -36,6 +36,8 @@ class SymptomeController extends Controller
     // Store
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'nom' => 'required|unique:symptomes',
             'description' => 'nullable|string'
@@ -49,6 +51,8 @@ class SymptomeController extends Controller
     // Update
     public function update(Request $request, Symptome $symptome)
     {
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'nom' => 'required|unique:symptomes,nom,'.$symptome->id,
             'description' => 'nullable|string'
@@ -62,6 +66,8 @@ class SymptomeController extends Controller
     // Delete
     public function destroy(Symptome $symptome)
     {
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé.');
+
         $symptome->delete();
         return response()->json(['message' => 'Symptôme supprimé avec succès !']);
     }
@@ -69,6 +75,8 @@ class SymptomeController extends Controller
     // Edit (pour récupérer les données AJAX)
     public function edit(Symptome $symptome)
     {
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé.');
+
         return response()->json($symptome);
     }
 

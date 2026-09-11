@@ -18,7 +18,7 @@
                         <div class="list-group-item d-flex justify-content-between">
                             <span class="text-muted">Âge de la patiente</span>
                             <span
-                                class="fw-bold">{{ \Carbon\Carbon::parse($grossesse->patient->date_naissance)->age ?? '?' }}
+                                class="fw-bold">{{ $grossesse->patient->age ?? '?' }}
                                 ans</span>
                         </div>
                         <div class="list-group-item d-flex justify-content-between">

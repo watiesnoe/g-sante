@@ -42,7 +42,7 @@ class OrdonnanceController extends Controller
                 ->addColumn('medicaments', function($ord){
                     $html = '<ul>';
                     foreach($ord->medicaments as $med){
-                        $html .= '<li>'.$med->nom.' - '.$med->pivot->posologie.' ('.$med->pivot->duree_jours.' jrs)</li>';
+                        $html .= '<li>'.e($med->nom).' - '.e($med->pivot->posologie).' ('.e($med->pivot->duree_jours).' jrs)</li>';
                     }
                     $html .= '</ul>';
                     return $html;
@@ -115,8 +115,11 @@ class OrdonnanceController extends Controller
             'medicaments'     => 'required|array',
             'medicaments.*'   => 'required|exists:medicaments,id',
             'posologies'      => 'required|array',
+            'posologies.*'    => 'nullable|string|max:255',
             'duree_jours'     => 'nullable|array',
+            'duree_jours.*'   => 'nullable|integer|min:1',
             'quantites'       => 'required|array',
+            'quantites.*'     => 'nullable|integer|min:1',
         ]);
 
         DB::beginTransaction();
@@ -166,13 +169,14 @@ class OrdonnanceController extends Controller
             return redirect()->route('ordonnances.index')->with('success', 'Ordonnance créée avec succès');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Erreur création ordonnance : ' . $e->getMessage(), ['exception' => $e]);
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'error'   => $e->getMessage()
+                    'error'   => 'Une erreur est survenue lors de la création de l\'ordonnance.'
                 ], 500);
             }
-            return back()->with('error', 'Erreur lors de la création de l\'ordonnance : ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la création de l\'ordonnance.');
         }
     }
 
@@ -249,7 +253,8 @@ class OrdonnanceController extends Controller
         
         DB::transaction(function() use ($request, $ordonnance, &$montantTotal) {
             foreach ($request->medicaments as $medId => $qteDemandee) {
-                $med = Medicament::findOrFail($medId);
+                // 🔒 Verrou pessimiste pour éviter une survente en cas de paiements concurrents
+                $med = Medicament::where('id', $medId)->lockForUpdate()->firstOrFail();
                 $qteFinale = min($qteDemandee, $med->stock);
 
                 if ($qteFinale > 0) {

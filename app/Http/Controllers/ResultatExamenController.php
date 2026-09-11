@@ -35,7 +35,7 @@ class ResultatExamenController extends Controller
                 })
                 ->addColumn('fichier', function($row){
                     if ($row->fichier) {
-                        return '<a href="'.asset(''.$row->fichier).'" target="_blank" class="btn btn-sm btn-info">
+                        return '<a href="'.route('reponses.fichier', $row).'" target="_blank" class="btn btn-sm btn-info">
                                     📂 Voir fichier
                                 </a>';
                     }
@@ -82,22 +82,18 @@ class ResultatExamenController extends Controller
         $data=$request->validate([
             'prescription_examen_id' => 'required|exists:prescriptions_examens,id',
             'resultat' => 'nullable|string',
-            'fichier' => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+            'fichier' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240'
         ]);
         if ($request->hasFile('fichier')) {
             $file = $request->file('fichier');
 
-            // Dossier public/resultats
-            $folder = public_path('resultats');
-            if (!file_exists($folder)) {
-                mkdir($folder, 0755, true);
-            }
-
             // Nom unique du fichier
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $filename = time() . '_' . bin2hex(random_bytes(8)) . '.' . $file->getClientOriginalExtension();
 
-            // Déplacement du fichier dans le dossier public/resultats
-            $file->move($folder, $filename);
+            // 🔒 Stockage hors du dossier public : ces fichiers contiennent des données
+            // médicales sensibles et ne doivent être accessibles qu'via une route authentifiée
+            // et vérifiant la permission (voir méthode download()).
+            $file->storeAs('resultats', $filename);
 
             // Chemin relatif à stocker dans la DB
             $data['fichier'] = 'resultats/' . $filename;
@@ -129,16 +125,18 @@ class ResultatExamenController extends Controller
         $request->validate([
             'prescription_examen_id' => 'required|exists:prescriptions_examens,id',
             'resultat' => 'nullable|string',
-            'fichier' => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+            'fichier' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240'
         ]);
 
         $data = $request->only('prescription_examen_id', 'resultat');
 
         if ($request->hasFile('fichier')) {
             $file = $request->file('fichier');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->storeAs('public/resultats', $filename);
-            $data['fichier'] = $filename;
+            $filename = time() . '_' . bin2hex(random_bytes(8)) . '.' . $file->getClientOriginalExtension();
+
+            // 🔒 Même stockage privé que store() (voir méthode download())
+            $file->storeAs('resultats', $filename);
+            $data['fichier'] = 'resultats/' . $filename;
         }
 
         $resultatExamen->update($data);
@@ -152,5 +150,20 @@ class ResultatExamenController extends Controller
 
         $resultatExamen->delete();
         return redirect()->route('reponses.index')->with('success', 'Résultat supprimé avec succès.');
+    }
+
+    /**
+     * Télécharger/consulter le fichier de résultat (stocké hors du dossier public).
+     * L'accès est protégé par la même permission que la consultation des résultats.
+     */
+    public function download(ResultatExamen $resultatExamen)
+    {
+        abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de consulter ce fichier.');
+
+        if (!$resultatExamen->fichier || !\Illuminate\Support\Facades\Storage::disk('local')->exists($resultatExamen->fichier)) {
+            abort(404, 'Fichier introuvable.');
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->response($resultatExamen->fichier);
     }
 }

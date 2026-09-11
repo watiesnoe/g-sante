@@ -62,20 +62,6 @@
                      "<'row'<'col-sm-12 text-center'i><'col-sm-12 text-center'p>>",
                 pagingType: 'simple_numbers'
             });
-
-            $(document).on('click', '.btn-delete', function(){
-                let url = $(this).data('url');
-                if(confirm('Voulez-vous vraiment supprimer ce suivi ?')){
-                    $.ajax({
-                        url: url,
-                        method: 'DELETE',
-                        data: { _token: "{{ csrf_token() }}" },
-                        success: function(){
-                            table.ajax.reload();
-                        }
-                    });
-                }
-            });
         });
     </script>
 @endsection

@@ -65,11 +65,23 @@ class PaiementController extends Controller
 
         DB::transaction(function () use ($request) {
 
-            $hospitalisation = Hospitalisation::where('uuid', $request->hospitalisation_id)->firstOrFail();
+            $hospitalisation = Hospitalisation::where('uuid', $request->hospitalisation_id)->with('salle')->firstOrFail();
 
             // 🔒 Vérifier si déjà terminé
             if ($hospitalisation->etat === 'terminé') {
                 throw new \Exception("Cette hospitalisation est déjà clôturée.");
+            }
+
+            // 🔒 Recalcul du montant minimum attendu côté serveur (jours × prix de la salle)
+            // pour empêcher un montant_total falsifié/sous-évalué envoyé par le client.
+            $prixJour = (float) ($hospitalisation->salle->prix ?? 0);
+            $jours = max(1, (int) ceil(
+                \Carbon\Carbon::parse($hospitalisation->date_entree)->diffInDays(\Carbon\Carbon::parse($request->date_sortie))
+            ));
+            $montantAttendu = $jours * $prixJour;
+
+            if ($request->montant_total < $montantAttendu - 0.01) {
+                throw new \Exception("Le montant total ({$request->montant_total}) est inférieur au montant minimum attendu ({$montantAttendu}) pour {$jours} jour(s) d'hospitalisation.");
             }
 
             // ✅ Mode de sortie
@@ -131,10 +143,20 @@ class PaiementController extends Controller
 
     } catch (\Exception $e) {
 
+        \Illuminate\Support\Facades\Log::error('Erreur paiement hospitalisation : ' . $e->getMessage(), ['exception' => $e]);
+
+        $messagesMetierAffichables = [
+            "Cette hospitalisation est déjà clôturée.",
+        ];
+        $estMessageMetier = in_array($e->getMessage(), $messagesMetierAffichables)
+            || str_starts_with($e->getMessage(), 'Le montant total (');
+
         return response()->json([
             'success' => false,
-            'error' => $e->getMessage()
-        ], 500);
+            'error' => $estMessageMetier
+                ? $e->getMessage()
+                : 'Une erreur est survenue lors de l\'enregistrement du paiement.'
+        ], $estMessageMetier ? 422 : 500);
     }
 }
 

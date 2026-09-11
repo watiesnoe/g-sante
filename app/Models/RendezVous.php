@@ -16,6 +16,7 @@ class RendezVous extends Model
         'medecin_id',
         'date_heure',
         'motif',
+        'resultat',
         'statut',
     ];
     protected $dates = ['date_heure'];

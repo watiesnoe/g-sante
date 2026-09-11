@@ -120,6 +120,8 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);
+
         // Validation des données
         $validated = $request->validate([
             'prenom' => 'required|string|max:255',
@@ -132,6 +134,11 @@ class UserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // 🔒 Seul un super_admin peut créer un compte super_admin
+        if ($validated['role'] === 'super_admin' && !Auth::user()->hasRole('super_admin')) {
+            abort(403, 'Seul un super administrateur peut attribuer ce rôle.');
+        }
 
         // Gestion de la photo
         if ($request->hasFile('photo')) {
@@ -198,7 +205,7 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $request->validate([
+        $validated = $request->validate([
             'prenom' => 'required|string|max:255',
             'nom' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -210,13 +217,25 @@ class UserController extends Controller
             'permissions' => 'nullable|array'
         ]);
 
-        // Mise à jour classique
-        $data = $request->except(['photo', 'role', 'permissions']);
-        
-        $user->update($data);
+        // 🔒 Seul un super_admin peut promouvoir un compte au rôle super_admin
+        if ($validated['role'] === 'super_admin' && !Auth::user()->hasRole('super_admin')) {
+            abort(403, 'Seul un super administrateur peut attribuer ce rôle.');
+        }
+
+        // 🔒 Mise à jour explicite (jamais $request->except(), qui laisserait passer
+        // n'importe quel champ fillable du modèle, comme "password", sans validation)
+        $user->update([
+            'prenom' => $validated['prenom'],
+            'nom' => $validated['nom'],
+            'name' => $validated['prenom'] . ' ' . $validated['nom'],
+            'email' => $validated['email'],
+            'telephone' => $validated['telephone'] ?? null,
+            'adresse' => $validated['adresse'] ?? null,
+            'statut' => $validated['statut'],
+        ]);
 
         // Update role
-        $user->syncRoles([$request->role]);
+        $user->syncRoles([$validated['role']]);
         
         // Update direct permissions
         if ($request->has('permissions')) {
@@ -241,10 +260,10 @@ class UserController extends Controller
      */
     public function updateStatus(Request $request, User $user)
     {
-        try {
-            // (Optionnel) Vérifie l'autorisation
-            // $this->authorize('update', $user);
+        // 🔒 Vérifiée avant le try/catch pour ne pas être avalée en erreur 500 générique
+        $this->authorize('update', $user);
 
+        try {
             // ✅ Validation du statut reçu
             $request->validate([
                 'statut' => 'required|in:actif,inactif,suspendu'

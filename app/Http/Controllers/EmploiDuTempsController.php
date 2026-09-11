@@ -162,6 +162,30 @@ class EmploiDuTempsController extends Controller
             'notes'        => 'nullable|string|max:500',
         ]);
 
+        // 🔒 Le sélecteur ne propose que des médecins, mais on revérifie côté serveur.
+        if (!User::role('medecin')->where('id', $validated['medecin_id'])->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Le compte sélectionné n\'est pas un médecin.',
+            ], 422);
+        }
+
+        // 🩺 Empêche deux créneaux qui se chevauchent pour le même médecin le même jour.
+        $conflit = EmploiDuTemps::where('medecin_id', $validated['medecin_id'])
+            ->where('jour_semaine', $validated['jour_semaine'])
+            ->where('statut', 'actif')
+            ->where('heure_debut', '<', $validated['heure_fin'])
+            ->where('heure_fin', '>', $validated['heure_debut'])
+            ->when($request->id, fn($q) => $q->where('id', '!=', $request->id))
+            ->exists();
+
+        if ($conflit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce médecin a déjà un créneau qui chevauche cet horaire ce jour-là.',
+            ], 422);
+        }
+
         $creneau = EmploiDuTemps::updateOrCreate(
             ['id' => $request->id],
             array_merge($validated, ['statut' => 'actif'])
@@ -177,7 +201,7 @@ class EmploiDuTempsController extends Controller
     /**
      * Supprime (désactive) un créneau (réservé aux admins/superadmins)
      */
-    public function destroy(EmploiDuTemps $emploiDuTemp)
+    public function destroy($id)
     {
         if (!Auth::user()->hasRole(['super_admin', 'superadmin', 'admin'])) {
             return response()->json([
@@ -186,6 +210,11 @@ class EmploiDuTempsController extends Controller
             ], 403);
         }
 
+        // 🔒 Recherche par id numérique (et non par uuid) : cette fonctionnalité
+        // utilise déjà l'id numérique partout ailleurs (store/edit), la liaison de
+        // route implicite sur EmploiDuTemps résoudrait par uuid (via HasUuid) et
+        // aurait donc systématiquement échoué avec l'id envoyé par le JS.
+        $emploiDuTemp = EmploiDuTemps::findOrFail($id);
         $emploiDuTemp->delete();
 
         return response()->json(['success' => true, 'message' => 'Créneau supprimé.']);

@@ -736,6 +736,13 @@
     <script>
         $(document).ready(function() {
 
+            // Échappe le HTML pour éviter toute injection via des noms de médicament/maladie (XSS)
+            function escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, function (s) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+                });
+            }
+
             // ═══════════════════════════════════════════════════════════
             // 0. SETUP
             // ═══════════════════════════════════════════════════════════
@@ -910,7 +917,7 @@
                                 <div class="card h-100 border-0 shadow-sm select-suggested-maladie animate__animated animate__fadeIn" style="cursor:pointer;" data-id="${s.id}">
                                     <div class="card-body p-3">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h6 class="fw-bold text-dark mb-0 small">${s.nom}</h6>
+                                            <h6 class="fw-bold text-dark mb-0 small">${escapeHtml(s.nom)}</h6>
                                             <span class="badge bg-${color} rounded-pill" style="font-size: 0.65rem;">${s.score}%</span>
                                         </div>
                                         <div class="progress mb-2" style="height:5px;"><div class="progress-bar ${prog} progress-bar-striped progress-bar-animated" style="width:${s.score}%"></div></div>
@@ -931,7 +938,7 @@
                             let qHtml = '';
                             data.slice(0, 8).forEach(s => {
                                 qHtml += `<span class="badge bg-white text-info border border-info py-2 px-3 cursor-pointer suggest-badge animate__animated animate__pulse" data-id="${s.id}" style="cursor:pointer;">
-                                    ${s.nom} ?
+                                    ${escapeHtml(s.nom)} ?
                                 </span>`;
                             });
                             followUpQuestions.html(qHtml);
@@ -1070,11 +1077,11 @@
                             $('#ordonnanceFooter').removeClass('d-none');
 
                             // Create options with medicament already selected
-                            let opts = `<option value="${med.id}" data-prix="${med.prix_vente}" data-stock="${med.stock}" selected>${med.nom}</option>`;
+                            let opts = `<option value="${med.id}" data-prix="${med.prix_vente}" data-stock="${med.stock}" selected>${escapeHtml(med.nom)}</option>`;
                             // Add other medicines for choice
                             medicamentsList.forEach(m => {
                                 if (m.id != med.id) {
-                                    opts += `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}">${m.nom}</option>`;
+                                    opts += `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}">${escapeHtml(m.nom)}</option>`;
                                 }
                             });
 
@@ -1122,7 +1129,7 @@
                                 let sel = (matchedMed && m.id == matchedMed.id) ?
                                     'selected' : '';
                                 opts +=
-                                    `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}" ${sel}>${m.nom}</option>`;
+                                    `<option value="${m.id}" data-prix="${m.prix_vente}" data-stock="${m.stock}" ${sel}>${escapeHtml(m.nom)}</option>`;
                             });
 
                             let rowClass = matchedMed ? 'table-success' : 'table-warning';

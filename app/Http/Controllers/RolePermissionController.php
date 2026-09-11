@@ -4,24 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Role;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
 
 class RolePermissionController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('permission:roles.view');
-        // $this->middleware('permission:roles.create')->only(['create', 'store']);
-        // $this->middleware('permission:roles.edit')->only(['edit', 'update']);
-        // $this->middleware('permission:roles.delete')->only(['destroy']);
-        // $this->middleware('permission:roles.assign_permissions')->only(['editPermissions', 'updatePermissions']);
-    }
-
     /**
      * Liste des rôles
      */
     public function index()
     {
+        abort_unless(Auth::user()->can('roles.view'), 403, 'Accès non autorisé.');
+
         $roles = Role::with(['permissions', 'users'])->paginate(15);
         $allPermissions = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
@@ -34,6 +28,8 @@ class RolePermissionController extends Controller
      */
     public function create()
     {
+        abort_unless(Auth::user()->can('roles.create'), 403, 'Accès non autorisé.');
+
         $permissions = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
@@ -45,6 +41,8 @@ class RolePermissionController extends Controller
      */
     public function store(Request $request)
     {
+        abort_unless(Auth::user()->can('roles.create'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'name'        => 'required|unique:roles,name',
             'libelle'     => 'required|string|max:255',
@@ -70,6 +68,8 @@ class RolePermissionController extends Controller
      */
     public function edit(Role $role)
     {
+        abort_unless(Auth::user()->can('roles.edit'), 403, 'Accès non autorisé.');
+
         $permissions    = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
@@ -83,6 +83,8 @@ class RolePermissionController extends Controller
      */
     public function update(Request $request, Role $role)
     {
+        abort_unless(Auth::user()->can('roles.edit'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'name'        => 'required|unique:roles,name,' . $role->id,
             'libelle'     => 'required|string|max:255',
@@ -105,6 +107,8 @@ class RolePermissionController extends Controller
      */
     public function updatePermissions(Request $request, Role $role)
     {
+        abort_unless(Auth::user()->can('roles.assign_permissions'), 403, 'Accès non autorisé.');
+
         $request->validate([
             'permissions' => 'array',
         ]);
@@ -120,6 +124,8 @@ class RolePermissionController extends Controller
      */
     public function destroy(Role $role)
     {
+        abort_unless(Auth::user()->can('roles.delete'), 403, 'Accès non autorisé.');
+
         // Empêcher la suppression des rôles système
         if (in_array($role->name, ['super_admin', 'admin'])) {
             return response()->json([
@@ -141,6 +147,8 @@ class RolePermissionController extends Controller
      */
     public function permissions()
     {
+        abort_unless(Auth::user()->can('roles.view'), 403, 'Accès non autorisé.');
+
         $permissions = Permission::all()->groupBy(function ($perm) {
             return explode('.', $perm->name)[0];
         });
@@ -153,6 +161,8 @@ class RolePermissionController extends Controller
      */
     public function assignUserPermissions(Request $request, $userId)
     {
+        abort_unless(Auth::user()->can('roles.assign_permissions'), 403, 'Accès non autorisé.');
+
         $user = \App\Models\User::findOrFail($userId);
 
         $request->validate([
@@ -172,6 +182,8 @@ class RolePermissionController extends Controller
      */
     public function getUserPermissions($userId)
     {
+        abort_unless(Auth::user()->can('roles.view'), 403, 'Accès non autorisé.');
+
         $user = \App\Models\User::findOrFail($userId);
         $directPermissions = $user->getDirectPermissions()->pluck('name')->toArray();
         $allPermissions    = $user->getAllPermissions()->pluck('name')->toArray();

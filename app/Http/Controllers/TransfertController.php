@@ -79,6 +79,15 @@ class TransfertController extends Controller
             'hopital_destination' => 'required_if:type,hopital_externe|nullable|string',
         ]);
 
+        // 🔒 Le dropdown ne propose que des médecins actifs, mais on revérifie côté
+        // serveur pour empêcher qu'un transfert ne cible un compte sans le rôle médecin.
+        if ($request->type === 'medecin' && !User::role('medecin')->where('id', $request->dest_medecin_id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Le compte sélectionné n\'est pas un médecin.',
+            ], 422);
+        }
+
         // Resolve models by UUID
         $patient        = \App\Models\Patient::where('uuid', $request->patient_id)->firstOrFail();
         $consultation   = $request->consultation_id
@@ -107,9 +116,12 @@ class TransfertController extends Controller
                 $transfert->source_medecin_id = $consultation->medecin_id;
                 $transfert->dest_medecin_id = $request->dest_medecin_id;
 
-                // Update consultation medecin
-                $consultation->medecin_id = $request->dest_medecin_id;
-                $consultation->save();
+                // 🔒 On ne réassigne PAS consultation->medecin_id : ce champ doit rester
+                // celui du médecin qui a réellement examiné/documenté cette consultation
+                // (traçabilité médicale). Le transfert donne au médecin destinataire un
+                // accès au dossier du patient via Transfert::dest_medecin_id (voir
+                // ConsultationController), sans effacer l'auteur d'origine — qui, sinon,
+                // perdrait tout accès à sa propre consultation.
             } else {
                 // Pour service ou hopital_externe, on a besoin d'une hospitalisation
                 if (!$hospitalisation && $consultation) {
@@ -156,10 +168,20 @@ class TransfertController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Erreur transfert patient : ' . $e->getMessage(), ['exception' => $e]);
+
+            $messagesMetier = [
+                "Une consultation est requise pour transférer à un autre médecin.",
+                "Le transfert vers un service ou un autre hôpital nécessite une hospitalisation en cours.",
+            ];
+            $message = in_array($e->getMessage(), $messagesMetier)
+                ? $e->getMessage()
+                : 'Une erreur est survenue lors de l\'enregistrement du transfert.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors du transfert : ' . $e->getMessage(),
-            ], 500);
+                'message' => $message,
+            ], in_array($e->getMessage(), $messagesMetier) ? 422 : 500);
         }
     }
 
@@ -174,9 +196,10 @@ class TransfertController extends Controller
                 'message' => 'Transfert supprimé avec succès ✅',
             ]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erreur suppression transfert : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la suppression : ' . $e->getMessage(),
+                'message' => 'Une erreur est survenue lors de la suppression du transfert.',
             ], 500);
         }
     }
