@@ -237,11 +237,18 @@ class ExportImportController extends Controller
                                 } elseif ($field === 'salle_id' && ! is_numeric($val)) {
                                     $salle = \App\Models\Salle::where('nom', 'like', $val)->first();
                                     if (! $salle) {
+                                        // 🔒 service_medical_id est obligatoire (NOT NULL) sur la table
+                                        // salles : sans ceci, l'insertion échoue en base (erreur 1364).
+                                        $serviceParDefaut = \App\Models\ServiceMedical::firstOrCreate(
+                                            ['nom' => 'Non classé'],
+                                            ['description' => 'Service créé automatiquement pour rattacher les salles importées sans service précisé.']
+                                        );
                                         $salle = \App\Models\Salle::create([
                                             'nom' => $val,
                                             'type' => 'Standard',
                                             'capacite' => 10,
-                                            'prix' => 0
+                                            'prix' => 0,
+                                            'service_medical_id' => $serviceParDefaut->id,
                                         ]);
                                     }
                                     $val = $salle->id;
@@ -266,10 +273,18 @@ class ExportImportController extends Controller
                                 } elseif ($field === 'medicament_id' && ! is_numeric($val)) {
                                     $medicament = \App\Models\Medicament::where('nom', 'like', $val)->first();
                                     if (! $medicament) {
+                                        // 🔒 famille_id est obligatoire (NOT NULL) sur la table
+                                        // medicaments : sans ceci, l'insertion échoue en base (erreur 1364,
+                                        // exactement l'erreur remontée lors de l'import du module "unites").
+                                        $familleParDefaut = \App\Models\Famille::firstOrCreate(
+                                            ['nom' => 'Non classé'],
+                                            ['description' => 'Famille créée automatiquement pour rattacher les médicaments importés sans famille précisée.']
+                                        );
                                         $medicament = \App\Models\Medicament::create([
                                             'nom' => $val,
                                             'uuid' => (string) \Illuminate\Support\Str::uuid(),
-                                            'description' => 'Créé automatiquement via import.'
+                                            'description' => 'Créé automatiquement via import.',
+                                            'famille_id' => $familleParDefaut->id,
                                         ]);
                                     }
                                     $val = $medicament->id;
