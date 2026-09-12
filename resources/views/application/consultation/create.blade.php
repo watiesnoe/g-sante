@@ -229,6 +229,7 @@
                                                             Traitement recommandé :</div>
                                                         <div id="protocoleTraitement" class="h6 fw-bold mb-1"></div>
                                                         <div id="protocolePosologie" class="small text-muted mb-2"></div>
+                                                        <div id="protocoleAlternatif" class="small text-muted fst-italic mb-2" style="display:none;"></div>
                                                         <span id="stockBadge" class="badge bg-secondary mb-2"></span>
                                                         <div class="d-none" id="multiProtocolSelector">
                                                             <select id="selectProtocoleAlt"
@@ -1024,25 +1025,55 @@
                 });
             });
 
+            // "principal" et "adjuvant" sont donnés ENSEMBLE (ex. traitement curatif + paracétamol
+            // pour la fièvre) ; "alternatif" est donné À LA PLACE du principal, jamais en plus —
+            // il ne doit donc jamais être ajouté automatiquement à l'ordonnance.
+            function protocoleMedsAutoPrescriptibles(p) {
+                return (p.medicaments || []).filter(m => m.pivot && ['principal', 'adjuvant']
+                    .includes(m.pivot.type));
+            }
+
+            function protocoleMedsAlternatifs(p) {
+                return (p.medicaments || []).filter(m => m.pivot && m.pivot.type === 'alternatif');
+            }
+
             function updateProtocoleUI(p) {
                 $('#protocoleTitre').text(p.titre || 'Protocole');
-                $('#protocoleTraitement').text(p.traitement_principal || 'N/A');
-                $('#protocolePosologie').text(p.posologie_principale || '');
 
-                // Stock check
-                if (p.traitement_principal) {
-                    let meds = p.traitement_principal.split(/[\+\,]/);
-                    let inStock = 0;
-                    meds.forEach(mName => {
-                        if (medicamentsList.find(m => m.nom.toLowerCase().includes(mName.trim()
-                            .toLowerCase()) && m.stock > 0)) inStock++;
-                    });
-                    let badge = $('#stockBadge');
-                    if (inStock === meds.length) badge.removeClass('bg-danger bg-warning').addClass('bg-success')
-                        .text('En stock ✅');
-                    else if (inStock > 0) badge.removeClass('bg-success bg-danger').addClass('bg-warning text-dark')
-                        .text('Stock partiel ⚠️');
-                    else badge.removeClass('bg-success bg-warning').addClass('bg-danger').text('Indisponible ❌');
+                // Source de vérité : les médicaments réellement liés (pivot protocole_medicament),
+                // pas les colonnes texte legacy (souvent vides pour les protocoles générés par seeder).
+                let principalMeds = protocoleMedsAutoPrescriptibles(p);
+                let altMeds = protocoleMedsAlternatifs(p);
+
+                if (principalMeds.length > 0) {
+                    $('#protocoleTraitement').text(principalMeds.map(m => m.nom).join(' + '));
+                    $('#protocolePosologie').text(principalMeds.map(m => `${m.nom} : ${m.pivot.posologie || ''}`)
+                        .join(' | '));
+                } else {
+                    $('#protocoleTraitement').text(p.traitement_principal || 'N/A');
+                    $('#protocolePosologie').text(p.posologie_principale || '');
+                }
+
+                if (altMeds.length > 0) {
+                    $('#protocoleAlternatif').text('Alternative(s) (non ajoutée(s) automatiquement) : ' + altMeds
+                        .map(m => m.nom).join(', ')).show();
+                } else {
+                    $('#protocoleAlternatif').hide();
+                }
+
+                // Stock check — basé directement sur les médicaments structurés (pas de correspondance
+                // approximative par nom), le stock étant déjà chargé sur chaque médicament du protocole.
+                let badge = $('#stockBadge');
+                if (principalMeds.length > 0) {
+                    let inStock = principalMeds.filter(m => (m.stock || 0) > 0).length;
+                    if (inStock === principalMeds.length) badge.removeClass('bg-danger bg-warning').addClass(
+                        'bg-success').text('En stock ✅');
+                    else if (inStock > 0) badge.removeClass('bg-success bg-danger').addClass(
+                        'bg-warning text-dark').text('Stock partiel ⚠️');
+                    else badge.removeClass('bg-success bg-warning').addClass('bg-danger').text(
+                        'Indisponible ❌');
+                } else {
+                    badge.removeClass('bg-success bg-warning bg-danger').addClass('bg-secondary').text('');
                 }
                 $('#btnApplyProtocole').data('protocole', p);
             }
@@ -1059,13 +1090,18 @@
                     diagArea.val((currentDiag ? currentDiag + '\n' : '') + `• PATHOLOGIE : ${p.titre}`);
                 }
 
-                // Génération ordonnance
-                if (p.medicaments && p.medicaments.length > 0) {
+                // Génération ordonnance — seuls les médicaments "principal"/"adjuvant" du protocole
+                // sont ajoutés automatiquement. Les "alternatif" (ex. Hydrochlorothiazide en
+                // alternative à l'Amlodipine, ou un antipsychotique alternatif) ne doivent pas être
+                // prescrits en même temps que le principal : ils restent une information (voir
+                // #protocoleAlternatif), à ajouter manuellement par le médecin si besoin.
+                let principalMeds = protocoleMedsAutoPrescriptibles(p);
+                if (principalMeds.length > 0) {
                     if ($('#ordonnanceTable tbody tr').length <= 1 && $('#emptyOrdonnanceRow').length > 0) {
                         $('#ordonnanceTable tbody').empty();
                     }
 
-                    p.medicaments.forEach(med => {
+                    principalMeds.forEach(med => {
                         // Anti-doublon
                         let alreadyExists = false;
                         $('.selectMedicament').each(function() {
@@ -1374,15 +1410,27 @@
                 $(`#compTitle${idx}`).text(p.titre || 'Inconnu');
                 $(`#compSignes${idx}`).text(p.signes || 'N/A');
                 $(`#compDx${idx}`).text(p.diagnostics || 'N/A');
-                $(`#compTr${idx}`).text(p.traitement_principal || 'N/A');
-                $(`#compPos${idx}`).text(p.posologie_principale || 'N/A');
 
-                let meds = (p.traitement_principal || '').split(/[\+\,]/);
-                let inStock = medicamentsList.filter(m => meds.some(s => m.nom.toLowerCase().includes(s.trim()
-                    .toLowerCase()) && m.stock > 0)).length;
-                let badgeClass = inStock === meds.length ? 'text-success' : (inStock > 0 ? 'text-warning' :
-                    'text-danger');
-                let badgeText = inStock === meds.length ? 'En stock' : (inStock > 0 ? 'Stock partiel' : 'Rupture');
+                let principalMeds = protocoleMedsAutoPrescriptibles(p);
+
+                if (principalMeds.length > 0) {
+                    $(`#compTr${idx}`).text(principalMeds.map(m => m.nom).join(' + '));
+                    $(`#compPos${idx}`).text(principalMeds.map(m => `${m.nom} : ${m.pivot.posologie || ''}`)
+                        .join(' | '));
+                } else {
+                    $(`#compTr${idx}`).text(p.traitement_principal || 'N/A');
+                    $(`#compPos${idx}`).text(p.posologie_principale || 'N/A');
+                }
+
+                let badgeClass = 'text-secondary';
+                let badgeText = 'N/A';
+                if (principalMeds.length > 0) {
+                    let inStock = principalMeds.filter(m => (m.stock || 0) > 0).length;
+                    badgeClass = inStock === principalMeds.length ? 'text-success' : (inStock > 0 ?
+                        'text-warning' : 'text-danger');
+                    badgeText = inStock === principalMeds.length ? 'En stock' : (inStock > 0 ?
+                        'Stock partiel' : 'Rupture');
+                }
                 $(`#compStock${idx}`).html(
                     `<span class="badge bg-light ${badgeClass} border"><i class="fas fa-box me-1"></i> ${badgeText}</span>`
                     );

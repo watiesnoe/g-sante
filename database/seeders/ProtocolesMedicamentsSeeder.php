@@ -22,6 +22,20 @@ use Illuminate\Support\Str;
  * paludisme, VIH/PTME, hépatites B/C, nutrition, santé maternelle référencées
  * dans who_guidelines.tsv. Idempotent : peut être exécuté plusieurs fois sans
  * dupliquer les liaisons (updateOrInsert sur protocole_medicament).
+ *
+ * Effectue aussi une resynchronisation système-large : les colonnes texte
+ * héritées `traitement_principal`/`posologie_principale`/`traitement_alternatif`
+ * /`posologie_alternative` de protocole_traitements ne sont jamais renseignées
+ * par les seeders (elles servent uniquement au formulaire de création manuelle
+ * de protocoles, infectiologie/protocoles.blade.php), alors qu'au moins 7 vues
+ * du module Infectiologie et de la consultation les affichent comme source de
+ * vérité (aide_prescription, pathogenes, show, protocoles, suivi, et la boîte
+ * de prévisualisation + le comparateur de protocoles en création de
+ * consultation). Résultat avant correction : ces colonnes étaient vides pour
+ * 245/245 protocoles, rendant ces écrans silencieusement blancs ("N/A") alors
+ * que les vraies données existent dans la table pivot protocole_medicament.
+ * `syncTraitementTextFromPivot()` régénère ces colonnes à partir du pivot
+ * (source de vérité structurée) pour tous les protocoles existants.
  */
 class ProtocolesMedicamentsSeeder extends Seeder
 {
@@ -34,9 +48,50 @@ class ProtocolesMedicamentsSeeder extends Seeder
         DB::transaction(function () {
             $this->fixMdrTb();
             $this->fillOrphanProtocols();
+            $this->syncTraitementTextFromPivot();
         });
 
         $this->command?->info('Médicaments structurés liés aux protocoles OMS restants (ProtocolesMedicamentsSeeder).');
+    }
+
+    /**
+     * Régénère traitement_principal/posologie_principale/traitement_alternatif
+     * /posologie_alternative à partir des médicaments réellement liés (pivot
+     * protocole_medicament), pour que les vues qui lisent encore ces colonnes
+     * texte affichent les vraies données au lieu de rester vides. Sans effet
+     * sur un protocole sans médicament lié (ex. Bronchiolite du nourrisson).
+     */
+    private function syncTraitementTextFromPivot(): void
+    {
+        $protocoles = DB::table('protocole_traitements')->pluck('id');
+
+        foreach ($protocoles as $protocoleId) {
+            $medicaments = DB::table('protocole_medicament')
+                ->join('medicaments', 'medicaments.id', '=', 'protocole_medicament.medicament_id')
+                ->where('protocole_medicament.protocole_id', $protocoleId)
+                ->select('medicaments.nom', 'protocole_medicament.type', 'protocole_medicament.posologie', 'protocole_medicament.duree')
+                ->get();
+
+            if ($medicaments->isEmpty()) {
+                continue;
+            }
+
+            // "adjuvant" (ex. Paracétamol pour la fièvre associé à un traitement curatif) est
+            // destiné à être administré en même temps que le principal, contrairement à
+            // "alternatif" (à donner À LA PLACE du principal, pas en plus).
+            $principaux = $medicaments->whereIn('type', ['principal', 'adjuvant']);
+            $alternatifs = $medicaments->where('type', 'alternatif');
+
+            $format = fn ($m) => $m->nom.' : '.$m->posologie.($m->duree ? ' ('.$m->duree.')' : '');
+
+            DB::table('protocole_traitements')->where('id', $protocoleId)->update([
+                'traitement_principal' => Str::limit($principaux->pluck('nom')->implode(' + '), 250),
+                'posologie_principale' => $principaux->map($format)->implode('; ') ?: null,
+                'traitement_alternatif' => $alternatifs->isNotEmpty() ? Str::limit($alternatifs->pluck('nom')->implode(' + '), 250) : null,
+                'posologie_alternative' => $alternatifs->isNotEmpty() ? $alternatifs->map($format)->implode('; ') : null,
+                'updated_at' => $this->now,
+            ]);
+        }
     }
 
     private function familleId(string $nom): int
