@@ -258,7 +258,7 @@ class InfectiologieSeeder extends Seeder
                             'symptome_id' => $sId[$symptomeNom],
                         ],
                         [
-                            'uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now
+                            'created_at' => $now, 'updated_at' => $now
                         ]
                     );
                 }

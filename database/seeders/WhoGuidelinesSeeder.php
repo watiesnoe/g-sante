@@ -67,7 +67,7 @@ class WhoGuidelinesSeeder extends Seeder
 
                     DB::table('maladie_symptome')->updateOrInsert(
                         ['maladie_id' => $maladieId, 'symptome_id' => $symptomId],
-                        ['uuid' => (string) Str::uuid(), 'created_at' => $now, 'updated_at' => $now]
+                        ['created_at' => $now, 'updated_at' => $now]
                     );
                 }
             }
@@ -97,7 +97,21 @@ class WhoGuidelinesSeeder extends Seeder
                     'description' => "Catégorie thérapeutique : " . $traitement
                 ]);
             }
-            $familleId = $familleId ?? 1;
+            if (!$familleId) {
+                // 🔒 Ne jamais pointer vers un id codé en dur (fragile : peut ne pas
+                // exister sur une base fraîche et provoquer l'erreur SQL 1364 déjà
+                // rencontrée en production). On résout/crée une famille par défaut par nom.
+                $familleId = DB::table('familles')->where('nom', 'Non classé')->value('id');
+                if (!$familleId) {
+                    $familleId = DB::table('familles')->insertGetId([
+                        'nom' => 'Non classé',
+                        'uuid' => (string) Str::uuid(),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                        'description' => 'Famille par défaut pour les médicaments sans catégorie thérapeutique précisée.',
+                    ]);
+                }
+            }
 
             // 5. Create or Find Medicament
             $medicament = DB::table('medicaments')->where('nom', $medicamentNom)->first();
