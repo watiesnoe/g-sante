@@ -14,29 +14,29 @@
                 <span class="nav-main-link-name">Pathologies Infectieuses</span>
             </a>
         </li>
-        <li class="nav-main-item">
+        {{-- <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('infectiologie.pathogenes') }}">
                 <span class="nav-main-link-name">Pathogènes</span>
             </a>
-        </li>
-        <li class="nav-main-item">
+        </li> --}}
+        {{-- <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('infectiologie.protocoles') }}">
                 <span class="nav-main-link-name">Protocoles de Traitement</span>
             </a>
-        </li>
-        <li class="nav-main-item">
+        </li> --}}
+        {{-- <li class="nav-main-item">
             @php
                 $atbFamille = \App\Models\Famille::where('nom', 'like', 'Antibiotique%')->first();
             @endphp
             <a class="nav-main-link" href="{{ $atbFamille ? route('familles.medicaments', $atbFamille->uuid) : '#' }}">
                 <span class="nav-main-link-name">Gestion Antibiotiques</span>
             </a>
-        </li>
-        <li class="nav-main-item">
+        </li> --}}
+        {{-- <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('infectiologie.aide_prescription') }}">
                 <span class="nav-main-link-name">Aide à la Prescription</span>
             </a>
-        </li>
+        </li> --}}
         <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('infectiologie.suivi') }}">
                 <span class="nav-main-link-name">Suivi des Traitements</span>

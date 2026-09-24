@@ -19,6 +19,9 @@ class SymptomeController extends Controller
 
             return Datatables::of($symptomes)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function($row){
+                    return '<input type="checkbox" class="symptome-checkbox form-check-input" value="'.$row->uuid.'">';
+                })
                 ->addColumn('actions', function($row){
                     $view   = '<a href="'.route('symptomes.show', $row->uuid).'" class="btn btn-sm btn-outline-primary" title="Détails"><i class="fa fa-eye"></i></a>';
                     $edit   = '<button type="button" class="btn btn-sm btn-outline-info edit" data-id="'.$row->uuid.'" title="Modifier"><i class="fa fa-pencil-alt"></i></button>';
@@ -26,7 +29,7 @@ class SymptomeController extends Controller
                     
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $edit . $delete . '</div>';
                 })
-                ->rawColumns(['actions'])
+                ->rawColumns(['checkbox', 'actions'])
                 ->make(true);
         }
 
@@ -70,6 +73,28 @@ class SymptomeController extends Controller
 
         $symptome->delete();
         return response()->json(['message' => 'Symptôme supprimé avec succès !']);
+    }
+
+    // Delete Bulk
+    public function destroyBulk(Request $request)
+    {
+        abort_unless(Auth::user()->can('parametres.symptomes'), 403, 'Accès non autorisé.');
+
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'string|exists:symptomes,uuid',
+        ]);
+
+        $symptomes = Symptome::whereIn('uuid', $request->ids)->get();
+        $count = $symptomes->count();
+
+        foreach ($symptomes as $symptome) {
+            $symptome->delete();
+        }
+
+        return response()->json([
+            'message' => "$count symptôme(s) supprimé(s) avec succès.",
+        ]);
     }
 
     // Edit (pour récupérer les données AJAX)

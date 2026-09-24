@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('unites', UniteController::class);
     Route::resource('familles', FamilleController::class)->except(['create']);
     Route::resource('maladies', MaladieController::class)->except(['create']);
+    Route::delete('maladies-bulk', [MaladieController::class, 'destroyBulk'])->name('maladies.destroyBulk');
+    Route::delete('symptomes-bulk', [SymptomeController::class, 'destroyBulk'])->name('symptomes.destroyBulk');
     Route::resource('symptomes', SymptomeController::class)->except(['create']);
     Route::middleware('caisse.ouverte')->group(function () {
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
@@ -182,6 +184,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('infectiologie')->group(function () {
         Route::get('/pathologies', [\App\Http\Controllers\InfectiologieController::class, 'pathologies'])->name('infectiologie.pathologies');
+        Route::get('/pathologies/export/{format}', [\App\Http\Controllers\InfectiologieController::class, 'exportPathologies'])->name('infectiologie.pathologies.export');
         Route::get('/pathogenes', [\App\Http\Controllers\InfectiologieController::class, 'pathogenes'])->name('infectiologie.pathogenes');
         Route::get('/pathologies-api', [\App\Http\Controllers\InfectiologieController::class, 'pathologiesApi'])
             ->name('infectiologie.pathologies.api');
@@ -229,6 +232,7 @@ require __DIR__ . '/auth.php';
 
 // ── Export / Import generique ──────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
-    Route::get('/export/{module}',  [ExportImportController::class, 'export'])->name('export.model');
-    Route::post('/import/{module}', [ExportImportController::class, 'import'])->name('import.model');
+    Route::get('/export/{module}',      [ExportImportController::class, 'export'])->name('export.model');
+    Route::get('/export-xlsx/{module}', [ExportImportController::class, 'exportXlsx'])->name('export.model.xlsx');
+    Route::post('/import/{module}',     [ExportImportController::class, 'import'])->name('import.model');
 });

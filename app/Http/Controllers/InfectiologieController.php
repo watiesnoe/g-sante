@@ -36,15 +36,80 @@ class InfectiologieController extends Controller
         return view('application.infectiologie.statistiques', compact('topMaladies','monthlyStats', 'lowStockCount'));
     }
 
-    public function pathologies()
+    public function pathologies(\Illuminate\Http\Request $request)
     {
         abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
 
-        $pathologies = \App\Models\Maladie::with(['protocole', 'symptomes'])
+        $search = $request->input('search');
+
+        $query = \App\Models\Maladie::with(['protocole', 'symptomes'])
+            ->withCount('consultations');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('symptomes', function ($q2) use ($search) {
+                      $q2->where('nom', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $pathologies = $query->orderBy('nom')->paginate(12)->withQueryString();
+
+        return view('application.infectiologie.pathologies', compact('pathologies', 'search'));
+    }
+
+    public function exportPathologies(string $format)
+    {
+        abort_unless(Auth::user()->can('infectiologie.view'), 403, 'Accès non autorisé.');
+        abort_unless(in_array($format, ['xlsx', 'pdf']), 404);
+
+        $pathologies = Maladie::with(['protocole', 'symptomes'])
             ->withCount('consultations')
+            ->orderBy('nom')
             ->get();
 
-        return view('application.infectiologie.pathologies', compact('pathologies'));
+        $filename = 'pathologies_infectieuses_' . now()->format('Ymd_His');
+
+        if ($format === 'pdf') {
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView('application.infectiologie.pathologies_pdf', compact('pathologies'))
+                ->setPaper('a4', 'landscape')
+                ->download($filename . '.pdf');
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet()->setTitle('Pathologies');
+
+        $headers = ['Pathologie', 'Description', 'Symptômes', 'Protocole', 'Traitement principal', 'Posologie principale', 'Cas enregistrés'];
+        $sheet->fromArray($headers, null, 'A1');
+
+        $rows = $pathologies->map(fn ($p) => [
+            $p->nom,
+            $p->description,
+            $p->symptomes->pluck('nom')->implode(', '),
+            $p->protocole->titre ?? '',
+            $p->protocole->traitement_principal ?? '',
+            $p->protocole->posologie_principale ?? '',
+            $p->consultations_count,
+        ])->all();
+        $sheet->fromArray($rows, null, 'A2');
+
+        $sheet->getStyle('A1:G1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0665D0']],
+        ]);
+        foreach (['A' => 28, 'B' => 50, 'C' => 40, 'D' => 30, 'E' => 35, 'F' => 30, 'G' => 16] as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
+        }
+        $sheet->getStyle('A2:G' . (count($rows) + 1))->getAlignment()->setWrapText(true)->setVertical('top');
+        $sheet->freezePane('A2');
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save('php://output');
+        }, $filename . '.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     public function pathogenes()
@@ -154,14 +219,29 @@ class InfectiologieController extends Controller
         abort_unless(Auth::user()->can('infectiologie.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir le suivi.');
 
         // Consultations liées à au moins une maladie (via la table pivot)
-        $suivis = \App\Models\Consultation::with(['patient', 'maladies.protocole'])
+        $suivis = \App\Models\Consultation::with(['patient', 'maladies.protocole', 'suivis' => function($q) {
+            $q->orderBy('date_suivi', 'desc');
+        }])
             ->whereHas('maladies', function($q) {
                 $q->whereHas('protocole');
             })
             ->orderBy('date_consultation', 'desc')
             ->get();
 
-        return view('application.infectiologie.suivi', compact('suivis'));
+        // Calcul du Taux d'atteinte cible (Amélioration ou Guérison)
+        $totalSuivis = $suivis->count();
+        $atteinte = 0;
+        
+        foreach ($suivis as $s) {
+            $latestEvolution = $s->suivis->first()->evolution ?? null;
+            if (in_array($latestEvolution, ['Amélioration', 'Guérison'])) {
+                $atteinte++;
+            }
+        }
+        
+        $tauxAtteinte = $totalSuivis > 0 ? round(($atteinte / $totalSuivis) * 100) : 0;
+
+        return view('application.infectiologie.suivi', compact('suivis', 'tauxAtteinte'));
     }
 
     public function getProtocole($maladieId)

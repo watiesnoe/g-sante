@@ -15,6 +15,9 @@
                 <div class="block-header block-header-default d-flex justify-content-between align-items-center">
                     <h3 class="block-title">Liste des Symptômes</h3>
                     <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-sm btn-danger d-none" id="btnDeleteBulk">
+                            <i class="fa fa-trash me-1"></i> Supprimer la sélection (<span id="bulkCount">0</span>)
+                        </button>
                         <a href="{{ route('export.model', 'symptomes') }}" class="btn btn-sm btn-outline-primary" title="Exporter en Excel">
                             <i class="fa fa-file-excel me-1"></i> Exporter
                         </a>
@@ -32,9 +35,12 @@
                         <table id="symptomeTable" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px; text-align: center;">
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
                                     <th>Nom</th>
                                     <th>Description</th>
-                                    <th class="col-3">Actions</th>
+                                    <th class="col-3 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -100,10 +106,84 @@ $(document).ready(function() {
         serverSide: true,
         ajax: "{{ route('symptomes.index') }}",
         columns: [
+            { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
             { data: 'nom', name: 'nom' },
             { data: 'description', name: 'description' },
             { data: 'actions', name: 'actions', orderable: false, searchable: false }
-        ]
+        ],
+        drawCallback: function() {
+            updateBulkCount();
+            $('#selectAll').prop('checked', false);
+        }
+    });
+
+    // Gestion du Select All
+    $('#selectAll').on('change', function() {
+        $('.symptome-checkbox').prop('checked', $(this).prop('checked'));
+        updateBulkCount();
+    });
+
+    // Gestion des checkbox individuelles
+    $('#symptomeTable').on('change', '.symptome-checkbox', function() {
+        if (!$(this).prop('checked')) {
+            $('#selectAll').prop('checked', false);
+        }
+        updateBulkCount();
+    });
+
+    function updateBulkCount() {
+        let count = $('.symptome-checkbox:checked').length;
+        if (count > 0) {
+            $('#bulkCount').text(count);
+            $('#btnDeleteBulk').removeClass('d-none');
+        } else {
+            $('#btnDeleteBulk').addClass('d-none');
+        }
+    }
+
+    // Suppression groupée
+    $('#btnDeleteBulk').on('click', function() {
+        let ids = [];
+        $('.symptome-checkbox:checked').each(function() {
+            ids.push($(this).val());
+        });
+
+        if (ids.length === 0) return;
+
+        Swal.fire({
+            title: 'Supprimer ' + ids.length + ' symptôme(s) ?',
+            text: "Cette action est irréversible.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Oui, supprimer tout',
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ route('symptomes.destroyBulk') }}",
+                    method: 'DELETE',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        ids: ids
+                    },
+                    success: function(res) {
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    },
+                    error: function(err) {
+                        Swal.fire('Erreur', err.responseJSON?.message || 'Impossible de supprimer la sélection.', 'error');
+                    }
+                });
+            }
+        });
     });
 
     // Ouvrir modal ajout

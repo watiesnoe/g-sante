@@ -54,7 +54,7 @@
                     </div>
                     <div>
                         <div class="small text-muted text-uppercase fw-bold">Taux d'Atteinte Cible</div>
-                        <h4 class="mb-0 fw-bold">92%</h4>
+                        <h4 class="mb-0 fw-bold">{{ $tauxAtteinte }}%</h4>
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($suivis as $s)
+                    @foreach($suivis as $s)
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
@@ -102,7 +102,19 @@
                             <div class="small text-muted italic" style="font-size: 0.7rem;">{{ Str::limit($protocole->posologie_principale ?? '', 50) }}</div>
                         </td>
                         <td class="text-center">
-                            <span class="badge bg-success rounded-pill">Stable</span>
+                            @php 
+                                $latestSuivi = $s->suivis->first();
+                                $evolutionBadge = 'bg-secondary';
+                                $evolutionText = 'Non évalué';
+                                
+                                if ($latestSuivi) {
+                                    if ($latestSuivi->evolution == 'Guérison') { $evolutionBadge = 'bg-success'; $evolutionText = 'Guérison'; }
+                                    elseif ($latestSuivi->evolution == 'Amélioration') { $evolutionBadge = 'bg-primary'; $evolutionText = 'Amélioration'; }
+                                    elseif ($latestSuivi->evolution == 'Stagnation') { $evolutionBadge = 'bg-warning text-dark'; $evolutionText = 'Stagnation'; }
+                                    elseif ($latestSuivi->evolution == 'Aggravation') { $evolutionBadge = 'bg-danger'; $evolutionText = 'Aggravation'; }
+                                }
+                            @endphp
+                            <span class="badge {{ $evolutionBadge }} rounded-pill">{{ $evolutionText }}</span>
                         </td>
                         <td class="text-center pe-4">
                             <a href="{{ route('consultations.show', $s) }}" class="btn-sm" title="Dossier">
@@ -110,14 +122,7 @@
                             </a>
                         </td>
                     </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="fas fa-user-clock fa-3x mb-3 opacity-25"></i>
-                            <p class="mb-0">Aucun patient sous protocole expert actuellement.</p>
-                        </td>
-                    </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

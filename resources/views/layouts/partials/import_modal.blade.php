@@ -26,6 +26,11 @@
                            class="btn btn-sm btn-outline-success rounded-pill">
                             <i class="fa fa-download me-1"></i> Télécharger le modèle (.csv)
                         </a>
+                        <span class="mx-1 text-muted small">ou</span>
+                        <a href="#" id="downloadTemplateXlsxLink" target="_blank"
+                           class="btn btn-sm btn-outline-success rounded-pill">
+                            <i class="fa fa-file-excel me-1"></i> Télécharger le modèle (.xlsx)
+                        </a>
                     </div>
 
                     <hr class="my-3">
@@ -35,8 +40,8 @@
                         <label for="excelFileInput" class="form-label fw-semibold">
                             <i class="fa fa-file-csv text-success me-1"></i> Sélectionner le fichier CSV
                         </label>
-                        <input class="form-control" type="file" id="excelFileInput" name="file" accept=".csv,.txt" required>
-                        <div class="form-text">Format accepté : <strong>.csv</strong> — Encodage recommandé : UTF-8</div>
+                        <input class="form-control" type="file" id="excelFileInput" name="file" accept=".csv,.txt,.xlsx" required>
+                        <div class="form-text">Formats acceptés : <strong>.csv</strong> ou <strong>.xlsx</strong> — Encodage recommandé : UTF-8</div>
                     </div>
 
                     {{-- Info Alert --}}
@@ -80,9 +85,11 @@
                 $('#importModule').val(module);
                 $('#importExcelModalLabel').html('<i class="fa fa-file-import me-2"></i> Importer ' + label);
                 
-                // Dynamically generate the template URL using Laravel route helper to support subdirectory hosting (e.g. XAMPP)
-                var templateUrl = "{{ route('export.model', ':module') }}?template=1".replace(':module', module);
-                $('#downloadTemplateLink').attr('href', templateUrl);
+                // Dynamically generate the template URLs (CSV & XLSX)
+                var templateCsvUrl  = "{{ route('export.model', ':module') }}?template=1".replace(':module', module);
+                var templateXlsxUrl = "{{ route('export.model.xlsx', ':module') }}?template=1".replace(':module', module);
+                $('#downloadTemplateLink').attr('href', templateCsvUrl);
+                $('#downloadTemplateXlsxLink').attr('href', templateXlsxUrl);
                 $('#importExcelForm')[0].reset();
 
                 $('#importExcelModal').modal('show');

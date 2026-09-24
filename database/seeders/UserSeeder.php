@@ -70,6 +70,11 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
             ],
             [
+                'name' => 'Zarahou', 'nom' => 'Tangara', 'prenom' => 'Zarahou', 'telephone' => '770000000',
+                'adresse' => 'Dakar', 'role' => 'superadmin', 'email' => 'tangarazarahou@gmail.com',
+                'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,
+            ],
+            [
                 'name' => 'Amadou', 'nom' => 'TRAORE', 'prenom' => 'Amadou', 'telephone' => '77000000',
                 'adresse' => 'Dakar', 'role' => 'secretaire', 'email' => 'amadou@gmail.com',
                 'password' => Hash::make('password'), 'statut' => 'actif', 'service_medical_id' => null,

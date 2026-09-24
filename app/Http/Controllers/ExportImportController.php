@@ -60,6 +60,9 @@ class ExportImportController extends Controller
 
         if ($module === 'maladies') {
             $exportColumns[] = 'symptomes';
+            $exportColumns[] = 'protocole';
+            $exportColumns[] = 'traitement_principal';
+            $exportColumns[] = 'posologie_principale';
         }
 
         // Build CSV
@@ -68,13 +71,23 @@ class ExportImportController extends Controller
 
         if (! $isTemplate) {
             $records = $module === 'maladies'
-                ? $modelClass::with('symptomes')->get()
+                ? $modelClass::with(['symptomes', 'protocole'])->get()
                 : $modelClass::all();
             foreach ($records as $record) {
                 $row = [];
                 foreach ($exportColumns as $col) {
-                    if ($col === 'symptomes' && $module === 'maladies') {
-                        $row[] = $record->symptomes ? $record->symptomes->pluck('nom')->implode(', ') : '';
+                    if ($module === 'maladies') {
+                        if ($col === 'symptomes') {
+                            $row[] = $record->symptomes ? $record->symptomes->pluck('nom')->implode(', ') : '';
+                        } elseif ($col === 'protocole') {
+                            $row[] = $record->protocole ? $record->protocole->titre : '';
+                        } elseif ($col === 'traitement_principal') {
+                            $row[] = $record->protocole ? $record->protocole->traitement_principal : '';
+                        } elseif ($col === 'posologie_principale') {
+                            $row[] = $record->protocole ? $record->protocole->posologie_principale : '';
+                        } else {
+                            $row[] = $record->{$col} ?? '';
+                        }
                     } else {
                         $row[] = $record->{$col} ?? '';
                     }
@@ -101,6 +114,90 @@ class ExportImportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export a module's data (or a blank template) as an XLSX file.
+     * Route: GET /export-xlsx/{module}?template=1
+     */
+    public function exportXlsx(Request $request, string $module)
+    {
+        if (! array_key_exists($module, $this->modules)) {
+            abort(404, 'Module inconnu.');
+        }
+
+        $config     = $this->modules[$module];
+        abort_unless(Auth::user()->can($config['permission']), 403, 'Accès non autorisé.');
+
+        $isTemplate = $request->boolean('template');
+        $label      = $config['label'];
+        $modelClass = $config['model'];
+
+        $instance = new $modelClass();
+        $fillable = $instance->getFillable();
+
+        $exportColumns = collect($fillable)->filter(fn($f) =>
+            ! in_array($f, ['uuid', 'deleted_at', 'password'])
+        )->values()->toArray();
+
+        if ($module === 'maladies') {
+            $exportColumns[] = 'symptomes';
+            $exportColumns[] = 'protocole';
+            $exportColumns[] = 'traitement_principal';
+            $exportColumns[] = 'posologie_principale';
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet()->setTitle($label);
+
+        // Header row with styling
+        $sheet->fromArray($exportColumns, null, 'A1');
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($exportColumns));
+        $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0665D0']],
+        ]);
+        foreach (range(1, count($exportColumns)) as $colIdx) {
+            $sheet->getColumnDimensionByColumn($colIdx)->setWidth(22);
+        }
+        $sheet->freezePane('A2');
+
+        if (! $isTemplate) {
+            $records = $module === 'maladies'
+                ? $modelClass::with(['symptomes', 'protocole'])->get()
+                : $modelClass::all();
+            $dataRows = [];
+            foreach ($records as $record) {
+                $row = [];
+                foreach ($exportColumns as $col) {
+                    if ($module === 'maladies') {
+                        if ($col === 'symptomes') {
+                            $row[] = $record->symptomes ? $record->symptomes->pluck('nom')->implode(', ') : '';
+                        } elseif ($col === 'protocole') {
+                            $row[] = $record->protocole ? $record->protocole->titre : '';
+                        } elseif ($col === 'traitement_principal') {
+                            $row[] = $record->protocole ? $record->protocole->traitement_principal : '';
+                        } elseif ($col === 'posologie_principale') {
+                            $row[] = $record->protocole ? $record->protocole->posologie_principale : '';
+                        } else {
+                            $row[] = $record->{$col} ?? '';
+                        }
+                    } else {
+                        $row[] = $record->{$col} ?? '';
+                    }
+                }
+                $dataRows[] = $row;
+            }
+            $sheet->fromArray($dataRows, null, 'A2');
+        }
+
+        $filename = Str::slug($label) . ($isTemplate ? '_modele' : '_export') . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -133,45 +230,82 @@ class ExportImportController extends Controller
 
         $file = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
-        if (! in_array($extension, ['csv', 'txt'])) {
-            return response()->json(['success' => false, 'message' => 'Le fichier doit être au format CSV ou TXT.'], 422);
+        if (! in_array($extension, ['csv', 'txt', 'xlsx'])) {
+            return response()->json(['success' => false, 'message' => 'Le fichier doit être au format CSV, TXT ou XLSX.'], 422);
         }
 
         $modelClass = $config['model'];
         $uniqueBy   = $config['unique_by']; // may be string or array of fields
 
         try {
-            $handle  = fopen($file->getPathname(), 'r');
+            // ── Lecture du fichier selon son extension ────────────────────────
+            if ($extension === 'xlsx') {
+                // Le fichier temporaire PHP n'a pas d'extension → IOFactory::load() ne peut pas
+                // deviner le format. On utilise un reader explicite pour éviter l'erreur.
+                $reader     = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getPathname());
+                $sheetData   = $spreadsheet->getActiveSheet()->toArray(
+                    null,   // null pour les cellules vides
+                    true,   // calculer les formules
+                    true,   // formater les valeurs
+                    false   // indices numériques (0-based)
+                );
 
-            // Read a portion of the first line to detect separator (';' or ',')
-            $firstLine = fgets($handle);
-            rewind($handle);
-
-            // Strip UTF-8 BOM if present
-            $bom = fread($handle, 3);
-            if ($bom !== "\xEF\xBB\xBF") {
-                rewind($handle);
-            }
-
-            // Detect separator: count occurrences of ';' vs ',' in the first line
-            $separator = ';';
-            if ($firstLine !== false) {
-                $semicolons = substr_count($firstLine, ';');
-                $commas = substr_count($firstLine, ',');
-                if ($commas > $semicolons) {
-                    $separator = ',';
+                if (empty($sheetData)) {
+                    return response()->json(['success' => false, 'message' => 'Fichier XLSX vide ou invalide.']);
                 }
-            }
 
-            // Read header row
-            $headers = fgetcsv($handle, 0, $separator);
-            if (! $headers) {
+                // Première ligne = en-têtes (peut contenir null si cellule vide)
+                $headers           = array_shift($sheetData);
+                $headers           = array_map(fn($h) => (string)($h ?? ''), $headers);
+                $normalizedHeaders = array_map([$this, 'normalizeHeader'], $headers);
+
+                // Ignorer les lignes entièrement vides (fréquent en fin de XLSX)
+                $allRows = array_filter($sheetData, fn($row) =>
+                    array_filter((array) $row, fn($v) => $v !== null && $v !== '')
+                );
+            } else {
+                // ── Lecture CSV / TXT ─────────────────────────────────────────
+                $handle  = fopen($file->getPathname(), 'r');
+
+                // Read a portion of the first line to detect separator (';' or ',')
+                $firstLine = fgets($handle);
+                rewind($handle);
+
+                // Strip UTF-8 BOM if present
+                $bom = fread($handle, 3);
+                if ($bom !== "\xEF\xBB\xBF") {
+                    rewind($handle);
+                }
+
+                // Detect separator: count occurrences of ';' vs ',' in the first line
+                $separator = ';';
+                if ($firstLine !== false) {
+                    $semicolons = substr_count($firstLine, ';');
+                    $commas = substr_count($firstLine, ',');
+                    if ($commas > $semicolons) {
+                        $separator = ',';
+                    }
+                }
+
+                // Read header row
+                $headers = fgetcsv($handle, 0, $separator);
+                if (! $headers) {
+                    fclose($handle);
+                    return response()->json(['success' => false, 'message' => 'Fichier CSV vide ou invalide.']);
+                }
+
+                // Normalize headers (remove accents, lowercase)
+                $normalizedHeaders = array_map([$this, 'normalizeHeader'], $headers);
+
+                // Read all remaining rows into memory so the rest of the logic is unified
+                $allRows = [];
+                while (($row = fgetcsv($handle, 0, $separator)) !== false) {
+                    $allRows[] = $row;
+                }
                 fclose($handle);
-                return response()->json(['success' => false, 'message' => 'Fichier CSV vide ou invalide.']);
             }
-
-            // Normalize headers (remove accents, lowercase)
-            $normalizedHeaders = array_map([$this, 'normalizeHeader'], $headers);
 
             $instance  = new $modelClass();
             $fillable  = $instance->getFillable();
@@ -182,22 +316,48 @@ class ExportImportController extends Controller
             $errors  = [];
             $lineNum = 1;
 
-            while (($row = fgetcsv($handle, 0, $separator)) !== false) {
+            foreach ($allRows as $row) {
                 $lineNum++;
-                if (count($row) !== count($normalizedHeaders)) {
+                $row = array_values((array) $row); // normalise XLSX rows (may be associative)
+
+                $headerCount = count($normalizedHeaders);
+                $rowCount    = count($row);
+
+                // Ligne strictement plus longue que les headers → probablement mal formée
+                if ($rowCount > $headerCount) {
                     $skipped++;
                     continue;
+                }
+
+                // Ligne plus courte (cellules vides en fin de ligne dans XLSX) → compléter avec null
+                if ($rowCount < $headerCount) {
+                    $row = array_pad($row, $headerCount, null);
                 }
 
                 // Map CSV columns → model fillable fields
                 $data = [];
                 $symptomesVal = null;
+                $protocoleVal = null;
+                $traitementVal = null;
+                $posologieVal = null;
 
                 foreach ($normalizedHeaders as $idx => $col) {
                     $normalizedCol = $this->normalizeHeader($col);
 
                     if ($module === 'maladies' && in_array($normalizedCol, ['symptomes', 'symptome', 'symptomes_cles'])) {
                         $symptomesVal = trim($row[$idx] ?? '');
+                        continue;
+                    }
+                    if ($module === 'maladies' && in_array($normalizedCol, ['protocole', 'titre_protocole'])) {
+                        $protocoleVal = trim($row[$idx] ?? '');
+                        continue;
+                    }
+                    if ($module === 'maladies' && in_array($normalizedCol, ['traitement_principal', 'traitement'])) {
+                        $traitementVal = trim($row[$idx] ?? '');
+                        continue;
+                    }
+                    if ($module === 'maladies' && in_array($normalizedCol, ['posologie_principale', 'posologie'])) {
+                        $posologieVal = trim($row[$idx] ?? '');
                         continue;
                     }
 
@@ -213,7 +373,13 @@ class ExportImportController extends Controller
                             }
                         }
 
-                        if ($normalizedField === $normalizedCol || $isRelationMatch) {
+                        // Allow specific aliases like 'pathologie' mapping to 'nom'
+                        $isAliasMatch = false;
+                        if ($module === 'maladies' && $normalizedField === 'nom' && in_array($normalizedCol, ['pathologie', 'maladie'])) {
+                            $isAliasMatch = true;
+                        }
+
+                        if ($normalizedField === $normalizedCol || $isRelationMatch || $isAliasMatch) {
                             $val = trim($row[$idx] ?? '');
                             if ($val !== '') {
                                 // Normalize boolean values from Excel (e.g. VRAI/FAUX, TRUE/FALSE)
@@ -347,12 +513,28 @@ class ExportImportController extends Controller
                             $record->symptomes()->sync($symptomeIds);
                         }
                     }
+
+                    // Attach / Create ProtocoleTraitement if importing maladies module
+                    if ($module === 'maladies' && $record) {
+                        if (!empty($protocoleVal) || !empty($traitementVal) || !empty($posologieVal)) {
+                            $protocole = \App\Models\ProtocoleTraitement::firstOrNew(['maladie_id' => $record->id]);
+                            
+                            if (!$protocole->exists && empty($protocoleVal)) {
+                                $protocole->titre = 'Protocole ' . $record->nom;
+                            } elseif (!empty($protocoleVal)) {
+                                $protocole->titre = $protocoleVal;
+                            }
+                            
+                            if (!empty($traitementVal)) $protocole->traitement_principal = $traitementVal;
+                            if (!empty($posologieVal)) $protocole->posologie_principale = $posologieVal;
+                            
+                            $protocole->save();
+                        }
+                    }
                 } catch (\Throwable $e) {
                     $errors[] = "Ligne $lineNum : " . $e->getMessage();
                 }
             }
-
-            fclose($handle);
 
             $summary = "Importation terminée : $created créé(s), $updated mis à jour, $skipped ignoré(s).";
             if (! empty($errors)) {

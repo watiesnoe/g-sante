@@ -135,4 +135,30 @@ class MaladieController extends Controller
             'message' => 'Maladie supprimée avec succès'
         ]);
     }
+
+    /**
+     * Supprimer plusieurs maladies en une seule requête (suppression groupée).
+     */
+    public function destroyBulk(\Illuminate\Http\Request $request)
+    {
+        abort_unless(auth()->user()->can('parametres.maladies'), 403, 'Accès non autorisé.');
+
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:maladies,id',
+        ]);
+
+        $maladies = \App\Models\Maladie::whereIn('id', $request->ids)->get();
+        $count = $maladies->count();
+
+        foreach ($maladies as $maladie) {
+            $maladie->symptomes()->detach();
+            $maladie->delete();
+        }
+
+        return response()->json([
+            'message' => $count . ' pathologie(s) supprimée(s) avec succès.',
+        ]);
+    }
+
 }
