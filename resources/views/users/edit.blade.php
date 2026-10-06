@@ -103,6 +103,19 @@
                                     </select>
                                 </div>
 
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">Structure / Service</label>
+                                    <select name="service_medical_id" class="form-select js-select2">
+                                        <option value="">-- Sélectionner une structure / un service --</option>
+                                        @foreach($services as $service)
+                                            <option value="{{ $service->id }}" {{ old('service_medical_id', $user->service_medical_id) == $service->id ? 'selected' : '' }}>
+                                                {{ $service->nom }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Obligatoire pour le rôle Médecin.</small>
+                                </div>
+
                                 <div class="col-md-12">
                                     <p class="mb-2 fw-semibold">Permissions Spécifiques (Optionnel)</p>
                                     <small class="text-muted d-block mb-3">

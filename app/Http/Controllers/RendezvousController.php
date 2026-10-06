@@ -168,13 +168,13 @@ class RendezvousController extends Controller
         return response()->json(['success' => true, 'data' => $rdv]);
     }
 
-    public function disponible(Request $request)
+    public function realiser(Request $request)
     {
         abort_unless(Auth::user()->can('rendezvous.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les rendez-vous réalisés.');
 
         if ($request->ajax()) {
             $rdvs = RendezVous::with(['patient.grossesses', 'medecin', 'consultation'])
-                ->where('statut', ['realise'])
+                ->where('statut', 'realise')
                 ->select('rendezvous.*');
 
             return DataTables::of($rdvs)
@@ -211,19 +211,13 @@ class RendezvousController extends Controller
                         $html .= '<a href="' . route('maternity.show', [$activeGrossesse->uuid, 'rdv_uuid' => $rdv->uuid]) . '" class="btn btn-sm btn-outline-danger" title="Maternité" style="color: #e91e63; border-color: #e91e63;"><i class="fa fa-female"></i></a>';
                     }
 
-                    // ✏️ Modifier (rendezvous.edit)
-                    if ($user->can('rendezvous.edit')) {
-                        $html .= '<a href="' . route('rendezvous.edit', $rdv->uuid) . '" class="btn btn-sm btn-outline-info" title="Modifier"><i class="fa fa-pencil-alt"></i></a>';
-                    }
+                    // Un rendez-vous déjà réalisé est un historique figé : pas de
+                    // bouton Modifier ni Supprimer ici (voir edit()/update()/destroy()
+                    // qui refusent aussi toute modification côté serveur).
 
                     // 📋 Créer un suivi (consultations.suivi)
                     if ($user->can('consultations.suivi') && $rdv->consultation) {
                         $html .= '<a href="' . route('consultations.suivi.create', $rdv->consultation) . '" class="btn btn-sm btn-outline-success" title="Créer un suivi"><i class="fa fa-file-medical"></i></a>';
-                    }
-
-                    // 🗑 Supprimer (rendezvous.delete)
-                    if ($user->can('rendezvous.delete')) {
-                        $html .= '<button type="button" data-url="' . route('rendezvous.destroy', $rdv->uuid) . '" class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"><i class="fa fa-trash"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
@@ -232,7 +226,7 @@ class RendezvousController extends Controller
                 ->make(true);
         }
 
-        return view('application.rendezvous.rdvdisponible');
+        return view('application.rendezvous.realise');
     }
     public function annuler(Request $request)
     {
@@ -240,7 +234,7 @@ class RendezvousController extends Controller
 
         if ($request->ajax()) {
             $rdvs = RendezVous::with(['patient.grossesses', 'medecin', 'consultation'])
-                ->where('statut', ['annule'])
+                ->where('statut', 'annule')
                 ->select('rendezvous.*');
 
             return DataTables::of($rdvs)
@@ -322,6 +316,7 @@ class RendezvousController extends Controller
     public function edit(RendezVous $rendezvous)
     {
         abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
+        abort_if($rendezvous->statut === 'realise', 403, 'Ce rendez-vous a déjà été réalisé : il ne peut plus être modifié.');
 
         $rendezvous->load(['patient', 'medecin', 'consultation']);
         $medecins = \App\Models\User::whereHas('roles', function ($q) {
@@ -334,6 +329,7 @@ class RendezvousController extends Controller
     public function update(Request $request, RendezVous $rendezvous)
     {
         abort_unless(Auth::user()->can('rendezvous.edit'), 403, 'Accès non autorisé.');
+        abort_if($rendezvous->statut === 'realise', 403, 'Ce rendez-vous a déjà été réalisé : il ne peut plus être modifié.');
 
         // 1. AJOUT de 'medecin_id' et 'statut' dans la validation
         $request->validate([
@@ -359,6 +355,10 @@ class RendezvousController extends Controller
     public function destroy(RendezVous $rendezvous)
     {
         abort_unless(Auth::user()->can('rendezvous.delete'), 403, 'Accès non autorisé.');
+
+        if ($rendezvous->statut === 'realise') {
+            return response()->json(['success' => false, 'message' => 'Ce rendez-vous a déjà été réalisé : il ne peut plus être annulé.'], 422);
+        }
 
         $rendezvous->statut = 'annule';
         $rendezvous->save();

@@ -79,7 +79,7 @@ class Medicament extends Model
         ->withTimestamps();
     }
 
-    /**
+    /**œ
      * Scope a query to only include medications with critical stock levels.
      */
     public function scopeCritique($query)

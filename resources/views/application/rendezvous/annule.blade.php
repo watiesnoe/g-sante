@@ -112,31 +112,19 @@
                 });
             });
 
-            // Éditer
-            $(document).on('click', '.editRdv', function(){
-                let id = $(this).data('id');
-                $.get("/rendezvous/"+id+"/edit", function(rdv){
-                    $('#rdv_id').val(rdv.id);
-                    $('#patient_id').val(rdv.patient_id);
-                    $('#medecin_id').val(rdv.medecin_id);
-                    $('#consultation_id').val(rdv.consultation_id);
-                    $('#date_heure').val(rdv.date_heure.replace(" ", "T"));
-                    $('#motif').val(rdv.motif);
-                    $('#rdvModal .modal-title').text("Modifier Rendez-vous");
-                    $('#rdvModal').modal('show');
-                });
-            });
-
-            // Supprimer
-            $(document).on('click', '.deleteRdv', function(){
-                let id = $(this).data('id');
+            // Supprimer (bouton réellement rendu par la colonne "actions" du contrôleur)
+            $(document).on('click', '.btn-delete', function(){
+                let url = $(this).data('url');
                 if(confirm("Voulez-vous vraiment supprimer ce rendez-vous ?")){
                     $.ajax({
-                        url: "/rendezvous/"+id,
+                        url: url,
                         method: "DELETE",
                         data: {_token: "{{ csrf_token() }}"},
                         success: function(){
                             table.ajax.reload();
+                        },
+                        error: function(xhr){
+                            alert(xhr.responseJSON?.message || "Erreur lors de la suppression.");
                         }
                     });
                 }

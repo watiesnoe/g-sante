@@ -127,25 +127,25 @@
                         <h5 class="text-success mb-3">
                             <i class="fas fa-file-medical-alt me-2"></i>Protocole de Traitement Appliqué
                         </h5>
-                        <div class="alert alert-success border-0 rounded-3">
+                        <div class="alert alert-success border-0 rounded-3 text-dark">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <strong>{{ $consultation->protocole->titre }}</strong>
-                                    <p class="mb-1 small text-muted mt-1">
+                                    <strong class="text-dark d-block">{{ $consultation->protocole->titre }}</strong>
+                                    <p class="mb-1 small text-dark mt-1">
                                         {{ $consultation->protocole->traitement_principal ?? 'Traitement via médicaments liés' }}
                                     </p>
                                 </div>
                                 <a href="{{ route('infectiologie.protocoles.show', $consultation->protocole) }}" 
-                                   class="btn btn-sm btn-outline-success">
+                                   class="btn btn-sm btn-outline-dark">
                                     <i class="fas fa-eye me-1"></i>Voir
                                 </a>
                             </div>
                             @if($consultation->protocole->medicaments->count())
                             <div class="mt-2 d-flex flex-wrap gap-1">
                                 @foreach($consultation->protocole->medicaments as $pm)
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">
+                                    <span class="badge bg-light text-dark border border-dark">
                                         {{ $pm->nom }}
-                                        <small class="text-muted">({{ $pm->pivot->type }})</small>
+                                        <small class="text-dark">({{ $pm->pivot->type }})</small>
                                     </span>
                                 @endforeach
                             </div>

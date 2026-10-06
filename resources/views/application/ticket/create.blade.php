@@ -1,6 +1,6 @@
  @extends('layouts.app')
 
-@section('titre', isset($ticket) ? '✏️ Édition Ticket Prestation' : '➕ Création Ticket Prestation')
+@section('titre', isset($ticket) ? 'Édition Ticket Prestation' : 'Création Ticket Prestation')
 
 @section('content')
     <div class="container mt-4">
@@ -28,7 +28,7 @@
                     <div class="row g-3">
                         {{-- Patient --}}
                         <div class="col-md-8">
-                            <label class="form-label fw-bold">Patient</label>
+                            <label class="form-label fw-bold">Patient <span class="text-danger">*</span></label>
                             <select class="form-select js-select2" id="patient" name="patient_id" required>
                                 @if(isset($ticket) && $ticket->patient)
                                     <option value="{{ $ticket->patient->id }}" selected>
@@ -56,9 +56,9 @@
 
                         {{-- Structure (Service Médical) --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="fa fa-hospital"></i> Structure / Service (Optionnel)</label>
-                            <select class="form-select js-select2" id="service_medical" name="service_medical_id">
-                                <option value="">-- Tous les services --</option>
+                            <label class="form-label fw-bold"><i class="fa fa-hospital"></i> Structure / Service <span class="text-danger">*</span></label>
+                            <select class="form-select js-select2" id="service_medical" name="service_medical_id" required>
+                                <option value="">-- Sélectionner une structure / un service --</option>
                                 @foreach($services as $service)
                                     <option value="{{ $service->id }}">
                                         {{ $service->nom }}
@@ -70,11 +70,11 @@
 
                         {{-- Médecin (Optionnel) --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="fa fa-user-md"></i> Médecin en charge (Optionnel)</label>
-                            <select class="form-select js-select2" id="medecin" name="medecin_id">
+                            <label class="form-label fw-bold"><i class="fa fa-user-md"></i> Médecin en charge <span class="text-danger">*</span></label>
+                            <select class="form-select js-select2" id="medecin" name="medecin_id" required disabled>
                                 <option value="">-- Assigner un médecin --</option>
                                 @foreach($medecins as $medecin)
-                                    <option value="{{ $medecin->id }}" data-service-id="{{ $medecin->service_medical_id }}"
+                                    <option value="{{ $medecin->id }}" data-service-ids="{{ $medecin->service_ids->implode(',') }}"
                                         {{ isset($ticket) && $ticket->medecin_id == $medecin->id ? 'selected' : '' }}>
                                         {{ $medecin->name }} {{ $medecin->prenom ? '('.$medecin->prenom.' '.$medecin->nom.')' : '' }}
                                     </option>
@@ -85,8 +85,8 @@
 
                         {{-- Prestation --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Prestation</label>
-                            <select id="prestation" class="form-select js-select2">
+                            <label class="form-label fw-bold">Prestation <span class="text-danger">*</span></label>
+                            <select id="prestation" class="form-select js-select2" disabled>
                                 <option value="">-- Choisir une prestation --</option>
                                 @foreach($prestations as $prestation)
                                     <option value="{{ $prestation->id }}"
@@ -146,7 +146,7 @@
                                             <td>{{ $ligne->remise }}%</td>
                                             <td class="sousTotal">{{ number_format($ligne->sous_total, 0, ',', ' ') }}</td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-outline-danger btn-sm btnSupprimer">🗑️</button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm btnSupprimer" aria-label="Supprimer la prestation" title="Supprimer la prestation"><i class="fa fa-trash"></i></button>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -175,9 +175,13 @@
                     <textarea class="form-control mb-3" id="description" name="description" rows="2" placeholder="Notes optionnelles...">{{ $ticket->description ?? '' }}</textarea>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('tickets.index') }}" class="btn btn-outline-secondary">❌ Annuler</a>
+                        <a href="{{ route('tickets.index') }}" class="btn btn-outline-secondary"><i class="fa fa-times me-1"></i> Annuler</a>
                         <button type="submit" class="btn btn-primary px-5">
-                            {{ isset($ticket) ? '💾 Mettre à jour' : '✅ Valider le Ticket' }}
+                            @if(isset($ticket))
+                                <i class="fa fa-save me-1"></i> Mettre à jour
+                            @else
+                                <i class="fa fa-check me-1"></i> Valider le Ticket
+                            @endif
                         </button>
                     </div>
                 </div>
@@ -230,7 +234,13 @@
             // Autoremplissage et vérification assurance
             $('#patient').on('select2:select', function (e) {
                 var data = e.params.data;
-                if (data.assurance_id) {
+                var assuranceDisponible = data.assurance_id && $('#assurance option').filter(function () {
+                    return this.value == data.assurance_id;
+                }).length > 0;
+
+                $('#assurance').prop('disabled', false);
+
+                if (assuranceDisponible) {
                     let dNow = new Date();
                     dNow.setHours(0,0,0,0);
                     let valid = true;
@@ -260,6 +270,8 @@
                 } else {
                     $('#assurance').val('').trigger('change');
                 }
+            }).on('select2:clear', function () {
+                $('#assurance').prop('disabled', false).val('').trigger('change');
             });
 
             // --- 0. Filtrage des médecins et prestations par service ---
@@ -268,13 +280,15 @@
 
             $('#service_medical').on('change', function() {
                 var serviceId = $(this).val();
+                $('#medecin').prop('disabled', !serviceId);
+                $('#prestation').prop('disabled', !serviceId);
 
                 // Filtrer les médecins
                 var currentMedecin = $('#medecin').val();
                 $('#medecin').empty();
                 allMedecinsOptions.each(function() {
-                    var optionServiceId = $(this).data('service-id');
-                    if (!serviceId || !optionServiceId || optionServiceId == serviceId || $(this).val() == '') {
+                    var optionServiceIds = String($(this).attr('data-service-ids') || '').split(',');
+                    if ($(this).val() == '' || optionServiceIds.includes(String(serviceId))) {
                         $('#medecin').append($(this).clone());
                     }
                 });
@@ -294,7 +308,7 @@
                         $('#prestation').append($(this).clone());
                     }
                 });
-                if ($('#prestation option[value="' + currentPrestation + '"]').length) {
+                if (serviceId && $('#prestation option[value="' + currentPrestation + '"]').length) {
                     $('#prestation').val(currentPrestation);
                 } else {
                     $('#prestation').val('');
@@ -498,8 +512,8 @@
                                     <label class="form-label fw-semibold">Genre <span class="text-danger">*</span></label>
                                     <select class="form-select" id="genre">
                                         <option value="">Sélectionner</option>
-                                        <option value="M">👨 Masculin</option>
-                                        <option value="F">👩 Féminin</option>
+                                        <option value="M">Masculin</option>
+                                        <option value="F">Féminin</option>
                                     </select>
                                 </div>
                                 <div class="col-6">

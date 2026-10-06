@@ -29,6 +29,12 @@
                         </div>
                     </div>
                     <div class="block-content block-content-full">
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fa fa-check-circle me-2"></i>{{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                            </div>
+                        @endif
                         <div class="table-responsive">
                             <table id="users-datatable" class="table table-bordered table-striped table-vcenter w-100">
                                 <thead>

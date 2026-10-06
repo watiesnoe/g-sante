@@ -307,7 +307,10 @@ class OrdonnanceController extends Controller
     }
     public function lespayer(Request $request)
     {
-        abort_unless(Auth::user()->can('ordonnances.view'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances.');
+        // Permission dédiée (distincte de ordonnances.view) : les médecins voient et
+        // prescrivent des ordonnances, mais ne doivent pas avoir accès aux ordonnances
+        // déjà payées — information réservée à la pharmacie/comptabilité.
+        abort_unless(Auth::user()->can('ordonnances.view_payees'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances payées.');
 
         if ($request->ajax()) {
             $user = Auth::user();

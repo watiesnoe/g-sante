@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('salles', SalleController::class);
     Route::resource('examens', ExamenController::class)->except(['show']);
     Route::resource('prescriptions', PrescriptionExamenController::class);
+    Route::get('prescriptions/{consultation}/pdf', [PrescriptionExamenController::class, 'pdf'])->name('prescriptions.pdf');
     Route::resource('reponses', ResultatExamenController::class);
     Route::get('reponses/{id}/create', [ResultatExamenController::class, 'reponse'])->name('reponse.create');
     Route::get('reponses/{resultatExamen}/fichier', [ResultatExamenController::class, 'download'])->name('reponses.fichier');
@@ -85,7 +86,7 @@ Route::middleware('auth')->group(function () {
         ->name('consultations.suivi.create');
 
     Route::get('/rendezvous/data', [RendezvousController::class, 'getData'])->name('rendezvous.data');
-    Route::get('/rendezvous/disponible', [RendezvousController::class, 'disponible'])->name('rendezvous.disponible');
+    Route::get('/rendezvous/realiser', [RendezvousController::class, 'realiser'])->name('rendezvous.realiser');
 
     // Emploi du temps des médecins
     Route::get('/emploi-du-temps', [EmploiDuTempsController::class, 'index'])->name('emploi-du-temps.index');

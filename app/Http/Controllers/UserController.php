@@ -130,7 +130,7 @@ class UserController extends Controller
             'telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:500',
             'role' => 'required|exists:roles,name',
-            'service_medical_id' => 'nullable|exists:service_medicals,id',
+            'service_medical_id' => 'nullable|required_if:role,medecin|exists:service_medicals,id',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -183,6 +183,7 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
+        $services = ServiceMedical::orderBy('nom')->get();
         $roles = \Spatie\Permission\Models\Role::all();
 
         $statuts = [
@@ -198,7 +199,7 @@ class UserController extends Controller
         $userRole = $user->roles->first()?->name;
         $userPermissions = $user->getDirectPermissions()->pluck('name')->toArray();
         
-        return view('users.edit', compact('user', 'roles', 'statuts', 'permissions', 'userRole', 'userPermissions'));
+        return view('users.edit', compact('user', 'services', 'roles', 'statuts', 'permissions', 'userRole', 'userPermissions'));
     }
 
     public function update(Request $request, User $user)
@@ -214,7 +215,8 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
             'statut' => 'required|in:actif,inactif,suspendu',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'permissions' => 'nullable|array'
+            'permissions' => 'nullable|array',
+            'service_medical_id' => 'nullable|required_if:role,medecin|exists:service_medicals,id',
         ]);
 
         // 🔒 Seul un super_admin peut promouvoir un compte au rôle super_admin
@@ -231,6 +233,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'telephone' => $validated['telephone'] ?? null,
             'adresse' => $validated['adresse'] ?? null,
+            'service_medical_id' => $validated['service_medical_id'] ?? null,
             'statut' => $validated['statut'],
         ]);
 

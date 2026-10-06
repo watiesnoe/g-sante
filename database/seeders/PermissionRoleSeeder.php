@@ -62,6 +62,7 @@ class PermissionRoleSeeder extends Seeder
             'ordonnances.delete'                 => 'Supprimer une ordonnance',
             'ordonnances.pdf'                    => 'Générer le PDF d\'ordonnance',
             'ordonnances.payer'                  => 'Enregistrer le paiement d\'ordonnance',
+            'ordonnances.view_payees'             => 'Voir les ordonnances payées (réservé pharmacie/comptabilité)',
 
             // ── Rendez-vous ───────────────────────────────────────────
             'rendezvous.view'                    => 'Voir les rendez-vous',
@@ -194,7 +195,7 @@ class PermissionRoleSeeder extends Seeder
             'tickets.view', 'tickets.create', 'tickets.edit',
             'consultations.view', 'consultations.liste_attente',
             'rendezvous.view', 'rendezvous.create', 'rendezvous.edit', 'rendezvous.confirm',
-            'examens.view',
+            'examens.view', 'examens.results',
             'hospitalisations.view',
             'transferts.view',
             'maternity.view',
@@ -224,7 +225,7 @@ class PermissionRoleSeeder extends Seeder
             'consultations.liste_attente', 'consultations.print', 'consultations.prescribe', 'consultations.suivi',
             'ordonnances.view', 'ordonnances.create', 'ordonnances.edit', 'ordonnances.pdf',
             'rendezvous.view', 'rendezvous.create', 'rendezvous.edit', 'rendezvous.confirm',
-            'examens.view', 'examens.create', 'examens.results',
+            'examens.view', 'examens.create', 'examens.edit', 'examens.results',
             'hospitalisations.view', 'hospitalisations.create', 'hospitalisations.edit',
             'transferts.view', 'transferts.create',
             'maternity.view', 'maternity.create', 'maternity.edit', 'maternity.cpn', 'maternity.close',
@@ -280,7 +281,7 @@ class PermissionRoleSeeder extends Seeder
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
             'assurances.view',
-            'ordonnances.view', 'ordonnances.payer',
+            'ordonnances.view', 'ordonnances.payer', 'ordonnances.view_payees',
             'paiements.view', 'paiements.create',
         ]);
         $this->command->info('✅ pharmacien → permissions configurées');
@@ -306,7 +307,7 @@ class PermissionRoleSeeder extends Seeder
             'dashboard.view',
             'paiements.view', 'paiements.create', 'paiements.edit',
             'caisse.view',
-            'ordonnances.view', 'ordonnances.payer',
+            'ordonnances.view', 'ordonnances.payer', 'ordonnances.view_payees',
             'hospitalisations.view', 'hospitalisations.paiement',
         ]);
         $this->command->info('✅ comptable → permissions configurées');

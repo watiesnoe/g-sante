@@ -457,7 +457,7 @@
                                                         @foreach ($salles as $salle)
                                                             <option value="{{ $salle->id }}"
                                                                 @if ($consultation->exists && $consultation->hospitalisation && $consultation->hospitalisation?->salles_id == $salle->id) selected @endif>
-                                                                {{ $salle->nom }} ({{ $salle->type }})
+                                                                {{ $salle->nom }} ({{ $salle->type ?? '' }})
                                                             </option>
                                                         @endforeach
                                                     </select>

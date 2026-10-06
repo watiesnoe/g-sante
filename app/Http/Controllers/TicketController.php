@@ -108,6 +108,17 @@ class TicketController extends Controller
             ->select('users.id', 'users.name', 'users.prenom', 'users.nom', 'users.service_medical_id')
             ->orderBy('users.name')
             ->get();
+        $serviceIdsByMedecin = DB::table('service_user')
+            ->whereIn('user_id', $medecins->pluck('id'))
+            ->get(['user_id', 'service_medical_id'])
+            ->groupBy('user_id');
+        $medecins->each(function ($medecin) use ($serviceIdsByMedecin) {
+            $medecin->service_ids = collect([$medecin->service_medical_id])
+                ->merge($serviceIdsByMedecin->get($medecin->id, collect())->pluck('service_medical_id'))
+                ->filter()
+                ->unique()
+                ->values();
+        });
         $services = DB::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
 
         // Passer les données à la vue
@@ -123,6 +134,8 @@ class TicketController extends Controller
 
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
+            'service_medical_id' => 'required|exists:service_medicals,id',
+            'medecin_id' => 'required|exists:users,id',
             'items' => 'required|array|min:1',
             'items.*.prestation_id' => 'required|exists:prestations,id',
             'items.*.prix_unitaire' => 'required|numeric',
@@ -132,7 +145,6 @@ class TicketController extends Controller
             'items.*.service' => 'nullable|string', // Changé en nullable
             'description' => 'nullable|string',
             'assurance_id' => 'nullable|exists:assurances,id',
-            'medecin_id' => 'nullable|exists:users,id',
         ]);
 
         DB::beginTransaction();
@@ -289,6 +301,8 @@ class TicketController extends Controller
         }
 
         $request->validate([
+            'service_medical_id' => 'required|exists:service_medicals,id',
+            'medecin_id' => 'required|exists:users,id',
             'items' => 'required|array|min:1',
             'items.*.prestation_id' => 'required|exists:prestations,id',
             'items.*.quantite' => 'required|integer|min:1',
@@ -296,7 +310,6 @@ class TicketController extends Controller
             'items.*.service' => 'required|string',
             'description' => 'nullable|string',
             'assurance_id' => 'nullable|exists:assurances,id',
-            'medecin_id' => 'nullable|exists:users,id',
         ]);
 
         DB::beginTransaction();

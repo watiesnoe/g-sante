@@ -5,6 +5,8 @@
     </a>
     <ul class="nav-main-submenu">
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('ordonnances.index')}}"><span class="nav-main-link-name">Ordonnances disponibles</span></a></li>
-        <li class="nav-main-item"><a class="nav-main-link" href="{{route('ordonnances.lespayer')}}"><span class="nav-main-link-name">Ordonnances payées</span></a></li>
+        @can('ordonnances.view_payees')
+            <li class="nav-main-item"><a class="nav-main-link" href="{{route('ordonnances.lespayer')}}"><span class="nav-main-link-name">Ordonnances payées</span></a></li>
+        @endcan
     </ul>
 </li>
