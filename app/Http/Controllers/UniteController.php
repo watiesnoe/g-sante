@@ -7,6 +7,7 @@ use App\Models\Medicament;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 
@@ -42,7 +43,47 @@ class UniteController extends Controller
         }
 
         $medicaments = Medicament::orderBy('nom')->get();
-        return view('application.unite.index', compact('medicaments'));
+        // Types d'unités (Comprimé, Flacon, ...) pour la saisie du prix forfaitaire
+        $typesUnites = Unite::selectRaw('nom, COUNT(*) as total')->groupBy('nom')->orderBy('nom')->get();
+        return view('application.unite.index', compact('medicaments', 'typesUnites'));
+    }
+
+    /**
+     * Appliquer un prix de vente (et, si saisi, d'achat) forfaitaire (FCFA) à toutes les unités d'un même type
+     * (ex : tous les "Comprimé"), multiplié par le facteur pour les conditionnements.
+     */
+    public function prixForfaitaire(Request $request)
+    {
+        abort_unless(Auth::user()->can('stock.unites'), 403, 'Accès non autorisé.');
+
+        $validated = $request->validate([
+            'nom'              => ['required', 'string', $request->nom === '*' ? 'in:*' : 'exists:unites,nom'],
+            'prix_forfaitaire' => 'required|numeric|min:0',
+            'prix_achat'       => 'nullable|numeric|min:0',
+            'conserver'        => 'nullable|boolean',
+        ]);
+
+        // nom = "*" : toutes les unités, uniquement celles qui n'ont pas encore de prix
+        $toutes = $validated['nom'] === '*';
+        $conserver = $toutes || $request->boolean('conserver');
+        $cible = fn() => Unite::when(!$toutes, fn($q) => $q->where('nom', $validated['nom']));
+
+        $nb = $cible()
+            ->when($conserver, fn($q) => $q->where('prix_vente', 0))
+            ->update(['prix_vente' => DB::raw('facteur * ' . (float) $validated['prix_forfaitaire'])]);
+
+        // Prix d'achat forfaitaire : facultatif
+        if ($request->filled('prix_achat')) {
+            $cible()
+                ->when($conserver, fn($q) => $q->where('prix_achat', 0))
+                ->update(['prix_achat' => DB::raw('facteur * ' . (float) $validated['prix_achat'])]);
+        }
+
+        return response()->json([
+            'message' => $toutes
+                ? "Prix forfaitaire appliqué à $nb médicament(s) sans prix."
+                : "Prix forfaitaire appliqué à $nb médicament(s) en « {$validated['nom']} »."
+        ]);
     }
 
     /**

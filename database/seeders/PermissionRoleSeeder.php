@@ -282,7 +282,7 @@ class PermissionRoleSeeder extends Seeder
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
             'assurances.view',
             'ordonnances.view', 'ordonnances.payer', 'ordonnances.view_payees',
-            'paiements.view', 'paiements.create',
+            'paiements.view', 'paiements.create', 'caisse.view',
         ]);
         $this->command->info('✅ pharmacien → permissions configurées');
 

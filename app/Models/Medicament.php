@@ -51,6 +51,14 @@ class Medicament extends Model
         return $this->uniteDefault();
     }
 
+    /**
+     * Prix de vente du médicament = prix de vente de son unité par défaut.
+     */
+    public function getPrixVenteAttribute()
+    {
+        return $this->uniteDefault->prix_vente ?? 0;
+    }
+
     public function commandeMedicaments()
     {
         return $this->hasMany(CommandeMedicaments::class);

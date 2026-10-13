@@ -26,7 +26,8 @@ class OrdonnanceController extends Controller
                 ->select('ordonnances.*')
                 ->whereYear('ordonnances.created_at', $year)
                 ->whereNotIn('statutordo', ['paye', 'partiellement']) // 🔥 exclure ces statuts
-                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
+                // La pharmacie/comptabilité (ordonnances.payer) encaisse les ordonnances de tous les médecins
+                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']) && !$user->can('ordonnances.payer'), function ($query) use ($user) {
                     $query->whereHas('consultation', function ($q) use ($user) {
                         $q->where('medecin_id', $user->id);
                     });
@@ -313,14 +314,10 @@ class OrdonnanceController extends Controller
         abort_unless(Auth::user()->can('ordonnances.view_payees'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances payées.');
 
         if ($request->ajax()) {
-            $user = Auth::user();
             $ordonnances = DB::table('ordonnances')
                 ->join('consultations', 'ordonnances.consultation_id', '=', 'consultations.id')
                 ->join('patients', 'consultations.patient_id', '=', 'patients.id')
                 ->whereIn('ordonnances.statutordo', ['paye', 'partiellement'])
-                ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
-                    $query->where('consultations.medecin_id', $user->id);
-                })
                 ->select(
                     'ordonnances.id',
                     'ordonnances.uuid',

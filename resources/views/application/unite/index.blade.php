@@ -20,6 +20,9 @@
                             <button type="button" class="btn btn-sm btn-outline-primary btn-open-import-modal" data-module="unites" data-label="Unités">
                                 <i class="fa fa-file-import me-1"></i> Importer
                             </button>
+                            <button class="btn btn-sm btn-success" id="btnForfait">
+                                <i class="fa fa-tags me-1"></i> Prix forfaitaire
+                            </button>
                             <button class="btn btn-sm btn-primary" id="btnAdd">
                                 <i class="fa fa-plus me-1"></i> Ajouter
                             </button>
@@ -32,6 +35,9 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Nom</th>
+                                        <th>Médicament</th>
+                                        <th>Prix d'achat</th>
+                                        <th>Prix de vente</th>
                                         <th>Date création</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
@@ -69,6 +75,51 @@
                 </div>
             </div>
         </div>
+
+        {{-- Modal Prix forfaitaire par type d'unité --}}
+        <div class="modal fade" id="forfaitModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Prix forfaitaire par unité</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="forfaitForm">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label">Unité <span class="text-danger">*</span></label>
+                                <select name="nom" class="form-select" required>
+                                    <option value="">-- Choisir --</option>
+                                    <option value="*">Toutes les unités sans prix</option>
+                                    @foreach($typesUnites as $type)
+                                        <option value="{{ $type->nom }}">{{ $type->nom }} ({{ $type->total }} médicaments)</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Prix de vente forfaitaire (FCFA) <span class="text-danger">*</span></label>
+                                <input type="number" name="prix_forfaitaire" class="form-control" min="0" step="1" placeholder="Ex: 500" required>
+                                <div class="form-text">Devient le prix de vente de tous les médicaments ayant cette unité.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Prix d'achat forfaitaire (FCFA)</label>
+                                <input type="number" name="prix_achat" class="form-control" min="0" step="1" placeholder="Ex: 350">
+                                <div class="form-text">Facultatif. Laisser vide pour ne pas modifier les prix d'achat.</div>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" name="conserver" id="conserver" value="1">
+                                <label class="form-check-label" for="conserver">Conserver les prix déjà renseignés (ne remplir que les prix à 0)</label>
+                            </div>
+                            <div class="text-end border-top pt-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="submit" class="btn btn-sm btn-success">Appliquer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -90,6 +141,9 @@
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'nom', name: 'nom' },
+                    { data: 'medicament_nom', name: 'medicament.nom', orderable: false },
+                    { data: 'prix_achat', name: 'prix_achat', className: 'text-end' },
+                    { data: 'prix_vente', name: 'prix_vente', className: 'text-end' },
                     { data: 'created_at', name: 'created_at' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
                 ],
@@ -111,6 +165,36 @@
                 $('#id').val('');
                 $('#modalTitle').text('Ajouter une unité');
                 $('#crudModal').modal('show');
+            });
+
+            // Prix forfaitaire par type d'unité
+            $('#btnForfait').click(function() {
+                $('#forfaitForm')[0].reset();
+                $('#forfaitModal').modal('show');
+            });
+
+            $('#forfaitForm').submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: "{{ route('unites.prix_forfaitaire') }}",
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#forfaitModal').modal('hide');
+                        table.ajax.reload(null, false);
+                        Swal.fire({ icon: 'success', title: 'Succès', text: response.message });
+                    },
+                    error: function(xhr) {
+                        let errors = xhr.responseJSON?.errors;
+                        let errorMsg = '';
+                        if (errors) {
+                            for (let key in errors) {
+                                errorMsg += errors[key][0] + '<br>';
+                            }
+                        }
+                        Swal.fire({ icon: 'error', title: 'Erreur', html: errorMsg || 'Une erreur est survenue.' });
+                    }
+                });
             });
 
             // 3. Gestion de la Sauvegarde (Ajout ou Modification)

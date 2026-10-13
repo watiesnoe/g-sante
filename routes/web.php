@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('reponses', ResultatExamenController::class);
     Route::get('reponses/{id}/create', [ResultatExamenController::class, 'reponse'])->name('reponse.create');
     Route::get('reponses/{resultatExamen}/fichier', [ResultatExamenController::class, 'download'])->name('reponses.fichier');
+    Route::post('unites/prix-forfaitaire', [UniteController::class, 'prixForfaitaire'])->name('unites.prix_forfaitaire');
     Route::resource('unites', UniteController::class);
     Route::resource('familles', FamilleController::class)->except(['create']);
     Route::resource('maladies', MaladieController::class)->except(['create']);
