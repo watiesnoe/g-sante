@@ -214,34 +214,150 @@ class InfectiologieController extends Controller
         return view('application.infectiologie.aide_prescription');
     }
 
-    public function suivi()
+    /** Nombre de jours sans activité au-delà duquel un patient est considéré « perdu de vue ». */
+    private const SUIVI_JOURS_PERDU_DE_VUE = 30;
+
+    public function suivi(Request $request)
     {
         abort_unless(Auth::user()->can('infectiologie.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir le suivi.');
 
-        // Consultations liées à au moins une maladie (via la table pivot)
-        $suivis = \App\Models\Consultation::with(['patient', 'maladies.protocole', 'suivis' => function($q) {
-            $q->orderBy('date_suivi', 'desc');
-        }])
-            ->whereHas('maladies', function($q) {
+        $data = $this->buildSuiviCohorte($request);
+        $data['maladies'] = Maladie::whereHas('protocole')->orderBy('nom')->get(['id', 'nom']);
+        $data['maladieId'] = $request->input('maladie_id');
+        $data['joursPerduDeVue'] = self::SUIVI_JOURS_PERDU_DE_VUE;
+
+        return view('application.infectiologie.suivi', $data);
+    }
+
+    public function suiviPdf(Request $request)
+    {
+        abort_unless(Auth::user()->can('infectiologie.suivi'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir le suivi.');
+
+        $data = $this->buildSuiviCohorte($request);
+        $data['annee'] = session('exercice_year', date('Y'));
+        $data['maladieFiltre'] = $request->filled('maladie_id') ? Maladie::find($request->maladie_id) : null;
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('application.infectiologie.suivi_pdf', $data)
+            ->setPaper('a4', 'landscape')
+            ->download('suivi_cohorte_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    /**
+     * Construit la cohorte : une ligne par patient ET par pathologie (et non par consultation).
+     * Sources d'évolution : suivis_traitements (évolution cotée) et rendez-vous de suivi réalisés.
+     */
+    private function buildSuiviCohorte(Request $request): array
+    {
+        $year = session('exercice_year', date('Y'));
+        $maladieId = $request->input('maladie_id');
+
+        $consultations = \App\Models\Consultation::with([
+                'patient',
+                'maladies.protocole',
+                'suivis',
+                'rendezVous',
+            ])
+            ->whereYear('date_consultation', $year)
+            ->whereHas('patient', fn ($q) => $q->forUserStructure(Auth::user()))
+            ->whereHas('maladies', function ($q) use ($maladieId) {
                 $q->whereHas('protocole');
+                if ($maladieId) {
+                    $q->where('maladies.id', $maladieId);
+                }
             })
-            ->orderBy('date_consultation', 'desc')
+            ->orderBy('date_consultation')
             ->get();
 
-        // Calcul du Taux d'atteinte cible (Amélioration ou Guérison)
-        $totalSuivis = $suivis->count();
-        $atteinte = 0;
-        
-        foreach ($suivis as $s) {
-            $latestEvolution = $s->suivis->first()->evolution ?? null;
-            if (in_array($latestEvolution, ['Amélioration', 'Guérison'])) {
-                $atteinte++;
+        $now = now();
+        $cas = [];
+
+        foreach ($consultations as $c) {
+            foreach ($c->maladies as $maladie) {
+                if (!$maladie->protocole || ($maladieId && $maladie->id != $maladieId)) {
+                    continue;
+                }
+
+                $key = $c->patient_id . '-' . $maladie->id;
+                $cas[$key] ??= [
+                    'patient' => $c->patient,
+                    'maladie' => $maladie,
+                    'protocole' => $maladie->protocole,
+                    'debut' => \Carbon\Carbon::parse($c->date_consultation),
+                    'consultation_uuid' => $c->uuid,
+                    'nb_consultations' => 0,
+                    'evenements' => [],      // [date, evolution|null]
+                    'dernier_contact' => \Carbon\Carbon::parse($c->date_consultation),
+                    'prochain_rdv' => null,
+                ];
+
+                $cas[$key]['nb_consultations']++;
+                $cas[$key]['consultation_uuid'] = $c->uuid; // dernière consultation (tri croissant)
+                $consultDate = \Carbon\Carbon::parse($c->date_consultation);
+                if ($consultDate->gt($cas[$key]['dernier_contact'])) {
+                    $cas[$key]['dernier_contact'] = $consultDate;
+                }
+
+                foreach ($c->suivis as $sv) {
+                    $d = \Carbon\Carbon::parse($sv->date_suivi);
+                    $cas[$key]['evenements'][] = [$d, $sv->evolution];
+                    if ($d->gt($cas[$key]['dernier_contact'])) {
+                        $cas[$key]['dernier_contact'] = $d;
+                    }
+                }
+
+                foreach ($c->rendezVous as $rdv) {
+                    $d = \Carbon\Carbon::parse($rdv->date_heure);
+                    if ($rdv->statut === 'realise' && $rdv->resultat) {
+                        $cas[$key]['evenements'][] = [$d, null];
+                        if ($d->gt($cas[$key]['dernier_contact'])) {
+                            $cas[$key]['dernier_contact'] = $d;
+                        }
+                    } elseif (in_array($rdv->statut, ['prevu', 'en_attente']) && $d->gte($now->copy()->startOfDay())) {
+                        if (!$cas[$key]['prochain_rdv'] || $d->lt($cas[$key]['prochain_rdv'])) {
+                            $cas[$key]['prochain_rdv'] = $d;
+                        }
+                    }
+                }
             }
         }
-        
-        $tauxAtteinte = $totalSuivis > 0 ? round(($atteinte / $totalSuivis) * 100) : 0;
 
-        return view('application.infectiologie.suivi', compact('suivis', 'tauxAtteinte'));
+        $atteinte = 0;
+        $evalues = 0;
+
+        $cohorte = collect($cas)->map(function ($c) use ($now, &$atteinte, &$evalues) {
+            // Dernière évolution cotée (les rendez-vous réalisés comptent comme contact mais n'ont pas de cotation)
+            $cotes = collect($c['evenements'])->filter(fn ($e) => $e[1])->sortByDesc(fn ($e) => $e[0]->timestamp);
+            $c['evolution'] = $cotes->first()[1] ?? null;
+            $c['nb_suivis'] = count($c['evenements']);
+
+            if ($c['evolution']) {
+                $evalues++;
+                if (in_array($c['evolution'], ['Amélioration', 'Guérison'])) {
+                    $atteinte++;
+                }
+            }
+
+            if ($c['evolution'] === 'Guérison') {
+                $c['statut'] = 'Guéri';
+            } elseif ($c['dernier_contact']->diffInDays($now) > self::SUIVI_JOURS_PERDU_DE_VUE && !$c['prochain_rdv']) {
+                $c['statut'] = 'Perdu de vue';
+            } else {
+                $c['statut'] = 'En cours';
+            }
+
+            return $c;
+        })->sortByDesc(fn ($c) => $c['dernier_contact']->timestamp)->values();
+
+        return [
+            'cohorte' => $cohorte,
+            'totalCas' => $cohorte->count(),
+            'enCours' => $cohorte->where('statut', 'En cours')->count(),
+            'perdusDeVue' => $cohorte->where('statut', 'Perdu de vue')->count(),
+            'gueris' => $cohorte->where('statut', 'Guéri')->count(),
+            'evalues' => $evalues,
+            'atteinte' => $atteinte,
+            'tauxAtteinte' => $evalues > 0 ? round(($atteinte / $evalues) * 100) : null,
+        ];
     }
 
     public function getProtocole($maladieId)

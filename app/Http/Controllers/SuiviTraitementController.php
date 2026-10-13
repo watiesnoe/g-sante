@@ -15,13 +15,22 @@ class SuiviTraitementController extends Controller
 
         $validated = $request->validate([
             'consultation_id' => 'required|exists:consultations,id',
-            'date_suivi'      => 'required|date',
+            'date_suivi'      => 'required|date|before_or_equal:today',
             'evolution'       => 'required|in:Amélioration,Stagnation,Aggravation,Guérison',
             'observations'    => 'nullable|string',
             'recommandations' => 'nullable|string',
             'temperature'     => 'nullable|string',
             'tension'         => 'nullable|string',
         ]);
+
+        // Un suivi ne peut pas précéder la consultation qu'il suit
+        $consultation = Consultation::findOrFail($validated['consultation_id']);
+        if (\Carbon\Carbon::parse($validated['date_suivi'])->startOfDay()->lt(\Carbon\Carbon::parse($consultation->date_consultation)->startOfDay())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La date du suivi ne peut pas être antérieure à la consultation.',
+            ], 422);
+        }
 
         SuiviTraitement::create($validated);
 

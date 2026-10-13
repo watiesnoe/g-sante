@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/protocoles/{protocole}', [\App\Http\Controllers\InfectiologieController::class, 'destroyProtocole'])->name('infectiologie.protocoles.destroy');
         Route::get('/aide-prescription', [\App\Http\Controllers\InfectiologieController::class, 'aidePrescription'])->name('infectiologie.aide_prescription');
         Route::get('/suivi-traitements', [\App\Http\Controllers\InfectiologieController::class, 'suivi'])->name('infectiologie.suivi');
+        Route::get('/suivi-traitements/pdf', [\App\Http\Controllers\InfectiologieController::class, 'suiviPdf'])->name('infectiologie.suivi.pdf');
         Route::get('/api/protocoles/{maladie}', [\App\Http\Controllers\InfectiologieController::class, 'getProtocole'])->name('infectiologie.get_protocole');
         Route::get('/api/medicaments-list', [\App\Http\Controllers\InfectiologieController::class, 'getMedicaments'])->name('api.medicaments.list');
     });

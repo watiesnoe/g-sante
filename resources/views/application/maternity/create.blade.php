@@ -11,33 +11,46 @@
                 <div class="card-body p-4">
                     <form action="{{ route('maternity.store') }}" method="POST">
                         @csrf
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label class="form-label fw-bold">Choix de la Patiente</label>
-                                <select name="patient_id" class="form-select select2" required>
-                                    <!-- Options will be populated by AJAX -->
+                                <label class="form-label fw-bold">Choix de la Patiente <span class="text-danger">*</span></label>
+                                <select name="patient_id" id="patient_id" class="form-select no-select2" required>
+                                    <option value=""></option>
+                                    @if($oldPatient)
+                                        <option value="{{ $oldPatient->id }}" selected>{{ $oldPatient->nom }} {{ $oldPatient->prenom }} ({{ $oldPatient->age }} ans)</option>
+                                    @endif
                                 </select>
+                                <small class="text-muted">Tapez au moins 2 lettres du nom, prénom ou téléphone (femmes de 15 ans et plus).</small>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Date des dernières règles (DDR)</label>
-                                <input type="date" name="ddr" class="form-control" required id="ddr_input">
-                                <small class="text-primary italic" id="dpa_preview">La DPA sera calculée automatiquement.</small>
+                                <input type="date" name="ddr" class="form-control" required id="ddr_input" value="{{ old('ddr') }}" max="{{ date('Y-m-d') }}">
+                                <small class="text-primary fst-italic" id="dpa_preview">La DPA sera calculée automatiquement.</small>
                             </div>
 
                             <div class="col-md-3 mb-3">
                                 <label class="form-label fw-bold">Gestité (G)</label>
-                                <input type="number" name="gestite" class="form-control" placeholder="ex: 1">
+                                <input type="number" name="gestite" class="form-control" min="1" max="20" value="{{ old('gestite') }}" placeholder="ex: 1">
                             </div>
 
                             <div class="col-md-3 mb-3">
                                 <label class="form-label fw-bold">Parité (P)</label>
-                                <input type="number" name="parite" class="form-control" placeholder="ex: 0">
+                                <input type="number" name="parite" class="form-control" min="0" value="{{ old('parite') }}" placeholder="ex: 0">
                             </div>
 
                             <div class="col-md-12 mb-3">
                                 <label class="form-label fw-bold">Antécédents & Observations particulières</label>
-                                <textarea name="antecedents_particuliers" class="form-control" rows="3" placeholder="Hypertension, diabète gestationnel, césarienne antérieure..."></textarea>
+                                <textarea name="antecedents_particuliers" class="form-control" rows="3" placeholder="Hypertension, diabète gestationnel, césarienne antérieure...">{{ old('antecedents_particuliers') }}</textarea>
                             </div>
                         </div>
 
@@ -59,45 +72,48 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        $('.select2').select2({
-            theme: 'bootstrap-5',
+        $('#patient_id').select2({
             placeholder: "Rechercher une patiente par nom ou téléphone...",
             allowClear: true,
             width: '100%',
+            minimumInputLength: 2,
+            language: {
+                inputTooShort: function () { return 'Saisissez au moins 2 caractères...'; },
+                noResults: function () { return 'Aucune patiente trouvée'; },
+                searching: function () { return 'Recherche en cours...'; }
+            },
             ajax: {
                 url: "{{ route('patients.search') }}",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
-                    return {
-                        q: params.term, // search term
-                        gender: 'F', // only female
-                        min_age: 15 // min age 15 (superieur a 14)
-                    };
+                    return { q: params.term, gender: 'F', min_age: 15 };
                 },
                 processResults: function (data) {
                     return {
                         results: $.map(data, function (item) {
                             return {
-                                text: item.nom + ' ' + item.prenom + ' (' + item.age + ' ans)',
-                                id: item.id
-                            }
+                                id: item.id,
+                                text: item.nom + ' ' + item.prenom + ' (' + item.age + ' ans)' + (item.telephone ? ' - ' + item.telephone : '')
+                            };
                         })
                     };
-                },
-                cache: true
-            },
-            minimumInputLength: 2
+                }
+            }
+        });
+
+        // Ouvre directement le champ de saisie à l'ouverture de la liste
+        $(document).on('select2:open', function () {
+            document.querySelector('.select2-container--open .select2-search__field')?.focus();
         });
     });
 
     document.getElementById('ddr_input').addEventListener('change', function() {
         if (this.value) {
             let ddr = new Date(this.value);
-            // Calcul DPA: DDR + 9 mois + 7 jours
+            // Calcul DPA: DDR + 280 jours
             let dpa = new Date(ddr);
-            dpa.setMonth(dpa.getMonth() + 9);
-            dpa.setDate(dpa.getDate() + 7);
+            dpa.setDate(dpa.getDate() + 280);
             
             let options = { day: 'numeric', month: 'long', year: 'numeric' };
             document.getElementById('dpa_preview').innerHTML = "<b>DPA estimée : " + dpa.toLocaleDateString('fr-FR', options) + "</b>";

@@ -319,7 +319,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-3">
                                         <label class="form-label small fw-bold">Date de suivi</label>
-                                        <input type="date" name="date_suivi" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                        <input type="date" name="date_suivi" class="form-control" value="{{ date('Y-m-d') }}" min="{{ \Carbon\Carbon::parse($consultation->date_consultation)->format('Y-m-d') }}" max="{{ date('Y-m-d') }}" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small fw-bold">Évolution globale</label>
@@ -412,7 +412,7 @@
                                     location.reload();
                                 });
                             } else {
-                                Swal.fire('Erreur', 'Une erreur est survenue', 'error');
+                                Swal.fire('Erreur', res.message || 'Une erreur est survenue', 'error');
                             }
                         })
                         .catch(err => {

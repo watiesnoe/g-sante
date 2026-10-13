@@ -15,9 +15,8 @@ class MaternityController extends Controller
     {
         abort_unless(Auth::user()->can('maternity.view'), 403, 'Accès non autorisé : vous n\'avez pas accès au module maternité.');
 
-        $year = session('exercice_year', date('Y'));
+        // Un suivi en cours reste visible tant qu'il n'est pas clôturé, quelle que soit l'année de création
         $grossesses = Grossesse::with('patient')
-            ->whereYear('created_at', $year)
             ->where('statut', 'En cours')
             ->get();
         return view('application.maternity.index', compact('grossesses'));
@@ -27,7 +26,9 @@ class MaternityController extends Controller
     {
         abort_unless(Auth::user()->can('maternity.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un suivi de grossesse.');
 
-        return view('application.maternity.create');
+        $oldPatient = old('patient_id') ? Patient::find(old('patient_id')) : null;
+
+        return view('application.maternity.create', compact('oldPatient'));
     }
 
     public function store(Request $request)
@@ -36,15 +37,18 @@ class MaternityController extends Controller
 
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
-            'ddr'        => 'required|date',
-            'parite'     => 'nullable|integer',
-            'gestite'    => 'nullable|integer',
+            'ddr'        => 'required|date|before_or_equal:today|after:-10 months',
+            'gestite'    => 'nullable|integer|min:1|max:20',
+            'parite'     => 'nullable|integer|min:0|lt:gestite',
             'antecedents_particuliers' => 'nullable|string',
         ]);
 
-        // Calcul DPA (Date Prévue Accouchement = DDR + 9 mois + 7 jours)
-        $ddr = Carbon::parse($validated['ddr']);
-        $validated['dpa'] = $ddr->addMonths(9)->addDays(7);
+        if (Grossesse::where('patient_id', $validated['patient_id'])->where('statut', 'En cours')->exists()) {
+            return back()->withInput()->withErrors(['patient_id' => 'Cette patiente a déjà un suivi de grossesse en cours.']);
+        }
+
+        // Calcul DPA (Date Prévue Accouchement = DDR + 280 jours)
+        $validated['dpa'] = Carbon::parse($validated['ddr'])->addDays(280);
 
         Grossesse::create($validated);
 

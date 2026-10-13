@@ -16,36 +16,34 @@
                 <i class="fa fa-fw opacity-50 fa-search"></i> <span class="ms-1 d-none d-sm-inline-block">Search</span>
             </button>
             <!-- END Open Search Section -->
-
-            <!-- Sélecteur d'Année (Exercice) -->
-            <div class="d-inline-block ms-2">
-                <form action="{{ route('exercice.set') }}" method="POST" id="form-exercice-nav">
-                    @csrf
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-alt-secondary border-0">
-                            <i class="fa fa-calendar-alt"></i>
-                        </span>
-                        <select name="year" class="form-select form-select-sm bg-alt-secondary border-0 fw-bold" 
-                                onchange="document.getElementById('form-exercice-nav').submit();"
-                                style="cursor: pointer; min-width: 140px;">
-                            @php
-                                $currentYear = date('Y');
-                                $selectedYear = session('exercice_year', $currentYear);
-                            @endphp
-                            @for ($i = $currentYear + 1; $i >= 2024; $i--)
-                                <option value="{{ $i }}" {{ $selectedYear == $i ? 'selected' : '' }}>
-                                    Exercice {{ $i }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
-                </form>
-            </div>
         </div>
         <!-- END Left Section -->
 
         <!-- Right Section -->
-        <div class="space-x-1">
+        <div class="space-x-1 d-flex align-items-center">
+            <!-- Sélecteur d'Année (Exercice) -->
+            <form action="{{ route('exercice.set') }}" method="POST" id="form-exercice-nav" class="d-inline-block align-middle me-2">
+                @csrf
+                @php
+                    $currentYear = date('Y');
+                    $selectedYear = session('exercice_year', $currentYear);
+                @endphp
+                <div class="input-group input-group-sm flex-nowrap">
+                    <span class="input-group-text bg-body-light border-0" title="Exercice">
+                        <i class="fa fa-calendar-alt"></i>
+                    </span>
+                    <select name="year" class="form-select form-select-sm no-select2 bg-body-light border-0 fw-semibold"
+                            onchange="this.form.submit();" style="cursor: pointer; width: auto;">
+                        @for ($i = $currentYear + 1; $i >= 2024; $i--)
+                            <option value="{{ $i }}" {{ $selectedYear == $i ? 'selected' : '' }}>
+                                Exercice {{ $i }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+            </form>
+            <!-- END Sélecteur d'Année -->
+
             <!-- User Dropdown -->
             <div class="dropdown d-inline-block">
                 <button type="button" class="btn btn-sm btn-alt-secondary" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
