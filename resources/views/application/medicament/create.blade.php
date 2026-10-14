@@ -73,8 +73,14 @@
                             <!-- Stock -->
                             <div class="row">
                                 <div class="col-6 mb-3">
-                                    <label class="form-label fw-bold">Stock actuel <span class="text-danger">*</span></label>
-                                    <input type="number" name="stock" class="form-control" value="{{ $medicament->stock ?? 0 }}" min="0" required>
+                                    @isset($medicament)
+                                        <label class="form-label fw-bold">Stock actuel</label>
+                                        <input type="number" class="form-control" value="{{ $medicament->stock }}" disabled>
+                                        <div class="form-text">Le stock évolue par les réceptions, les ventes et les inventaires.</div>
+                                    @else
+                                        <label class="form-label fw-bold">Stock initial <span class="text-danger">*</span></label>
+                                        <input type="number" name="stock" class="form-control" value="0" min="0" required>
+                                    @endisset
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label class="form-label fw-bold">Stock minimum <span class="text-danger">*</span></label>

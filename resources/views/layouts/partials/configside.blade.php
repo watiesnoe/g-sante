@@ -16,6 +16,16 @@
                 </li>
                 @endcan
 
+                {{-- Tous les établissements (super-administration) --}}
+                @can('etablissements.gerer')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('etablissements.*') ? 'active' : '' }}"
+                       href="{{ route('etablissements.index') }}">
+                        <i class="fa fa-network-wired me-1"></i> Établissements
+                    </a>
+                </li>
+                @endcan
+
                 {{-- Structures / Services médicaux --}}
                 @can('parametres.services')
                 <li class="nav-item mb-1">
@@ -96,6 +106,15 @@
                 </li>
                 @endcan
 
+                {{-- Nomenclature des diagnostics --}}
+                @can('parametres.maladies')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('diagnostics.*') ? 'active' : '' }}" href="{{ route('diagnostics.index') }}">
+                        <i class="fa fa-list-ol me-1"></i> Diagnostics (CIM)
+                    </a>
+                </li>
+                @endcan
+
                 {{-- Médicaments (stock) --}}
                 @can('stock.medicaments')
                 <li class="nav-item mb-1">
@@ -142,6 +161,34 @@
                     <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
                        href="{{ route('users.index') }}">
                         <i class="fa fa-users me-1"></i> Utilisateurs
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Guichets de caisse --}}
+                @can('parametres.etablissement')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('guichets.*') ? 'active' : '' }}" href="{{ route('guichets.index') }}">
+                        <i class="fa fa-cash-register me-1"></i> Guichets de caisse
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Modèles de certificats et lettres --}}
+                @can('parametres.etablissement')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('modeles.*') ? 'active' : '' }}" href="{{ route('modeles.index') }}">
+                        <i class="fa fa-file-alt me-1"></i> Modèles de documents
+                    </a>
+                </li>
+                @endcan
+
+                {{-- Journal d'audit (lecture seule) --}}
+                @can('audit.view')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('audit.*') ? 'active' : '' }}"
+                       href="{{ route('audit.index') }}">
+                        <i class="fa fa-history me-1"></i> Journal d'audit
                     </a>
                 </li>
                 @endcan

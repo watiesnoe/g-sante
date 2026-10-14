@@ -25,7 +25,7 @@ class PrescriptionExamenController extends Controller
 
             $consultations = Consultation::with(['patient', 'medecin', 'examens'])
                 ->whereHas('examens', function ($q) {
-                    $q->where('statut', '!=', 'realise'); // ✅ au moins un examen non réalisé
+                    $q->whereNotIn('statut', ['saisi', 'valide', 'annule']); // ✅ au moins un examen sans résultat
                 })
                 ->whereYear('date_consultation', $year)
                 ->when(!$user->hasRole(['super_admin', 'superadmin', 'admin']), function ($query) use ($user) {
@@ -38,10 +38,10 @@ class PrescriptionExamenController extends Controller
                 ->addColumn('date', fn($c) => $c->date_consultation ? \Carbon\Carbon::parse($c->date_consultation)->format('d-m-Y H:i') : '-')
                 ->addColumn('examens', function ($c) {
                     $user = Auth::user();
-                    $items = $c->examens->where('statut', '!=', 'realise')->map(function ($e) use ($user) {
+                    $items = $c->examens->whereNotIn('statut', ['saisi', 'valide', 'annule'])->map(function ($e) use ($user) {
                         $actions = '';
                         // Modification possible uniquement tant qu'aucun résultat n'a été saisi
-                        // (le statut passe à "realise" dès qu'un résultat est enregistré, voir
+                        // (le statut passe à "saisi" dès qu'un résultat est enregistré, voir
                         // ResultatExamenController::store()) — au-delà, l'examen fait partie du
                         // dossier médical du patient et ne doit plus être altéré.
                         if ($user->can('examens.edit')) {
@@ -124,7 +124,7 @@ class PrescriptionExamenController extends Controller
     public function edit(PrescriptionExamen $examen)
     {
         abort_unless(Auth::user()->can('examens.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un examen.');
-        abort_if($examen->statut === 'realise', 403, 'Le résultat de cet examen a déjà été saisi : la prescription ne peut plus être modifiée.');
+        abort_if(in_array($examen->statut, ['realise', 'saisi', 'valide', 'annule'], true), 403, 'Le résultat de cet examen a déjà été saisi : la prescription ne peut plus être modifiée.');
 
         return response()->json([
             'id'     => $examen->id,
@@ -136,7 +136,7 @@ class PrescriptionExamenController extends Controller
     public function update(Request $request, PrescriptionExamen $examen)
     {
         abort_unless(Auth::user()->can('examens.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier un examen.');
-        abort_if($examen->statut === 'realise', 403, 'Le résultat de cet examen a déjà été saisi : la prescription ne peut plus être modifiée.');
+        abort_if(in_array($examen->statut, ['realise', 'saisi', 'valide', 'annule'], true), 403, 'Le résultat de cet examen a déjà été saisi : la prescription ne peut plus être modifiée.');
 
         $validated = $request->validate([
             'examen' => 'required|string|max:255',

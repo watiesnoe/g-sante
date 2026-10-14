@@ -67,9 +67,9 @@ class UserController extends Controller
         }
 
         $stats = [
-            'total'    => DB::table('users')->count(),
-            'actifs'   => DB::table('users')->where('statut', 'actif')->count(),
-            'inactifs' => DB::table('users')->where('statut', 'inactif')->count(),
+            'total'    => \App\Models\Etablissement::tableUtilisateurs()->count(),
+            'actifs'   => \App\Models\Etablissement::tableUtilisateurs()->where('statut', 'actif')->count(),
+            'inactifs' => \App\Models\Etablissement::tableUtilisateurs()->where('statut', 'inactif')->count(),
         ];
 
         $roles = \Spatie\Permission\Models\Role::all();
@@ -82,7 +82,8 @@ class UserController extends Controller
 
     public function getData(Request $request)
     {
-        $users = User::whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))->latest()->get();
+        // Comptes affectés à l'établissement courant (EF-01.03)
+        $users = User::deLEtablissement()->whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'))->latest()->get();
 
         return datatables()->of($users)
             ->addColumn('photo', function($user){
@@ -111,8 +112,10 @@ class UserController extends Controller
 
         $services = ServiceMedical::orderBy('nom')->get();
         $roles = \Spatie\Permission\Models\Role::all();
+        $etablissements = Auth::user()->etablissementsAccessibles();
+        $etablissementsUtilisateur = [\App\Models\Etablissement::courantId()];
 
-        return view('users.create', compact('services', 'roles'));
+        return view('users.create', compact('services', 'roles', 'etablissements', 'etablissementsUtilisateur'));
     }
 
     /**
@@ -133,6 +136,8 @@ class UserController extends Controller
             'service_medical_id' => 'nullable|required_if:role,medecin|exists:service_medicals,id',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'etablissements' => 'nullable|array',
+            'etablissements.*' => 'integer|exists:etablissements,id',
         ]);
 
         // 🔒 Seul un super_admin peut créer un compte super_admin
@@ -160,6 +165,7 @@ class UserController extends Controller
         ]);
 
         $user->assignRole($validated['role']);
+        $user->etablissements()->sync($this->etablissementsAutorises($request));
 
         if ($request->has('permissions')) {
             $user->syncPermissions($request->permissions);
@@ -182,6 +188,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->authorize('update', $user);
+        $this->exigerMemeEtablissement($user);
 
         $services = ServiceMedical::orderBy('nom')->get();
         $roles = \Spatie\Permission\Models\Role::all();
@@ -198,13 +205,16 @@ class UserController extends Controller
         
         $userRole = $user->roles->first()?->name;
         $userPermissions = $user->getDirectPermissions()->pluck('name')->toArray();
-        
-        return view('users.edit', compact('user', 'services', 'roles', 'statuts', 'permissions', 'userRole', 'userPermissions'));
+        $etablissements = Auth::user()->etablissementsAccessibles();
+        $etablissementsUtilisateur = $user->etablissements()->pluck('etablissements.id')->all();
+
+        return view('users.edit', compact('user', 'services', 'roles', 'statuts', 'permissions', 'userRole', 'userPermissions', 'etablissements', 'etablissementsUtilisateur'));
     }
 
     public function update(Request $request, User $user)
     {
         $this->authorize('update', $user);
+        $this->exigerMemeEtablissement($user);
 
         $validated = $request->validate([
             'prenom' => 'required|string|max:255',
@@ -239,6 +249,11 @@ class UserController extends Controller
 
         // Update role
         $user->syncRoles([$validated['role']]);
+
+        // Affectations : on ne touche qu'aux établissements que l'administrateur gère lui-même
+        $geres = Auth::user()->etablissementsAccessibles()->pluck('id');
+        $horsPerimetre = $user->etablissements()->whereNotIn('etablissements.id', $geres)->pluck('etablissements.id');
+        $user->etablissements()->sync($horsPerimetre->merge($this->etablissementsAutorises($request))->unique()->all());
         
         // Update direct permissions
         if ($request->has('permissions')) {
@@ -387,7 +402,7 @@ class UserController extends Controller
      */
     public function medecins(Request $request)
     {
-        $query = User::role('medecin')->where('statut', 'actif');
+        $query = User::deLEtablissement()->role('medecin')->where('statut', 'actif');
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -404,4 +419,22 @@ class UserController extends Controller
     }
 
 
+
+    /** Établissements cochés, limités à ceux de l'administrateur ; au moins l'établissement courant. */
+    private function etablissementsAutorises(Request $request): array
+    {
+        $geres = Auth::user()->etablissementsAccessibles()->pluck('id');
+        $choisis = collect($request->input('etablissements', []))->map(fn($id) => (int) $id)->intersect($geres);
+
+        return ($choisis->isEmpty() ? collect([\App\Models\Etablissement::courantId()]) : $choisis)->values()->all();
+    }
+
+    /** Un administrateur ne gère que les comptes de son établissement (SEC-04). */
+    private function exigerMemeEtablissement(User $user): void
+    {
+        if (Auth::user()->hasRole(['super_admin', 'superadmin'])) {
+            return;
+        }
+        abort_unless($user->etablissements()->where('etablissements.id', \App\Models\Etablissement::courantId())->exists(), 404);
+    }
 }

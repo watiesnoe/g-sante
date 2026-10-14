@@ -17,7 +17,7 @@ class PrestationController extends Controller
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
         if ($request->ajax()) {
-            $prestations = DB::table('prestations')
+            $prestations = \App\Models\Etablissement::table('prestations')
                 ->join('service_medicals', 'prestations.service_medical_id', '=', 'service_medicals.id')
                 ->select([
                     'prestations.id',
@@ -52,7 +52,7 @@ class PrestationController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
         return view('application.prestation.create', compact('services'));
     }
 
@@ -68,10 +68,11 @@ class PrestationController extends Controller
             'quantifiable' => 'nullable|boolean',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['service_medical_id', 'nom', 'description', 'prix']);
         $data['quantifiable'] = $request->has('quantifiable');
 
-        Prestation::create($data);
+        $prestation = Prestation::create($data);
+        $prestation->tarifs()->create(['prix' => $prestation->prix, 'date_effet' => today(), 'user_id' => Auth::id()]);
 
         return redirect()->route('prestations.index')
             ->with('success', 'Prestation créée avec succès.');
@@ -81,7 +82,8 @@ class PrestationController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.prestations'), 403, 'Accès non autorisé.');
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
+        $prestation->load('tarifs.user');
         return view('application.prestation.create', compact('prestation', 'services'));
     }
 
@@ -102,10 +104,20 @@ class PrestationController extends Controller
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
             'quantifiable' => 'nullable|boolean',
+            'date_effet' => 'nullable|date',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['service_medical_id', 'nom', 'description']);
         $data['quantifiable'] = $request->has('quantifiable');
+
+        // EF-05.01 : un changement de prix crée un tarif daté ; les actes déjà facturés gardent leur prix (RG-07)
+        $dateEffet = $request->date_effet ? \Illuminate\Support\Carbon::parse($request->date_effet) : today();
+        if ((float) $request->prix !== $prestation->prixAu($dateEffet)) {
+            $prestation->tarifs()->create(['prix' => $request->prix, 'date_effet' => $dateEffet, 'user_id' => Auth::id()]);
+        }
+        if ($dateEffet->lte(today())) {
+            $data['prix'] = $request->prix;
+        }
 
         $prestation->update($data);
 

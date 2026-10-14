@@ -165,7 +165,7 @@
                         @endif
                     </td>
                     <td style="text-align: center;">
-                        @if ($examen->statut === 'realise')
+                        @if (in_array($examen->statut, ['saisi', 'valide']))
                             <span class="statut-badge statut-realise">Réalisé</span>
                         @else
                             <span class="statut-badge statut-attente">En attente</span>

@@ -22,7 +22,7 @@ class HospitalisationController extends Controller
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $user = Auth::user();
-            $hospitalisations = DB::table('hospitalisations')
+            $hospitalisations = \App\Models\Etablissement::table('hospitalisations')
                 ->join('salles', 'hospitalisations.salles_id', '=', 'salles.id')
                 ->join('lits', 'hospitalisations.lit_id', '=', 'lits.id')
                 ->join('service_medicals', 'hospitalisations.service_id', '=', 'service_medicals.id')
@@ -110,7 +110,7 @@ class HospitalisationController extends Controller
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $user = Auth::user();
-            $hospitalisations = DB::table('hospitalisations')
+            $hospitalisations = \App\Models\Etablissement::table('hospitalisations')
                 ->join('salles', 'hospitalisations.salles_id', '=', 'salles.id')
                 ->join('lits', 'hospitalisations.lit_id', '=', 'lits.id')
                 ->join('service_medicals', 'hospitalisations.service_id', '=', 'service_medicals.id')
@@ -236,22 +236,25 @@ class HospitalisationController extends Controller
         abort_unless(Auth::user()->can('hospitalisations.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer une hospitalisation.');
 
         $validated = $request->validate([
-            'consultation_id' => 'required|exists:consultations,id',
+            'consultation_id' => 'nullable|required_without:patient_id|exists:consultations,id',
+            'patient_id'      => 'nullable|exists:patients,id',
             'service_id'      => 'required|exists:service_medicals,id',
-            'salles_id'       => 'required|exists:salles,id',
+            'salles_id'       => 'nullable|exists:salles,id',
             'lit_id'          => 'required|exists:lits,id',
             'date_entree'     => 'required|date',
             'motif'           => 'nullable|string|max:500',
             'observations'    => 'nullable|string',
         ]);
 
-        // Créer l'hospitalisation
-        $hospitalisation = Hospitalisation::create(array_merge($validated, [
-            'etat' => 'en cours',
-        ]));
-
-        // Marquer le lit comme occupé
-        \App\Models\Lit::where('id', $validated['lit_id'])->update(['statut' => 'Occupé']);
+        // EF-10.01 : admission avec ou sans consultation (urgence, référé), RG-12 contrôlée
+        $patient = isset($validated['consultation_id'])
+            ? \App\Models\Consultation::findOrFail($validated['consultation_id'])->patient
+            : \App\Models\Patient::findOrFail($validated['patient_id']);
+        try {
+            $hospitalisation = app(\App\Services\HospitalisationService::class)->admettre($patient, \App\Models\Lit::findOrFail($validated['lit_id']), $validated);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
 
         return redirect()
             ->route('hospitalisations.show', $hospitalisation->uuid)
@@ -315,16 +318,8 @@ class HospitalisationController extends Controller
                 'user_id'            => Auth::id(),
             ]);
 
-            // 🔹 Mise à jour de l'état médical de l'hospitalisation et libération du lit
-            $hospitalisation->update([
-                'etat'          => 'terminé',
-                'date_sortie'   => $validated['date_sortie'],
-                'statut_sortie' => $validated['statut_sortie'], // Sauvegarde de l'état médical corrigé !
-            ]);
-
-            if ($hospitalisation->lit_id) {
-                \App\Models\Lit::where('id', $hospitalisation->lit_id)->update(['statut' => 'Libre']);
-            }
+            // 🔹 Sortie du patient et libération du lit (RG-12)
+            app(\App\Services\HospitalisationService::class)->sortir($hospitalisation, $validated['statut_sortie'], $validated['date_sortie']);
 
             // 🔹 Enregistrement dans la caisse
             if ($validated['montant_recu'] > 0) {

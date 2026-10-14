@@ -22,6 +22,7 @@ class ExportImportController extends Controller
         'protocoles'  => ['model' => \App\Models\ProtocoleTraitement::class, 'permission' => 'infectiologie.aide_prescription', 'unique_by' => 'maladie_id', 'label' => 'Protocoles de traitement'],
         'medicaments' => ['model' => \App\Models\Medicament::class,      'permission' => 'stock.medicaments',    'unique_by' => 'nom',    'label' => 'Médicaments'],
         'familles'    => ['model' => \App\Models\Famille::class,         'permission' => 'stock.familles',       'unique_by' => 'nom',    'label' => 'Familles'],
+        'diagnostics' => ['model' => \App\Models\Diagnostic::class,      'permission' => 'parametres.maladies',  'unique_by' => 'code',   'label' => 'Nomenclature des diagnostics'],
         'unites'      => ['model' => \App\Models\Unite::class,           'permission' => 'stock.unites',         'unique_by' => ['nom', 'medicament_id'], 'label' => 'Unités'],
         'roles'       => ['model' => \Spatie\Permission\Models\Role::class,'permission'=> 'roles.view',          'unique_by' => 'name',   'label' => 'Rôles'],
         'users'       => ['model' => \App\Models\User::class,            'permission' => 'users.view',           'unique_by' => 'email',  'label' => 'Utilisateurs'],
@@ -308,7 +309,9 @@ class ExportImportController extends Controller
             }
 
             $instance  = new $modelClass();
-            $fillable  = $instance->getFillable();
+            // RG-08 : le stock ne s'importe pas, il évolue uniquement par mouvements ;
+            // l'établissement et les champs de traçabilité ne viennent jamais d'un fichier.
+            $fillable  = array_values(array_diff($instance->getFillable(), ['stock', 'etablissement_id', 'statut', 'annule_par', 'annule_at', 'motif_annulation', 'fusionne_dans_id', 'numero_dossier']));
 
             $created = 0;
             $updated = 0;

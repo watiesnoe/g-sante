@@ -30,6 +30,13 @@ return [
 
     'disks' => [
 
+        // Copie des sauvegardes sur un autre support (disque externe, NAS monté)
+        'sauvegarde_externe' => [
+            'driver' => 'local',
+            'root' => env('BACKUP_EXTERNAL_PATH', storage_path('app/sauvegarde_externe')),
+            'throw' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

@@ -12,9 +12,24 @@
                         <h3 class="fw-bold text-primary mb-0">
                             <i class="fas fa-file-medical me-2"></i>Détail Consultation
                         </h3>
-                        <p class="text-muted mb-0 mt-1">Référence #{{ $consultation->id }}</p>
+                        <p class="text-muted mb-0 mt-1">Référence #{{ $consultation->id }}
+                            @if($consultation->estSignee())
+                                <span class="badge bg-success ms-2"><i class="fa fa-signature me-1"></i>Signée par {{ $consultation->signataire->name ?? '-' }} le {{ $consultation->signee_at->format('d/m/Y H:i') }}</span>
+                            @else
+                                <span class="badge bg-warning text-dark ms-2">Non signée</span>
+                            @endif
+                        </p>
                     </div>
-                    <div>
+                    <div class="d-flex gap-2 flex-wrap justify-content-end">
+                        @if(!$consultation->estSignee() && auth()->user()->can('consultations.edit') && ($consultation->medecin_id === auth()->id() || auth()->user()->hasRole(['admin', 'super_admin'])))
+                            <form method="POST" action="{{ route('consultations.signer', $consultation) }}">
+                                @csrf
+                                <button class="btn btn-success" onclick="return confirm('Signer cette consultation ? Elle ne pourra plus être modifiée, seulement complétée par un addendum.')"><i class="fa fa-signature me-1"></i>Signer</button>
+                            </form>
+                        @endif
+                        @can('consultations.print')
+                            <a href="{{ route('documents.create', ['patient' => $consultation->patient->uuid, 'consultation' => $consultation->uuid]) }}" class="btn btn-outline-secondary"><i class="fa fa-file-alt me-1"></i>Certificat / lettre</a>
+                        @endcan
                         <button onclick="window.print()" class="btn btn-outline-primary">
                             <i class="fas fa-print me-2"></i>Imprimer
                         </button>
@@ -299,6 +314,42 @@
                         </div>
                     </div>
                 @endif
+                @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+
+                {{-- Diagnostic codifié et conduite à tenir --}}
+                @if($consultation->diagnosticCode || $consultation->conduite_a_tenir)
+                    <div class="border-top pt-3 mb-3">
+                        @if($consultation->diagnosticCode)
+                            <p class="mb-1"><strong>Diagnostic codifié :</strong> <span class="badge bg-primary">{{ $consultation->diagnosticCode->code }}</span> {{ $consultation->diagnosticCode->libelle }}</p>
+                        @endif
+                        @if($consultation->conduite_a_tenir)
+                            <p class="mb-0"><strong>Conduite à tenir :</strong> {{ $consultation->conduite_a_tenir }}</p>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- Addenda (RG-13) --}}
+                @if($consultation->estSignee())
+                    <div class="border-top pt-3 mb-4">
+                        <h5 class="text-primary mb-3"><i class="fas fa-paperclip me-2"></i>Addenda</h5>
+                        @forelse($consultation->addenda as $addendum)
+                            <div class="border-start border-3 border-info ps-3 mb-2">
+                                <div class="small text-muted">{{ $addendum->created_at->format('d/m/Y H:i') }} — {{ $addendum->user->name ?? '-' }}</div>
+                                <div>{!! nl2br(e($addendum->contenu)) !!}</div>
+                            </div>
+                        @empty
+                            <p class="text-muted small">Aucun addendum.</p>
+                        @endforelse
+                        @can('consultations.edit')
+                            <form method="POST" action="{{ route('consultations.addendum', $consultation) }}" class="mt-2">
+                                @csrf
+                                <textarea name="contenu" class="form-control mb-2" rows="2" placeholder="Complément daté et signé à votre nom…" required></textarea>
+                                <button class="btn btn-sm btn-info">Ajouter un addendum</button>
+                            </form>
+                        @endcan
+                    </div>
+                @endif
+
                 {{-- Évolution & Suivi Clinique --}}
                 <div class="border-top pt-4 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">

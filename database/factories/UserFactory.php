@@ -36,6 +36,17 @@ class UserFactory extends Factory
     /**
      * Indicate that the model's email address should be unverified.
      */
+    /** Les comptes créés sont affectés à l'établissement courant (EF-01.03). */
+    public function configure(): static
+    {
+        return $this->afterCreating(function ($user) {
+            $id = \App\Models\Etablissement::courantId();
+            if ($id) {
+                $user->etablissements()->syncWithoutDetaching([$id]);
+            }
+        });
+    }
+
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [

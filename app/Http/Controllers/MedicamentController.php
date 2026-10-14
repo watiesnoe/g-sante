@@ -156,10 +156,15 @@ class MedicamentController extends Controller
             'nom'         => $request->nom,
             'code_barre'  => $request->code_barre,
             'description' => $request->description,
-            'stock'       => $request->stock,
+            'stock'       => 0,
             'stock_min'   => $request->stock_min,
             'famille_id'  => $request->famille_id,
         ]);
+
+        // Le stock de départ passe par un mouvement d'entrée (RG-08)
+        if ((int) $request->stock > 0) {
+            app(\App\Services\StockService::class)->entree($medicament, (int) $request->stock, 'INITIAL', null, null, 'Stock initial à la création');
+        }
 
         $defaultIdx = (int) $request->input('default_unit_idx', 0);
         $unitesData = array_values($request->input('unites', []));
@@ -199,7 +204,6 @@ class MedicamentController extends Controller
         $request->validate([
             'nom'                      => 'required|string|max:255',
             'description'              => 'nullable|string',
-            'stock'                    => 'required|integer|min:0',
             'stock_min'                => 'required|integer|min:0',
             'famille_id'               => 'required|exists:familles,id',
             'unites'                   => 'required|array|min:1',
@@ -210,11 +214,11 @@ class MedicamentController extends Controller
             'unites.*.prix_vente'      => 'required|numeric|min:0',
         ]);
 
+        // Le stock n'est pas modifiable ici (RG-08) : il évolue par réceptions, ventes et inventaires
         $medicament->update([
             'nom'         => $request->nom,
             'code_barre'  => $request->code_barre,
             'description' => $request->description,
-            'stock'       => $request->stock,
             'stock_min'   => $request->stock_min,
             'famille_id'  => $request->famille_id,
         ]);
@@ -260,6 +264,14 @@ class MedicamentController extends Controller
         abort_unless(Auth::user()->can('stock.medicaments'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un médicament.');
 
         $medicament = Medicament::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
+
+        if ($medicament->mouvementsStock()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce médicament a un historique de stock : il ne peut pas être supprimé.',
+            ], 422);
+        }
+
         $medicament->delete();
 
         return response()->json([

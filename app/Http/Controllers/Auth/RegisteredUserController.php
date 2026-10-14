@@ -41,6 +41,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $user->etablissements()->syncWithoutDetaching([\App\Models\Etablissement::courantId()]);
+
         event(new Registered($user));
 
         Auth::login($user);

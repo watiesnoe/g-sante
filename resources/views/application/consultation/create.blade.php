@@ -97,6 +97,14 @@
                                             <textarea name="motif" class="form-control" rows="2" placeholder="Motif de consultation...">{{ $consultation->motif ?? '' }}</textarea>
                                         </div>
                                         <div class="col-12">
+                                            <label class="form-label fw-semibold small text-secondary">Type d'activité</label>
+                                            <select name="type_activite" class="form-select no-select2">
+                                                @foreach(['generale' => 'Consultation générale', 'pediatrie' => 'Pédiatrie', 'cpn' => 'Consultation prénatale', 'controle' => 'Contrôle / suivi', 'urgence' => 'Urgence'] as $code => $libelle)
+                                                    <option value="{{ $code }}" {{ ($consultation->type_activite ?? 'generale') === $code ? 'selected' : '' }}>{{ $libelle }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
                                             <label class="form-label fw-semibold small text-secondary">Antécédents
                                                 médicaux</label>
                                             <textarea name="antecedents" class="form-control" rows="2"
@@ -249,6 +257,19 @@
                                                 OBSERVATIONS</label>
                                             <textarea class="form-control" name="diagnostic" placeholder="Saisir la synthèse de la consultation..."
                                                 rows="5" required>{{ $consultation->diagnostic ?? '' }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-secondary">DIAGNOSTIC CODIFIÉ</label>
+                                            <select name="diagnostic_id" id="diagnosticCode" class="form-select" style="width:100%">
+                                                @if(!empty($consultation?->diagnosticCode))
+                                                    <option value="{{ $consultation->diagnostic_id }}" selected>{{ $consultation->diagnosticCode->code }} — {{ $consultation->diagnosticCode->libelle }}</option>
+                                                @endif
+                                            </select>
+                                            <div class="form-text">Nomenclature (CIM-10 ou nationale). Le résumé clinique reste en texte libre.</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-secondary">CONDUITE À TENIR</label>
+                                            <textarea class="form-control" name="conduite_a_tenir" rows="2">{{ $consultation->conduite_a_tenir ?? '' }}</textarea>
                                         </div>
                                     </div>
 
@@ -1496,6 +1517,19 @@
                     error: function(xhr) {
                         let errors = xhr.responseJSON?.errors,
                             msg = '';
+                        // EF-04.04 : allergie connue, on demande une confirmation explicite
+                        if (xhr.status === 422 && errors?.allergie) {
+                            Swal.fire({
+                                icon: 'warning', title: 'Allergie connue', text: errors.allergie[0],
+                                showCancelButton: true, confirmButtonText: 'Prescrire quand même', cancelButtonText: 'Revoir l\'ordonnance'
+                            }).then((r) => {
+                                if (r.isConfirmed) {
+                                    form.append('<input type="hidden" name="confirmer_allergie" value="1">');
+                                    form.trigger('submit');
+                                }
+                            });
+                            return;
+                        }
                         if (errors) $.each(errors, function(k, v) {
                             msg += v[0] + '\n';
                         });
@@ -1547,5 +1581,21 @@
             if ($('#symptomes').val() && $('#symptomes').val().length > 0) $('#symptomes').trigger('change');
 
         });
-    </script>
+    
+    // EF-04.02 : recherche dans la nomenclature des diagnostics
+    $(function () {
+        $('#diagnosticCode').select2({
+            placeholder: 'Code ou libellé…',
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: "{{ route('diagnostics.recherche') }}",
+                dataType: 'json',
+                delay: 250,
+                data: (params) => ({ q: params.term }),
+                processResults: (data) => ({ results: data.map(d => ({ id: d.id, text: d.code + ' — ' + d.libelle })) })
+            }
+        });
+    });
+</script>
 @endsection

@@ -8,10 +8,22 @@
                     <h2 class="h3 fw-bold mb-1">Détails de la Session de Caisse</h2>
                     <p class="text-muted mb-0">Gérée par <strong>{{ $session->user->name }}</strong></p>
                 </div>
-                <a href="{{ route('caisse.index') }}" class="btn btn-secondary">
-                    <i class="fa fa-arrow-left me-1"></i> Retour à la supervision
-                </a>
+                <div class="d-flex gap-2">
+                    @if($session->statut == 'fermee' && auth()->user()->can('caisse.valider_cloture'))
+                        <form action="{{ route('caisse.valider', $session->uuid) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Valider cette clôture de caisse ?')">
+                                <i class="fa fa-check me-1"></i> Valider la clôture
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('caisse.index') }}" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left me-1"></i> Retour à la supervision
+                    </a>
+                </div>
             </div>
+            @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+            @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
             <!-- Balances Cards -->
             <div class="row">
@@ -73,8 +85,11 @@
                                         <td>
                                             @if($session->statut == 'ouverte')
                                                 <span class="badge bg-success">Ouverte</span>
+                                            @elseif($session->statut == 'fermee')
+                                                <span class="badge bg-warning text-dark">Clôturée, à valider</span>
                                             @else
-                                                <span class="badge bg-secondary">Fermée</span>
+                                                <span class="badge bg-secondary">Validée</span>
+                                                <div class="small text-muted">par {{ $session->valideePar->name ?? '-' }} le {{ $session->validee_at?->format('d/m/Y H:i') }}</div>
                                             @endif
                                         </td>
                                     </tr>
@@ -93,7 +108,7 @@
                                     <tr>
                                         <td class="fw-semibold">Écart</td>
                                         <td>
-                                            @if($session->statut == 'fermee')
+                                            @if($session->statut != 'ouverte')
                                                 @if($session->ecart == 0)
                                                     <span class="text-success fw-bold">0 XOF</span>
                                                 @elseif($session->ecart > 0)
@@ -106,6 +121,12 @@
                                             @endif
                                         </td>
                                     </tr>
+                                    @if($session->justification_ecart)
+                                    <tr>
+                                        <td class="fw-semibold">Justification</td>
+                                        <td>{{ $session->justification_ecart }}</td>
+                                    </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>

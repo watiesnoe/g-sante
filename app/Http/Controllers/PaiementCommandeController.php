@@ -161,7 +161,8 @@ class PaiementCommandeController extends Controller
                 $request->montant,
                 'Paiement Fournisseur (Commande #' . $request->commande_id . ')',
                 'sortie',
-                $paiement
+                $paiement,
+                ['espèce' => 'especes', 'virement' => 'virement', 'chèque' => 'cheque', 'carte' => 'carte'][$request->mode] ?? 'autre'
             );
 
             // Mettre à jour le StatutPaiement de la commande
@@ -218,42 +219,46 @@ class PaiementCommandeController extends Controller
         return view('application.paiementcommande.show', compact('paiement'));
     }
 
-    public function destroy(PaiementCommande $paiement)
+    /**
+     * Annuler un paiement fournisseur (RG-01) : il reste visible, marqué annulé,
+     * et la sortie de caisse est neutralisée par une écriture inverse.
+     */
+    public function destroy(Request $request, PaiementCommande $paiement)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
-        try {
-            DB::beginTransaction();
-
-            $commande = $paiement->commande;
-
-            $paiement->delete();
-
-            // Mettre à jour le statut de paiement de la commande
-            $this->updateStatutPaiement($commande);
-
-            DB::commit();
-
-            if (request()->ajax() || request()->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Paiement supprimé avec succès'
-                ]);
+        $repondre = function (bool $ok, string $message, int $code = 200) use ($request) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => $ok, 'message' => $message], $code);
             }
+            return redirect()->back()->with($ok ? 'success' : 'error', $message);
+        };
 
-            return redirect()->back()->with('success', 'Paiement supprimé avec succès');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            if (request()->ajax() || request()->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        if (trim((string) $request->motif) === '') {
+            return $repondre(false, 'Le motif de l\'annulation est obligatoire.', 422);
         }
+        if ($paiement->statut === 'annule') {
+            return $repondre(false, 'Ce paiement est déjà annulé.', 422);
+        }
+
+        try {
+            DB::transaction(function () use ($paiement, $request) {
+                app(\App\Services\CaisseService::class)->annulerReference($paiement, $request->motif);
+                $paiement->update([
+                    'statut'           => 'annule',
+                    'motif_annulation' => $request->motif,
+                    'annule_par'       => Auth::id(),
+                    'annule_at'        => now(),
+                ]);
+                $this->updateStatutPaiement($paiement->commande);
+            });
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return $repondre(false, $e->getMessage(), 403);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $repondre(false, collect($e->errors())->flatten()->first(), 422);
+        }
+
+        return $repondre(true, 'Paiement annulé ; la sortie de caisse a été neutralisée.');
     }
     /**
      * Récupérer les commandes impayées via API

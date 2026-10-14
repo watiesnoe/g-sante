@@ -29,6 +29,24 @@
                             </div>
                         </div>
 
+                        @if(count($totauxParMode) > 0)
+                            <table class="table table-sm table-bordered mb-4">
+                                <thead class="table-light">
+                                    <tr><th>Mode de paiement</th><th class="text-end">Entrées</th><th class="text-end">Sorties</th><th class="text-end">Net</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($totauxParMode as $mode => $t)
+                                        <tr>
+                                            <td>{{ \App\Models\CaisseMouvement::MODES[$mode] ?? ucfirst($mode) }}</td>
+                                            <td class="text-end">{{ number_format($t['entree'], 0, ',', ' ') }} F</td>
+                                            <td class="text-end">{{ number_format($t['sortie'], 0, ',', ' ') }} F</td>
+                                            <td class="text-end fw-semibold">{{ number_format($t['entree'] - $t['sortie'], 0, ',', ' ') }} F</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+
                         <hr>
 
                         <form action="{{ route('caisse.storeClose') }}" method="POST">
@@ -39,7 +57,15 @@
                                 @error('solde_reel')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text mt-2 text-warning">Si le montant physique est différent du solde théorique ({{ number_format($session->solde_theorique, 0, ',', ' ') }} F), un écart sera enregistré.</div>
+                                <div class="form-text mt-2 text-warning">Si le montant physique est différent du solde théorique ({{ number_format($session->solde_theorique, 0, ',', ' ') }} F), l'écart doit être justifié ci-dessous.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label" for="justification_ecart">Justification de l'écart <small class="text-muted">(obligatoire s'il y a un écart)</small></label>
+                                <textarea class="form-control @error('justification_ecart') is-invalid @enderror" id="justification_ecart" name="justification_ecart" rows="2">{{ old('justification_ecart') }}</textarea>
+                                @error('justification_ecart')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             
                             <div class="mb-4 text-center">

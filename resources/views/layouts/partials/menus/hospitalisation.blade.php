@@ -4,6 +4,8 @@
         <span class="nav-main-link-name">Hospitalisations</span>
     </a>
     <ul class="nav-main-submenu">
+        <li class="nav-main-item"><a class="nav-main-link" href="{{ route('lits.tableau') }}"><span class="nav-main-link-name">État des lits</span></a></li>
+        <li class="nav-main-item"><a class="nav-main-link" href="{{ route('hospitalisation.indicateurs') }}"><span class="nav-main-link-name">Indicateurs</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route("hospitalisations.index")}}"><span class="nav-main-link-name">Liste</span></a></li>
         <li class="nav-main-item"><a class="nav-main-link" href="{{route('hospitalisations.realise')}}"><span class="nav-main-link-name">Liste des hospitalisés</span></a></li>
     </ul>

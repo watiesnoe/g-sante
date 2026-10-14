@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,7 @@ use Illuminate\Support\Str;
 
 class Commande extends Model
 {
+    use AppartientEtablissement;
     use HasUuid;
     use HasFactory;
 
@@ -65,7 +67,8 @@ class Commande extends Model
      */
     public function montantPaye()
     {
-        return $this->paiements()->sum('montant');
+        // Les paiements annulés restent visibles mais ne comptent plus (RG-01)
+        return $this->paiements()->where('statut', '!=', 'annule')->sum('montant');
     }
 
     /**

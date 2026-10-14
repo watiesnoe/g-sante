@@ -82,6 +82,10 @@ class ResultatExamenController extends Controller
         $data=$request->validate([
             'prescription_examen_id' => 'required|exists:prescriptions_examens,id',
             'resultat' => 'nullable|string',
+            'valeur' => 'nullable|string|max:50',
+            'unite' => 'nullable|string|max:30',
+            'valeur_min' => 'nullable|numeric',
+            'valeur_max' => 'nullable|numeric',
             'fichier' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240'
         ]);
         if ($request->hasFile('fichier')) {
@@ -100,13 +104,18 @@ class ResultatExamenController extends Controller
         }
 
 
-        $reponse=ResultatExamen::create($data);
-
-        $prescription =PrescriptionExamen::find($data['prescription_examen_id']);
-        if ($prescription) {
-            $prescription->update([ 'statut' => 'realise' ]);
+        // EF-09.03 / EF-09.04 : saisie tracée, valeur comparée aux valeurs de référence
+        try {
+            $reponse = app(\App\Services\LaboratoireService::class)->saisir(PrescriptionExamen::findOrFail($data['prescription_examen_id']), $data);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
         }
-        return response()->json(['success' => true, 'message' =>'Réponse enregistrée avec succès', 'data' => $reponse]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $reponse->anormal ? 'Résultat enregistré — valeur ANORMALE signalée.' : 'Réponse enregistrée avec succès',
+            'data' => $reponse,
+        ]);
     }
 
 
@@ -121,6 +130,7 @@ class ResultatExamenController extends Controller
     public function update(Request $request, ResultatExamen $resultatExamen)
     {
         abort_unless(Auth::user()->can('examens.results'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier des résultats.');
+        abort_if($resultatExamen->prescriptionExamen?->statut === 'valide', 403, 'Résultat validé : il ne peut plus être modifié.');
 
         $request->validate([
             'prescription_examen_id' => 'required|exists:prescriptions_examens,id',
@@ -147,6 +157,7 @@ class ResultatExamenController extends Controller
     public function destroy(ResultatExamen $resultatExamen)
     {
         abort_unless(Auth::user()->can('examens.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer des résultats.');
+        abort_if($resultatExamen->prescriptionExamen?->statut === 'valide', 403, 'Résultat validé : il ne peut plus être supprimé.');
 
         $resultatExamen->delete();
         return redirect()->route('reponses.index')->with('success', 'Résultat supprimé avec succès.');

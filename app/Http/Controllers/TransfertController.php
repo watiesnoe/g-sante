@@ -81,7 +81,7 @@ class TransfertController extends Controller
 
         // 🔒 Le dropdown ne propose que des médecins actifs, mais on revérifie côté
         // serveur pour empêcher qu'un transfert ne cible un compte sans le rôle médecin.
-        if ($request->type === 'medecin' && !User::role('medecin')->where('id', $request->dest_medecin_id)->exists()) {
+        if ($request->type === 'medecin' && !User::deLEtablissement()->role('medecin')->where('id', $request->dest_medecin_id)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Le compte sélectionné n\'est pas un médecin.',
@@ -146,15 +146,11 @@ class TransfertController extends Controller
                 } elseif ($request->type === 'hopital_externe') {
                     $transfert->hopital_destination = $request->hopital_destination;
                     
-                    $hospitalisation->etat = 'terminé';
-                    $hospitalisation->date_sortie = now();
                     $hospitalisation->observations = ($hospitalisation->observations ? $hospitalisation->observations . "\n" : "") . "Transféré vers: " . $request->hopital_destination . ". Motif: " . $request->motif;
                     $hospitalisation->save();
 
-                    // Libérer le lit si présent
-                    if ($hospitalisation->lit_id) {
-                        \App\Models\Lit::where('id', $hospitalisation->lit_id)->update(['statut' => 'Libre']);
-                    }
+                    // Sortie par transfert : séjour clos, lit libéré (RG-12)
+                    app(\App\Services\HospitalisationService::class)->sortir($hospitalisation, 'Transfert');
                 }
             }
 

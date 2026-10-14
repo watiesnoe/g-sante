@@ -14,7 +14,7 @@
 {{-- ── HEADER ── --}}
 <div class="ticket-header-container" style="padding: 14px 18px 0 18px;">
     @include('layouts.pdf_header', [
-        'docNumber' => 'TCK-' . \Carbon\Carbon::parse($ticket->created_at)->format('Ymd') . '-' . str_pad($ticket->id, 5, '0', STR_PAD_LEFT),
+        'docNumber' => $ticket->numero ?? ('TCK-' . \Carbon\Carbon::parse($ticket->created_at)->format('Ymd') . '-' . str_pad($ticket->id, 5, '0', STR_PAD_LEFT)),
     ])
 </div>
 

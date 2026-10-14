@@ -78,6 +78,11 @@
                                 <i class="fa fa-calendar-plus me-2"></i> Fixer un Rendez-vous
                             </button>
 
+                            @can('maternity.accouchement')
+                            <a href="{{ route('accouchements.create', ['patient' => $grossesse->patient->uuid]) }}" class="btn btn-outline-danger text-start">
+                                <i class="fa fa-baby me-2"></i> Enregistrer l'accouchement
+                            </a>
+                            @endcan
                             <a href="{{ route('ordonnances.maternite', ['patient' => $grossesse->patient->uuid]) }}"
                                 class="btn btn-outline-success text-start">
                                 <i class="fa fa-pills me-2"></i> Prescrire (Ordonnance)

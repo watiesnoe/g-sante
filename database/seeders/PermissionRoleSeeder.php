@@ -77,6 +77,7 @@ class PermissionRoleSeeder extends Seeder
             'examens.edit'                       => 'Modifier un examen',
             'examens.delete'                     => 'Supprimer un examen',
             'examens.results'                    => 'Saisir les résultats d\'analyses',
+            'examens.valider'                    => 'Valider les résultats (biologiste, radiologue)',
 
             // ── Hospitalisations ──────────────────────────────────────
             'hospitalisations.view'              => 'Voir les hospitalisations',
@@ -116,6 +117,24 @@ class PermissionRoleSeeder extends Seeder
             'stock.familles'                     => 'Gérer les familles de médicaments',
             'stock.unites'                       => 'Gérer les unités de mesure',
             'stock.inventaire'                   => 'Réaliser et valider les inventaires',
+            'achats.demander'                    => 'Émettre une demande d\'achat',
+            'achats.approuver'                   => 'Approuver ou rejeter une demande d\'achat',
+            'rh.gardes.view'                     => 'Voir le planning des gardes',
+            'rh.gardes.gerer'                    => 'Programmer les gardes et astreintes',
+            'urgences.view'                      => 'Voir le registre des urgences',
+            'urgences.gerer'                     => 'Enregistrer et orienter les patients aux urgences',
+            'maternity.accouchement'             => 'Enregistrer un accouchement',
+            'references.view'                    => 'Voir les références et évacuations',
+            'references.gerer'                   => 'Émettre, recevoir et suivre les références',
+            'gratuites.gerer'                    => 'Gérer les règles de gratuité',
+            'budget.view'                        => 'Voir l\'exécution budgétaire',
+            'budget.gerer'                       => 'Gérer les lignes budgétaires',
+            'rapports.mensuel'                   => 'Calculer et exporter le rapport mensuel d\'activité',
+            'rapports.valider'                   => 'Valider et transmettre le rapport mensuel',
+            'bloc.view'                          => 'Voir le programme du bloc opératoire',
+            'bloc.programmer'                    => 'Programmer et conduire les interventions',
+            'maintenance.view'                   => 'Voir les équipements et signaler une panne',
+            'maintenance.gerer'                  => 'Gérer les équipements et clôturer les maintenances',
 
             // ── Paiements / Caisse ────────────────────────────────────
             'paiements.view'                     => 'Voir les paiements',
@@ -123,6 +142,23 @@ class PermissionRoleSeeder extends Seeder
             'paiements.edit'                     => 'Modifier un paiement',
             'paiements.delete'                   => 'Supprimer un paiement',
             'caisse.view'                        => 'Voir la caisse globale',
+            'caisse.annuler'                     => 'Annuler un encaissement (ticket, vente, paiement) avec motif',
+            'caisse.valider_cloture'             => 'Valider la clôture de caisse d\'un caissier',
+            'audit.view'                         => 'Consulter le journal d\'audit',
+            'etablissements.gerer'               => 'Créer et lister les établissements (super-administration)',
+            'patients.fusionner'                 => 'Fusionner deux dossiers patients (réversible)',
+            'rapports.view'                      => 'Consulter et exporter les rapports d\'activité et financiers',
+            'tiers_payants.conventions'          => 'Gérer les conventions avec les organismes payeurs',
+            'tiers_payants.bordereaux'           => 'Émettre les bordereaux et enregistrer les recouvrements',
+            // ── Accueil / passages (lot 1) ───────────────────────────
+            'accueil.view'                       => 'Voir l\'accueil et la file d\'attente',
+            'accueil.create'                     => 'Enregistrer l\'arrivée d\'un patient',
+            'accueil.orienter'                   => 'Orienter un patient (trier, envoyer en consultation, sortir)',
+            // ── Dépenses (lot 1) ─────────────────────────────────────
+            'depenses.view'                      => 'Voir les dépenses',
+            'depenses.create'                    => 'Saisir une dépense',
+            'depenses.valider'                   => 'Valider ou rejeter une dépense',
+            'depenses.payer'                     => 'Payer une dépense validée (sortie de caisse)',
 
             // ── Assurances / Sécurité sociale ─────────────────────────
             'assurances.view'                    => 'Voir les assurances',
@@ -191,6 +227,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Administrateur']
         );
         $admin->syncPermissions([
+            'accueil.view', 'accueil.create', 'accueil.orienter', 'depenses.view', 'depenses.create', 'depenses.valider', 'depenses.payer', 'patients.fusionner', 'examens.valider', 'achats.demander', 'achats.approuver', 'rh.gardes.view', 'rh.gardes.gerer', 'urgences.view', 'urgences.gerer', 'maternity.accouchement', 'references.view', 'references.gerer', 'gratuites.gerer', 'budget.view', 'budget.gerer', 'rapports.mensuel', 'rapports.valider', 'bloc.view', 'bloc.programmer', 'maintenance.view', 'maintenance.gerer', 'rapports.view', 'tiers_payants.conventions', 'tiers_payants.bordereaux',
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search', 'patients.dossier',
             'tickets.view', 'tickets.create', 'tickets.edit',
@@ -206,6 +243,7 @@ class PermissionRoleSeeder extends Seeder
             'paiements.view', 'paiements.create', 'caisse.view',
             'assurances.view', 'assurances.create', 'assurances.edit',
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
+            'caisse.annuler', 'caisse.valider_cloture', 'audit.view',
             'parametres.view', 'parametres.etablissement', 'parametres.services', 'parametres.prestations', 'parametres.salles',
             'parametres.lits', 'parametres.examens_config', 'parametres.assurances',
             'parametres.symptomes', 'parametres.maladies',
@@ -220,6 +258,11 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Médecin']
         );
         $medecin->syncPermissions([
+            'bloc.view', 'bloc.programmer', 'maintenance.view',
+            'urgences.view', 'urgences.gerer', 'references.view', 'references.gerer', 'maternity.accouchement',
+            'rh.gardes.view',
+            'achats.demander',
+            'accueil.view', 'accueil.orienter',
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search', 'patients.dossier',
             'consultations.view', 'consultations.create', 'consultations.edit',
@@ -243,6 +286,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Secrétaire médicale']
         );
         $secretaire->syncPermissions([
+            'accueil.view', 'accueil.create', 'accueil.orienter',
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search',
             'tickets.view', 'tickets.create', 'tickets.edit', 'tickets.print',
@@ -260,6 +304,11 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Infirmier(e)']
         );
         $infirmier->syncPermissions([
+            'bloc.view', 'maintenance.view',
+            'urgences.view', 'urgences.gerer', 'references.view',
+            'rh.gardes.view',
+            'achats.demander',
+            'accueil.view', 'accueil.orienter',
             'dashboard.view',
             'patients.view', 'patients.search', 'patients.dossier',
             'tickets.view',
@@ -277,6 +326,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Pharmacien']
         );
         $pharmacien->syncPermissions([
+            'achats.demander',
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
@@ -295,7 +345,7 @@ class PermissionRoleSeeder extends Seeder
         $laborantin->syncPermissions([
             'dashboard.view',
             'patients.view', 'patients.search',
-            'examens.view', 'examens.edit', 'examens.results',
+            'examens.view', 'examens.edit', 'examens.results', 'examens.valider',
         ]);
         $this->command->info('✅ laborantin → permissions configurées');
 
@@ -305,6 +355,8 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Comptable / Caissier']
         );
         $comptable->syncPermissions([
+            'budget.view',
+            'depenses.view', 'depenses.create', 'depenses.payer', 'rapports.view', 'tiers_payants.bordereaux',
             'dashboard.view',
             'paiements.view', 'paiements.create', 'paiements.edit',
             'caisse.view',
@@ -319,6 +371,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Gestionnaire de stock']
         );
         $gestionnaire->syncPermissions([
+            'achats.demander',
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
@@ -332,6 +385,10 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Sage-femme']
         );
         $sageFemme->syncPermissions([
+            'maintenance.view',
+            'maternity.accouchement', 'references.view', 'references.gerer', 'urgences.view',
+            'rh.gardes.view',
+            'accueil.view', 'accueil.orienter',
             'dashboard.view',
             'patients.view', 'patients.search', 'patients.dossier',
             'maternity.view', 'maternity.create', 'maternity.edit', 'maternity.cpn', 'maternity.close',

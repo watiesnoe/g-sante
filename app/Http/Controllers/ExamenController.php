@@ -48,7 +48,7 @@ class ExamenController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.examens_config'), 403, 'Accès non autorisé.');
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
         return view('application.examen.create', compact('services'));
     }
 
@@ -76,7 +76,7 @@ class ExamenController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.examens_config'), 403, 'Accès non autorisé.');
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
         return view('application.examen.create', compact('examen','services'));
     }
 

@@ -87,6 +87,35 @@
                 },
 
             });
+
+            // Annulation d'un ticket : motif obligatoire (RG-01)
+            $(document).on('click', '.btn-annuler-ticket', function () {
+                const url = $(this).data('url');
+                Swal.fire({
+                    title: 'Annuler ce ticket ?',
+                    html: '<small>L\'encaissement sera neutralisé en caisse. Le ticket reste visible, marqué annulé.</small>',
+                    icon: 'warning',
+                    input: 'text',
+                    inputPlaceholder: 'Motif de l\'annulation (obligatoire)',
+                    inputValidator: (value) => !value && 'Le motif est obligatoire.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Annuler le ticket',
+                    cancelButtonText: 'Fermer'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: { _token: '{{ csrf_token() }}', motif: result.value },
+                        success: (res) => {
+                            Swal.fire('Ticket annulé', res.message, 'success');
+                            $('#ticketsTable').DataTable().ajax.reload(null, false);
+                        },
+                        error: (xhr) => Swal.fire('Annulation refusée', xhr.responseJSON?.message || 'Une erreur est survenue.', 'error')
+                    });
+                });
+            });
         });
     </script>
 

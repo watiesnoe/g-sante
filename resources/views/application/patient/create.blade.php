@@ -72,6 +72,28 @@
                                             name="telephone" value="{{ old('telephone', $patient->telephone ?? '') }}"
                                             required>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="date_naissance">Date de naissance <small class="text-muted">(si connue)</small></label>
+                                        <input type="date" class="form-control" id="date_naissance" name="date_naissance"
+                                            value="{{ old('date_naissance', isset($patient) && $patient->date_naissance ? \Carbon\Carbon::parse($patient->date_naissance)->format('Y-m-d') : '') }}" max="{{ date('Y-m-d') }}">
+                                    </div>
+                                    @if(\App\Models\Etablissement::courant()->parametre('patient.provenance'))
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label" for="provenance">Provenance <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="provenance" name="provenance">
+                                                    <option value="">-- Choisir --</option>
+                                                    @foreach(\App\Models\Patient::PROVENANCES as $code => $libelle)
+                                                        <option value="{{ $code }}" {{ old('provenance', $patient->provenance ?? '') === $code ? 'selected' : '' }}>{{ $libelle }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <label class="form-label" for="cscom_origine">CSCom / structure d'origine</label>
+                                                <input type="text" class="form-control" id="cscom_origine" name="cscom_origine" value="{{ old('cscom_origine', $patient->cscom_origine ?? '') }}">
+                                            </div>
+                                        </div>
+                                    @endif
                                     <div class="mb-2">
                                         <label class="form-label" for="ethnie">Ethnie / Origine <span
                                                 class="text-danger">*</span></label>
@@ -116,6 +138,10 @@
                                                     {{ $gs }}</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="allergies">Allergies connues</label>
+                                        <textarea class="form-control" id="allergies" name="allergies" rows="2" placeholder="Ex. pénicilline, arachide…">{{ old('allergies', $patient->allergies ?? '') }}</textarea>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="adresse">Adresse de résidence</label>
@@ -209,6 +235,26 @@
                     },
                     error: function(xhr) {
                         $submitBtn.html(originalBtnHtml).attr('disabled', false);
+
+                        // EF-02.02 : doublon probable, on demande confirmation avant de créer
+                        if (xhr.status === 409 && xhr.responseJSON?.doublons) {
+                            let liste = xhr.responseJSON.doublons.map(p =>
+                                `<li><b>${p.nom} ${p.prenom}</b> — ${p.numero_dossier ?? ''} — ${p.age ?? '?'} ans — ${p.telephone ?? ''}</li>`).join('');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Dossier peut-être existant',
+                                html: `<p>Ces patients ressemblent à celui que vous créez :</p><ul class="text-start">${liste}</ul><p>Vérifiez avant de créer un nouveau dossier.</p>`,
+                                showCancelButton: true,
+                                confirmButtonText: 'Créer quand même',
+                                cancelButtonText: 'Annuler'
+                            }).then((r) => {
+                                if (r.isConfirmed) {
+                                    $form.append('<input type="hidden" name="confirmer_doublon" value="1">');
+                                    $form.trigger('submit');
+                                }
+                            });
+                            return;
+                        }
 
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;

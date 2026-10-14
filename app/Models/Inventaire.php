@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Inventaire extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid, HasFactory;
 
     protected $fillable = [

@@ -103,6 +103,18 @@
                                     </select>
                                 </div>
 
+                            @if($etablissements->count() > 1)
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label">Établissements où ce compte travaille</label>
+                                <select name="etablissements[]" class="form-select js-select2" multiple>
+                                    @foreach($etablissements as $etab)
+                                        <option value="{{ $etab->id }}" {{ in_array($etab->id, old('etablissements', $etablissementsUtilisateur)) ? 'selected' : '' }}>{{ $etab->nom }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Le compte ne voit que les données des établissements cochés.</small>
+                            </div>
+                            @endif
+
                                 <div class="col-md-12 mb-4">
                                     <label class="form-label">Structure / Service</label>
                                     <select name="service_medical_id" class="form-select js-select2">

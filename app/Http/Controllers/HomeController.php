@@ -47,20 +47,20 @@ class HomeController extends Controller
 
         // ── Stats globales via DB::table() (pas de surcharge Eloquent) ──
         $stats = [
-            'total_users'         => DB::table('users')->count(),
-            'total_medecins'      => DB::table('users')->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'medecin')->count(),
-            'total_secretaires'   => DB::table('users')->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'secretaire')->count(),
-            'total_admins'        => DB::table('users')->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'admin')->count(),
-            'total_patients'      => DB::table('patients')->whereYear('created_at', $year)->count(),
-            'total_ordonnance'    => DB::table('ordonnances')->whereYear('created_at', $year)->count(),
-            'total_fournisseur'   => DB::table('fournisseurs')->count(),
-            'total_rendezvou'     => DB::table('rendezvous')->whereYear('created_at', $year)->count(),
-            'total_ticket'        => DB::table('tickets')->whereYear('created_at', $year)->count(),
-            'total_medicament'    => DB::table('medicaments')->count(),
+            'total_users'         => \App\Models\Etablissement::tableUtilisateurs()->count(),
+            'total_medecins'      => \App\Models\Etablissement::tableUtilisateurs()->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'medecin')->count(),
+            'total_secretaires'   => \App\Models\Etablissement::tableUtilisateurs()->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'secretaire')->count(),
+            'total_admins'        => \App\Models\Etablissement::tableUtilisateurs()->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'admin')->count(),
+            'total_patients'      => \App\Models\Etablissement::table('patients')->whereYear('created_at', $year)->count(),
+            'total_ordonnance'    => \App\Models\Etablissement::table('ordonnances')->whereYear('created_at', $year)->count(),
+            'total_fournisseur'   => \App\Models\Etablissement::table('fournisseurs')->count(),
+            'total_rendezvou'     => \App\Models\Etablissement::table('rendezvous')->whereYear('created_at', $year)->count(),
+            'total_ticket'        => \App\Models\Etablissement::table('tickets')->whereYear('created_at', $year)->count(),
+            'total_medicament'    => \App\Models\Etablissement::table('medicaments')->count(),
             'total_examens'       => DB::table('examens')->count(),
-            'total_lits'          => DB::table('lits')->count(),
-            'new_patients_today'  => DB::table('patients')->whereDate('created_at', today())->count(),
-            'total_consultations' => DB::table('consultations')->whereYear('created_at', $year)->count(),
+            'total_lits'          => \App\Models\Etablissement::table('lits')->count(),
+            'new_patients_today'  => \App\Models\Etablissement::table('patients')->whereDate('created_at', today())->count(),
+            'total_consultations' => \App\Models\Etablissement::table('consultations')->whereYear('created_at', $year)->count(),
         ];
 
         // ── Graphique 7 jours : 3 requêtes GROUP BY au lieu de 21 ─────
@@ -104,15 +104,15 @@ class HomeController extends Controller
     {
         $year = session('exercice_year', date('Y'));
         $stats = [
-            'total_personnel'    => DB::table('users')->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->whereIn('roles.name', ['medecin', 'secretaire'])->count(),
-            'consultations_mois' => DB::table('consultations')->whereYear('created_at', $year)->whereMonth('created_at', now()->month)->count(),
-            'revenus_mois'       => DB::table('paiements')->whereYear('created_at', $year)->whereMonth('created_at', now()->month)->sum('montant_total'),
-            'alertes_stock'      => DB::table('medicaments')->whereColumn('stock', '<=', 'stock_min')->count(),
-            'total_patients'     => DB::table('patients')->whereYear('created_at', $year)->count(),
-            'new_patients_today' => DB::table('patients')->whereYear('created_at', $year)->whereDate('created_at', today())->count(),
+            'total_personnel'    => \App\Models\Etablissement::tableUtilisateurs()->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->whereIn('roles.name', ['medecin', 'secretaire'])->count(),
+            'consultations_mois' => \App\Models\Etablissement::table('consultations')->whereYear('created_at', $year)->whereMonth('created_at', now()->month)->count(),
+            'revenus_mois'       => \App\Models\Etablissement::table('paiements')->whereYear('created_at', $year)->whereMonth('created_at', now()->month)->sum('montant_total'),
+            'alertes_stock'      => \App\Models\Etablissement::table('medicaments')->whereColumn('stock', '<=', 'stock_min')->count(),
+            'total_patients'     => \App\Models\Etablissement::table('patients')->whereYear('created_at', $year)->count(),
+            'new_patients_today' => \App\Models\Etablissement::table('patients')->whereYear('created_at', $year)->whereDate('created_at', today())->count(),
         ];
 
-        $lowStockMedicaments = DB::table('medicaments')
+        $lowStockMedicaments = \App\Models\Etablissement::table('medicaments')
             ->whereColumn('stock', '<=', 'stock_min')
             ->orderBy('stock')
             ->limit(5)
@@ -129,10 +129,10 @@ class HomeController extends Controller
             ->get();
 
         $stats = [
-            'new_patients_today' => DB::table('patients')->whereDate('created_at', today())->count(),
-            'rdv_realises'       => DB::table('rendezvous')->whereDate('date_heure', today())->where('statut', 'realise')->count(),
-            'rdv_attente'        => DB::table('rendezvous')->whereDate('date_heure', today())->where('statut', 'prevu')->count(),
-            'total_patients'     => DB::table('patients')->count(),
+            'new_patients_today' => \App\Models\Etablissement::table('patients')->whereDate('created_at', today())->count(),
+            'rdv_realises'       => \App\Models\Etablissement::table('rendezvous')->whereDate('date_heure', today())->where('statut', 'realise')->count(),
+            'rdv_attente'        => \App\Models\Etablissement::table('rendezvous')->whereDate('date_heure', today())->where('statut', 'prevu')->count(),
+            'total_patients'     => \App\Models\Etablissement::table('patients')->count(),
         ];
 
         return view('dashboard', compact('todayAppointments', 'stats'));
@@ -179,9 +179,9 @@ class HomeController extends Controller
         });
 
         $stats = [
-            'consultations_today'     => DB::table('consultations')->where('medecin_id', $medecinId)->whereDate('created_at', today())->count(),
+            'consultations_today'     => \App\Models\Etablissement::table('consultations')->where('medecin_id', $medecinId)->whereDate('created_at', today())->count(),
             'total_patients'          => (clone $patientsQuery)->count(),
-            'total_consultations'     => DB::table('consultations')->where('medecin_id', $medecinId)->count(),
+            'total_consultations'     => \App\Models\Etablissement::table('consultations')->where('medecin_id', $medecinId)->count(),
             'total_hospitalisations'  => (clone $hospitalisationsQuery)->count(),
             'new_patients_today'      => (clone $patientsQuery)->whereDate('patients.created_at', today())->count(),
             'active_hospitalisations' => (clone $hospitalisationsQuery)->where('etat', 'en cours')->count(),
@@ -299,22 +299,22 @@ class HomeController extends Controller
 
         // Tableau de bord par défaut pour les autres rôles
         $stats = [
-            'total_patients'           => DB::table('patients')->count(),
-            'total_consultations'      => DB::table('consultations')->count(),
-            'total_ordonnances'        => DB::table('ordonnances')->count(),
-            'ordonnances_today'        => DB::table('ordonnances')->whereDate('created_at', today())->count(),
-            'ordonnances_pending'      => DB::table('ordonnances')->where('statutordo', 'impaye')->count(),
-            'ordonnances_processed'    => DB::table('ordonnances')->where('statutordo', 'paye')->count(),
-            'total_medecins'           => DB::table('users')->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'medecin')->count(),
-            'total_rendezvous'         => DB::table('rendezvous')->count(),
-            'total_medicaments'        => DB::table('medicaments')->count(),
-            'medicaments_low_stock'    => DB::table('medicaments')->where('stock', '<=', 10)->where('stock', '>', 0)->count(),
-            'medicaments_out_of_stock' => DB::table('medicaments')->where('stock', '<=', 0)->count(),
-            'total_fournisseurs'       => DB::table('fournisseurs')->count(),
-            'patients_today'           => DB::table('patients')->whereDate('created_at', today())->count(),
-            'total_lits'               => DB::table('lits')->count(),
-            'lits_occupes'             => DB::table('lits')->where('statut', 'occupé')->count(),
-            'total_tickets'            => DB::table('tickets')->count(),
+            'total_patients'           => \App\Models\Etablissement::table('patients')->count(),
+            'total_consultations'      => \App\Models\Etablissement::table('consultations')->count(),
+            'total_ordonnances'        => \App\Models\Etablissement::table('ordonnances')->count(),
+            'ordonnances_today'        => \App\Models\Etablissement::table('ordonnances')->whereDate('created_at', today())->count(),
+            'ordonnances_pending'      => \App\Models\Etablissement::table('ordonnances')->where('statutordo', 'impaye')->count(),
+            'ordonnances_processed'    => \App\Models\Etablissement::table('ordonnances')->where('statutordo', 'paye')->count(),
+            'total_medecins'           => \App\Models\Etablissement::tableUtilisateurs()->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')->join('roles', 'model_has_roles.role_id', '=', 'roles.id')->where('roles.name', 'medecin')->count(),
+            'total_rendezvous'         => \App\Models\Etablissement::table('rendezvous')->count(),
+            'total_medicaments'        => \App\Models\Etablissement::table('medicaments')->count(),
+            'medicaments_low_stock'    => \App\Models\Etablissement::table('medicaments')->where('stock', '<=', 10)->where('stock', '>', 0)->count(),
+            'medicaments_out_of_stock' => \App\Models\Etablissement::table('medicaments')->where('stock', '<=', 0)->count(),
+            'total_fournisseurs'       => \App\Models\Etablissement::table('fournisseurs')->count(),
+            'patients_today'           => \App\Models\Etablissement::table('patients')->whereDate('created_at', today())->count(),
+            'total_lits'               => \App\Models\Etablissement::table('lits')->count(),
+            'lits_occupes'             => \App\Models\Etablissement::table('lits')->where('statut', 'occupé')->count(),
+            'total_tickets'            => \App\Models\Etablissement::table('tickets')->count(),
         ];
 
         return view('dashboard', compact('stats'));

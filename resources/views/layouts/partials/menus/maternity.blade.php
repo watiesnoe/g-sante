@@ -5,6 +5,11 @@
     </a>
     <ul class="nav-main-submenu">
         <li class="nav-main-item">
+            <a class="nav-main-link" href="{{ route('accouchements.index') }}">
+                <span class="nav-main-link-name">Accouchements</span>
+            </a>
+        </li>
+        <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('maternity.index') }}">
                 <span class="nav-main-link-name">Suivi Grossesses</span>
             </a>

@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureEtablissement::class,
+            \App\Http\Middleware\DeconnexionInactivite::class,
             \App\Http\Middleware\EnsureExerciceYear::class,
             \App\Http\Middleware\EnsureUserIsActive::class,
         ]);

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Audite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InventaireLigne extends Model
 {
+    use Audite;
     use HasFactory;
 
     protected $fillable = [

@@ -44,7 +44,7 @@ class FournisseurController extends Controller
 
         $data = $request->validate([
             'nom' => 'required|string|max:255',
-            'contact' => 'required|string|max:255|unique:fournisseurs,contact',
+            'contact' => 'required|string|max:255|unique:fournisseurs,contact,NULL,id,etablissement_id,' . \App\Models\Etablissement::courantId(),
             'email' => 'nullable|email|max:255',
             'adresse' => 'nullable|string|max:255',
         ], [

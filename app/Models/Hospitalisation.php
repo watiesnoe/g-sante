@@ -1,15 +1,20 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 
 class Hospitalisation extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
     protected $fillable = [
+        'patient_id',
         'consultation_id',
         'salles_id',
         'lit_id',
@@ -49,5 +54,10 @@ class Hospitalisation extends Model
     public function service()
     {
         return $this->belongsTo(ServiceMedical::class);
+    }
+
+    public function occupations()
+    {
+        return $this->hasMany(OccupationLit::class)->orderBy('debut');
     }
 }

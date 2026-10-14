@@ -61,6 +61,30 @@
                                            id="prix" name="prix" value="{{ old('prix') ?? ($prestation->prix ?? '') }}" required placeholder="Ex: 15 000">
                                     @error('prix') <div class="text-danger">{{ $message }}</div> @enderror
                                 </div>
+                                @isset($prestation)
+                                <div class="col-md-6 mb-3">
+                                    <label for="date_effet" class="form-label">Nouveau prix applicable à partir du</label>
+                                    <input type="date" class="form-control" id="date_effet" name="date_effet" value="{{ old('date_effet', date('Y-m-d')) }}">
+                                    <small class="text-muted">Les actes déjà facturés gardent leur prix.</small>
+                                </div>
+                                @if($prestation->tarifs->isNotEmpty())
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Historique des tarifs</label>
+                                    <table class="table table-sm table-bordered fs-sm mb-0">
+                                        <thead><tr><th>À partir du</th><th class="text-end">Prix</th><th>Saisi par</th></tr></thead>
+                                        <tbody>
+                                            @foreach($prestation->tarifs as $tarif)
+                                                <tr>
+                                                    <td>{{ $tarif->date_effet->format('d/m/Y') }}</td>
+                                                    <td class="text-end">{{ number_format($tarif->prix, 0, ',', ' ') }} FCFA</td>
+                                                    <td>{{ $tarif->user->name ?? '-' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @endif
+                                @endisset
                                 <div class="col-md-6 mb-3 d-flex align-items-center">
                                     <div class="form-check form-switch pt-4">
                                         <input class="form-check-input" type="checkbox" id="quantifiable" name="quantifiable" value="1"

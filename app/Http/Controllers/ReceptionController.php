@@ -8,6 +8,10 @@ use App\Models\ReceptionLigne;
 use App\Models\Commande;
 use App\Models\Medicament;
 use Illuminate\Http\Request;
+use App\Models\Lot;
+use App\Models\MouvementStock;
+use App\Services\StockService;
+use App\Exceptions\StockInsuffisantException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +50,10 @@ class ReceptionController extends Controller
                 })
 
                 ->addColumn('date', function($row){
-                    return \Carbon\Carbon::parse($row->date_reception)->format('d-m-Y');
+                    $date = \Carbon\Carbon::parse($row->date_reception)->format('d-m-Y');
+                    return $row->statut === 'annulee'
+                        ? $date . ' <span class="badge bg-danger" title="' . e($row->motif_annulation) . '">Annulée</span>'
+                        : $date;
                 })
 
                 ->addColumn('actions', function($row){
@@ -57,16 +64,16 @@ class ReceptionController extends Controller
                     if ($user->can('stock.receptions')) {
                         $view   = '<a href="'.route('receptions.show', $row).'" class="btn btn-sm btn-outline-primary" title="Voir les détails"><i class="fa fa-eye"></i></a>';
                         $pdf    = '<a href="'.route('receptions.pdf', $row).'" target="_blank" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i></a>';
-                        $delete = '<button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                        $delete = $row->statut === 'annulee' ? '' : '<button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('.$row->id.', \''.$row->reference_reception.'\')" title="Annuler la réception"><i class="fa fa-ban"></i></button>';
                         
                         $actions = '<div class="d-flex align-items-center justify-content-center gap-1">' . $view . $pdf . $delete . '</div>';
-                        $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row).'" style="display:none;">'.csrf_field().method_field('DELETE').'</form>';
+                        $actions .= '<form id="delete-form-'.$row->id.'" method="POST" action="'.route('receptions.destroy', $row).'" style="display:none;">'.csrf_field().method_field('DELETE').'<input type="hidden" name="motif"></form>';
                     }
 
                     return $actions;
                 })
 
-                ->rawColumns(['reference','commande','actions'])
+                ->rawColumns(['reference','commande','date','actions'])
                 ->make(true);
         }
 
@@ -152,14 +159,14 @@ class ReceptionController extends Controller
                     $uniteId = $ligne['unite_id'] ?? $commandeMedicament->unite_id ?? null;
                     $facteur = 1.0;
                     if ($uniteId) {
-                        $uniteObj = DB::table('unites')->where('id', $uniteId)->first();
+                        $uniteObj = \App\Models\Etablissement::table('unites')->where('id', $uniteId)->first();
                         if ($uniteObj && $uniteObj->facteur > 0) {
                             $facteur = (float) $uniteObj->facteur;
                         }
                     }
 
                     // ✅ Enregistrer la ligne de réception
-                    $reception->lignes()->create([
+                    $ligneReception = $reception->lignes()->create([
                         'medicament_id'     => $ligne['medicament_id'],
                         'unite_id'          => $uniteId,
                         'quantite_commandee'=> $quantiteCommandee,
@@ -174,12 +181,17 @@ class ReceptionController extends Controller
                         ->where('id', $ligne['commande_medicament_id'])
                         ->update(['quantiterecue' => $nouvelleQuantiteTotale]);
 
-                    // 📦 Incrémenter le stock de base du médicament (quantité reçue * facteur)
-                    $quantiteBaseIncr = $qteRecue * $facteur;
+                    // 📦 Entrée en stock dans le lot reçu (quantité reçue * facteur, en unité de base)
+                    $quantiteBaseIncr = (int) round($qteRecue * $facteur);
                     if ($quantiteBaseIncr > 0) {
-                        DB::table('medicaments')
-                            ->where('id', $ligne['medicament_id'])
-                            ->increment('stock', $quantiteBaseIncr);
+                        app(StockService::class)->entree(
+                            Medicament::findOrFail($ligne['medicament_id']),
+                            $quantiteBaseIncr,
+                            $ligne['lot'] ?? null,
+                            $ligne['date_peremption'] ?? null,
+                            $ligneReception,
+                            'Réception ' . $referenceReception
+                        );
                     }
                 }
             }
@@ -189,7 +201,7 @@ class ReceptionController extends Controller
             $toutesRecues = $lignes->every(fn($l) => $l->quantite == $l->quantiterecue);
 
             // 🏁 Mise à jour du statut de la commande
-            DB::table('commandes')
+            \App\Models\Etablissement::table('commandes')
                 ->where('id', $request->commande_id)
                 ->update(['statut' => $toutesRecues ? 'valide' : 'en_cours']);
 
@@ -309,6 +321,7 @@ class ReceptionController extends Controller
     public function update(Request $request, Reception $reception)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+        abort_if($reception->statut === 'annulee', 422, 'Cette réception est annulée : elle ne peut plus être modifiée.');
 
         $request->validate([
             'date_reception' => 'required|date',
@@ -355,13 +368,15 @@ class ReceptionController extends Controller
                 $uniteId = $ligne['unite_id'] ?? $ligneReceptionExistante?->unite_id ?? $commandeMedicament->unite_id ?? null;
                 $facteur = 1.0;
                 if ($uniteId) {
-                    $uniteObj = DB::table('unites')->where('id', $uniteId)->first();
+                    $uniteObj = \App\Models\Etablissement::table('unites')->where('id', $uniteId)->first();
                     if ($uniteObj && $uniteObj->facteur > 0) {
                         $facteur = (float) $uniteObj->facteur;
                     }
                 }
 
                 $ancienneQteRecue = $ligneReceptionExistante ? (float) $ligneReceptionExistante->quantite_recue : 0.0;
+                $ancienFacteur = ($ligneReceptionExistante && $ligneReceptionExistante->unite) ? (float) $ligneReceptionExistante->unite->facteur : $facteur;
+                $ancienLot = $ligneReceptionExistante ? [(string) $ligneReceptionExistante->lot, $ligneReceptionExistante->date_peremption ? \Illuminate\Support\Carbon::parse($ligneReceptionExistante->date_peremption)->toDateString() : null] : null;
                 $nouvelleQuantiteRecue = (float) $ligne['quantite_recue'];
 
                 // ❌ Blocage si la nouvelle quantité totale (toutes réceptions confondues) dépasse la quantité commandée
@@ -370,13 +385,14 @@ class ReceptionController extends Controller
                     ->where('receptions.commande_id', $reception->commande_id)
                     ->where('reception_lignes.medicament_id', $ligne['medicament_id'])
                     ->where('receptions.id', '!=', $reception->id)
+                    ->where('receptions.statut', '!=', 'annulee')
                     ->sum('reception_lignes.quantite_recue');
 
                 if ($autresReceptionsRecu + $nouvelleQuantiteRecue > $commandeMedicament->quantite) {
                     abort(422, "Quantité reçue (" . ($autresReceptionsRecu + $nouvelleQuantiteRecue) . ") dépasse la quantité commandée ({$commandeMedicament->quantite}) pour le médicament ID {$ligne['medicament_id']}.");
                 }
 
-                if ($nouvelleQuantiteRecue > 0) {
+                if ($nouvelleQuantiteRecue > 0 || $ligneReceptionExistante) {
                     if ($ligneReceptionExistante) {
                         $ligneReceptionExistante->update([
                             'unite_id' => $uniteId,
@@ -395,26 +411,30 @@ class ReceptionController extends Controller
                             'date_peremption' => $ligne['date_peremption'] ?? null,
                         ]);
                     }
-                } elseif ($ligneReceptionExistante) {
-                    $ligneReceptionExistante->delete();
+                    // La ligne est conservée même à 0 : elle reste la source de ses mouvements de stock
+                    $ligneReceptionExistante = $ligneReceptionExistante ?? $reception->lignes()->where('medicament_id', $ligne['medicament_id'])->latest('id')->first();
                 }
 
-                // 📦 Ajuster le stock du médicament (plafonné à 0 au minimum)
-                $diffQte = $nouvelleQuantiteRecue - $ancienneQteRecue;
-                if ($diffQte != 0) {
-                    $diffBase = $diffQte * $facteur;
-                    if ($diffBase > 0) {
-                        DB::table('medicaments')->where('id', $ligne['medicament_id'])->increment('stock', $diffBase);
-                    } else {
-                        $absDiff = abs($diffBase);
-                        $medicamentActuel = DB::table('medicaments')
-                            ->where('id', $ligne['medicament_id'])
-                            ->lockForUpdate()
-                            ->first();
-                        $nouveauStock = max(0, ($medicamentActuel->stock ?? 0) - $absDiff);
-                        DB::table('medicaments')
-                            ->where('id', $ligne['medicament_id'])
-                            ->update(['stock' => $nouveauStock]);
+                // 📦 Corriger le stock par mouvements (jamais par écrasement, RG-08)
+                $ancienneBase = (int) round($ancienneQteRecue * $ancienFacteur);
+                $nouvelleBase = (int) round($nouvelleQuantiteRecue * $facteur);
+                $nouveauLot = [(string) ($ligne['lot'] ?? ''), !empty($ligne['date_peremption']) ? \Illuminate\Support\Carbon::parse($ligne['date_peremption'])->toDateString() : null];
+                $motif = 'Modification réception ' . $reception->reference_reception;
+                $medicament = Medicament::findOrFail($ligne['medicament_id']);
+
+                if ($ancienLot === null || $ancienLot == $nouveauLot) {
+                    if ($nouvelleBase > $ancienneBase) {
+                        app(StockService::class)->entree($medicament, $nouvelleBase - $ancienneBase, $nouveauLot[0], $nouveauLot[1], $ligneReceptionExistante, $motif);
+                    } elseif ($nouvelleBase < $ancienneBase) {
+                        $this->retirerDeLaLigne($ligneReceptionExistante, $medicament, $ancienneBase - $nouvelleBase, $motif);
+                    }
+                } else {
+                    // Changement de lot : on retire l'ancien lot et on entre le nouveau
+                    if ($ancienneBase > 0) {
+                        $this->retirerDeLaLigne($ligneReceptionExistante, $medicament, $ancienneBase, $motif);
+                    }
+                    if ($nouvelleBase > 0) {
+                        app(StockService::class)->entree($medicament, $nouvelleBase, $nouveauLot[0], $nouveauLot[1], $ligneReceptionExistante, $motif);
                     }
                 }
 
@@ -422,6 +442,7 @@ class ReceptionController extends Controller
                 $totalRecu = DB::table('reception_lignes')
                     ->join('receptions', 'reception_lignes.reception_id', '=', 'receptions.id')
                     ->where('receptions.commande_id', $reception->commande_id)
+                    ->where('receptions.statut', '!=', 'annulee')
                     ->where('reception_lignes.medicament_id', $ligne['medicament_id'])
                     ->sum('reception_lignes.quantite_recue');
 
@@ -434,7 +455,7 @@ class ReceptionController extends Controller
         $lignes = DB::table('commande_medicaments')->where('commande_id', $reception->commande_id)->get();
         $toutesRecues = $lignes->every(fn($l) => $l->quantite <= $l->quantiterecue);
 
-        DB::table('commandes')
+        \App\Models\Etablissement::table('commandes')
             ->where('id', $reception->commande_id)
             ->update(['statut' => $toutesRecues ? 'valide' : 'en_cours']);
 
@@ -450,11 +471,30 @@ class ReceptionController extends Controller
         });
     }
 
-    public function destroy(Reception $reception)
+    /**
+     * Annuler une réception (RG-01) : le stock reçu est retiré par des mouvements
+     * inverses, la réception et ses lignes sont conservées avec le motif.
+     */
+    public function destroy(Request $request, Reception $reception)
     {
         abort_unless(Auth::user()->can('stock.receptions'), 403, 'Accès non autorisé.');
+        abort_if($reception->statut === 'annulee', 422, 'Cette réception est déjà annulée.');
 
-        return DB::transaction(function () use ($reception) {
+        $request->validate(['motif' => 'required|string|max:255'], ['motif.required' => 'Le motif de l\'annulation est obligatoire.']);
+
+        try {
+            return $this->annuler($request, $reception);
+        } catch (StockInsuffisantException $e) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+            return redirect()->route('receptions.index')->with('error', $e->getMessage());
+        }
+    }
+
+    private function annuler(Request $request, Reception $reception)
+    {
+        return DB::transaction(function () use ($request, $reception) {
             $reception->load('lignes.unite');
             $commandeId = $reception->commande_id;
 
@@ -478,24 +518,21 @@ class ReceptionController extends Controller
                         ->update(['quantiterecue' => $nouvelleQuantite]);
                 }
 
-                // 2. Restitution du stock médicament (décrémentation des unités de base entrées, sans descendre sous 0)
+                // 2. Retrait du stock reçu par mouvements inverses (refusé si le lot a déjà été dispensé)
                 $facteur = $ligne->unite ? (float) $ligne->unite->facteur : 1.0;
-                $qteBase = $ligne->quantite_recue * $facteur;
+                $qteBase = (int) round($ligne->quantite_recue * $facteur);
                 if ($qteBase > 0) {
-                    $medicamentActuel = DB::table('medicaments')
-                        ->where('id', $ligne->medicament_id)
-                        ->lockForUpdate()
-                        ->first();
-                    $nouveauStock = max(0, ($medicamentActuel->stock ?? 0) - $qteBase);
-                    DB::table('medicaments')
-                        ->where('id', $ligne->medicament_id)
-                        ->update(['stock' => $nouveauStock]);
+                    $this->retirerDeLaLigne($ligne, $ligne->medicament, $qteBase, 'Annulation réception ' . $reception->reference_reception . ' : ' . $request->motif);
                 }
             }
-            
-            // 3. Supprimer les lignes et la réception
-            $reception->lignes()->delete();
-            $reception->delete();
+
+            // 3. La réception est conservée, marquée annulée
+            $reception->update([
+                'statut'           => 'annulee',
+                'motif_annulation' => $request->motif,
+                'annule_par'       => Auth::id(),
+                'annule_at'        => now(),
+            ]);
 
             // 4. Mettre à jour le statut global de la commande
             if ($commandeId) {
@@ -503,7 +540,7 @@ class ReceptionController extends Controller
                 $toutesRecues = $lignes->count() > 0 && $lignes->every(fn($l) => $l->quantite <= $l->quantiterecue);
                 $nouveauStatut = $toutesRecues ? 'valide' : 'en_cours';
 
-                DB::table('commandes')
+                \App\Models\Etablissement::table('commandes')
                     ->where('id', $commandeId)
                     ->update(['statut' => $nouveauStatut]);
             }
@@ -511,11 +548,43 @@ class ReceptionController extends Controller
             if (request()->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Réception supprimée et quantités restituées avec succès !',
+                    'message' => 'Réception annulée : stock et quantités de la commande corrigés.',
                 ]);
             }
 
-            return redirect()->route('receptions.index')->with('success', 'Réception supprimée et quantités restituées avec succès.');
+            return redirect()->route('receptions.index')->with('success', 'Réception annulée : stock et quantités de la commande corrigés.');
         });
+    }
+
+    /**
+     * Retire du stock une quantité entrée par une ligne de réception, d'abord dans
+     * les lots que cette ligne a alimentés. Les réceptions antérieures au suivi par
+     * lot n'ont pas de mouvement propre : le reste sort alors en FEFO.
+     */
+    private function retirerDeLaLigne(?ReceptionLigne $ligne, Medicament $medicament, int $quantite, string $motif): void
+    {
+        $stock = app(StockService::class);
+        $reste = $quantite;
+
+        if ($ligne) {
+            $parLot = MouvementStock::where('source_type', $ligne->getMorphClass())->where('source_id', $ligne->id)
+                ->selectRaw('lot_id, SUM(quantite) as net')->groupBy('lot_id')->having('net', '>', 0)->get();
+
+            foreach ($parLot as $ligneLot) {
+                if ($reste === 0) {
+                    break;
+                }
+                $lot = Lot::findOrFail($ligneLot->lot_id);
+                $retrait = min($reste, (int) $ligneLot->net, $lot->quantite);
+                if ($retrait > 0) {
+                    $stock->retirerDuLot($lot, $retrait, $ligne, $motif);
+                    $reste -= $retrait;
+                }
+            }
+        }
+
+        if ($reste > 0) {
+            $stock->sortie($medicament, $reste, $ligne, $motif, 'retour');
+        }
     }
 }

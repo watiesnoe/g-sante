@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Medicament extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasFactory, HasUuid;
 
     protected $fillable = [
@@ -57,6 +61,16 @@ class Medicament extends Model
     public function getPrixVenteAttribute()
     {
         return $this->uniteDefault->prix_vente ?? 0;
+    }
+
+    public function lots()
+    {
+        return $this->hasMany(Lot::class);
+    }
+
+    public function mouvementsStock()
+    {
+        return $this->hasMany(MouvementStock::class);
     }
 
     public function commandeMedicaments()

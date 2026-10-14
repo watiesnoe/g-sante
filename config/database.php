@@ -45,6 +45,8 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
+            // Chemin de mysqldump pour les sauvegardes (ex. /opt/lampp/bin sous XAMPP)
+            'dump' => ['dump_binary_path' => env('DB_DUMP_BINARY_PATH', '')],
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -65,6 +67,8 @@ return [
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
+            // Chemin de mysqldump pour les sauvegardes (ex. /opt/lampp/bin sous XAMPP)
+            'dump' => ['dump_binary_path' => env('DB_DUMP_BINARY_PATH', '')],
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),

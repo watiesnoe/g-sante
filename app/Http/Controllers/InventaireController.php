@@ -228,11 +228,10 @@ class InventaireController extends Controller
 
         DB::beginTransaction();
         try {
-            // Appliquer les corrections de stock
+            // Appliquer les corrections par mouvements d'ajustement (RG-11)
+            $stock = app(\App\Services\StockService::class);
             foreach ($inventaire->lignes as $ligne) {
-                if ($ligne->ecart !== 0) {
-                    $ligne->medicament->update(['stock' => $ligne->stock_reel]);
-                }
+                $stock->ajuster($ligne->medicament, (int) $ligne->stock_reel, $ligne, 'Inventaire ' . $inventaire->reference);
             }
 
             $inventaire->update(['statut' => 'validé']);

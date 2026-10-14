@@ -20,7 +20,7 @@ class LitController extends Controller
 
         if ($request->ajax()) {
             // Récupération des lits triés par date décroissante avec leur salle liée via DB::table()
-            $lits = DB::table('lits')
+            $lits = \App\Models\Etablissement::table('lits')
                 ->join('salles', 'lits.salle_id', '=', 'salles.id')
                 ->select([
                     'lits.id',
@@ -64,7 +64,7 @@ class LitController extends Controller
         }
 
         // Si ce n'est pas de l'AJAX, on charge la vue principale avec la liste des salles pour le modal
-        $salles = DB::table('salles')->select('id', 'nom')->get();
+        $salles = \App\Models\Etablissement::table('salles')->select('id', 'nom')->get();
         return view('application.lit.index', compact('salles'));
     }
 
@@ -74,7 +74,7 @@ class LitController extends Controller
         abort_unless(Auth::user()->can('parametres.lits'), 403, 'Accès non autorisé.');
 
         $request->validate([
-            'numero' => 'required|string|unique:lits,numero',
+            'numero' => 'required|string|unique:lits,numero,NULL,id,etablissement_id,' . \App\Models\Etablissement::courantId(),
             'salle_id' => 'required|exists:salles,id',
             'statut' => 'required|in:Libre,Occupé,Maintenance',
         ]);
@@ -117,7 +117,7 @@ class LitController extends Controller
         $lit = Lit::where('uuid', $id)->orWhere('id', $id)->firstOrFail();
 
         $request->validate([
-            'numero' => 'required|string|unique:lits,numero,' . $lit->id,
+            'numero' => 'required|string|unique:lits,numero,' . $lit->id . ',id,etablissement_id,' . \App\Models\Etablissement::courantId(),
             'salle_id' => 'required|exists:salles,id',
             'statut' => 'required|in:Libre,Occupé,Maintenance',
         ]);

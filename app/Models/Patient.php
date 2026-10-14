@@ -1,14 +1,52 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 // app/Models/Patient.php
 class Patient extends Model {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
-    protected $fillable = ['nom',
+
+    protected $casts = ['date_naissance' => 'date'];
+
+    public const PROVENANCES = [
+        'domicile'   => 'Domicile',
+        'cscom'      => 'Référé par un CSCom',
+        'structure'  => 'Référé par une autre structure',
+        'evacuation' => 'Évacuation sanitaire',
+    ];
+
+    /** EF-02.01 : identifiant de dossier unique, au format de l'établissement. */
+    protected static function booted(): void
+    {
+        static::creating(function (Patient $patient) {
+            $patient->numero_dossier ??= app(\App\Services\NumerotationService::class)->suivant('patient');
+        });
+    }
+
+    /**
+     * EF-02.02 : dossiers probablement identiques (même nom et prénom, ou même
+     * téléphone), à signaler avant toute création.
+     */
+    public static function doublonsProbables(string $nom, string $prenom, ?string $telephone = null, ?int $saufId = null)
+    {
+        return static::query()
+            ->when($saufId, fn($q) => $q->where('id', '!=', $saufId))
+            ->where(function ($q) use ($nom, $prenom, $telephone) {
+                $q->where(fn($n) => $n->whereRaw('LOWER(TRIM(nom)) = ?', [mb_strtolower(trim($nom))])->whereRaw('LOWER(TRIM(prenom)) = ?', [mb_strtolower(trim($prenom))]));
+                if ($telephone) {
+                    $q->orWhere('telephone', $telephone);
+                }
+            })
+            ->limit(5)->get(['id', 'uuid', 'numero_dossier', 'nom', 'prenom', 'age', 'telephone']);
+    }
+    protected $fillable = ['numero_dossier', 'date_naissance', 'provenance', 'cscom_origine', 'allergies', 'fusionne_dans_id', 'nom',
         'prenom',
         'genre',
         'telephone',

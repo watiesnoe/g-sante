@@ -58,6 +58,28 @@
                 order: [[0, 'desc']]
             });
 
+            // Annulation d'une vente : motif obligatoire (RG-01)
+            $(document).on('click', '.btn-annuler-vente', function () {
+                const url = $(this).data('url');
+                Swal.fire({
+                    title: 'Annuler cette vente ?',
+                    html: '<small>Les médicaments reviennent en stock et l\'encaissement est neutralisé en caisse.</small>',
+                    icon: 'warning',
+                    input: 'text',
+                    inputPlaceholder: 'Motif de l\'annulation (obligatoire)',
+                    inputValidator: (value) => !value && 'Le motif est obligatoire.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Annuler la vente',
+                    cancelButtonText: 'Fermer'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+                    $.post(url, { _token: '{{ csrf_token() }}', motif: result.value })
+                        .done((res) => { Swal.fire('Vente annulée', res.message, 'success'); table.ajax.reload(null, false); })
+                        .fail((xhr) => Swal.fire('Annulation refusée', xhr.responseJSON?.message || 'Une erreur est survenue.', 'error'));
+                });
+            });
+
             // Suppression AJAX
             $(document).on('click', '.btn-delete', function(){
                 let url = $(this).data('url');

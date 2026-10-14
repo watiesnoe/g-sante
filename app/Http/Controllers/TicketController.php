@@ -60,7 +60,10 @@ class TicketController extends Controller
 
             // Date de création
             ->addColumn('date', function($ticket){
-                return $ticket->created_at->format('d/m/Y H:i');
+                $date = $ticket->created_at->format('d/m/Y H:i');
+                return $ticket->statut === 'annule'
+                    ? $date . ' <span class="badge bg-danger" title="' . e($ticket->motif_annulation) . '">Annulé</span>'
+                    : $date;
             })
 
             // Actions (Dropdown Bootstrap 5)
@@ -77,13 +80,13 @@ class TicketController extends Controller
                 if ($user->can('tickets.print')) {
                     $html .= '<a href="'.route('tickets.print', $ticket).'" class="btn btn-sm btn-outline-warning" title="Imprimer"><i class="fa fa-print"></i></a>';
                 }
-                if ($user->can('tickets.delete')) {
-                    $html .= '<button type="button" class="btn btn-sm btn-outline-danger delete" onclick="deleteTicket('.$ticket->id.')" title="Supprimer"><i class="fa fa-trash"></i></button>';
+                if ($user->can('tickets.delete') && $ticket->statut !== 'annule') {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-danger btn-annuler-ticket" data-url="'.route('tickets.destroy', $ticket).'" title="Annuler le ticket"><i class="fa fa-ban"></i></button>';
                 }
                 
                 return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';
             })
-            ->rawColumns(['actions'])
+            ->rawColumns(['date', 'actions'])
             ->make(true);
     }
 
@@ -93,7 +96,7 @@ class TicketController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         abort_unless(Auth::user()->can('tickets.create'), 403, 'Accès non autorisé : vous n\'avez pas la permission de créer un ticket.');
 
@@ -101,7 +104,7 @@ class TicketController extends Controller
 
         // Plus de chargement de Patient::all() -> Utilisera Select2 AJAX
         $assurances = DB::table('assurances')->select('id', 'nom', 'taux')->orderBy('nom')->get();
-        $medecins   = DB::table('users')
+        $medecins   = \App\Models\Etablissement::tableUtilisateurs()
             ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
             ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
             ->where('roles.name', 'medecin')
@@ -119,10 +122,15 @@ class TicketController extends Controller
                 ->unique()
                 ->values();
         });
-        $services = DB::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
 
         // Passer les données à la vue
-        return view('application.ticket.create', compact('prestations', 'assurances', 'medecins', 'services'));
+        // Patient déjà choisi (encaissement après consultation, depuis l'accueil)
+        $patientPreselectionne = $request->patient ? \App\Models\Patient::where('uuid', $request->patient)->first() : null;
+
+        $passageId = $request->integer('passage') ?: null;
+
+        return view('application.ticket.create', compact('prestations', 'assurances', 'medecins', 'services', 'patientPreselectionne', 'passageId'));
     }
 
     /**
@@ -145,7 +153,11 @@ class TicketController extends Controller
             'items.*.service' => 'nullable|string', // Changé en nullable
             'description' => 'nullable|string',
             'assurance_id' => 'nullable|exists:assurances,id',
-        ]);
+            'mode_paiement' => ['nullable', \Illuminate\Validation\Rule::in(\App\Models\Etablissement::courant()->parametre('caisse.modes'))],
+            'passage_id' => 'nullable|exists:passages,id',
+            // RG-04 : toute remise est motivée
+            'motif_remise' => [\Illuminate\Validation\Rule::requiredIf(fn() => collect($request->items)->contains(fn($i) => (float) ($i['remise'] ?? 0) > 0)), 'nullable', 'string', 'max:255'],
+        ], ['motif_remise.required' => 'Une remise a été accordée : indiquez son motif.']);
 
         DB::beginTransaction();
         try {
@@ -157,41 +169,24 @@ class TicketController extends Controller
                 ], 403);
             }
 
-            // 🔒 Recalcul des prix côté serveur à partir de la Prestation en base
-            // (ne jamais faire confiance à prix_unitaire/sous_total envoyés par le client,
-            // qui pourraient être falsifiés pour sous-facturer un patient)
-            $itemsData = [];
-            $totalTicket = 0;
-            foreach ($request->items as $item) {
-                $prestation = Prestation::findOrFail($item['prestation_id']);
-                $quantite = (int) $item['quantite'];
-                $remise = (float) $item['remise'];
-                $prixUnitaire = (float) $prestation->prix;
-                $sousTotal = round($prixUnitaire * $quantite * (1 - $remise / 100), 2);
-
-                $itemsData[] = [
-                    'prestation_id' => $prestation->id,
-                    'service'       => $item['service'] ?? 'N/A',
-                    'prix_unitaire' => $prixUnitaire,
-                    'quantite'      => $quantite,
-                    'remise'        => $remise,
-                    'sous_total'    => $sousTotal,
-                ];
-
-                $totalTicket += $sousTotal;
+            // 🔒 Montants recalculés côté serveur au tarif en vigueur (jamais ceux envoyés par le navigateur)
+            // EF-07.02 : la prise en charge du patient doit être valide à la date du ticket
+            $patientTicket = \App\Models\Patient::findOrFail($request->patient_id);
+            if ($request->assurance_id && $patientTicket->fin_validite_assurance && \Illuminate\Support\Carbon::parse($patientTicket->fin_validite_assurance)->lt(today())) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'La prise en charge de ce patient a expiré le ' . \Illuminate\Support\Carbon::parse($patientTicket->fin_validite_assurance)->format('d/m/Y') . '.'], 422);
             }
 
+            $calcul = app(\App\Services\FacturationService::class)->calculer($request->items, $request->assurance_id, null, $patientTicket);
+            $itemsData = $calcul['lignes'];
+            $totalTicket = $calcul['total'];
             $assuranceId = $request->assurance_id;
-            $tauxCouverture = 0;
-            if ($assuranceId) {
-                $assurance = \App\Models\Assurance::find($assuranceId);
-                $tauxCouverture = $assurance ? $assurance->taux : 0;
-            }
-
-            $partAssurance = ($totalTicket * $tauxCouverture) / 100;
-            $partPatient = $totalTicket - $partAssurance;
+            $tauxCouverture = $calcul['taux_couverture'];
+            $partAssurance = $calcul['part_assurance'];
+            $partPatient = $calcul['part_patient'];
 
             $ticket = Ticket::create([
+                    'numero'       => app(\App\Services\NumerotationService::class)->suivant('ticket'),
                     'patient_id'   => $request->patient_id,
                     'description'  => $request->description,
                     'total'        => $totalTicket,
@@ -199,6 +194,11 @@ class TicketController extends Controller
                     'taux_couverture' => $tauxCouverture,
                     'part_assurance'  => $partAssurance,
                     'part_patient'    => $partPatient,
+                    'motif_remise'    => $request->motif_remise,
+                    'convention_id'   => $calcul['convention_id'],
+                    'part_gratuite'   => $calcul['part_gratuite'],
+                    'passage_id'      => $request->passage_id,
+                    'numero_assure'   => $request->assurance_id ? $patientTicket->numero_assurance : null,
                     'date_validite'=> now()->addWeek(),   // validité = 7 jours
                     'statut'       => 'en_attente',           // statut initial
                     'user_id' => \Illuminate\Support\Facades\Auth::id(),
@@ -209,15 +209,24 @@ class TicketController extends Controller
                 $ticket->items()->create($data);
             }
 
-            // Enregistrement dans la caisse
+            // Enregistrement dans la caisse, avec le mode de paiement choisi (EF-06.02, EF-06.03)
             if ($partPatient > 0) {
                 \App\Models\CaisseSession::enregistrerMouvement(
                     $partPatient,
-                    'Paiement Ticket (Patient: ' . ($ticket->patient ? $ticket->patient->nom : $request->patient_id) . ')',
+                    'Ticket ' . $ticket->numero . ' (Patient : ' . ($ticket->patient ? $ticket->patient->nom : $request->patient_id) . ')',
                     'entree',
-                    $ticket
+                    $ticket,
+                    $request->input('mode_paiement', 'especes')
                 );
             }
+
+            // EF-03.01 : l'arrivée du patient ouvre (ou complète) son passage du jour
+            if ($request->passage_id) {
+                \App\Models\Passage::whereKey($request->passage_id)->whereNull('ticket_id')->update(['ticket_id' => $ticket->id]);
+            } else app(\App\Services\PassageService::class)->rattacherTicket($ticket->patient, $ticket->id, [
+                'service_medical_id' => $request->service_medical_id,
+                'motif'              => $request->description,
+            ]);
 
             DB::commit();
 
@@ -272,14 +281,14 @@ class TicketController extends Controller
         $ticket->load(['patient', 'items.prestation.serviceMedical']);
         $prestations = Prestation::with('serviceMedical')->orderBy('nom')->get();
         $assurances  = DB::table('assurances')->select('id', 'nom', 'taux')->orderBy('nom')->get();
-        $medecins    = DB::table('users')
+        $medecins    = \App\Models\Etablissement::tableUtilisateurs()
             ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
             ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
             ->where('roles.name', 'medecin')
             ->select('users.id', 'users.name', 'users.prenom', 'users.nom', 'users.service_medical_id')
             ->orderBy('users.name')
             ->get();
-        $services    = DB::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
+        $services    = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->orderBy('nom')->get();
         return view('application.ticket.create', compact('ticket', 'prestations', 'assurances', 'medecins', 'services'));
     }
 
@@ -290,6 +299,10 @@ class TicketController extends Controller
     public function update(Request $request, Ticket $ticket)
     {
         abort_unless(Auth::user()->can('tickets.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier ce ticket.');
+
+        if ($ticket->statut === 'annule') {
+            return response()->json(['success' => false, 'message' => 'Ce ticket est annulé : il ne peut plus être modifié.'], 422);
+        }
 
         // Si expiré, on bloque
         if ($ticket->date_validite < now()) {
@@ -314,38 +327,28 @@ class TicketController extends Controller
 
         DB::beginTransaction();
         try {
-            // 🔒 Recalcul des prix côté serveur à partir de la Prestation en base
-            // (ne jamais faire confiance à prix_unitaire/sous_total envoyés par le client)
-            $itemsData = [];
-            $totalTicket = 0;
-            foreach ($request->items as $item) {
-                $prestation = Prestation::findOrFail($item['prestation_id']);
-                $quantite = (int) $item['quantite'];
-                $remise = (float) $item['remise'];
-                $prixUnitaire = (float) $prestation->prix;
-                $sousTotal = round($prixUnitaire * $quantite * (1 - $remise / 100), 2);
-
-                $itemsData[] = [
-                    'prestation_id' => $prestation->id,
-                    'service'       => $item['service'],
-                    'prix_unitaire' => $prixUnitaire,
-                    'quantite'      => $quantite,
-                    'remise'        => $remise,
-                    'sous_total'    => $sousTotal,
-                ];
-
-                $totalTicket += $sousTotal;
-            }
-
+            // 🔒 Montants recalculés côté serveur, au tarif en vigueur à la date du ticket (RG-07)
+            $calcul = app(\App\Services\FacturationService::class)->calculer($request->items, $request->assurance_id, $ticket->created_at, $ticket->patient);
+            $itemsData = $calcul['lignes'];
+            $totalTicket = $calcul['total'];
             $assuranceId = $request->assurance_id;
-            $tauxCouverture = 0;
-            if ($assuranceId) {
-                $assurance = \App\Models\Assurance::find($assuranceId);
-                $tauxCouverture = $assurance ? $assurance->taux : 0;
-            }
+            $tauxCouverture = $calcul['taux_couverture'];
+            $partAssurance = $calcul['part_assurance'];
+            $partPatient = $calcul['part_patient'];
 
-            $partAssurance = ($totalTicket * $tauxCouverture) / 100;
-            $partPatient = $totalTicket - $partAssurance;
+            // RG-01 : un ticket encaissé ne change pas de montant ni de contenu facturé.
+            // La correction passe par l'annulation du ticket puis un nouveau ticket.
+            $signature = fn($lignes) => collect($lignes)->map(fn($l) => $l['prestation_id'] . 'x' . (int) $l['quantite'] . '-' . (float) $l['remise'])->sort()->values()->all();
+            $contenuChange = $signature($itemsData) !== $signature($ticket->items->map->only(['prestation_id', 'quantite', 'remise']))
+                || (int) $assuranceId !== (int) $ticket->assurance_id
+                || round($partPatient, 2) != round((float) $ticket->part_patient, 2);
+            if ($contenuChange && $ticket->aDesEncaissements()) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ce ticket est déjà encaissé : pour changer les prestations, les remises ou l\'assurance, annulez-le puis créez un nouveau ticket.',
+                ], 422);
+            }
 
             // Mise à jour du ticket
             $ticket->update([
@@ -354,6 +357,7 @@ class TicketController extends Controller
                 'assurance_id'  => $assuranceId,
                 'taux_couverture' => $tauxCouverture,
                 'part_assurance'  => $partAssurance,
+                'part_gratuite'   => $calcul['part_gratuite'],
                 'part_patient'    => $partPatient,
                 'date_validite' => now()->addWeek(),  // on prolonge la validité à chaque update
                 'statut'        => 'en_attente', // on remet en attente à chaque update
@@ -400,9 +404,39 @@ class TicketController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Ticket $ticket)
+    /**
+     * Annuler un ticket (RG-01) : le ticket est conservé avec son motif et
+     * l'encaissement est neutralisé par une écriture inverse en caisse.
+     */
+    public function destroy(Request $request, Ticket $ticket)
     {
-        abort_unless(Auth::user()->can('tickets.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission de supprimer un ticket.');
-        // TODO: Implement actual deletion if required. Note that related records might need constraints.
+        abort_unless(Auth::user()->can('tickets.delete'), 403, 'Accès non autorisé : vous n\'avez pas la permission d\'annuler un ticket.');
+
+        $request->validate(['motif' => 'required|string|max:255'], ['motif.required' => 'Le motif de l\'annulation est obligatoire.']);
+
+        if ($ticket->statut === 'annule') {
+            return response()->json(['success' => false, 'message' => 'Ce ticket est déjà annulé.'], 422);
+        }
+        if (\App\Models\Consultation::where('ticket_id', $ticket->id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Une consultation a déjà été faite sur ce ticket : il ne peut plus être annulé.'], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($ticket, $request) {
+                app(\App\Services\CaisseService::class)->annulerReference($ticket, $request->motif);
+                $ticket->update([
+                    'statut'           => 'annule',
+                    'motif_annulation' => $request->motif,
+                    'annule_par'       => Auth::id(),
+                    'annule_at'        => now(),
+                ]);
+            });
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 403);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Ticket annulé ; l\'encaissement a été neutralisé en caisse.']);
     }
 }

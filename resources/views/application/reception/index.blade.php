@@ -125,15 +125,19 @@ $(document).ready(function() {
 // 🔥 CONFIRM DELETE SWEETALERT
 function confirmDelete(id, ref) {
     Swal.fire({
-        title: "Supprimer ?",
-        html: "Réception <b>" + (ref || '#' + id) + "</b>",
+        title: "Annuler la réception ?",
+        html: "Réception <b>" + (ref || '#' + id) + "</b><br><small>Le stock reçu sera retiré. La réception reste visible, marquée annulée.</small>",
         icon: "warning",
+        input: "text",
+        inputPlaceholder: "Motif de l'annulation (obligatoire)",
+        inputValidator: (value) => !value && "Le motif est obligatoire.",
         showCancelButton: true,
         confirmButtonColor: "#d33",
-        confirmButtonText: "Oui",
-        cancelButtonText: "Annuler"
+        confirmButtonText: "Annuler la réception",
+        cancelButtonText: "Fermer"
     }).then((result) => {
         if (result.isConfirmed) {
+            $('#delete-form-' + id + ' input[name=motif]').val(result.value);
             $('#delete-form-' + id).submit();
         }
     });

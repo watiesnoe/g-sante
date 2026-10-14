@@ -59,6 +59,7 @@
                                         $badges = [
                                             'en_attente' => 'bg-warning',
                                             'realise' => 'bg-success',
+                                            'absent' => 'bg-dark',
                                             'annule' => 'bg-danger'
                                         ];
                                         $badgeClass = $badges[$rendezvous->statut] ?? 'bg-secondary';

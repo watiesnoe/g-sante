@@ -7,6 +7,7 @@ use App\Models\CaisseSession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\CaisseService;
 use Yajra\DataTables\DataTables;
 
 class CaisseController extends Controller
@@ -18,13 +19,13 @@ class CaisseController extends Controller
     {
         abort_unless(Auth::user()->can('caisse.view'), 403, 'Accès non autorisé.');
 
-        // View all sessions for admin, or redirect normal users to their active session
-        if (!Auth::user()->hasRole(['admin', 'super_admin'])) {
+        // Vue d'ensemble pour les admins et les responsables qui valident les clôtures
+        if (!Auth::user()->hasRole(['admin', 'super_admin']) && !Auth::user()->can('caisse.valider_cloture')) {
             return redirect()->route('caisse.my_session');
         }
 
         $year = session('exercice_year', date('Y'));
-        $sessions = CaisseSession::with('user')
+        $sessions = CaisseSession::with(['user', 'valideePar'])
             ->whereYear('created_at', $year)
             ->latest()
             ->get();
@@ -40,7 +41,12 @@ class CaisseController extends Controller
         if ($session) {
             return redirect()->route('caisse.my_session')->with('info', 'Vous avez déjà une caisse ouverte.');
         }
-        return view('application.caisse.open');
+        $guichets = \App\Models\Etablissement::courant()->parametre('caisse.multi_guichets')
+            ? \App\Models\Guichet::where('actif', true)->orderBy('nom')->get()
+            : collect();
+        $guichetsOccupes = CaisseSession::where('statut', 'ouverte')->whereNotNull('guichet_id')->pluck('guichet_id')->all();
+
+        return view('application.caisse.open', compact('guichets', 'guichetsOccupes'));
     }
 
     /**
@@ -48,9 +54,16 @@ class CaisseController extends Controller
      */
     public function storeOpen(Request $request)
     {
+        $multiGuichets = \App\Models\Etablissement::courant()->parametre('caisse.multi_guichets') && \App\Models\Guichet::where('actif', true)->exists();
         $request->validate([
-            'solde_initial' => 'required|numeric|min:0'
-        ]);
+            'solde_initial' => 'required|numeric|min:0',
+            'guichet_id'    => [$multiGuichets ? 'required' : 'nullable', \Illuminate\Validation\Rule::exists('guichets', 'id')->where('etablissement_id', \App\Models\Etablissement::courantId())->where('actif', true)],
+        ], ['guichet_id.required' => 'Choisissez le guichet sur lequel vous ouvrez la caisse.']);
+
+        // EF-06.06 : un guichet n'a qu'une session ouverte à la fois
+        if ($request->guichet_id && CaisseSession::where('guichet_id', $request->guichet_id)->where('statut', 'ouverte')->exists()) {
+            return back()->withErrors(['guichet_id' => 'Ce guichet a déjà une caisse ouverte.'])->withInput();
+        }
 
         $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
         if ($session) {
@@ -59,6 +72,7 @@ class CaisseController extends Controller
 
         CaisseSession::create([
             'user_id' => Auth::id(),
+            'guichet_id' => $request->guichet_id,
             'solde_initial' => $request->solde_initial,
             'solde_theorique' => $request->solde_initial,
             'statut' => 'ouverte',
@@ -78,13 +92,12 @@ class CaisseController extends Controller
             return redirect()->route('caisse.open')->with('error', 'Vous n\'avez pas de caisse ouverte à clôturer.');
         }
 
-        // Recalculate theorique just in case
         $totalEntrees = $session->mouvements()->where('type', 'entree')->sum('montant');
         $totalSorties = $session->mouvements()->where('type', 'sortie')->sum('montant');
-        $session->solde_theorique = $session->solde_initial + $totalEntrees - $totalSorties;
-        $session->save();
+        $session->solde_theorique = app(CaisseService::class)->soldeTheorique($session);
+        $totauxParMode = $session->totauxParMode();
 
-        return view('application.caisse.close', compact('session', 'totalEntrees', 'totalSorties'));
+        return view('application.caisse.close', compact('session', 'totalEntrees', 'totalSorties', 'totauxParMode'));
     }
 
     /**
@@ -92,27 +105,37 @@ class CaisseController extends Controller
      */
     public function storeClose(Request $request)
     {
+        $request->merge(['solde_reel' => str_replace([' ', "\u{00a0}"], '', (string) $request->solde_reel)]);
         $request->validate([
-            'solde_reel' => 'required|numeric|min:0'
+            'solde_reel'          => 'required|numeric|min:0',
+            'justification_ecart' => 'nullable|string|max:1000',
         ]);
 
-        $session = CaisseSession::where('user_id', Auth::id())->where('statut', 'ouverte')->first();
-        if (!$session) {
+        if (!CaisseSession::hasOpenSession()) {
             return redirect()->route('caisse.open')->with('error', 'Vous n\'avez pas de caisse ouverte.');
         }
 
-        // Final theorique calculation
-        $totalEntrees = $session->mouvements()->where('type', 'entree')->sum('montant');
-        $totalSorties = $session->mouvements()->where('type', 'sortie')->sum('montant');
-        $session->solde_theorique = $session->solde_initial + $totalEntrees - $totalSorties;
+        $session = app(CaisseService::class)->cloturer((float) $request->solde_reel, $request->justification_ecart);
 
-        $session->solde_reel = $request->solde_reel;
-        $session->ecart = $request->solde_reel - $session->solde_theorique;
-        $session->statut = 'fermee';
-        $session->closed_at = now();
-        $session->save();
+        $message = $session->statut === 'fermee'
+            ? 'Votre caisse est clôturée. Elle doit maintenant être validée par un responsable.'
+            : 'Votre caisse a été clôturée avec succès.';
 
-        return redirect()->route('caisse.index')->with('success', 'Votre caisse a été clôturée avec succès.');
+        return redirect()->route('caisse.show', $session->uuid)->with('success', $message);
+    }
+
+    /**
+     * Validation d'une clôture par un responsable (EF-06.05)
+     */
+    public function valider(CaisseSession $session)
+    {
+        try {
+            app(CaisseService::class)->valider($session);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Clôture de caisse validée.');
     }
 
     /**
@@ -143,11 +166,7 @@ class CaisseController extends Controller
             ->editColumn('created_at', function ($mouvement) {
                 return Carbon::parse($mouvement->created_at)->format('d/m/Y H:i');
             })
-            ->editColumn('type', function ($mouvement) {
-                return $mouvement->type === 'entree' 
-                    ? '<span class="badge bg-success">Entrée</span>' 
-                    : '<span class="badge bg-danger">Sortie</span>';
-            })
+            ->editColumn('type', fn($mouvement) => $this->badgeMouvement($mouvement))
             ->editColumn('montant', function ($mouvement) {
                 return number_format($mouvement->montant, 0, ',', ' ') . ' XOF';
             })
@@ -182,11 +201,7 @@ class CaisseController extends Controller
                 ->editColumn('created_at', function ($mouvement) {
                     return Carbon::parse($mouvement->created_at)->format('d/m/Y H:i');
                 })
-                ->editColumn('type', function ($mouvement) {
-                    return $mouvement->type === 'entree' 
-                        ? '<span class="badge bg-success">Entrée</span>' 
-                        : '<span class="badge bg-danger">Sortie</span>';
-                })
+                ->editColumn('type', fn($mouvement) => $this->badgeMouvement($mouvement))
                 ->editColumn('montant', function ($mouvement) {
                     return number_format($mouvement->montant, 0, ',', ' ') . ' XOF';
                 })
@@ -316,5 +331,44 @@ class CaisseController extends Controller
             'reference_type' => $refType,
             'reference_data' => $refData
         ]);
+    }
+
+    /** Badge du type de mouvement, avec la mention d'annulation s'il y a lieu. */
+    private function badgeMouvement($mouvement): string
+    {
+        $badge = $mouvement->type === 'entree'
+            ? '<span class="badge bg-success">Entrée</span>'
+            : '<span class="badge bg-danger">Sortie</span>';
+
+        if ($mouvement->statut === 'annule') {
+            $badge .= ' <span class="badge bg-dark" title="' . e($mouvement->motif_annulation) . '">Annulé</span>';
+        } elseif ($mouvement->mouvement_annule_id) {
+            $badge .= ' <span class="badge bg-warning text-dark">Annulation</span>';
+        }
+
+        return $badge;
+    }
+
+    /**
+     * EF-06.06 : consolidation journalière de toutes les caisses, par guichet et par mode.
+     */
+    public function consolidation(Request $request)
+    {
+        abort_unless(Auth::user()->can('caisse.valider_cloture') || Auth::user()->hasRole(['admin', 'super_admin']), 403, 'Accès non autorisé.');
+
+        $jour = $request->date ? Carbon::parse($request->date) : today();
+        $service = app(CaisseService::class);
+        $sessions = CaisseSession::with(['user', 'guichet', 'valideePar'])->whereDate('opened_at', $jour)->orderBy('opened_at')->get()
+            ->map(fn($s) => ['session' => $s, 'theorique' => $service->soldeTheorique($s), 'modes' => $s->totauxParMode()]);
+
+        $totauxModes = [];
+        foreach ($sessions as $ligne) {
+            foreach ($ligne['modes'] as $mode => $t) {
+                $totauxModes[$mode]['entree'] = ($totauxModes[$mode]['entree'] ?? 0) + $t['entree'];
+                $totauxModes[$mode]['sortie'] = ($totauxModes[$mode]['sortie'] ?? 0) + $t['sortie'];
+            }
+        }
+
+        return view('application.caisse.consolidation', compact('jour', 'sessions', 'totauxModes'));
     }
 }

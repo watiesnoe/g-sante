@@ -33,6 +33,79 @@
             </div>
         </div>
 
+        @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+        @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
+        @if($patient->fusionne_dans_id)
+            <div class="alert alert-warning">Ce dossier a été fusionné dans le dossier <a href="{{ route('patients.show', \App\Models\Patient::find($patient->fusionne_dans_id)) }}">{{ \App\Models\Patient::find($patient->fusionne_dans_id)?->numero_dossier }}</a>.</div>
+        @endif
+
+        {{-- EF-02.05 : synthèse du dossier --}}
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <h6 class="fw-bold text-muted text-uppercase small">N° de dossier</h6>
+                    <div class="fs-5 fw-bold">{{ $patient->numero_dossier ?? '-' }}</div>
+                    @if($patient->provenance)<div class="small text-muted mt-1">{{ \App\Models\Patient::PROVENANCES[$patient->provenance] ?? $patient->provenance }} {{ $patient->cscom_origine ? '— ' . $patient->cscom_origine : '' }}</div>@endif
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100 {{ $synthese['allergies'] ? 'border-start border-4 border-danger' : '' }}"><div class="card-body">
+                    <h6 class="fw-bold text-muted text-uppercase small">Allergies</h6>
+                    <div class="{{ $synthese['allergies'] ? 'text-danger fw-semibold' : 'text-muted' }}">{!! $synthese['allergies'] ? nl2br(e($synthese['allergies'])) : 'Aucune connue' !!}</div>
+                    <h6 class="fw-bold text-muted text-uppercase small mt-2">Antécédents</h6>
+                    <div class="small">{!! $synthese['antecedents'] ? nl2br(e(\Illuminate\Support\Str::limit($synthese['antecedents'], 200))) : '<span class="text-muted">Non renseignés</span>' !!}</div>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <h6 class="fw-bold text-muted text-uppercase small">Traitements en cours</h6>
+                    @forelse($synthese['traitements'] as $t)
+                        <div class="small"><b>{{ $t['nom'] }}</b> — {{ $t['posologie'] }} <span class="text-muted">(jusqu'au {{ $t['jusqu_au']->format('d/m') }})</span></div>
+                    @empty
+                        <div class="small text-muted">Aucun</div>
+                    @endforelse
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                    <h6 class="fw-bold text-muted text-uppercase small">Derniers passages</h6>
+                    @forelse($synthese['passages'] as $p)
+                        <div class="small">{{ $p->arrive_at->format('d/m/Y') }} — {{ $p->service->nom ?? 'Accueil' }} <span class="badge bg-{{ \App\Models\Passage::COULEURS[$p->statut] ?? 'secondary' }}">{{ \App\Models\Passage::STATUTS[$p->statut] ?? $p->statut }}</span></div>
+                    @empty
+                        <div class="small text-muted">Aucun</div>
+                    @endforelse
+                </div></div>
+            </div>
+        </div>
+
+        @can('patients.fusionner')
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <form method="POST" action="{{ route('patients.fusion', $patient) }}" class="row g-2 align-items-end" onsubmit="return confirm('Rattacher tout le contenu du dossier choisi à celui-ci ? L\'opération pourra être annulée.')">
+                        @csrf
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Fusionner un doublon dans ce dossier</label>
+                            <select name="doublon_id" id="doublonFusion" class="form-select" style="width:100%" required></select>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" name="motif" class="form-control" placeholder="Motif (obligatoire)" required>
+                        </div>
+                        <div class="col-md-2"><button class="btn btn-outline-danger w-100">Fusionner</button></div>
+                    </form>
+                    @foreach($fusions as $f)
+                        <div class="small mt-2">
+                            {{ $f->created_at->format('d/m/Y') }} : dossier {{ $f->fusionne->numero_dossier ?? '#' . $f->patient_fusionne_id }} fusionné par {{ $f->user->name ?? '-' }} — {{ $f->motif }}
+                            @if($f->annulee_at)
+                                <span class="badge bg-secondary">annulée le {{ $f->annulee_at->format('d/m/Y') }}</span>
+                            @else
+                                <form method="POST" action="{{ route('fusions.annuler', $f) }}" class="d-inline">@csrf<button class="btn btn-link btn-sm p-0 ms-2" onclick="return confirm('Annuler cette fusion ?')">Annuler la fusion</button></form>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endcan
+
         <div class="row g-3">
             <!-- Colonne Gauche : Profil & Constantes -->
             <div class="col-xl-3 col-lg-4">
@@ -583,5 +656,13 @@
                 });
             });
         });
-    </script>
+    
+    $(function () {
+        $('#doublonFusion').select2({
+            placeholder: 'Rechercher le dossier en double…', minimumInputLength: 2,
+            ajax: { url: "{{ route('patients.search') }}", dataType: 'json', delay: 250, data: (p) => ({ q: p.term }),
+                processResults: (data) => ({ results: data.filter(p => p.id !== {{ $patient->id }}).map(p => ({ id: p.id, text: `${p.nom} ${p.prenom} — ${p.numero_dossier ?? ''} — ${p.telephone ?? ''}` })) }) }
+        });
+    });
+</script>
 @endsection

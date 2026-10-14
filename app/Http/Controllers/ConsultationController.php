@@ -174,10 +174,10 @@ class ConsultationController extends Controller
             }
         }
 
-        $patients    = DB::table('patients')->select('id', 'uuid', 'nom', 'prenom', 'genre', 'age')->orderBy('nom')->get();
+        $patients    = \App\Models\Etablissement::table('patients')->select('id', 'uuid', 'nom', 'prenom', 'genre', 'age')->orderBy('nom')->get();
         $symptomes   = Symptome::with('maladies')->get();
         $maladies    = Maladie::with(['protocole', 'symptomes'])->get();
-        $medicaments = DB::table('medicaments')
+        $medicaments = \App\Models\Etablissement::table('medicaments')
             ->leftJoin('unites', function ($join) {
                 $join->on('unites.medicament_id', '=', 'medicaments.id')
                      ->where('unites.is_default', true);
@@ -190,8 +190,8 @@ class ConsultationController extends Controller
             )
             ->orderBy('medicaments.nom')
             ->get();
-        $salles      = DB::table('salles')->select('id', 'nom', 'type','service_medical_id')->orderBy('nom')->get();
-        $lits        = DB::table('lits')->select('id', 'numero', 'salle_id', 'statut')->orderBy('numero')->get();
+        $salles      = \App\Models\Etablissement::table('salles')->select('id', 'nom', 'type','service_medical_id')->orderBy('nom')->get();
+        $lits        = \App\Models\Etablissement::table('lits')->select('id', 'numero', 'salle_id', 'statut')->orderBy('numero')->get();
 
         $symptomeMaladieMap = $symptomes->mapWithKeys(function ($s) {
             return [$s->id => $s->maladies->pluck('id')->toArray()];
@@ -258,6 +258,9 @@ class ConsultationController extends Controller
                 'groupe_sanguin' => 'nullable|string',
                 'adresse_patient' => 'nullable|string',
                 'diagnostic'   => 'required|string',
+                'diagnostic_id' => 'nullable|exists:diagnostics,id',
+                'type_activite' => 'nullable|in:generale,pediatrie,cpn,controle,urgence',
+                'conduite_a_tenir' => 'nullable|string',
                 'ticket_id'    => 'nullable|exists:tickets,id',
                 'grossesse_id' => 'nullable|exists:grossesses,id',
                 'protocole_id' => 'nullable|exists:protocole_traitements,id',
@@ -265,6 +268,12 @@ class ConsultationController extends Controller
                 'suggestions'  => 'nullable|array',
             ]);
 
+
+            // 🔹 EF-04.04 : alerte si un médicament prescrit correspond à une allergie connue
+            $alertes = \App\Services\AllergieService::alertes(\App\Models\Patient::find($request->patient_id), (array) $request->medicaments);
+            if ($alertes && !$request->boolean('confirmer_allergie')) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['allergie' => 'Allergie connue du patient : ' . implode(' ; ', $alertes) . '. Confirmez la prescription si elle est voulue.']);
+            }
 
             // 🔹 Création de la consultation
             $consultation = Consultation::create([
@@ -275,6 +284,9 @@ class ConsultationController extends Controller
                 'protocole_id'     => $request->protocole_id, // ✅ track the applied protocol
                 'date_consultation' => now(),
                 'motif'            => $request->motif,
+                'type_activite'    => $request->type_activite ?: 'generale',
+                'diagnostic_id'    => $request->diagnostic_id,
+                'conduite_a_tenir' => $request->conduite_a_tenir,
                 'maladie_id'       => $request->maladie_id,
                 'taille'           => $request->taille,
                 'diagnostic'       => $request->diagnostic,
@@ -332,9 +344,14 @@ class ConsultationController extends Controller
             // 🔹 Examens prescrits
             if ($request->filled('examens')) {
                 foreach ($request->examens as $examen) {
+                    // EF-09.01 : la demande est reliée au catalogue (type, valeurs de référence)
+                    $catalogue = \App\Models\Examen::where('nom', $examen)->first();
                     PrescriptionExamen::create([
                         'consultation_id' => $consultation->id,
-                        'examen'          => $examen
+                        'examen_id'       => $catalogue?->id,
+                        'type'            => $catalogue->type ?? 'laboratoire',
+                        'examen'          => $examen,
+                        'statut'          => 'demande',
                     ]);
                 }
             }
@@ -363,17 +380,12 @@ class ConsultationController extends Controller
 
             // 🔹 Hospitalisation
             if ($request->filled('hospitalisation')) {
-                Hospitalisation::create([
+                app(\App\Services\HospitalisationService::class)->admettre($consultation->patient, Lit::findOrFail($request->lit_id), [
                     'consultation_id' => $consultation->id,
-                    'salles_id'       => $request->salle_id,
-                    'lit_id'          => $request->lit_id,
                     'date_entree'     => $request->date_entree ?: now(),
                     'motif'           => $request->motif ?? 'Hospitalisation suite consultation',
-                    'etat'            => 'en cours',
-                    'service_id'      => \App\Models\Salle::find($request->salle_id)->service_medical_id ?? 1,
                     'observations'    => $request->observations,
                 ]);
-                Lit::where('id', $request->lit_id)->update(['statut' => 'Occupé']);
             }
 
             // 🔹 Mettre à jour le statut du ticket (si lié)
@@ -382,6 +394,15 @@ class ConsultationController extends Controller
                     ->update(['statut' => 'valide']);
             }
 
+            // 🔹 EF-03.02 : le passage du patient suit la consultation
+            $passages = app(\App\Services\PassageService::class);
+            $passage = $consultation->ticket_id
+                ? \App\Models\Passage::where('ticket_id', $consultation->ticket_id)->latest('id')->first()
+                : \App\Models\Passage::where('patient_id', $consultation->patient_id)->ouverts()->latest('id')->first();
+            $passage ??= $passages->ouvrir($consultation->patient, ['ticket_id' => $consultation->ticket_id, 'motif' => $consultation->motif]);
+            $consultation->update(['passage_id' => $passage->id]);
+            $passages->avancerSiPossible($passage, $request->filled('hospitalisation') ? 'hospitalise' : 'termine');
+
             DB::commit();
 
             return response()->json([
@@ -389,6 +410,10 @@ class ConsultationController extends Controller
                 'data'    => 'Consultation enregistrée avec succès ✅',
                 'redirect' => route('consultations.index')
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Erreurs de saisie et règles métier : message précis, pas d'erreur générique
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erreur création consultation : ' . $e->getMessage(), ['exception' => $e]);
@@ -433,7 +458,11 @@ class ConsultationController extends Controller
             'hospitalisation.salle',
             'hospitalisation.lit',
             'symptomes',
-            'maladies'
+            'maladies',
+            'diagnosticCode',
+            'addenda.user',
+            'signataire',
+            'documents',
         ]);
 
         // Retourner la vue show
@@ -446,6 +475,7 @@ class ConsultationController extends Controller
     public function edit(Consultation $consultation)
     {
         abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
+        abort_if($consultation->estSignee(), 403, 'Consultation signée : ajoutez un addendum au lieu de la modifier.');
 
         // Un médecin peut modifier ses consultations ET celles des patients qui lui ont été transférés
         if (Auth::user()->hasRole('medecin')) {
@@ -484,7 +514,7 @@ class ConsultationController extends Controller
                 return [$s->id => $s->maladies->pluck('id')->toArray()];
             });
 
-        $medicaments = DB::table('medicaments')
+        $medicaments = \App\Models\Etablissement::table('medicaments')
             ->leftJoin('unites', function ($join) {
                 $join->on('unites.medicament_id', '=', 'medicaments.id')
                      ->where('unites.is_default', true);
@@ -497,7 +527,7 @@ class ConsultationController extends Controller
             )
             ->orderBy('medicaments.nom')
             ->get();
-        $salles      = DB::table('salles')->select('id', 'nom', 'service_medical_id')->orderBy('nom')->get();
+        $salles      = \App\Models\Etablissement::table('salles')->select('id', 'nom', 'service_medical_id')->orderBy('nom')->get();
 
         // ✅ Chargement des relations
         $consultation->load([
@@ -534,6 +564,8 @@ class ConsultationController extends Controller
     public function update(Request $request, Consultation $consultation)
     {
         abort_unless(Auth::user()->can('consultations.edit'), 403, 'Accès non autorisé : vous n\'avez pas la permission de modifier une consultation.');
+        // RG-13 : une consultation signée ne se modifie plus que par un addendum
+        abort_if($consultation->estSignee(), 403, 'Consultation signée : ajoutez un addendum au lieu de la modifier.');
 
         DB::beginTransaction();
         try {
@@ -552,6 +584,9 @@ class ConsultationController extends Controller
                 'patient_id'       => $request->patient_id,
                 'medecin_id'       => $request->medecin_id,
                 'motif'            => $request->motif,
+                'type_activite'    => $request->type_activite ?: $consultation->type_activite,
+                'diagnostic_id'    => $request->diagnostic_id,
+                'conduite_a_tenir' => $request->conduite_a_tenir,
                 'diagnostic'       => $request->diagnostic,
                 'notes'            => $request->antecedents,
                 'poids'            => $request->poids,
@@ -586,12 +621,18 @@ class ConsultationController extends Controller
                 }
             }
 
-            // 🔹 Examens : supprimer anciens et créer les nouveaux
-            $consultation->examens()->delete();
-            foreach ($request->examens ?? [] as $examen) {
+            // 🔹 Examens : seules les demandes non commencées peuvent être retirées ;
+            // un examen prélevé, réalisé ou avec résultat appartient au dossier.
+            $dejaEngages = $consultation->examens()->where('statut', '!=', 'demande')->pluck('examen')->all();
+            $consultation->examens()->where('statut', 'demande')->delete();
+            foreach (array_diff($request->examens ?? [], $dejaEngages) as $examen) {
+                $catalogue = \App\Models\Examen::where('nom', $examen)->first();
                 PrescriptionExamen::create([
                     'consultation_id' => $consultation->id,
+                    'examen_id'       => $catalogue?->id,
+                    'type'            => $catalogue->type ?? 'laboratoire',
                     'examen'          => $examen,
+                    'statut'          => 'demande',
                 ]);
             }
 
@@ -621,33 +662,25 @@ class ConsultationController extends Controller
                 }
             }
 
-            // 🔹 Hospitalisation
+            // 🔹 Hospitalisation : changement de lit = transfert, sinon admission (RG-12)
             if ($request->filled('hospitalisation')) {
+                $sejours = app(\App\Services\HospitalisationService::class);
                 $hospitalisation = $consultation->hospitalisation;
-                if ($hospitalisation) {
+                if ($hospitalisation && $hospitalisation->etat === 'en cours') {
+                    if ($request->lit_id && (int) $request->lit_id !== (int) $hospitalisation->lit_id) {
+                        $sejours->transferer($hospitalisation, Lit::findOrFail($request->lit_id));
+                    }
                     $hospitalisation->update([
-                        'salles_id'    => $request->salle_id,
-                        'lit_id'       => $request->lit_id,
-                        'date_entree'  => $request->date_entree,
-                        'motif'        => $request->motif ?? 'Hospitalisation suite consultation',
-                        'etat'         => 'en cours',
-                        'service_id'   => $request->service_id ?? 1,
+                        'motif'        => $request->motif ?? $hospitalisation->motif,
                         'observations' => $request->observations,
                     ]);
-                } else {
-                    Hospitalisation::create([
+                } elseif (!$hospitalisation) {
+                    $sejours->admettre($consultation->patient, Lit::findOrFail($request->lit_id), [
                         'consultation_id' => $consultation->id,
-                        'salles_id'       => $request->salle_id,
-                        'lit_id'          => $request->lit_id,
                         'date_entree'     => $request->date_entree ?: now(),
                         'motif'           => $request->motif ?? 'Hospitalisation suite consultation',
-                        'etat'            => 'en cours',
-                        'service_id'      => \App\Models\Salle::find($request->salle_id)->service_medical_id ?? 1,
                         'observations'    => $request->observations,
                     ]);
-
-                    // 🔹 Mettre à jour le statut du lit
-                    Lit::where('id', $request->lit_id)->update(['statut' => 'Occupé']);
                 }
             }
 
@@ -657,6 +690,9 @@ class ConsultationController extends Controller
                 'success' => true,
                 'data'    => 'Consultation mise à jour avec succès ✅'
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erreur mise à jour consultation : ' . $e->getMessage(), ['exception' => $e]);

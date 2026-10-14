@@ -34,6 +34,10 @@
                                     <option value="{{ $ticket->patient->id }}" selected>
                                         {{ $ticket->patient->nom }} {{ $ticket->patient->prenom }} - {{ $ticket->patient->telephone }}
                                     </option>
+                                @elseif(!empty($patientPreselectionne))
+                                    <option value="{{ $patientPreselectionne->id }}" selected>
+                                        {{ $patientPreselectionne->nom }} {{ $patientPreselectionne->prenom }} - {{ $patientPreselectionne->telephone }}
+                                    </option>
                                 @else
                                     <option value="">-- Sélectionner un patient --</option>
                                 @endif
@@ -171,6 +175,19 @@
 
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
+                    @unless(isset($ticket))
+                    @if(!empty($passageId))<input type="hidden" name="passage_id" value="{{ $passageId }}">@endif
+                    <label class="form-label fw-bold">Mode de paiement</label>
+                    <select class="form-select mb-3 no-select2" id="mode_paiement" name="mode_paiement">
+                        @foreach(\App\Models\Etablissement::courant()->parametre('caisse.modes') as $mode)
+                            <option value="{{ $mode }}">{{ \App\Models\CaisseMouvement::MODES[$mode] ?? $mode }}</option>
+                        @endforeach
+                    </select>
+                    @endunless
+
+                    <label class="form-label fw-bold">Motif de la remise <small class="text-muted fw-normal">(obligatoire si une remise est accordée)</small></label>
+                    <input type="text" class="form-control mb-3" id="motif_remise" name="motif_remise" value="{{ $ticket->motif_remise ?? '' }}" placeholder="Ex. : indigent, personnel, décision du médecin chef…">
+
                     <label class="form-label fw-bold">Observations</label>
                     <textarea class="form-control mb-3" id="description" name="description" rows="2" placeholder="Notes optionnelles...">{{ $ticket->description ?? '' }}</textarea>
 

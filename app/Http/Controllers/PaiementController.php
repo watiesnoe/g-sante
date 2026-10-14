@@ -72,38 +72,17 @@ class PaiementController extends Controller
                 throw new \Exception("Cette hospitalisation est déjà clôturée.");
             }
 
-            // 🔒 Recalcul du montant minimum attendu côté serveur (jours × prix de la salle)
-            // pour empêcher un montant_total falsifié/sous-évalué envoyé par le client.
-            $prixJour = (float) ($hospitalisation->salle->prix ?? 0);
-            $jours = max(1, (int) ceil(
-                \Carbon\Carbon::parse($hospitalisation->date_entree)->diffInDays(\Carbon\Carbon::parse($request->date_sortie))
-            ));
-            $montantAttendu = $jours * $prixJour;
+            // 🔒 Montant minimum recalculé côté serveur : relevé complet du séjour
+            // (hébergement par chambre, actes du bloc, consommables — REC-16)
+            $hospitalisation->date_sortie = $request->date_sortie;
+            $montantAttendu = app(\App\Services\HospitalisationService::class)->releve($hospitalisation)['total'];
 
             if ($request->montant_total < $montantAttendu - 0.01) {
-                throw new \Exception("Le montant total ({$request->montant_total}) est inférieur au montant minimum attendu ({$montantAttendu}) pour {$jours} jour(s) d'hospitalisation.");
+                throw new \Exception("Le montant total ({$request->montant_total}) est inférieur au montant minimum attendu ({$montantAttendu}) d'après le relevé du séjour.");
             }
 
-            // ✅ Mode de sortie
-            $statutSortie = $request->statut_sortie;
-
-            // ✅ Mise à jour hospitalisation
-            $hospitalisation->update([
-                'date_sortie' => $request->date_sortie,
-                'etat' => 'terminé',
-                'statut_sortie' => $statutSortie
-            ]);
-
-            // 💀 Si Décès, on marque le patient comme décédé
-            if ($statutSortie === 'Décès') {
-                $patient = $hospitalisation->consultation->patient ?? $hospitalisation->patient;
-                if ($patient) {
-                    $patient->update([
-                        'est_decede' => true,
-                        'date_deces' => now()
-                    ]);
-                }
-            }
+            // ✅ Sortie : séjour clos, lit libéré (RG-12), décès reporté au dossier
+            app(\App\Services\HospitalisationService::class)->sortir($hospitalisation, $request->statut_sortie, $request->date_sortie);
 
             // ✅ Calcul paiement
             $montantRestant = $request->montant_total - $request->montant_recu;
@@ -131,7 +110,8 @@ class PaiementController extends Controller
                     $request->montant_recu,
                     'Paiement Hospitalisation #' . $hospitalisation->id,
                     'entree',
-                    $hospitalisation
+                    $hospitalisation,
+                    $request->mode_paiement ?: 'especes'
                 );
             }
         });

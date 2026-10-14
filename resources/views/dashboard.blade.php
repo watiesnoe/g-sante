@@ -413,6 +413,8 @@
         </div>
     </div>
 
+    @include('dashbords.indicateurs')
+
     {{-- ===== ROLE-BASED DASHBOARD INCLUDE ===== --}}
     @hasrole('super_admin')
         @include('dashbords.superadmin')

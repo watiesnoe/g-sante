@@ -43,6 +43,17 @@
                 </tbody>
             </table>
 
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold" for="mode_paiement">Mode de paiement</label>
+                    <select class="form-select no-select2" id="mode_paiement" name="mode_paiement">
+                        @foreach(\App\Models\Etablissement::courant()->parametre('caisse.modes') as $mode)
+                            <option value="{{ $mode }}">{{ \App\Models\CaisseMouvement::MODES[$mode] ?? $mode }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
             <button class="btn btn-success" type="submit"> Payer</button>
         </form>
     </div>

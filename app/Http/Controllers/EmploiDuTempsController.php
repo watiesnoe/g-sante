@@ -29,7 +29,7 @@ class EmploiDuTempsController extends Controller
                 ->with(['emploiDuTemps' => fn($q) => $q->actif()->orderBy('jour_semaine')->orderBy('heure_debut')])
                 ->get();
         } else {
-            $medecins = User::role('medecin')
+            $medecins = User::deLEtablissement()->role('medecin')
                 ->where('statut', 'actif')
                 ->with(['emploiDuTemps' => fn($q) => $q->actif()->orderBy('jour_semaine')->orderBy('heure_debut')])
                 ->orderBy('nom')
@@ -116,7 +116,7 @@ class EmploiDuTempsController extends Controller
     {
         $jour = (int) $request->get('jour', Carbon::now()->dayOfWeekIso);
 
-        $medecins = User::role('medecin')
+        $medecins = User::deLEtablissement()->role('medecin')
             ->where('statut', 'actif')
             ->whereHas('emploiDuTemps', fn($q) => $q->where('jour_semaine', $jour)->actif())
             ->with(['emploiDuTemps' => fn($q) => $q->where('jour_semaine', $jour)->actif()->orderBy('heure_debut')])
@@ -163,7 +163,7 @@ class EmploiDuTempsController extends Controller
         ]);
 
         // 🔒 Le sélecteur ne propose que des médecins, mais on revérifie côté serveur.
-        if (!User::role('medecin')->where('id', $validated['medecin_id'])->exists()) {
+        if (!User::deLEtablissement()->role('medecin')->where('id', $validated['medecin_id'])->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Le compte sélectionné n\'est pas un médecin.',

@@ -19,6 +19,10 @@ class TicketItem extends Model
         'quantite',
         'remise',
         'sous_total',
+        'part_assurance',
+        'part_gratuite',
+        'regle_gratuite_id',
+        'part_patient',
     ];
 
     // Relation : un item appartient à un ticket

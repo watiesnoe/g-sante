@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\Audite;use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,6 +11,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    use Audite;
     use HasUuid;
     use HasRoles {
         checkPermissionTo as protected checkPermissionToSpatie;
@@ -41,6 +43,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'modules_access' => 'array',
+            'verrouille_jusqua' => 'datetime',
         ];
     }
 
@@ -128,13 +131,22 @@ class User extends Authenticatable
             'transfert'       => ['transferts'],
             'maternity'       => ['maternity'],
             'infectiologie'   => ['infectiologie'],
-            'stock'           => ['stock'],
+            'stock'           => ['stock', 'achats'],
             'paiements'       => ['paiements'],
             'caisse'          => ['caisse'],
             'parametre'       => ['parametres'],
             'dashboard'       => ['dashboard'],
             'users'           => ['users'],
             'roles'           => ['roles'],
+            'finances'        => ['depenses'],
+            'tiers_payants'   => ['tiers_payants'],
+            'rh'              => ['rh'],
+            'urgences'        => ['urgences'],
+            'bloc'            => ['bloc'],
+            'maintenance'     => ['maintenance'],
+            'references'      => ['references'],
+            'gratuites'       => ['gratuites'],
+            'budget'          => ['budget'],
         ];
 
         // Préfixes à chercher pour ce module
@@ -160,6 +172,28 @@ class User extends Authenticatable
         }
 
         return $this->checkPermissionToSpatie($permission, $guardName);
+    }
+
+    public function etablissements()
+    {
+        return $this->belongsToMany(Etablissement::class)->withTimestamps();
+    }
+
+    /**
+     * Établissements où l'utilisateur peut travailler (EF-01.03) : ceux qui lui sont
+     * affectés ; le super-administrateur technique peut ouvrir tous les établissements.
+     */
+    public function etablissementsAccessibles()
+    {
+        return $this->hasRole(['super_admin', 'superadmin'])
+            ? Etablissement::query()->where('actif', true)->orderBy('nom')->get()
+            : $this->etablissements()->where('actif', true)->orderBy('nom')->get();
+    }
+
+    /** Utilisateurs affectés à l'établissement courant (listes de médecins, d'agents…). */
+    public function scopeDeLEtablissement($query, ?int $etablissementId = null)
+    {
+        return $query->whereHas('etablissements', fn($q) => $q->where('etablissements.id', $etablissementId ?? Etablissement::courantId()));
     }
 
     public function service()

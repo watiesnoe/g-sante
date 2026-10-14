@@ -19,8 +19,33 @@
                         <input type="hidden" name="prescription_examen_id" value="{{ $prescription->id }}">
                     </div>
 
+                    @php $cat = $prescription->catalogue; @endphp
+                    <div class="mb-2 small text-muted">Examen : <strong>{{ $prescription->examen }}</strong>
+                        ({{ $prescription->type === 'imagerie' ? 'imagerie' : 'laboratoire' }})</div>
+                    @if($prescription->type !== 'imagerie')
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Valeur</label>
+                            <input type="text" name="valeur" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Unité</label>
+                            <input type="text" name="unite" class="form-control" value="{{ $cat->unite ?? '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Référence min.</label>
+                            <input type="number" step="any" name="valeur_min" class="form-control" value="{{ $cat->valeur_min ?? '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Référence max.</label>
+                            <input type="number" step="any" name="valeur_max" class="form-control" value="{{ $cat->valeur_max ?? '' }}">
+                        </div>
+                        <div class="col-12 form-text">Une valeur hors des références est signalée comme anormale.</div>
+                    </div>
+                    @endif
+
                     <div class="mb-3">
-                        <label for="resultat" class="form-label">Résultat</label>
+                        <label for="resultat" class="form-label">{{ $prescription->type === 'imagerie' ? 'Compte rendu' : 'Résultat / commentaire' }}</label>
                         <textarea name="resultat" id="resultat" class="form-control" rows="4"></textarea>
                     </div>
 

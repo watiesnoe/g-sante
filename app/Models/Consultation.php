@@ -1,17 +1,23 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Consultation extends Model {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
     use HasFactory;
 
+    protected $casts = ['signee_at' => 'datetime'];
+
     protected $fillable = [
-        'patient_id','medecin_id','ticket_id','protocole_id','date_consultation',
+        'patient_id','medecin_id','ticket_id','passage_id','diagnostic_id','type_activite','conduite_a_tenir','signee_at','signee_par','protocole_id','date_consultation',
         'motif','diagnostic','notes','poids','temperature','tension',
         'taille','imc','groupe_sanguin','adresse_patient','maladie_id',
         'grossesse_id'
@@ -79,5 +85,35 @@ class Consultation extends Model {
 
     public function suggestions() {
         return $this->hasMany(ConsultationSuggestion::class);
+    }
+
+    public function passage()
+    {
+        return $this->belongsTo(Passage::class);
+    }
+
+    public function diagnosticCode()
+    {
+        return $this->belongsTo(Diagnostic::class, 'diagnostic_id');
+    }
+
+    public function addenda()
+    {
+        return $this->hasMany(ConsultationAddendum::class)->orderBy('id');
+    }
+
+    public function signataire()
+    {
+        return $this->belongsTo(User::class, 'signee_par');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(DocumentMedical::class);
+    }
+
+    public function estSignee(): bool
+    {
+        return $this->signee_at !== null;
     }
 }

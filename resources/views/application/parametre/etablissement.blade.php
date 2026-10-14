@@ -49,6 +49,14 @@
                                     <label class="form-label">Adresse</label>
                                     <input type="text" name="adresse" class="form-control" value="{{ old('adresse', $etablissement->adresse) }}">
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Région</label>
+                                    <input type="text" name="region" class="form-control" value="{{ old('region', $etablissement->region) }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">District sanitaire</label>
+                                    <input type="text" name="district" class="form-control" value="{{ old('district', $etablissement->district) }}">
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Téléphone</label>
                                     <input type="text" name="telephone" class="form-control" value="{{ old('telephone', $etablissement->telephone) }}">
@@ -123,6 +131,84 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- 4. Règles de fonctionnement --}}
+                    <div class="block block-rounded">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">4. Règles de fonctionnement</h3>
+                        </div>
+                        <div class="block-content">
+                            <p class="text-muted small">Les règles marquées « fixe » protègent la sécurité des patients et de l'argent : elles ne se modifient pas.</p>
+                            <div class="mb-4">
+                                @foreach($parametres as $cle => $parametre)
+                                    @php $nomChamp = 'parametres[' . str_replace('.', '_', $cle) . ']'; $valeur = $etablissement->parametre($cle); @endphp
+                                    @switch($parametre['type'] ?? 'booleen')
+                                        @case('nombre')
+                                        @case('texte')
+                                            <div class="mb-3">
+                                                <label class="form-label" for="param_{{ $loop->index }}">{{ $parametre['label'] }}</label>
+                                                <input type="{{ ($parametre['type'] ?? '') === 'nombre' ? 'number' : 'text' }}" class="form-control" id="param_{{ $loop->index }}" name="{{ $nomChamp }}" value="{{ $valeur }}" min="0">
+                                            </div>
+                                            @break
+                                        @case('choix')
+                                            <div class="mb-3">
+                                                <label class="form-label" for="param_{{ $loop->index }}">{{ $parametre['label'] }}</label>
+                                                <select class="form-select" id="param_{{ $loop->index }}" name="{{ $nomChamp }}">
+                                                    @foreach($parametre['choix'] as $code => $libelle)
+                                                        <option value="{{ $code }}" {{ $valeur === $code ? 'selected' : '' }}>{{ $libelle }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            @break
+                                        @case('liste')
+                                            <div class="mb-3">
+                                                <label class="form-label d-block">{{ $parametre['label'] }}</label>
+                                                @foreach($parametre['choix'] as $code => $libelle)
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="checkbox" name="{{ $nomChamp }}[]" id="param_{{ $loop->parent->index }}_{{ $code }}" value="{{ $code }}" {{ in_array($code, (array) $valeur) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="param_{{ $loop->parent->index }}_{{ $code }}">{{ $libelle }}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            @break
+                                        @default
+                                            <div class="form-check form-switch mb-2">
+                                                <input class="form-check-input" type="checkbox" name="{{ $nomChamp }}" id="param_{{ $loop->index }}" value="1"
+                                                    {{ $valeur ? 'checked' : '' }} {{ !empty($parametre['fixe']) ? 'disabled' : '' }}>
+                                                <label class="form-check-label" for="param_{{ $loop->index }}">
+                                                    {{ $parametre['label'] }}
+                                                    @if(!empty($parametre['fixe']))<span class="badge bg-secondary ms-1">fixe</span>@endif
+                                                </label>
+                                            </div>
+                                    @endswitch
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($historique->isNotEmpty())
+                    <div class="block block-rounded">
+                        <div class="block-header block-header-default">
+                            <h3 class="block-title">Historique des changements</h3>
+                        </div>
+                        <div class="block-content pb-3">
+                            <table class="table table-sm table-striped fs-sm">
+                                <thead><tr><th>Date</th><th>Auteur</th><th>Réglage</th><th>Avant</th><th>Après</th></tr></thead>
+                                <tbody>
+                                    @foreach($historique as $ligne)
+                                        <tr>
+                                            <td class="text-nowrap">{{ $ligne['date'] }}</td>
+                                            <td>{{ $ligne['auteur'] }}</td>
+                                            <td>{{ $ligne['champ'] }}</td>
+                                            <td class="text-muted">{{ $ligne['avant'] }}</td>
+                                            <td>{{ $ligne['apres'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
 
                     <div class="text-end mb-4">
                         <button type="submit" class="btn btn-primary px-4">

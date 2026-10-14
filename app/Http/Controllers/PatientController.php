@@ -17,7 +17,7 @@ class PatientController extends Controller
         if ($request->ajax()) {
             $year = session('exercice_year', date('Y'));
             $patients = Patient::forUserStructure(Auth::user())
-                ->select(['patients.id', 'patients.uuid', 'patients.nom', 'patients.prenom', 'patients.genre', 'patients.telephone', 'patients.created_at'])
+                ->select(['patients.id', 'patients.uuid', 'patients.numero_dossier', 'patients.nom', 'patients.prenom', 'patients.genre', 'patients.telephone', 'patients.created_at'])
                 ->whereYear('patients.created_at', $year);
 
             return datatables()->of($patients)
@@ -64,17 +64,31 @@ class PatientController extends Controller
             'nom'              => 'required|string|max:255',
             'prenom'           => 'required|string|max:255',
             'genre'            => 'required|in:M,F',
-            'telephone'        => 'required|string|max:20|unique:patients,telephone',
+            'telephone'        => 'required|string|max:20|unique:patients,telephone,NULL,id,etablissement_id,' . \App\Models\Etablissement::courantId(),
             'ethnie'           => 'required|string|max:255',
             'age'              => 'required|integer|min:0',
             'assurance_id'     => 'nullable|exists:assurances,id',
             'numero_assurance' => 'nullable|string|max:255',
             'groupe_sanguin'   => 'nullable|string|max:5',
             'adresse'          => 'nullable|string',
-        ]);
+            'allergies'        => 'nullable|string|max:1000',
+            'date_naissance'   => 'nullable|date|before_or_equal:today',
+            'provenance'       => [\Illuminate\Validation\Rule::requiredIf(fn() => \App\Models\Etablissement::courant()->parametre('patient.provenance')), 'nullable', \Illuminate\Validation\Rule::in(array_keys(Patient::PROVENANCES))],
+            'cscom_origine'    => 'nullable|required_if:provenance,cscom|string|max:255',
+        ], ['cscom_origine.required_if' => 'Indiquez le CSCom qui a référé le patient.']);
 
-        // Plus besoin de Str::uuid() ici ! 
-        // Votre modèle Patient utilise le Trait "HasUuid" qui s'en charge automatiquement.
+        // EF-02.02 : signaler les doublons probables avant de créer le dossier
+        if (!$request->boolean('confirmer_doublon')) {
+            $doublons = Patient::doublonsProbables($validated['nom'], $validated['prenom']);
+            if ($doublons->isNotEmpty()) {
+                return response()->json([
+                    'success'  => false,
+                    'doublons' => $doublons,
+                    'message'  => 'Un dossier existe peut-être déjà pour ce patient.',
+                ], 409);
+            }
+        }
+
         $patient = Patient::create($validated);
 
         return response()->json([
@@ -90,7 +104,8 @@ class PatientController extends Controller
         $query = Patient::forUserStructure(Auth::user())->where(function($q) use ($request) {
             $q->where('nom', 'like', '%'.$request->q.'%')
               ->orWhere('prenom', 'like', '%'.$request->q.'%')
-              ->orWhere('telephone', 'like', '%'.$request->q.'%');
+              ->orWhere('telephone', 'like', '%'.$request->q.'%')
+              ->orWhere('numero_dossier', 'like', '%'.$request->q.'%');
         });
 
         if ($request->has('gender')) {
@@ -103,7 +118,7 @@ class PatientController extends Controller
         }
 
         $patients = $query->limit(20)
-            ->get(['patients.id', 'patients.uuid','patients.nom','patients.prenom','patients.telephone','patients.age','patients.genre','patients.assurance_id','patients.numero_assurance','patients.fin_validite_assurance']);
+            ->get(['patients.id', 'patients.uuid', 'patients.numero_dossier', 'patients.nom','patients.prenom','patients.telephone','patients.age','patients.genre','patients.assurance_id','patients.numero_assurance','patients.fin_validite_assurance']);
 
         return response()->json($patients);
     }
@@ -138,7 +153,10 @@ class PatientController extends Controller
             'transferts.destService',
         ]);
 
-        return view('application.patient.show', compact('patient'));
+        $synthese = app(\App\Services\DossierPatientService::class)->synthese($patient);
+        $fusions = \App\Models\FusionPatient::with(['fusionne', 'user'])->where('patient_conserve_id', $patient->id)->latest()->get();
+
+        return view('application.patient.show', compact('patient', 'synthese', 'fusions'));
     }
 
     public function edit(Patient $patient)
@@ -156,13 +174,17 @@ public function update(Request $request, Patient $patient)
         'nom' => 'required|string|max:255',
         'prenom' => 'required|string|max:255',
         'genre' => 'required|in:M,F',
-        'telephone' => 'required|string|max:20|unique:patients,telephone,'.$patient->id,
+        'telephone' => 'required|string|max:20|unique:patients,telephone,'.$patient->id.',id,etablissement_id,' . \App\Models\Etablissement::courantId(),
         'ethnie' => 'required|string|max:255',
         'age' => 'required|integer|min:0',
         'assurance_id' => 'nullable|exists:assurances,id',
         'numero_assurance' => 'nullable|string|max:255',
         'groupe_sanguin' => 'nullable|string|max:5',
         'adresse' => 'nullable|string',
+        'allergies' => 'nullable|string|max:1000',
+        'date_naissance' => 'nullable|date|before_or_equal:today',
+        'provenance' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(Patient::PROVENANCES))],
+        'cscom_origine' => 'nullable|required_if:provenance,cscom|string|max:255',
     ]);
 
     // Mise à jour en base de données

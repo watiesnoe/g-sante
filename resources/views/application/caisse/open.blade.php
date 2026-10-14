@@ -19,6 +19,18 @@
                         </div>
 
                         <form action="{{ route('caisse.storeOpen') }}" method="POST">
+                            @if($guichets->isNotEmpty())
+                                <div class="mb-4">
+                                    <label class="form-label" for="guichet_id">Guichet</label>
+                                    <select name="guichet_id" id="guichet_id" class="form-select form-select-lg @error('guichet_id') is-invalid @enderror" required>
+                                        <option value="">-- Choisir --</option>
+                                        @foreach($guichets as $g)
+                                            <option value="{{ $g->id }}" {{ in_array($g->id, $guichetsOccupes) ? 'disabled' : '' }}>{{ $g->nom }}{{ in_array($g->id, $guichetsOccupes) ? ' (déjà ouvert)' : '' }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('guichet_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            @endif
                             @csrf
                             <div class="mb-4">
                                 <label class="form-label" for="solde_initial">Fonds de caisse (Solde Initial) en XOF</label>

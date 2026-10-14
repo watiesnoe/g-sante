@@ -5,6 +5,9 @@
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
 
         <div class="card card-payment mb-4">
             <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
@@ -36,7 +39,12 @@
                                     <td>{{ $p->reference }}</td>
                                     <td>{{ $p->commande->reference ?? '-' }}</td>
                                     <td>{{ $p->commande->fournisseur->nom ?? '-' }}</td>
-                                    <td>{{ number_format($p->montant, 2, ',', ' ') }} F</td>
+                                    <td>
+                                        {{ number_format($p->montant, 2, ',', ' ') }} F
+                                        @if($p->statut === 'annule')
+                                            <span class="badge bg-danger" title="{{ $p->motif_annulation }}">Annulé</span>
+                                        @endif
+                                    </td>
                                     <td>{{ ucfirst($p->mode) }}</td>
                                     <td>{{ $p->date_paiement }}</td>
                                     <td class="text-center">
@@ -44,12 +52,15 @@
                                             <a href="{{ route('paiementscommande.show', $p) }}" class="btn btn-sm btn-info" title="Voir">
                                                 <i class="fa fa-eye"></i>
                                             </a>
-                                            <form action="{{ route('paiementscommande.destroy', $p) }}" method="POST" class="d-inline">
+                                            @if($p->statut !== 'annule')
+                                            <form action="{{ route('paiementscommande.destroy', $p) }}" method="POST" class="d-inline form-annuler-paiement">
                                                 @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ce paiement ?')" title="Supprimer">
-                                                    <i class="fa fa-trash"></i>
+                                                <input type="hidden" name="motif">
+                                                <button class="btn btn-sm btn-danger" title="Annuler le paiement">
+                                                    <i class="fa fa-ban"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -65,6 +76,18 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            // Annulation d'un paiement : motif obligatoire (RG-01)
+            $(document).on('submit', '.form-annuler-paiement', function (e) {
+                const form = this;
+                if (form.motif.value) return true;
+                e.preventDefault();
+                const motif = prompt('Motif de l\'annulation du paiement (obligatoire) :');
+                if (motif && motif.trim()) {
+                    form.motif.value = motif.trim();
+                    form.submit();
+                }
+            });
+
             $('#paymentsTable').DataTable({
                 "language": {
                     "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"

@@ -9,6 +9,13 @@
                 <span class="nav-main-link-name">Ma Caisse</span>
             </a>
         </li>
+        @if(auth()->user()->can('caisse.valider_cloture') || auth()->user()->hasRole(['admin', 'super_admin']))
+        <li class="nav-main-item">
+            <a class="nav-main-link" href="{{ route('caisse.consolidation') }}">
+                <span class="nav-main-link-name">Consolidation du jour</span>
+            </a>
+        </li>
+        @endif
         @hasrole('admin|super_admin')
         <li class="nav-main-item">
             <a class="nav-main-link" href="{{ route('caisse.index') }}">

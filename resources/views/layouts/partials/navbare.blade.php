@@ -21,6 +21,26 @@
 
         <!-- Right Section -->
         <div class="space-x-1 d-flex align-items-center">
+            <!-- Établissement de travail (EF-01.03) -->
+            @if(isset($etablissementsAccessibles) && $etablissementsAccessibles->count() > 1)
+                <form action="{{ route('etablissement.changer') }}" method="POST" class="d-inline-block align-middle me-2">
+                    @csrf
+                    <div class="input-group input-group-sm flex-nowrap">
+                        <span class="input-group-text bg-body-light border-0" title="Établissement">
+                            <i class="fa fa-hospital"></i>
+                        </span>
+                        <select name="etablissement_id" class="form-select form-select-sm no-select2 bg-body-light border-0 fw-semibold"
+                                onchange="this.form.submit();" style="cursor: pointer; width: auto; max-width: 220px;">
+                            @foreach($etablissementsAccessibles as $etab)
+                                <option value="{{ $etab->id }}" {{ \App\Models\Etablissement::courantId() == $etab->id ? 'selected' : '' }}>{{ $etab->nom }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+            @elseif(isset($etablissementsAccessibles))
+                <span class="badge bg-body-light text-body fw-semibold me-2"><i class="fa fa-hospital me-1"></i>{{ \App\Models\Etablissement::courant()->nom }}</span>
+            @endif
+
             <!-- Sélecteur d'Année (Exercice) -->
             <form action="{{ route('exercice.set') }}" method="POST" id="form-exercice-nav" class="d-inline-block align-middle me-2">
                 @csrf

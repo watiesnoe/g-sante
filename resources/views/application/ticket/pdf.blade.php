@@ -77,7 +77,7 @@
 </head>
 <body>
 @php
-    $tckNum     = 'TCK-' . \Carbon\Carbon::parse($ticket->created_at)->format('Y') . '-' . str_pad($ticket->id, 6, '0', STR_PAD_LEFT);
+    $tckNum     = $ticket->numero ?? 'TCK-' . \Carbon\Carbon::parse($ticket->created_at)->format('Y') . '-' . str_pad($ticket->id, 6, '0', STR_PAD_LEFT);
     $date       = \Carbon\Carbon::parse($ticket->created_at)->format('d/m/Y');
     $heure      = \Carbon\Carbon::parse($ticket->created_at)->format('H:i');
     $statut     = $ticket->statut ?? 'en_attente';

@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,11 +11,13 @@ use Carbon\Carbon;
 
 class Ticket extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
     use HasFactory;
 
     protected $fillable = [
-        'patient_id', 'description', 'total', 'date_validite', 'statut', 'assurance_id', 'taux_couverture', 'part_assurance', 'part_patient','user_id', 'medecin_id'];
+        'numero', 'patient_id', 'description', 'total', 'date_validite', 'statut', 'assurance_id', 'taux_couverture', 'part_assurance', 'part_patient','user_id', 'medecin_id', 'motif_remise', 'motif_annulation', 'annule_par', 'annule_at', 'convention_id', 'numero_assure', 'part_gratuite', 'passage_id'];
 
     protected $dates = ['date_validite'];
 
@@ -88,5 +92,11 @@ class Ticket extends Model
     public function getTotalCalculeAttribute()
     {
         return $this->items()->sum('sous_total');
+    }
+
+    /** Vrai si le ticket a donné lieu à un encaissement en caisse. */
+    public function aDesEncaissements(): bool
+    {
+        return CaisseMouvement::where('reference_type', self::class)->where('reference_id', $this->id)->exists();
     }
 }

@@ -28,6 +28,7 @@
                     <thead>
                     <tr>
                         <th class="text-center" style="width: 80px;">#</th>
+                        <th>N° dossier</th>
                         <th>Nom</th>
                         <th>Prénom</th>
                         <th class="d-none d-sm-table-cell" style="width: 100px;">Sexe</th>
@@ -92,6 +93,7 @@
                         searchable: false,
                         className: 'text-center'
                     },
+                    { data: 'numero_dossier', name: 'numero_dossier' },
                     { data: 'nom', name: 'nom' },
                     { data: 'prenom', name: 'prenom' },
                     {

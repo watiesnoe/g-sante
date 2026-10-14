@@ -104,7 +104,7 @@ class CommandeController extends Controller
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
-        $fournisseurs = DB::table('fournisseurs')->select('id', 'nom')->get();
+        $fournisseurs = \App\Models\Etablissement::table('fournisseurs')->select('id', 'nom')->get();
         $medicaments = Medicament::with('unites')->get();
         $panier = session()->get('commande_panier', []);
 
@@ -324,7 +324,7 @@ class CommandeController extends Controller
         }
 
         $commande->load(['lignes.medicament.unites', 'lignes.unite']);
-        $fournisseurs = DB::table('fournisseurs')->select('id', 'nom')->get();
+        $fournisseurs = \App\Models\Etablissement::table('fournisseurs')->select('id', 'nom')->get();
         $medicaments = Medicament::with('unites')->get();
 
         // Charger les lignes dans le panier de session

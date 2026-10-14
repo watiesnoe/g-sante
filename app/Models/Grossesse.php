@@ -1,12 +1,16 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Grossesse extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
     protected $fillable = [
         'patient_id', 'ddr', 'dpa', 'parite', 

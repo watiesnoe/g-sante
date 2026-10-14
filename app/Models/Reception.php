@@ -1,13 +1,17 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Reception extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
     use HasFactory;
 
@@ -17,7 +21,11 @@ class Reception extends Model
         'date_reception',
         'reference_reception',
         'observations',
-        'user_id'
+        'user_id',
+        'statut',
+        'motif_annulation',
+        'annule_par',
+        'annule_at',
     ];
 
     protected $casts = [

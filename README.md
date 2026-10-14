@@ -1,66 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# G-SANTÉ — Plateforme intégrée de gestion sanitaire
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application de gestion pour cabinets médicaux, cliniques, CSRéf et hôpitaux : accueil, consultations,
+ordonnances, laboratoire, hospitalisation, maternité, pharmacie et stock, caisse.
+Un noyau commun et des modules activables par établissement (Paramètres → Établissement).
 
-## About Laravel
+Le cahier des charges de référence est `Cahier_des_charges_plateforme_gestion_sanitaire_v2.1.pdf`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Prérequis
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.2 ou plus, avec les extensions `pdo_mysql`, `mbstring`, `zip`, `gd`, `intl`
+- MySQL 8 ou MariaDB 10.6 et plus (XAMPP convient en développement)
+- Composer 2, Node.js 18 et plus
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Installation (environ 20 minutes)
 
-## Learning Laravel
+```bash
+git clone https://github.com/watiesnoe/g-sante.git && cd g-sante
+composer install
+npm install && npm run build
+cp .env.example .env
+php artisan key:generate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Dans `.env`, renseigner `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, et `DB_DUMP_BINARY_PATH`
+(sous XAMPP : `/opt/lampp/bin`). Créer ensuite les deux bases, puis les tables et les droits :
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```sql
+CREATE DATABASE gsante      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE gsante_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan migrate
+php artisan db:seed --class=PermissionRoleSeeder
+php artisan serve
+```
 
-## Laravel Sponsors
+À la première connexion d'un administrateur, un bandeau invite à configurer l'établissement :
+nom, type, modules activés et règles de fonctionnement.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Tests
 
-### Premium Partners
+```bash
+php artisan test
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Les tests utilisent **uniquement** la base `gsante_test` (forcée dans `phpunit.xml`) : ils la vident à
+chaque exécution. Ne jamais les pointer sur la base de travail.
 
-## Contributing
+Les tests du dossier `tests/Feature/Lot0` vérifient les critères de sortie du lot 0
+(REC-07, REC-08, REC-13, REC-14, REC-15). L'intégration continue (`.github/workflows/tests.yml`)
+les lance à chaque envoi.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Sauvegarde et restauration (ENF-05)
 
-## Code of Conduct
+Sauvegarde manuelle de la base :
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan backup:run --only-db
+```
 
-## Security Vulnerabilities
+Les archives sont dans `storage/app/private/g-sante/`. Pour une sauvegarde nocturne automatique,
+ajouter cette ligne à la crontab du serveur (`crontab -e`) :
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+* * * * * cd /chemin/vers/g-sante && php artisan schedule:run >> /dev/null 2>&1
+```
 
-## License
+Elle déclenche la purge des anciennes archives à 1 h, la sauvegarde complète à 1 h 30 et un contrôle
+de santé à 7 h. Pour une copie sur un second support, monter un disque externe ou un NAS, puis
+renseigner `BACKUP_EXTERNAL_PATH` et `BACKUP_DISKS=local,sauvegarde_externe`. Renseigner aussi
+`BACKUP_ARCHIVE_PASSWORD` pour chiffrer les archives.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Restauration sur un serveur vierge :
+
+```bash
+unzip storage/app/private/g-sante/AAAA-MM-JJ-HH-MM-SS.zip -d /tmp/restauration
+mysql -u root -p -e "CREATE DATABASE gsante CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+mysql -u root -p gsante < /tmp/restauration/db-dumps/mysql-gsante.sql
+```
+
+Tester cette restauration chaque trimestre sur une base temporaire (scénario REC-10).
+
+## Règles à connaître avant de modifier le code
+
+- **Argent** : un encaissement, un paiement ou un mouvement de caisse ne se supprime ni ne se modifie.
+  Il s'annule avec un motif, ce qui crée une écriture inverse (`App\Services\CaisseService`).
+  Le modèle lève une exception en cas de tentative (`App\Traits\Inalterable`).
+- **Stock** : la quantité d'un médicament est la somme de ses mouvements. Toute entrée ou sortie passe
+  par `App\Services\StockService` (lots, péremptions, sortie FEFO, verrou contre les ventes simultanées).
+  `medicaments.stock` n'est qu'un total tenu à jour par ce service.
+- **Caisse** : une session passe de ouverte à clôturée (écart justifié) puis validée, sans retour
+  en arrière. Selon les règles de l'établissement, un responsable valide la clôture et on ne valide
+  ni n'annule ses propres opérations (séparation des tâches).
+- **Audit** : les modèles métier utilisent `App\Traits\Audite`. Le journal (Paramètres → Journal
+  d'audit) est protégé par des déclencheurs en base contre toute modification.
+- **Établissement** : les données métier portent `etablissement_id` (`App\Traits\AppartientEtablissement`).
+  Le code teste un module ou un paramètre (`Etablissement::courant()->parametre(...)`), jamais le type
+  d'établissement.

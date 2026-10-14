@@ -1,12 +1,16 @@
 <?php
 
 namespace App\Models;
-use App\Traits\HasUuid;
+
+use App\Traits\AppartientEtablissement;
+use App\Traits\Audite;use App\Traits\HasUuid;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Ordonnance extends Model
 {
+    use AppartientEtablissement;
+    use Audite;
     use HasUuid;
     protected $fillable = ['consultation_id', 'date','statutordo','date_paiement'];
 

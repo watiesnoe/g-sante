@@ -19,7 +19,7 @@ class SalleController extends Controller
         abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
 
         if ($request->ajax()) {
-            $salles = DB::table('salles')
+            $salles = \App\Models\Etablissement::table('salles')
                 ->join('service_medicals', 'salles.service_medical_id', '=', 'service_medicals.id')
                 ->leftJoin('lits', 'salles.id', '=', 'lits.salle_id')
                 ->select([
@@ -55,7 +55,7 @@ class SalleController extends Controller
                 ->make(true);
         }
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.index', compact('services'));
     }
 
@@ -67,7 +67,7 @@ class SalleController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.create', compact('services'));
     }
     public function litsLibres($salleId)
@@ -120,7 +120,7 @@ class SalleController extends Controller
     {
         abort_unless(Auth::user()->can('parametres.salles'), 403, 'Accès non autorisé.');
 
-        $services = DB::table('service_medicals')->select('id', 'nom')->get();
+        $services = \App\Models\Etablissement::table('service_medicals')->select('id', 'nom')->get();
         return view('application.salle.create', compact('salle', 'services'));
     }
 

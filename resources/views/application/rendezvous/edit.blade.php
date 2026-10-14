@@ -81,7 +81,8 @@
                         <select name="statut" class="form-select" required>
                             <option value="prevu"    {{ $rendezvous->statut == 'prevu'    ? 'selected' : '' }}>Prévu</option>
                             <option value="en_attente" {{ $rendezvous->statut == 'en_attente' ? 'selected' : '' }}>En attente</option>
-                            <option value="realise"  {{ $rendezvous->statut == 'realise'  ? 'selected' : '' }}>Réalisé</option>
+                            <option value="realise"  {{ $rendezvous->statut == 'realise'  ? 'selected' : '' }}>Honoré</option>
+                            <option value="absent"   {{ $rendezvous->statut == 'absent'   ? 'selected' : '' }}>Absent</option>
                             <option value="annule"   {{ $rendezvous->statut == 'annule'   ? 'selected' : '' }}>Annulé</option>
                         </select>
                     </div>

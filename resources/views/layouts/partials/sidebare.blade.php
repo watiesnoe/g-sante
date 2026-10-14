@@ -45,6 +45,14 @@
                     @include('layouts.partials.menus.ticket')
                 @endif
 
+                @if(auth()->user()->hasModuleAccess('urgences'))
+                    @include('layouts.partials.menus.urgences')
+                @endif
+
+                @if(auth()->user()->hasModuleAccess('references'))
+                    @include('layouts.partials.menus.references')
+                @endif
+
                 @if(auth()->user()->hasModuleAccess('consultation'))
                     @include('layouts.partials.menus.consultation')
                 @endif
@@ -65,12 +73,50 @@
                     @include('layouts.partials.menus.hospitalisation')
                 @endif
 
+                @if(auth()->user()->hasModuleAccess('bloc'))
+                    @include('layouts.partials.menus.bloc')
+                @endif
+
                 @if(auth()->user()->hasModuleAccess('stock'))
                     @include('layouts.partials.menus.stock')
                 @endif
 
                 @if(auth()->user()->hasModuleAccess('paiements'))
                     @include('layouts.partials.menus.paiements')
+                @endif
+
+                @if(auth()->user()->can('rapports.mensuel'))
+                    <li class="nav-main-item">
+                        <a class="nav-main-link" href="{{ route('rapports-mensuels.index') }}">
+                            <i class="nav-main-link-icon fa fa-file-medical-alt"></i>
+                            <span class="nav-main-link-name">Rapports mensuels</span>
+                        </a>
+                    </li>
+                @endif
+
+                @can('rapports.view')
+                    <li class="nav-main-item">
+                        <a class="nav-main-link" href="{{ route('rapports.index') }}">
+                            <i class="nav-main-link-icon fa fa-chart-bar"></i>
+                            <span class="nav-main-link-name">Rapports</span>
+                        </a>
+                    </li>
+                @endcan
+
+                @if(auth()->user()->hasModuleAccess('maintenance'))
+                    @include('layouts.partials.menus.maintenance')
+                @endif
+
+                @if(auth()->user()->hasModuleAccess('rh'))
+                    @include('layouts.partials.menus.rh')
+                @endif
+
+                @if(auth()->user()->hasModuleAccess('tiers_payants'))
+                    @include('layouts.partials.menus.tiers_payants')
+                @endif
+
+                @if(auth()->user()->hasModuleAccess('finances'))
+                    @include('layouts.partials.menus.finances')
                 @endif
 
                 @if(auth()->user()->hasModuleAccess('caisse'))

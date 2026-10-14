@@ -6,6 +6,7 @@ use App\Models\Medicament;
 use App\Models\OrdonnanceMedicament;
 use App\Models\OrdonnancePaiement;
 use App\Models\Patient;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -223,6 +224,7 @@ class OrdonnanceController extends Controller
 
         $request->validate([
             'medicaments' => 'required|array',
+            'mode_paiement' => ['nullable', \Illuminate\Validation\Rule::in(\App\Models\Etablissement::courant()->parametre('caisse.modes'))],
         ]);
 
         foreach ($request->medicaments as $medId => $qteDemandee) {
@@ -253,10 +255,15 @@ class OrdonnanceController extends Controller
         }
         
         DB::transaction(function() use ($request, $ordonnance, &$montantTotal) {
+            $stock = app(StockService::class);
+            $tiersPayant = app(\App\Services\TiersPayantService::class);
+            $patient = $ordonnance->consultation?->patient;
+
             foreach ($request->medicaments as $medId => $qteDemandee) {
                 // 🔒 Verrou pessimiste pour éviter une survente en cas de paiements concurrents
                 $med = Medicament::where('id', $medId)->lockForUpdate()->firstOrFail();
-                $qteFinale = min($qteDemandee, $med->stock);
+                // Seuls les lots non périmés sont vendables (RG-10)
+                $qteFinale = min((int) $qteDemandee, $stock->disponible($med));
 
                 if ($qteFinale > 0) {
                     // Mettre à jour la ligne pivot de manière robuste
@@ -265,20 +272,26 @@ class OrdonnanceController extends Controller
                         'statut_vente' => 'disponible',
                     ]);
 
-                    // Décrémenter le stock
-                    $med->decrement('stock', $qteFinale);
-
-                    // Créer le paiement
-                    OrdonnancePaiement::create([
+                    // Créer le paiement, avec la part prise en charge par l'organisme du patient (EF-07.03)
+                    $prixTotal = round($med->prix_vente * $qteFinale, 2);
+                    // EF-05.03 : médicament gratuit pour ce patient ? sinon part de l'organisme (EF-07.03)
+                    $regle = app(\App\Services\GratuiteService::class)->pourMedicament($patient, $med->id);
+                    $parts = $regle
+                        ? ['assurance_id' => null, 'convention_id' => null, 'part_assurance' => 0.0, 'part_gratuite' => $prixTotal, 'regle_gratuite_id' => $regle->id, 'part_patient' => 0.0]
+                        : $tiersPayant->partsMedicament($patient, $prixTotal);
+                    $paiement = OrdonnancePaiement::create([
                         'ordonnance_id' => $ordonnance->id,
                         'medicament_id' => $med->id,
                         'quantite' => $qteFinale,
-                        'prix_total' => $med->prix_vente * $qteFinale,
+                        'prix_total' => $prixTotal,
                         'statut' => 'payé',
-                    ]);
+                    ] + $parts);
 
-                    // Ajouter au montant total
-                    $montantTotal += $med->prix_vente * $qteFinale;
+                    // Sortie de stock FEFO, rattachée au paiement
+                    $stock->sortie($med, $qteFinale, $paiement, 'Dispensation ordonnance #' . $ordonnance->id);
+
+                    // Le patient ne paie que sa part
+                    $montantTotal += $parts['part_patient'];
                 }
             }
 
@@ -294,7 +307,8 @@ class OrdonnanceController extends Controller
                     $montantTotal,
                     'Paiement Ordonnance #' . $ordonnance->id,
                     'entree',
-                    $ordonnance
+                    $ordonnance,
+                    $request->input('mode_paiement', 'especes')
                 );
             }
         });
@@ -306,6 +320,50 @@ class OrdonnanceController extends Controller
         ]);
 
     }
+    /**
+     * Annuler la vente d'une ordonnance (RG-01) : les paiements restent visibles,
+     * marqués annulés ; les médicaments reviennent dans leurs lots et
+     * l'encaissement est neutralisé en caisse.
+     */
+    public function annulerPaiement(Request $request, Ordonnance $ordonnance)
+    {
+        abort_unless(Auth::user()->can('ordonnances.payer'), 403, 'Accès non autorisé.');
+        $request->validate(['motif' => 'required|string|max:255'], ['motif.required' => 'Le motif de l\'annulation est obligatoire.']);
+
+        $paiements = OrdonnancePaiement::where('ordonnance_id', $ordonnance->id)->where('statut', 'payé')->get();
+        if ($paiements->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Aucune vente à annuler pour cette ordonnance.'], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($ordonnance, $paiements, $request) {
+                app(\App\Services\CaisseService::class)->annulerReference($ordonnance, $request->motif);
+
+                $stock = app(StockService::class);
+                foreach ($paiements as $paiement) {
+                    $stock->annulerSource($paiement, $request->motif);
+                    $paiement->update([
+                        'statut'           => 'annule',
+                        'motif_annulation' => $request->motif,
+                        'annule_par'       => Auth::id(),
+                        'annule_at'        => now(),
+                    ]);
+                    $ordonnance->medicaments()->updateExistingPivot($paiement->medicament_id, ['qte_vendu' => 0]);
+                }
+
+                $ordonnance->update(['statutordo' => 'impaye', 'date_paiement' => null]);
+            });
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 403);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
+        } catch (\App\Exceptions\StockInsuffisantException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Vente annulée : médicaments remis en stock et encaissement neutralisé.']);
+    }
+
     public function lespayer(Request $request)
     {
         // Permission dédiée (distincte de ordonnances.view) : les médecins voient et
@@ -314,7 +372,7 @@ class OrdonnanceController extends Controller
         abort_unless(Auth::user()->can('ordonnances.view_payees'), 403, 'Accès non autorisé : vous n\'avez pas la permission de voir les ordonnances payées.');
 
         if ($request->ajax()) {
-            $ordonnances = DB::table('ordonnances')
+            $ordonnances = \App\Models\Etablissement::table('ordonnances')
                 ->join('consultations', 'ordonnances.consultation_id', '=', 'consultations.id')
                 ->join('patients', 'consultations.patient_id', '=', 'patients.id')
                 ->whereIn('ordonnances.statutordo', ['paye', 'partiellement'])
@@ -326,7 +384,7 @@ class OrdonnanceController extends Controller
                     'ordonnances.statutordo',
                     'patients.nom',
                     'patients.prenom',
-                    DB::raw('(SELECT SUM(prix_total) FROM ordonnance_paiements WHERE ordonnance_paiements.ordonnance_id = ordonnances.id) as montant_paye')
+                    DB::raw("(SELECT SUM(prix_total) FROM ordonnance_paiements WHERE ordonnance_paiements.ordonnance_id = ordonnances.id AND ordonnance_paiements.statut = 'payé') as montant_paye")
                 )
                 ->orderByDesc('ordonnances.created_at');
 
@@ -340,6 +398,9 @@ class OrdonnanceController extends Controller
 
                     if ($user->can('ordonnances.pdf')) {
                         $html .= '<a href="'.route('ordonnances.pdf', $ord->uuid).'" class="btn btn-sm btn-outline-danger" title="Imprimer PDF"><i class="fa fa-file-pdf"></i> PDF</a>';
+                    }
+                    if ($user->can('ordonnances.payer') && $user->can('caisse.annuler')) {
+                        $html .= '<button type="button" class="btn btn-sm btn-outline-dark btn-annuler-vente" data-url="'.route('ordonnances.annulerPaiement', $ord->uuid).'" title="Annuler la vente"><i class="fa fa-ban"></i></button>';
                     }
 
                     return '<div class="d-flex align-items-center justify-content-center gap-1">' . $html . '</div>';

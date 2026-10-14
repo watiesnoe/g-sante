@@ -103,7 +103,7 @@ class RendezvousController extends Controller
             $patient = Patient::where('uuid', $request->patient_id)->firstOrFail();
         }
 
-        $medecins = User::whereHas('roles', function ($q) {
+        $medecins = User::deLEtablissement()->whereHas('roles', function ($q) {
             $q->where('name', 'medecin');
         })->orderBy('name')->get();
 
@@ -319,7 +319,7 @@ class RendezvousController extends Controller
         abort_if($rendezvous->statut === 'realise', 403, 'Ce rendez-vous a déjà été réalisé : il ne peut plus être modifié.');
 
         $rendezvous->load(['patient', 'medecin', 'consultation']);
-        $medecins = \App\Models\User::whereHas('roles', function ($q) {
+        $medecins = \App\Models\User::deLEtablissement()->whereHas('roles', function ($q) {
             $q->where('name', 'medecin');
         })->orderBy('name')->get();
 
@@ -336,7 +336,7 @@ class RendezvousController extends Controller
             'date_heure' => 'required|date',
             'motif'      => 'nullable|string|max:255',
             'medecin_id' => 'required|exists:users,id', // s'adapte à votre table des médecins/utilisateurs
-            'statut'     => 'required|in:prevu,en_attente,realise,annule',
+            'statut'     => 'required|in:prevu,en_attente,realise,absent,annule',
         ]);
 
         // 2. Prise en compte de toutes les modifications
