@@ -111,6 +111,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/stock/magasins', [\App\Http\Controllers\MagasinController::class, 'index'])->name('magasins.index');
     Route::post('/stock/magasins', [\App\Http\Controllers\MagasinController::class, 'store'])->name('magasins.store');
     Route::post('/stock/magasins/transfert', [\App\Http\Controllers\MagasinController::class, 'transferer'])->name('magasins.transferer');
+    Route::get('/stock/requisitions', [\App\Http\Controllers\RequisitionController::class, 'index'])->name('requisitions.index');
+    Route::post('/stock/requisitions', [\App\Http\Controllers\RequisitionController::class, 'store'])->name('requisitions.store');
+    Route::post('/stock/requisitions/{requisition}/servir', [\App\Http\Controllers\RequisitionController::class, 'servir'])->name('requisitions.servir');
+    Route::post('/stock/requisitions/{requisition}/rejeter', [\App\Http\Controllers\RequisitionController::class, 'rejeter'])->name('requisitions.rejeter');
+    Route::post('/stock/requisitions/{requisition}/annuler', [\App\Http\Controllers\RequisitionController::class, 'annuler'])->name('requisitions.annuler');
+    Route::get('/stock/besoins', [\App\Http\Controllers\BesoinController::class, 'index'])->name('besoins.index');
+    Route::post('/stock/besoins/proposer', [\App\Http\Controllers\BesoinController::class, 'proposer'])->name('besoins.proposer');
     Route::get('/budget', [\App\Http\Controllers\BudgetController::class, 'index'])->name('budget.index');
     Route::post('/budget', [\App\Http\Controllers\BudgetController::class, 'store'])->name('budget.store');
     Route::get('/rapports-mensuels', [\App\Http\Controllers\RapportMensuelController::class, 'index'])->name('rapports-mensuels.index');

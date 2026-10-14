@@ -20,6 +20,8 @@ class LaboratoireController extends Controller
         $statut = $request->statut ?: 'en_cours';
         $examens = PrescriptionExamen::with(['consultation.patient', 'consultation.medecin', 'resultat', 'validateur'])
             ->when($request->type, fn($q) => $q->where('type', $request->type))
+            // Le prescripteur retrouve ses propres demandes (ancien écran « Analyses supplémentaires »)
+            ->when($request->boolean('mes'), fn($q) => $q->whereHas('consultation', fn($c) => $c->where('medecin_id', Auth::id())))
             ->when($statut === 'en_cours', fn($q) => $q->whereIn('statut', ['demande', 'preleve', 'planifie', 'realise', 'saisi']),
                 fn($q) => $q->where('statut', $statut))
             ->latest()->limit(300)->get();

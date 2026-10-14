@@ -103,6 +103,9 @@ class CommandeController extends Controller
     public function create()
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+        if ($this->commandeSurProposition()) {
+            return redirect()->route('achats.index')->with('error', self::MESSAGE_PROPOSITION);
+        }
 
         $fournisseurs = \App\Models\Etablissement::table('fournisseurs')->select('id', 'nom')->get();
         $medicaments = Medicament::with('unites')->get();
@@ -137,6 +140,9 @@ class CommandeController extends Controller
     public function ajouterAuPanier(Request $request)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+        if ($this->commandeSurProposition()) {
+            return response()->json(['message' => self::MESSAGE_PROPOSITION], 422);
+        }
 
         $id = $request->medicament_id;
         $medicament = Medicament::with(['unites', 'uniteDefault'])->findOrFail($id);
@@ -215,6 +221,9 @@ class CommandeController extends Controller
     public function store(Request $request)
     {
         abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+        if ($this->commandeSurProposition()) {
+            return redirect()->route('achats.index')->with('error', self::MESSAGE_PROPOSITION);
+        }
 
         // Validation
         $request->validate([
@@ -278,12 +287,18 @@ class CommandeController extends Controller
 
     public function bulkAjouterAuPanier(Request $request)
     {
-        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
+        abort_unless(Auth::user()->can('stock.commandes') || Auth::user()->can('stock.besoins'), 403, 'Accès non autorisé.');
 
         $ids = $request->medicament_ids;
         if(!$ids || !is_array($ids)) {
             return redirect()->back()->with('error', 'Aucun médicament sélectionné.');
         }
+
+        // Circuit contrôlé : la sélection part dans l'état des besoins pour devenir une proposition
+        if ($this->commandeSurProposition()) {
+            return redirect()->route('besoins.index', ['ids' => $ids]);
+        }
+        abort_unless(Auth::user()->can('stock.commandes'), 403, 'Accès non autorisé.');
 
         $medicaments = Medicament::with(['unites', 'uniteDefault'])->whereIn('uuid', $ids)->get();
         $panier = session()->get('commande_panier', []);
@@ -527,5 +542,16 @@ class CommandeController extends Controller
         }
 
         return '<span class="badge bg-' . $info['color'] . '">' . $info['label'] . '</span>';
+    }
+
+    private const MESSAGE_PROPOSITION = 'Avec la séparation des tâches, une commande part d\'une proposition approuvée : préparez-la depuis Stock → État des besoins.';
+
+    /**
+     * Séparation des tâches active : une commande fournisseur ne naît que d'une
+     * proposition approuvée par un responsable (DemandeAchatController).
+     */
+    private function commandeSurProposition(): bool
+    {
+        return (bool) \App\Models\Etablissement::courant()->parametre('securite.separation_taches');
     }
 }

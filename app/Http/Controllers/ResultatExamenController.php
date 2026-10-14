@@ -53,7 +53,8 @@ class ResultatExamenController extends Controller
                 ->rawColumns(['fichier','actions'])
                 ->make(true);
         }
-        return view('application.examenreponse.index'); // Vue DataTable
+        // Écran fusionné dans le poste laboratoire : l'ancienne adresse y mène
+        return redirect()->route('laboratoire.index', ['statut' => 'valide']);
     }
     public function create()
     {
@@ -151,7 +152,7 @@ class ResultatExamenController extends Controller
 
         $resultatExamen->update($data);
 
-        return redirect()->route('reponses.index')->with('success', 'Résultat mis à jour avec succès.');
+        return redirect()->route('laboratoire.index')->with('success', 'Résultat mis à jour avec succès.');
     }
 
     public function destroy(ResultatExamen $resultatExamen)
@@ -160,7 +161,7 @@ class ResultatExamenController extends Controller
         abort_if($resultatExamen->prescriptionExamen?->statut === 'valide', 403, 'Résultat validé : il ne peut plus être supprimé.');
 
         $resultatExamen->delete();
-        return redirect()->route('reponses.index')->with('success', 'Résultat supprimé avec succès.');
+        return redirect()->route('laboratoire.index')->with('success', 'Résultat supprimé avec succès.');
     }
 
     /**

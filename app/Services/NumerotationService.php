@@ -21,6 +21,7 @@ class NumerotationService
         'bordereau' => 'B',
         'demande_achat' => 'DA',
         'reference' => 'R',
+        'requisition' => 'RQ',
     ];
 
     public function suivant(string $type, ?Etablissement $etablissement = null): string

@@ -71,7 +71,8 @@ class PrescriptionExamenController extends Controller
                 ->make(true);
         }
 
-        return view('application.examen.listeprescription');
+        // Écran fusionné dans le poste laboratoire (filtre « Mes prescriptions ») : l'ancienne adresse y mène
+        return redirect()->route('laboratoire.index', Auth::user()->can('consultations.create') ? ['mes' => 1] : []);
     }
 
     /**

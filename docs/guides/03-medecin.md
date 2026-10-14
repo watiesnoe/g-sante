@@ -37,6 +37,10 @@ Choisissez le service et le lit libre. Le lit passe « Occupé ». La sortie (ou
 
 **Références / évacuations** : motif, établissement de destination, état du patient. Imprimez la **fiche de référence** qui accompagne le patient. Le retour d'information (contre-référence) est enregistré à la réception de la réponse.
 
+## Transférer
+
+**Transferts** sert aux mouvements **internes** : vers un autre médecin, ou vers un autre service. Si vous transférez un patient hospitalisé **vers un autre hôpital**, l'application crée automatiquement la référence correspondante : imprimez sa fiche dans **Références / évacuations**.
+
 ## Bloc opératoire (hôpital)
 
 **Bloc opératoire** : programmez l'intervention (salle, date, heure, équipe). L'application refuse deux interventions dans la même salle au même moment. Enregistrez ensuite le compte rendu et les consommables utilisés : ils s'ajoutent au relevé de séjour du patient.

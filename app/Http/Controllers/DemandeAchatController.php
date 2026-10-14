@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * EF-12.04 : demandes d'achat des services → approbation → commande fournisseur,
- * puis réception rapprochée du stock (module Réceptions existant).
+ * EF-12.04 : propositions de commande de la pharmacie → approbation → une commande
+ * par fournisseur, puis réception rapprochée du stock (module Réceptions existant).
+ * Les services, eux, passent par une réquisition interne (RequisitionController).
  */
 class DemandeAchatController extends Controller
 {
@@ -24,8 +25,9 @@ class DemandeAchatController extends Controller
         abort_unless(Auth::user()->can('achats.demander') || Auth::user()->can('achats.approuver'), 403, 'Accès non autorisé.');
 
         return view('application.achat.index', [
-            'demandes'     => DemandeAchat::with(['lignes.medicament', 'demandeur', 'service', 'commande'])->latest()->get(),
-            'medicaments'  => Medicament::orderBy('nom')->get(['id', 'nom', 'stock', 'stock_min']),
+            'demandes'     => DemandeAchat::with(['lignes.medicament.uniteDefault', 'lignes.fournisseur', 'demandeur', 'service', 'commande', 'commandes'])->latest()->get(),
+            'medicaments'  => Medicament::with('uniteDefault')->orderBy('nom')->get(['id', 'nom', 'stock', 'stock_min']),
+            'derniersFournisseurs' => $this->derniersFournisseurs(),
             'services'     => ServiceMedical::orderBy('nom')->get(['id', 'nom']),
             'fournisseurs' => Fournisseur::orderBy('nom')->get(['id', 'nom']),
         ]);
@@ -39,7 +41,7 @@ class DemandeAchatController extends Controller
             'service_medical_id'      => 'nullable|exists:service_medicals,id',
             'motif'                   => 'nullable|string|max:255',
             'lignes'                  => 'required|array|min:1',
-            'lignes.*.medicament_id'  => 'required|exists:medicaments,id',
+            'lignes.*.medicament_id'  => 'required|distinct|exists:medicaments,id',
             'lignes.*.quantite'       => 'required|integer|min:1',
         ]);
 
@@ -56,7 +58,7 @@ class DemandeAchatController extends Controller
             }
         });
 
-        return back()->with('success', 'Demande d\'achat enregistrée.');
+        return back()->with('success', 'Proposition de commande enregistrée.');
     }
 
     public function action(Request $request, DemandeAchat $demande, string $action)
@@ -84,34 +86,65 @@ class DemandeAchatController extends Controller
             'commander' => $this->commander($request, $demande),
         };
 
-        return back()->with('success', 'Demande ' . $demande->numero . ' : ' . DemandeAchat::STATUTS[$demande->fresh()->statut] . '.');
+        return back()->with('success', 'Proposition ' . $demande->numero . ' : ' . DemandeAchat::STATUTS[$demande->fresh()->statut] . '.');
     }
 
-    /** Transforme la demande approuvée en commande fournisseur, au prix d'achat de l'unité par défaut. */
+    /**
+     * Transforme la proposition approuvée en commandes : une par fournisseur choisi
+     * ligne à ligne, au prix d'achat de l'unité par défaut.
+     */
     private function commander(Request $request, DemandeAchat $demande): void
     {
-        $request->validate(['fournisseur_id' => 'required|exists:fournisseurs,id']);
+        $lignes = $demande->lignes()->with('medicament.uniteDefault')->get();
+        $choix = (array) $request->input('fournisseurs', []);
+        // Ancien formulaire : un seul fournisseur pour toute la demande
+        foreach ($lignes as $ligne) {
+            $choix[$ligne->id] = $choix[$ligne->id] ?? $request->input('fournisseur_id');
+        }
+        $request->merge(['fournisseurs' => $choix]);
+        $request->validate(
+            ['fournisseurs' => 'required|array', 'fournisseurs.*' => 'required|exists:fournisseurs,id'],
+            ['fournisseurs.*.required' => 'Choisissez un fournisseur pour chaque produit.']
+        );
 
-        DB::transaction(function () use ($request, $demande) {
-            $commande = Commande::create([
-                'reference'      => 'CMD-' . $demande->numero,
-                'date_commande'  => today(),
-                'fournisseur_id' => $request->fournisseur_id,
-                'statut'         => 'en_cours',
-                'total'          => 0,
-            ]);
-            $total = 0;
-            foreach ($demande->lignes()->with('medicament.uniteDefault')->get() as $ligne) {
-                $unite = $ligne->medicament->uniteDefault;
-                $prix = (float) ($unite->prix_achat ?? 0);
-                $commande->lignes()->create([
-                    'medicament_id' => $ligne->medicament_id, 'unite_id' => $unite?->id,
-                    'quantite' => $ligne->quantite, 'prix_unitaire' => $prix, 'total' => $prix * $ligne->quantite,
+        DB::transaction(function () use ($demande, $lignes, $choix) {
+            $parFournisseur = $lignes->groupBy(fn($l) => (int) $choix[$l->id]);
+            $premiere = null;
+            foreach ($parFournisseur as $fournisseurId => $groupe) {
+                // La référence est attribuée par le modèle Commande
+                $commande = Commande::create([
+                    'date_commande'    => today(),
+                    'fournisseur_id'   => $fournisseurId,
+                    'statut'           => 'en_cours',
+                    'total'            => 0,
+                    'demande_achat_id' => $demande->id,
                 ]);
-                $total += $prix * $ligne->quantite;
+                $total = 0;
+                foreach ($groupe as $ligne) {
+                    $unite = $ligne->medicament->uniteDefault;
+                    $prix = (float) ($unite->prix_achat ?? 0);
+                    $commande->lignes()->create([
+                        'medicament_id' => $ligne->medicament_id, 'unite_id' => $unite?->id,
+                        'quantite' => $ligne->quantite, 'prix_unitaire' => $prix, 'total' => $prix * $ligne->quantite,
+                    ]);
+                    $ligne->update(['fournisseur_id' => $fournisseurId]);
+                    $total += $prix * $ligne->quantite;
+                }
+                $commande->update(['total' => $total]);
+                $premiere ??= $commande;
             }
-            $commande->update(['total' => $total]);
-            $demande->update(['statut' => 'commandee', 'commande_id' => $commande->id]);
+            $demande->update(['statut' => 'commandee', 'commande_id' => $premiere->id]);
         });
+    }
+
+    /** Fournisseur de la dernière commande de chaque produit, proposé par défaut. */
+    private function derniersFournisseurs(): array
+    {
+        return Etablissement::table('commandes')
+            ->join('commande_medicaments as cm', 'cm.commande_id', '=', 'commandes.id')
+            ->orderBy('commandes.id')
+            ->get(['cm.medicament_id', 'commandes.fournisseur_id'])
+            ->pluck('fournisseur_id', 'medicament_id')
+            ->all();
     }
 }

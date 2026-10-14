@@ -151,6 +151,22 @@ class TransfertController extends Controller
 
                     // Sortie par transfert : séjour clos, lit libéré (RG-12)
                     app(\App\Services\HospitalisationService::class)->sortir($hospitalisation, 'Transfert');
+
+                    // Un départ vers un autre établissement est une référence sortante :
+                    // fiche imprimable, contre-référence attendue, compté au rapport mensuel (EF-11.01)
+                    $reference = \App\Models\Reference::create([
+                        'numero'                => app(\App\Services\NumerotationService::class)->suivant('reference'),
+                        'sens'                  => 'sortante',
+                        'evacuation'            => false,
+                        'patient_id'            => $patient->id,
+                        'hospitalisation_id'    => $hospitalisation->id,
+                        'structure_origine'     => \App\Models\Etablissement::courant()->nom,
+                        'structure_destination' => $request->hopital_destination,
+                        'motif'                 => $request->motif,
+                        'statut'                => 'emise',
+                        'date_reference'        => now(),
+                        'user_id'               => Auth::id(),
+                    ]);
                 }
             }
 
@@ -160,7 +176,9 @@ class TransfertController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transfert enregistré avec succès ✅',
+                'message' => isset($reference)
+                    ? 'Transfert enregistré ✅ Référence ' . $reference->numero . ' créée : imprimez sa fiche depuis « Références / évacuations ».'
+                    : 'Transfert enregistré avec succès ✅',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

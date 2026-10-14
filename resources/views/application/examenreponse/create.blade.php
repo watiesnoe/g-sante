@@ -56,7 +56,7 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success">Enregistrer</button>
-                        <a href="{{ route('reponses.index') }}" class="btn btn-secondary">Annuler</a>
+                        <a href="{{ route('laboratoire.index') }}" class="btn btn-secondary">Annuler</a>
                     </div>
                 </form>
             </div>

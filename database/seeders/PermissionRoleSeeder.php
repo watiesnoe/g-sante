@@ -117,8 +117,11 @@ class PermissionRoleSeeder extends Seeder
             'stock.familles'                     => 'Gérer les familles de médicaments',
             'stock.unites'                       => 'Gérer les unités de mesure',
             'stock.inventaire'                   => 'Réaliser et valider les inventaires',
-            'achats.demander'                    => 'Émettre une demande d\'achat',
-            'achats.approuver'                   => 'Approuver ou rejeter une demande d\'achat',
+            'achats.demander'                    => 'Préparer une proposition de commande (pharmacie)',
+            'achats.approuver'                   => 'Approuver ou rejeter une proposition de commande',
+            'stock.requisition'                  => 'Demander des produits à la pharmacie (réquisition d\'un service)',
+            'stock.servir'                       => 'Servir les réquisitions des services',
+            'stock.besoins'                      => 'Consulter l\'état des besoins (CMM)',
             'rh.gardes.view'                     => 'Voir le planning des gardes',
             'rh.gardes.gerer'                    => 'Programmer les gardes et astreintes',
             'urgences.view'                      => 'Voir le registre des urgences',
@@ -227,7 +230,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Administrateur']
         );
         $admin->syncPermissions([
-            'accueil.view', 'accueil.create', 'accueil.orienter', 'depenses.view', 'depenses.create', 'depenses.valider', 'depenses.payer', 'patients.fusionner', 'examens.valider', 'achats.demander', 'achats.approuver', 'rh.gardes.view', 'rh.gardes.gerer', 'urgences.view', 'urgences.gerer', 'maternity.accouchement', 'references.view', 'references.gerer', 'gratuites.gerer', 'budget.view', 'budget.gerer', 'rapports.mensuel', 'rapports.valider', 'bloc.view', 'bloc.programmer', 'maintenance.view', 'maintenance.gerer', 'rapports.view', 'tiers_payants.conventions', 'tiers_payants.bordereaux',
+            'accueil.view', 'accueil.create', 'accueil.orienter', 'depenses.view', 'depenses.create', 'depenses.valider', 'depenses.payer', 'patients.fusionner', 'examens.valider', 'achats.demander', 'achats.approuver', 'stock.requisition', 'stock.servir', 'stock.besoins', 'rh.gardes.view', 'rh.gardes.gerer', 'urgences.view', 'urgences.gerer', 'maternity.accouchement', 'references.view', 'references.gerer', 'gratuites.gerer', 'budget.view', 'budget.gerer', 'rapports.mensuel', 'rapports.valider', 'bloc.view', 'bloc.programmer', 'maintenance.view', 'maintenance.gerer', 'rapports.view', 'tiers_payants.conventions', 'tiers_payants.bordereaux',
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search', 'patients.dossier',
             'tickets.view', 'tickets.create', 'tickets.edit',
@@ -261,7 +264,7 @@ class PermissionRoleSeeder extends Seeder
             'bloc.view', 'bloc.programmer', 'maintenance.view',
             'urgences.view', 'urgences.gerer', 'references.view', 'references.gerer', 'maternity.accouchement',
             'rh.gardes.view',
-            'achats.demander',
+            'stock.requisition',
             'accueil.view', 'accueil.orienter',
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search', 'patients.dossier',
@@ -307,7 +310,7 @@ class PermissionRoleSeeder extends Seeder
             'bloc.view', 'maintenance.view',
             'urgences.view', 'urgences.gerer', 'references.view',
             'rh.gardes.view',
-            'achats.demander',
+            'stock.requisition',
             'accueil.view', 'accueil.orienter',
             'dashboard.view',
             'patients.view', 'patients.search', 'patients.dossier',
@@ -326,7 +329,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Pharmacien']
         );
         $pharmacien->syncPermissions([
-            'achats.demander',
+            'achats.demander', 'stock.servir', 'stock.besoins',
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
@@ -371,7 +374,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Gestionnaire de stock']
         );
         $gestionnaire->syncPermissions([
-            'achats.demander',
+            'achats.demander', 'stock.servir', 'stock.besoins',
             'dashboard.view',
             'stock.view', 'stock.medicaments', 'stock.fournisseurs',
             'stock.commandes', 'stock.receptions', 'stock.familles', 'stock.unites', 'stock.inventaire',
@@ -385,7 +388,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Sage-femme']
         );
         $sageFemme->syncPermissions([
-            'maintenance.view',
+            'maintenance.view', 'stock.requisition',
             'maternity.accouchement', 'references.view', 'references.gerer', 'urgences.view',
             'rh.gardes.view',
             'accueil.view', 'accueil.orienter',

@@ -103,6 +103,26 @@ class Etablissement extends Model
             'type'    => 'nombre',
             'defauts' => ['cabinet' => 90, 'clinique' => 90, 'csref' => 90, 'hopital' => 90],
         ],
+        'stock.besoins_periode_mois' => [
+            'label'   => 'Besoins : nombre de mois de consommation pris pour la CMM',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 3, 'clinique' => 3, 'csref' => 3, 'hopital' => 3],
+        ],
+        'stock.besoins_delai_mois' => [
+            'label'   => 'Besoins : délai de livraison du fournisseur (mois)',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 1, 'clinique' => 1, 'csref' => 1, 'hopital' => 1],
+        ],
+        'stock.besoins_couverture_mois' => [
+            'label'   => 'Besoins : période couverte par une commande (mois)',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 1, 'clinique' => 2, 'csref' => 3, 'hopital' => 2],
+        ],
+        'stock.besoins_securite_mois' => [
+            'label'   => 'Besoins : stock de sécurité (mois de consommation)',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 1, 'clinique' => 1, 'csref' => 1, 'hopital' => 1],
+        ],
         'securite.inactivite_minutes' => [
             'label'   => 'Déconnexion automatique après inactivité (minutes)',
             'type'    => 'nombre',

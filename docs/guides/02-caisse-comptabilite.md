@@ -1,6 +1,6 @@
 # 02 — Caisse et comptabilité
 
-Menus : **Caisse**, **Paiements**, **Ordonnances**, **Finances**, **Tiers payants**, **Rapports**.
+Menus : **Caisse**, **Paiements fournisseurs** (règlement des commandes), **Ordonnances**, **Finances**, **Tiers payants**, **Rapports**.
 
 ## Ouvrir sa caisse (chaque matin)
 

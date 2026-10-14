@@ -7,7 +7,11 @@ use App\Traits\Audite;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 
-/** Demande d'achat d'un service (EF-12.04) : soumise, approuvée, puis transformée en commande. */
+/**
+ * Proposition de commande de la pharmacie (EF-12.04) : soumise, approuvée par un
+ * responsable, puis transformée en une commande par fournisseur. Les besoins des
+ * services passent par une réquisition interne (voir Requisition).
+ */
 class DemandeAchat extends Model
 {
     use AppartientEtablissement, Audite, HasUuid;
@@ -38,5 +42,11 @@ class DemandeAchat extends Model
     public function commande()
     {
         return $this->belongsTo(Commande::class);
+    }
+
+    /** Commandes issues de cette proposition (une par fournisseur). */
+    public function commandes()
+    {
+        return $this->hasMany(Commande::class);
     }
 }

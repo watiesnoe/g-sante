@@ -9,13 +9,15 @@ Menus : tous, plus **Paramètres** et **Utilisateurs**.
 3. **Prestations et tarifs** : saisissez les tarifs **officiels** de l'établissement, avec leur date d'entrée en vigueur. Un changement de tarif crée un nouveau tarif daté : les anciens tickets gardent leur prix.
 4. **Assurances et conventions**, **règles de gratuité** : à saisir d'après les textes et conventions en vigueur.
 5. **Utilisateurs** : un compte par personne, avec le bon rôle, **affecté à l'établissement**. Désactivez immédiatement le compte d'un agent qui part.
-6. Pour un CSRéf : l'**identifiant DHIS2** de l'établissement (paramètre `dhis2.org_unit`), fourni par le district.
+6. **Calcul des besoins** (Paramètres → Établissement) : durée de calcul de la CMM, délai de livraison, période couverte par une commande, stock de sécurité. Les valeurs par défaut (3, 1, 1 à 3 et 1 mois) sont à **confirmer avec le pharmacien** selon vos fournisseurs réels.
+7. Pour un CSRéf : l'**identifiant DHIS2** de l'établissement (paramètre `dhis2.org_unit`), fourni par le district.
 
 ## Au quotidien
 
 - **Caisse → Consolidation du jour** et **Supervision Caisses** : validez les clôtures et examinez les écarts.
 - **Annulations** : vous seul annulez un encaissement, toujours avec un motif.
 - **Dépenses** : validez celles des autres.
+- **Propositions de commande** : approuvez ou rejetez celles de la pharmacie.
 - **Hospitalisations → État des lits** : libérez les lits restés « Occupé » sans patient.
 - **Journal d'audit** : qui a fait quoi et quand. Il ne peut pas être modifié.
 

@@ -1,6 +1,6 @@
 # 01 — Accueil et secrétariat
 
-Menus : **Dossiers Patients**, **Tickets**, **Rendez-vous**, **Paiements**.
+Menus : **Dossiers Patients**, **Tickets**, **Rendez-vous**, **Caisse**.
 
 ## Recevoir un patient
 

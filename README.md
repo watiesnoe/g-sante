@@ -8,7 +8,7 @@ Le cahier des charges de référence est `Cahier_des_charges_plateforme_gestion_
 
 ## Prérequis
 
-- PHP 8.2 ou plus, avec les extensions `pdo_mysql`, `mbstring`, `zip`, `gd`, `intl`
+- PHP 8.3 ou plus (exigé par spatie/laravel-permission 7 et laravel-backup 10), avec les extensions `pdo_mysql`, `mbstring`, `zip`, `gd`, `intl`
 - MySQL 8 ou MariaDB 10.6 et plus (XAMPP convient en développement)
 - Composer 2, Node.js 18 et plus
 

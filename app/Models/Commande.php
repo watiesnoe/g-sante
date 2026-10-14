@@ -20,7 +20,8 @@ class Commande extends Model
         'date_commande',
         'statut',
         'total',
-        'StatutPaiement'
+        'StatutPaiement',
+        'demande_achat_id',
     ];
 
     protected $casts = [

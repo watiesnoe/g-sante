@@ -14,6 +14,10 @@ Menus : **Maternité**, **Dossiers Patients**, **Urgences**, **Références**.
 2. Pour chaque **nouveau-né** : sexe, poids, Apgar, état. Chaque nouveau-né vivant reçoit automatiquement son propre dossier patient (au nom de la mère, « Bébé 1 de … » si aucun prénom n'est donné) : complétez-le plus tard.
 3. Ces données alimentent automatiquement le **rapport mensuel** : pas de double saisie.
 
+## Produits pour la salle d'accouchement
+
+Ocytocine, gants, fils, kits… : demandez-les à la pharmacie par **Stock → Réquisitions des services** (voir guide 04).
+
 ## Urgence obstétricale et évacuation
 
 - Une parturiente en urgence est prise en charge sans attendre le paiement.

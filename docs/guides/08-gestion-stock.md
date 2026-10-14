@@ -10,9 +10,16 @@ Menu : **Stock**.
 
 ## Approvisionnement
 
-1. **Demandes d'achat** : les services expriment leurs besoins ; le responsable approuve.
-2. **Commandes** : passez la commande au fournisseur.
-3. **Réceptions** : saisissez **numéro de lot et date de péremption** pour chaque produit reçu.
+1. **Réquisitions des services** : les services demandent à la pharmacie, qui les sert depuis son stock (sortie « dotation »). Ce n'est pas un achat.
+2. **État des besoins** : la quantité à commander est calculée sur la consommation moyenne mensuelle (CMM) des derniers mois, jours de rupture exclus :
+   - point de commande = CMM × (délai de livraison + stock de sécurité) ;
+   - stock maximum = point de commande + CMM × période couverte ;
+   - quantité proposée = stock maximum − disponible − déjà commandé.
+
+   Un produit sans consommation enregistrée utilise son seuil d'alerte saisi à la main.
+3. **Propositions de commande** : créées depuis l'état des besoins, approuvées par un responsable, puis transformées en une commande par fournisseur.
+4. **Commandes** : vérifiez les prix, envoyez le bon de commande au fournisseur.
+5. **Réceptions** : saisissez **numéro de lot et date de péremption** pour chaque produit reçu.
 
 ## Magasins et transferts
 

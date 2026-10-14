@@ -33,6 +33,10 @@ Vous pouvez consulter les résultats validés dans le dossier du patient.
 
 **Personnel → Gardes et astreintes** : votre planning de garde.
 
-## Demande d'achat
+## Demander des produits à la pharmacie
 
-Un produit manque dans le service : **Stock → Demandes d'achat**. La demande est approuvée par le responsable.
+Un produit manque dans le service : **Stock → Réquisitions des services**. Choisissez votre service, les produits et les quantités (en unités : comprimés, ampoules, paires de gants…), puis **Envoyer à la pharmacie**.
+
+- La pharmacie sert la réquisition depuis son stock ; vous voyez ce qui a été servi, ligne par ligne.
+- Si la pharmacie n'a pas tout, la réquisition est « servie en partie » : refaites une demande plus tard pour le reste.
+- Vous ne commandez pas chez un fournisseur : c'est la pharmacie qui s'en charge.

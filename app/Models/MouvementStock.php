@@ -37,6 +37,7 @@ class MouvementStock extends Model
         'perte' => 'Perte',
         'ajustement' => 'Ajustement',
         'transfert' => 'Transfert',
+        'dotation' => 'Dotation service',
     ];
 
     public function medicament()

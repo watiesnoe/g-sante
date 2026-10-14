@@ -12,6 +12,12 @@
                     <option value="laboratoire" {{ request('type') === 'laboratoire' ? 'selected' : '' }}>Laboratoire</option>
                     <option value="imagerie" {{ request('type') === 'imagerie' ? 'selected' : '' }}>Imagerie</option>
                 </select>
+                @can('consultations.create')
+                    <select name="mes" class="form-select form-select-sm no-select2" onchange="this.form.submit()">
+                        <option value="">Tous les prescripteurs</option>
+                        <option value="1" {{ request()->boolean('mes') ? 'selected' : '' }}>Mes prescriptions</option>
+                    </select>
+                @endcan
                 <select name="statut" class="form-select form-select-sm no-select2" onchange="this.form.submit()">
                     <option value="en_cours" {{ $statut === 'en_cours' ? 'selected' : '' }}>À traiter</option>
                     @foreach(\App\Models\PrescriptionExamen::STATUTS as $code => $libelle)
@@ -45,12 +51,18 @@
                                         @if($e->resultat->anormal)<span class="badge bg-danger">anormal</span>@endif
                                     @endif
                                     <div class="small">{{ \Illuminate\Support\Str::limit($e->resultat->resultat, 60) }}</div>
+                                    @if($e->resultat->fichier)
+                                        <a href="{{ route('reponses.fichier', $e->resultat) }}" target="_blank" class="small"><i class="fa fa-paperclip me-1"></i>Voir le fichier</a>
+                                    @endif
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
                             <td class="text-center">
                                 <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                    @if($e->consultation)
+                                        <a href="{{ route('prescriptions.pdf', $e->consultation->uuid) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Bon d'examens de la consultation"><i class="fa fa-print"></i></a>
+                                    @endif
                                     @can('examens.results')
                                         @foreach($suivants[$e->id] as $vers)
                                             @if($vers !== 'annule')
