@@ -138,6 +138,7 @@ class PermissionRoleSeeder extends Seeder
 
             // ── Paramètres / Configuration ────────────────────────────
             'parametres.view'                    => 'Voir les paramètres',
+            'parametres.etablissement'           => 'Configurer l\'établissement (identité, type, modules)',
             'parametres.services'                => 'Gérer les structures / services',
             'parametres.prestations'             => 'Gérer les prestations',
             'parametres.salles'                  => 'Gérer les salles',
@@ -205,7 +206,7 @@ class PermissionRoleSeeder extends Seeder
             'paiements.view', 'paiements.create', 'caisse.view',
             'assurances.view', 'assurances.create', 'assurances.edit',
             'fournisseurs.view', 'fournisseurs.create', 'fournisseurs.edit',
-            'parametres.view', 'parametres.services', 'parametres.prestations', 'parametres.salles',
+            'parametres.view', 'parametres.etablissement', 'parametres.services', 'parametres.prestations', 'parametres.salles',
             'parametres.lits', 'parametres.examens_config', 'parametres.assurances',
             'parametres.symptomes', 'parametres.maladies',
             'users.view', 'users.create', 'users.edit', 'users.status',

@@ -3,7 +3,8 @@
         <tr>
             <td style="width: 15%; border: none !important; vertical-align: top;">
                 @php
-                    $logoPath = public_path('image/logo/logo.png');
+                    $etablissement = \App\Models\Etablissement::courant();
+                    $logoPath = $etablissement->logoPath();
                 @endphp
                 @if(file_exists($logoPath))
                     <img src="{{ $logoPath }}" style="height: 70px;">
@@ -12,12 +13,12 @@
                 @endif
             </td>
             <td style="width: 55%; border: none !important; text-align: center; vertical-align: middle;">
-                <h1 style="margin: 0; color: #0665d0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">G-SANTÉ</h1>
+                <h1 style="margin: 0; color: #0665d0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">{{ $etablissement->nom }}</h1>
                 <p style="margin: 5px 0 0; font-size: 10px; color: #666; line-height: 1.4;">
-                    <strong>Clinique Médicale & Centre d'Excellence</strong><br>
-                    Tél: (+225) 07 00 00 00 00 / 05 00 00 00 00<br>
-                    E-mail: contact@g-sante.com | Web: www.g-sante.com<br>
-                    Ségou, Mali
+                    @if($etablissement->slogan)<strong>{{ $etablissement->slogan }}</strong><br>@endif
+                    @if($etablissement->telephone)Tél: {{ $etablissement->telephone }}<br>@endif
+                    @if($etablissement->email || $etablissement->site_web){{ implode(' | ', array_filter([$etablissement->email ? 'E-mail: ' . $etablissement->email : null, $etablissement->site_web ? 'Web: ' . $etablissement->site_web : null])) }}<br>@endif
+                    {{ $etablissement->adresse }}
                 </p>
             </td>
             <td style="width: 30%; border: none !important; text-align: right; vertical-align: top;">

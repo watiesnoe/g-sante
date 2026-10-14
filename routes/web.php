@@ -46,6 +46,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::post('/exercice/set', [\App\Http\Controllers\ExerciceController::class, 'setYear'])->name('exercice.set');
     Route::get('/parametre', [ConfigurationController::class, 'index'])->name('configuration');
+    Route::get('/parametre/etablissement', [\App\Http\Controllers\EtablissementController::class, 'edit'])->name('etablissement.edit');
+    Route::put('/parametre/etablissement', [\App\Http\Controllers\EtablissementController::class, 'update'])->name('etablissement.update');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

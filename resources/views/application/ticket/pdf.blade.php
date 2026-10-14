@@ -83,7 +83,8 @@
     $statut     = $ticket->statut ?? 'en_attente';
     $statutLabels = ['en_attente'=>'En attente','valide'=>'Validé','paye'=>'Payé','expire'=>'Expiré'];
     $statutLabel  = $statutLabels[$statut] ?? ucfirst($statut);
-    $logoPath   = public_path('image/logo/logo.png');
+    $etablissement = \App\Models\Etablissement::courant();
+    $logoPath   = $etablissement->logoPath();
     $patient    = $ticket->patient;
     $patCode    = 'PAT-' . str_pad($patient->id ?? 0, 6, '0', STR_PAD_LEFT);
     $nomComplet = strtoupper($patient->nom ?? '') . ' ' . ($patient->prenom ?? '');
@@ -114,9 +115,9 @@
                 @endif
             </td>
             <td style="padding-left:4mm; vertical-align:middle;">
-                <div style="font-size:15px;font-weight:bold;color:#1565c0;letter-spacing:0.5px;">G-SANTÉ</div>
-                <div style="font-size:7.5px;color:#555;margin-top:1px;">Soins de qualité, notre priorité</div>
-                <div style="font-size:7px;color:#555;margin-top:2px;">📍 Ségou, Mali &nbsp; 📞 (+225) 07 00 00 00 00 / 05 00 00 00 00</div>
+                <div style="font-size:15px;font-weight:bold;color:#1565c0;letter-spacing:0.5px;">{{ $etablissement->nom }}</div>
+                <div style="font-size:7.5px;color:#555;margin-top:1px;">{{ $etablissement->slogan }}</div>
+                <div style="font-size:7px;color:#555;margin-top:2px;">📍 {{ $etablissement->adresse }} &nbsp; 📞 {{ $etablissement->telephone }}</div>
             </td>
         </tr>
     </table>
@@ -315,9 +316,9 @@
                 @endif
             </td>
             <td style="padding-left:2mm; vertical-align:middle;">
-                <div class="coupon-clinic-name" style="font-size:10px;font-weight:bold;color:#1565c0;">G-SANTÉ</div>
-                <div style="font-size:6.5px;color:#555;">Ségou – Mali</div>
-                <div style="font-size:6.5px;color:#555;">Tél : (+225) 07 00 00 00 00</div>
+                <div class="coupon-clinic-name" style="font-size:10px;font-weight:bold;color:#1565c0;">{{ $etablissement->nom }}</div>
+                <div style="font-size:6.5px;color:#555;">{{ $etablissement->adresse }}</div>
+                <div style="font-size:6.5px;color:#555;">Tél : {{ $etablissement->telephone }}</div>
             </td>
         </tr>
     </table>

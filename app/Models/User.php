@@ -10,7 +10,10 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasUuid,HasRoles;
+    use HasUuid;
+    use HasRoles {
+        checkPermissionTo as protected checkPermissionToSpatie;
+    }
     use HasFactory, Notifiable;
 
     protected $fillable = [
@@ -102,6 +105,11 @@ class User extends Authenticatable
      */
     public function hasModuleAccess($module)
     {
+        // 0. Module désactivé pour l'établissement : masqué pour tout le monde
+        if (!Etablissement::courant()->moduleActif($module)) {
+            return false;
+        }
+
         // 1. Super admin et admin : accès total, toujours
         if ($this->hasRole(['super_admin', 'superadmin', 'admin'])) {
             return true;
@@ -139,6 +147,19 @@ class User extends Authenticatable
             $prefix = explode('.', $perm->name)[0];
             return in_array($prefix, $prefixes);
         });
+    }
+
+    /**
+     * Toute permission d'un module désactivé pour l'établissement est refusée,
+     * quel que soit le rôle. Couvre can(), @can et les abort_unless des contrôleurs.
+     */
+    public function checkPermissionTo($permission, $guardName = null): bool
+    {
+        if (is_string($permission) && Etablissement::courant()->permissionDesactivee($permission)) {
+            return false;
+        }
+
+        return $this->checkPermissionToSpatie($permission, $guardName);
     }
 
     public function service()

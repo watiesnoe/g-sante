@@ -6,6 +6,16 @@
         <div class="block-content">
             <ul class="nav nav-pills flex-column push">
 
+                {{-- Établissement : identité, type et modules --}}
+                @can('parametres.etablissement')
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('etablissement.*') ? 'active' : '' }}"
+                       href="{{ route('etablissement.edit') }}">
+                        <i class="fa fa-hospital me-1"></i> Établissement
+                    </a>
+                </li>
+                @endcan
+
                 {{-- Structures / Services médicaux --}}
                 @can('parametres.services')
                 <li class="nav-item mb-1">

@@ -953,6 +953,13 @@
         <!-- Hero -->
 
 
+        @if(!\App\Models\Etablissement::courant()->estConfigure() && !request()->routeIs('etablissement.*') && auth()->user()?->can('parametres.etablissement'))
+            <div class="alert alert-info d-flex justify-content-between align-items-center rounded-0 mb-0">
+                <span><i class="fa fa-hospital me-2"></i>Votre établissement n'est pas encore configuré : nom, type et modules à activer.</span>
+                <a href="{{ route('etablissement.edit') }}" class="btn btn-sm btn-primary">Configurer</a>
+            </div>
+        @endif
+
         <!-- Page Content -->
         @yield('content')
         <!-- END Page Content -->
