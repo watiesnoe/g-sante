@@ -23,6 +23,7 @@ class EtablissementController extends Controller
             'profils'       => Etablissement::PROFILS,
             'parametres'    => Etablissement::PARAMETRES,
             'historique'    => $this->historique(Etablissement::courant()),
+            'synchros'      => \App\Models\SynchroJournal::where('etablissement_id', Etablissement::courantId())->latest('id')->limit(5)->get(),
         ]);
     }
 
@@ -154,20 +155,59 @@ class EtablissementController extends Controller
             return collect();
         }
 
-        $texte = fn($v) => is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : (is_bool($v) ? ($v ? 'oui' : 'non') : (string) $v);
+        $texte = fn($v) => match (true) {
+            is_bool($v)  => $v ? 'oui' : 'non',
+            is_array($v) => implode(', ', array_map(fn($x) => is_bool($x) ? ($x ? 'oui' : 'non') : (string) $x, $v)),
+            $v === null  => '—',
+            default      => (string) $v,
+        };
+        $libelleModule = fn($code) => Etablissement::MODULES[$code]['label'] ?? $code;
 
         return \Spatie\Activitylog\Models\Activity::with('causer')
             ->where('subject_type', Etablissement::class)->where('subject_id', $etablissement->id)->where('event', 'updated')
             ->latest()->limit(30)->get()
-            ->flatMap(function ($activite) use ($texte) {
+            ->flatMap(function ($activite) use ($texte, $libelleModule) {
                 $avant = $activite->properties['old'] ?? [];
-                return collect($activite->properties['attributes'] ?? [])->map(fn($valeur, $champ) => [
+                $ligne = fn($champ, $a, $b) => [
                     'date'   => $activite->created_at->format('d/m/Y H:i'),
                     'auteur' => $activite->causer->name ?? 'Système',
                     'champ'  => $champ,
-                    'avant'  => \Illuminate\Support\Str::limit($texte($avant[$champ] ?? null), 80),
-                    'apres'  => \Illuminate\Support\Str::limit($texte($valeur), 80),
-                ])->values();
+                    'avant'  => \Illuminate\Support\Str::limit($a, 120),
+                    'apres'  => \Illuminate\Support\Str::limit($b, 120),
+                ];
+
+                return collect($activite->properties['attributes'] ?? [])->flatMap(function ($valeur, $champ) use ($avant, $texte, $ligne, $libelleModule) {
+                    $ancien = $avant[$champ] ?? null;
+
+                    // Modules : ce qui a été activé ou désactivé, plutôt que la liste complète
+                    if ($champ === 'modules') {
+                        $ancien = (array) (is_string($ancien) ? json_decode($ancien, true) : $ancien);
+                        $valeur = (array) (is_string($valeur) ? json_decode($valeur, true) : $valeur);
+                        $retires = array_map($libelleModule, array_values(array_diff($ancien, $valeur)));
+                        $ajoutes = array_map($libelleModule, array_values(array_diff($valeur, $ancien)));
+
+                        return ($retires || $ajoutes) ? [$ligne('Modules', $retires ? 'désactivés : ' . implode(', ', $retires) : '—', $ajoutes ? 'activés : ' . implode(', ', $ajoutes) : '—')] : [];
+                    }
+
+                    // Règles de fonctionnement : une ligne par règle modifiée, avec son libellé
+                    if ($champ === 'parametres') {
+                        $ancien = (array) (is_string($ancien) ? json_decode($ancien, true) : $ancien);
+                        $valeur = (array) (is_string($valeur) ? json_decode($valeur, true) : $valeur);
+
+                        return collect(array_unique(array_merge(array_keys($ancien), array_keys($valeur))))
+                            ->filter(fn($cle) => ($ancien[$cle] ?? null) !== ($valeur[$cle] ?? null))
+                            ->map(function ($cle) use ($ancien, $valeur, $texte, $ligne) {
+                                // Valeurs à choix : le libellé affiché à l'écran plutôt que le code
+                                $choix = Etablissement::PARAMETRES[$cle]['choix'] ?? [];
+                                $lisible = fn($v) => $texte(is_array($v) ? array_map(fn($x) => $choix[$x] ?? $x, $v) : (is_string($v) ? ($choix[$v] ?? $v) : $v));
+
+                                return $ligne(\Illuminate\Support\Str::limit(Etablissement::PARAMETRES[$cle]['label'] ?? $cle, 70), $lisible($ancien[$cle] ?? null), $lisible($valeur[$cle] ?? null));
+                            })
+                            ->values()->all();
+                    }
+
+                    return [$ligne($champ, $texte($ancien), $texte($valeur))];
+                })->values();
             });
     }
 }

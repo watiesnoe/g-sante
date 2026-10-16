@@ -18,7 +18,7 @@ trait Audite
         return LogOptions::defaults()
             ->useLogName('audit')
             ->logAll()
-            ->logExcept(['password', 'remember_token', 'updated_at'])
+            ->logExcept(['password', 'remember_token', 'updated_at', 'en_ligne_secret', 'secret', 'en_ligne_curseur', 'en_ligne_synchro_at', 'en_ligne_erreur'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

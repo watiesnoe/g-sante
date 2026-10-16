@@ -16,3 +16,8 @@ Schedule::command('backup:monitor')->dailyAt('07:00');
 
 // EF-03.05 : rappel des rendez-vous du lendemain (passerelle définie dans config/sms.php)
 Schedule::command('rendezvous:rappels')->dailyAt('18:00');
+
+// EF-14.01 : échange avec le serveur en ligne (sans effet si aucun établissement n'est relié)
+if (config('gsante.mode') === 'local') {
+    Schedule::command('synchro:en-ligne')->everyFiveMinutes()->withoutOverlapping(10);
+}

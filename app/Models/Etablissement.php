@@ -17,14 +17,25 @@ class Etablissement extends Model
     protected $fillable = [
         'type', 'code', 'nom', 'slogan', 'adresse', 'region', 'district', 'telephone', 'email', 'site_web', 'logo',
         'modules', 'parametres', 'configure', 'actif',
+        'en_ligne_url', 'en_ligne_cle', 'en_ligne_secret', 'en_ligne_curseur', 'en_ligne_synchro_at', 'en_ligne_erreur',
     ];
+
+    protected $hidden = ['en_ligne_secret'];
 
     protected $casts = [
         'modules'    => 'array',
         'parametres' => 'array',
         'configure'  => 'boolean',
         'actif'      => 'boolean',
+        'en_ligne_secret'     => 'encrypted',
+        'en_ligne_synchro_at' => 'datetime',
     ];
+
+    /** Relié à un serveur en ligne (lot 7) : adresse et identifiants renseignés. */
+    public function connecteEnLigne(): bool
+    {
+        return filled($this->en_ligne_url) && filled($this->en_ligne_cle) && filled($this->en_ligne_secret);
+    }
 
     /**
      * Paramètres de comportement (cahier des charges, section 4.1) : valeur par
@@ -122,6 +133,25 @@ class Etablissement extends Model
             'label'   => 'Besoins : stock de sécurité (mois de consommation)',
             'type'    => 'nombre',
             'defauts' => ['cabinet' => 1, 'clinique' => 1, 'csref' => 1, 'hopital' => 1],
+        ],
+        'en_ligne.rendez_vous' => [
+            'label'   => 'Publier les créneaux libres sur le serveur en ligne (demandes de rendez-vous des patients)',
+            'defauts' => ['cabinet' => false, 'clinique' => false, 'csref' => false, 'hopital' => false],
+        ],
+        'en_ligne.duree_creneau' => [
+            'label'   => 'Rendez-vous en ligne : durée d\'un créneau (minutes)',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 30, 'clinique' => 30, 'csref' => 30, 'hopital' => 30],
+        ],
+        'en_ligne.jours_publies' => [
+            'label'   => 'Rendez-vous en ligne : nombre de jours à l\'avance proposés',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 14, 'clinique' => 14, 'csref' => 14, 'hopital' => 14],
+        ],
+        'en_ligne.delai_annulation_heures' => [
+            'label'   => 'Rendez-vous en ligne : le patient peut annuler ou déplacer jusqu\'à ce délai avant (heures)',
+            'type'    => 'nombre',
+            'defauts' => ['cabinet' => 24, 'clinique' => 24, 'csref' => 24, 'hopital' => 24],
         ],
         'securite.inactivite_minutes' => [
             'label'   => 'Déconnexion automatique après inactivité (minutes)',

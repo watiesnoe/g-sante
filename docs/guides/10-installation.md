@@ -151,7 +151,56 @@ Connecté en administrateur, suivez le guide [09 — Administration](09-administ
 - [ ] Mode A : depuis un poste, l'application s'ouvre à l'adresse `http://IP-du-serveur`
 - [ ] Mode A : l'onduleur tient le serveur assez longtemps pour un arrêt propre
 
-## 9. Mettre à jour l'application
+## 9. Serveur en ligne (lot 7)
+
+Le serveur en ligne est **la même application**, installée chez un hébergeur avec `GSANTE_MODE=en_ligne`. Il ne montre rien de l'application interne : il reçoit seulement les demandes des patients et les échange avec les serveurs locaux. Il ne garde que le minimum : médecins publiés, créneaux libres, demandes de rendez-vous. **Jamais le dossier médical.**
+
+> L'hébergeur doit être autorisé pour les données de santé. Ce choix n'est pas encore arrêté : ne mettez pas ce serveur en service avec de vrais patients avant cette décision.
+
+**Installation chez l'hébergeur** : étapes 2 à 6, avec ces différences dans `.env` :
+
+| Clé | Valeur |
+|---|---|
+| `GSANTE_MODE` | `en_ligne` |
+| `APP_URL` | `https://adresse-du-serveur-en-ligne` (**HTTPS obligatoire**) |
+| `LOG_LEVEL` | `warning`, pour garder la trace des tentatives d'accès refusées |
+
+Pas de comptes de démonstration ici : n'exécutez pas le seeder des rôles.
+
+**Relier un établissement** :
+
+1. Sur le serveur local, dans Paramètres → Établissement → **5. Serveur en ligne**, relevez l'identifiant de l'établissement (un UUID).
+2. Sur le serveur en ligne, enregistrez-le :
+   ```bash
+   php artisan en-ligne:site <UUID> "Nom de l'établissement"
+   ```
+   La commande affiche une **clé** et un **secret**. Le secret n'est affiché qu'une fois.
+3. Sur le serveur local, même écran : saisissez l'adresse du serveur en ligne, la clé et le secret, puis **Synchroniser maintenant**.
+4. Dans les règles de fonctionnement, cochez **« Publier les créneaux libres »** quand l'établissement est prêt à recevoir des demandes.
+
+**Fonctionnement** : toutes les 5 minutes (tâche cron de l'étape 6), le serveur local récupère les demandes, envoie les décisions de l'accueil, puis publie ses créneaux libres. C'est toujours le serveur local qui appelle : **aucun port n'est à ouvrir** dans l'établissement. Chaque échange est signé avec le secret de l'établissement ; un message falsifié, rejoué ou trop ancien est refusé.
+
+**Coupure d'Internet** : l'établissement continue de travailler normalement. Les décisions restent en attente et partent au retour de la connexion. L'état de chaque synchronisation est visible dans Paramètres → Établissement.
+
+**Couper l'accès d'un établissement** (secret compromis, départ) :
+```bash
+php artisan en-ligne:site <UUID> "Nom" --desactiver
+php artisan en-ligne:site <UUID> "Nom" --renouveler   # nouveau secret
+```
+
+**Espace patient** : sur le serveur en ligne, à l'adresse `/patient`. Le patient se connecte avec son numéro de téléphone et un code reçu par SMS ; il peut l'installer comme une application depuis son navigateur (« Ajouter à l'écran d'accueil »).
+
+> Sans opérateur SMS branché (`SMS_PILOTE=journal`), les codes ne partent pas. Hors production, ils s'affichent à l'écran pour les essais ; en production, ils ne s'affichent jamais. Choisissez un fournisseur SMS avant d'ouvrir l'espace aux patients.
+
+**Essai sur un poste de développement** (deux serveurs sur la même machine) :
+```bash
+scripts/serveur-en-ligne.sh installer                     # base gsante_en_ligne
+scripts/serveur-en-ligne.sh relier <UUID> "Nom"            # affiche clé et secret
+scripts/serveur-en-ligne.sh demarrer                       # http://127.0.0.1:8001/patient
+```
+Puis, sur le serveur local : adresse `http://127.0.0.1:8001`, clé et secret dans Paramètres → Établissement → 5.
+
+## 10. Mettre à jour l'application
 
 Faites toujours une sauvegarde avant, et la mise à jour en dehors des heures de consultation.
 

@@ -35,6 +35,11 @@ use App\Http\Controllers\EmploiDuTempsController;
 use App\Http\Controllers\ExportImportController;
 use Illuminate\Support\Facades\Route;
 
+// Serveur en ligne : l'application de gestion interne n'y est jamais exposée (section 9.2)
+if (config('gsante.mode') === 'en_ligne') {
+    return;
+}
+
 // Quand on arrive sur la racine "/", on redirige vers le login
 Route::get('/', function () {
     return redirect()->route('login');
@@ -137,6 +142,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/hospitalisation/indicateurs', [\App\Http\Controllers\IndicateursHospitaliersController::class, 'index'])->name('hospitalisation.indicateurs');
     Route::post('/hospitalisation/unites', [\App\Http\Controllers\TableauLitsController::class, 'creerUnite'])->name('lits.unite');
     Route::post('/hospitalisation/salles/{salle}/unite', [\App\Http\Controllers\TableauLitsController::class, 'affecterUnite'])->name('lits.salle_unite');
+    Route::get('/rendezvous-en-ligne', [\App\Http\Controllers\DemandeEnLigneController::class, 'index'])->name('en_ligne.demandes');
+    Route::post('/rendezvous-en-ligne/synchroniser', [\App\Http\Controllers\DemandeEnLigneController::class, 'synchroniser'])->name('en_ligne.synchroniser');
+    Route::post('/rendezvous-en-ligne/{demande}/confirmer', [\App\Http\Controllers\DemandeEnLigneController::class, 'confirmer'])->name('en_ligne.confirmer');
+    Route::post('/rendezvous-en-ligne/{demande}/proposer', [\App\Http\Controllers\DemandeEnLigneController::class, 'proposer'])->name('en_ligne.proposer');
+    Route::post('/rendezvous-en-ligne/{demande}/refuser', [\App\Http\Controllers\DemandeEnLigneController::class, 'refuser'])->name('en_ligne.refuser');
+    Route::put('/parametre/etablissement/en-ligne', [\App\Http\Controllers\DemandeEnLigneController::class, 'connexion'])->name('etablissement.en_ligne');
     Route::post('/etablissement/changer', [\App\Http\Controllers\EtablissementController::class, 'changer'])->name('etablissement.changer');
     Route::get('/etablissements', [\App\Http\Controllers\EtablissementController::class, 'index'])->name('etablissements.index');
     Route::get('/etablissements/creer', [\App\Http\Controllers\EtablissementController::class, 'create'])->name('etablissements.create');

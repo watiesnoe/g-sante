@@ -35,7 +35,8 @@ class SmsService
         }
 
         DB::table('sms_envois')->insert([
-            'etablissement_id' => Etablissement::courantId(),
+            // Serveur en ligne : pas d'établissement courant (codes de connexion des patients)
+            'etablissement_id' => config('gsante.mode') === 'en_ligne' ? null : Etablissement::courantId(),
             'telephone' => $telephone, 'message' => $message, 'pilote' => $pilote,
             'statut' => $erreur ? 'echec' : 'envoye', 'erreur' => $erreur,
             'source_type' => $source?->getMorphClass(), 'source_id' => $source?->getKey(),

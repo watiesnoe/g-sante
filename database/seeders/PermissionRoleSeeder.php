@@ -122,6 +122,7 @@ class PermissionRoleSeeder extends Seeder
             'stock.requisition'                  => 'Demander des produits à la pharmacie (réquisition d\'un service)',
             'stock.servir'                       => 'Servir les réquisitions des services',
             'stock.besoins'                      => 'Consulter l\'état des besoins (CMM)',
+            'rendezvous.en_ligne'                => 'Traiter les demandes de rendez-vous en ligne',
             'rh.gardes.view'                     => 'Voir le planning des gardes',
             'rh.gardes.gerer'                    => 'Programmer les gardes et astreintes',
             'urgences.view'                      => 'Voir le registre des urgences',
@@ -230,7 +231,7 @@ class PermissionRoleSeeder extends Seeder
             ['libelle' => 'Administrateur']
         );
         $admin->syncPermissions([
-            'accueil.view', 'accueil.create', 'accueil.orienter', 'depenses.view', 'depenses.create', 'depenses.valider', 'depenses.payer', 'patients.fusionner', 'examens.valider', 'achats.demander', 'achats.approuver', 'stock.requisition', 'stock.servir', 'stock.besoins', 'rh.gardes.view', 'rh.gardes.gerer', 'urgences.view', 'urgences.gerer', 'maternity.accouchement', 'references.view', 'references.gerer', 'gratuites.gerer', 'budget.view', 'budget.gerer', 'rapports.mensuel', 'rapports.valider', 'bloc.view', 'bloc.programmer', 'maintenance.view', 'maintenance.gerer', 'rapports.view', 'tiers_payants.conventions', 'tiers_payants.bordereaux',
+            'accueil.view', 'accueil.create', 'accueil.orienter', 'depenses.view', 'depenses.create', 'depenses.valider', 'depenses.payer', 'patients.fusionner', 'examens.valider', 'achats.demander', 'achats.approuver', 'stock.requisition', 'stock.servir', 'stock.besoins', 'rendezvous.en_ligne', 'rh.gardes.view', 'rh.gardes.gerer', 'urgences.view', 'urgences.gerer', 'maternity.accouchement', 'references.view', 'references.gerer', 'gratuites.gerer', 'budget.view', 'budget.gerer', 'rapports.mensuel', 'rapports.valider', 'bloc.view', 'bloc.programmer', 'maintenance.view', 'maintenance.gerer', 'rapports.view', 'tiers_payants.conventions', 'tiers_payants.bordereaux',
             'dashboard.view',
             'patients.view', 'patients.create', 'patients.edit', 'patients.search', 'patients.dossier',
             'tickets.view', 'tickets.create', 'tickets.edit',
@@ -294,7 +295,7 @@ class PermissionRoleSeeder extends Seeder
             'patients.view', 'patients.create', 'patients.edit', 'patients.search',
             'tickets.view', 'tickets.create', 'tickets.edit', 'tickets.print',
             'rendezvous.view', 'rendezvous.create', 'rendezvous.edit',
-            'rendezvous.delete', 'rendezvous.confirm',
+            'rendezvous.delete', 'rendezvous.confirm', 'rendezvous.en_ligne',
             'hospitalisations.view',
             'transferts.view',
             'paiements.view', 'paiements.create', 'caisse.view',

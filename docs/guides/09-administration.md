@@ -10,7 +10,8 @@ Menus : tous, plus **Paramètres** et **Utilisateurs**.
 4. **Assurances et conventions**, **règles de gratuité** : à saisir d'après les textes et conventions en vigueur.
 5. **Utilisateurs** : un compte par personne, avec le bon rôle, **affecté à l'établissement**. Désactivez immédiatement le compte d'un agent qui part.
 6. **Calcul des besoins** (Paramètres → Établissement) : durée de calcul de la CMM, délai de livraison, période couverte par une commande, stock de sécurité. Les valeurs par défaut (3, 1, 1 à 3 et 1 mois) sont à **confirmer avec le pharmacien** selon vos fournisseurs réels.
-7. Pour un CSRéf : l'**identifiant DHIS2** de l'établissement (paramètre `dhis2.org_unit`), fourni par le district.
+7. **Serveur en ligne** (quand il sera en service) : voir le guide 10, partie 9. Cochez « Publier les créneaux libres » seulement quand l'accueil est formé au traitement des demandes en ligne.
+8. Pour un CSRéf : l'**identifiant DHIS2** de l'établissement (paramètre `dhis2.org_unit`), fourni par le district.
 
 ## Au quotidien
 

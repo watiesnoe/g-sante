@@ -9,6 +9,12 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            // Serveur en ligne : échanges avec les serveurs locaux (lot 7)
+            if (config('gsante.mode') === 'en_ligne' || app()->runningUnitTests()) {
+                \Illuminate\Support\Facades\Route::group([], base_path('routes/en_ligne.php'));
+            }
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
@@ -16,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'caisse.ouverte' => \App\Http\Middleware\EnsureCaisseOuverte::class,
             'exercice.year' => \App\Http\Middleware\EnsureExerciceYear::class,
         ]);
+
+        // Requêtes signées des serveurs locaux : pas de session, donc pas de jeton CSRF
+        $middleware->validateCsrfTokens(except: ['api/synchro/*']);
 
         $middleware->web(append: [
             \App\Http\Middleware\EnsureEtablissement::class,
@@ -32,5 +41,11 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Espace patient : session expirée (jeton du formulaire périmé) → reprise guidée, pas de page d'erreur
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() === 419 && $request->is('patient', 'patient/*')) {
+                return redirect()->route($request->session()->has(\App\Http\Middleware\PatientConnecte::SESSION) ? 'patient.accueil' : 'patient.connexion')
+                    ->with('erreur', 'La page avait expiré : recommencez votre dernière action.');
+            }
+        });
     })->create();

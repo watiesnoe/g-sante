@@ -29,6 +29,21 @@ Un ticket encaissé ne se modifie plus : en cas d'erreur, demandez au responsabl
 - À l'arrivée du patient, marquez le rendez-vous **Honoré** ; s'il ne vient pas, **Absent** ; s'il prévient, **Annulé**.
 - Le patient reçoit un rappel par SMS la veille (quand l'envoi de SMS est activé).
 
+## Demandes de rendez-vous en ligne
+
+Quand l'établissement publie ses créneaux, les patients peuvent demander un rendez-vous par Internet. **Une demande n'est pas un rendez-vous** : c'est vous qui décidez.
+
+1. **Rendez-vous → Demandes en ligne** : le nombre de demandes à traiter s'affiche dans le menu.
+2. **Traiter** ouvre trois choix :
+   - **Confirmer** : choisissez le dossier du patient parmi ceux qui lui ressemblent (même téléphone, nom proche). S'il n'en a pas, indiquez son sexe et son âge pour créer le dossier. Le rendez-vous apparaît dans l'agenda.
+   - **Proposer un autre créneau**, si l'heure demandée ne convient pas.
+   - **Refuser**, avec un motif communiqué au patient.
+3. Le patient est prévenu par SMS de chaque décision.
+
+Depuis son téléphone, le patient peut aussi **changer d'horaire** ou **annuler**, jusqu'au délai fixé par l'établissement (24 h par défaut). Un changement d'horaire arrive comme une nouvelle demande, marquée « Changement d'horaire ». L'ancien rendez-vous est annulé automatiquement et le dossier est conservé. Quand vous proposez un autre créneau et que le patient l'accepte, la demande revient « À traiter » sur ce créneau : il reste à la confirmer.
+
+Une demande marquée **« Conflit »** vise un créneau déjà donné sur place, par exemple pendant une coupure d'Internet. Ce qui a été fait sur place l'emporte : proposez un autre créneau au patient.
+
 ## Fin de journée
 
 - Vérifiez qu'aucun patient ne reste « Enregistré » dans la file sans avoir été vu.
