@@ -7,6 +7,20 @@
                         <h3 class="block-title">4. Serveur en ligne (espace patient)</h3>
                     </div>
                     <div class="block-content">
+                        @if(\App\Models\Etablissement::espacePatientDisponible())
+                            <div class="alert {{ $etablissement->espacePatientIntegre() ? 'alert-success' : 'alert-info' }} small">
+                                <strong>Espace patient intégré.</strong>
+                                @if($etablissement->espacePatientIntegre())
+                                    Actif : les patients se connectent sur <a href="{{ url('/patient') }}" target="_blank">{{ url('/patient') }}</a>.
+                                    @unless($etablissement->parametre('en_ligne.rendez_vous'))
+                                        Pensez à cocher « Publier les créneaux libres » dans les règles de fonctionnement.
+                                    @endunless
+                                @else
+                                    Cochez le module « Espace patient en ligne » de cet établissement pour l'ouvrir aux patients sur {{ url('/patient') }}.
+                                @endif
+                                Aucun réglage n'est nécessaire ci-dessous : il ne sert que pour un serveur en ligne séparé.
+                            </div>
+                        @endif
                         <p class="small text-muted">
                             Le serveur local de l'établissement reste maître : il envoie ses créneaux libres et récupère les demandes des patients toutes les 5 minutes.
                             Sans Internet, l'activité interne continue ; les échanges reprennent au retour de la connexion.

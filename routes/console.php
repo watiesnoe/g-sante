@@ -18,8 +18,10 @@ Schedule::command('backup:monitor')->dailyAt('07:00');
 Schedule::command('rendezvous:rappels')->dailyAt('18:00');
 
 // EF-14.01 : échange avec le serveur en ligne (sans effet si aucun établissement n'est relié)
+// Espace patient intégré : échange sans réseau, donc chaque minute (demandes vues plus vite par l'accueil)
 if (config('gsante.mode') === 'local') {
-    Schedule::command('synchro:en-ligne')->everyFiveMinutes()->withoutOverlapping(10);
+    $synchro = Schedule::command('synchro:en-ligne')->withoutOverlapping(10);
+    \App\Models\Etablissement::espacePatientDisponible() ? $synchro->everyMinute() : $synchro->everyFiveMinutes();
 }
 
 // Abonnements : rappels J-15 et J-3, période de grâce puis coupure des modules prévus

@@ -32,10 +32,32 @@ class Etablissement extends Model
         'en_ligne_synchro_at' => 'datetime',
     ];
 
-    /** Relié à un serveur en ligne (lot 7) : adresse et identifiants renseignés. */
+    /** Relié à un espace patient : serveur en ligne séparé (lot 7) ou espace intégré à cette installation. */
     public function connecteEnLigne(): bool
     {
+        return $this->connecteServeurDistant() || $this->espacePatientIntegre();
+    }
+
+    /** Serveur en ligne séparé : adresse et identifiants renseignés. */
+    public function connecteServeurDistant(): bool
+    {
         return filled($this->en_ligne_url) && filled($this->en_ligne_cle) && filled($this->en_ligne_secret);
+    }
+
+    /** L'installation sert elle-même l'espace patient (GSANTE_ESPACE_PATIENT=true, mode local). */
+    public static function espacePatientDisponible(): bool
+    {
+        return config('gsante.mode') === 'local' && config('gsante.espace_patient');
+    }
+
+    /**
+     * Établissement visible dans l'espace patient intégré : module activé, établissement
+     * actif, et pas de serveur en ligne séparé (qui reste prioritaire s'il est configuré).
+     */
+    public function espacePatientIntegre(): bool
+    {
+        return static::espacePatientDisponible() && $this->exists && $this->actif !== false
+            && $this->moduleActif('espace_patient') && blank($this->en_ligne_url);
     }
 
     /**
@@ -199,6 +221,8 @@ class Etablissement extends Model
         'tiers_payants'   => ['label' => 'Tiers payants',   'description' => 'Conventions, parts organismes, bordereaux, créances',  'prefixes' => ['tiers_payants']],
         'finances'        => ['label' => 'Dépenses',        'description' => 'Saisie, validation et paiement des dépenses',          'prefixes' => ['depenses']],
         'transfert'       => ['label' => 'Transferts',      'description' => 'Transferts entre médecins, services et hôpitaux',      'prefixes' => ['transferts']],
+        // Sans préfixe : l'écran « Demandes en ligne » sert aussi aux établissements reliés à un serveur en ligne séparé
+        'espace_patient'  => ['label' => 'Espace patient en ligne', 'description' => 'Les patients se connectent par SMS sur /patient et demandent un rendez-vous', 'prefixes' => []],
     ];
 
     /** Modules pré-cochés selon le type d'établissement. */
@@ -222,7 +246,13 @@ class Etablissement extends Model
                 $e->updateQuietly(['code' => 'ETAB' . $e->id]);
             }
         });
-        static::saved(fn () => static::oublierCourant());
+        static::saved(function (Etablissement $e) {
+            static::oublierCourant();
+            // Espace patient intégré : module retiré ou établissement suspendu → retiré aussitôt de l'espace patient
+            if (static::espacePatientDisponible() && !$e->espacePatientIntegre()) {
+                \App\Models\EnLigne\Site::where('uuid', $e->uuid)->update(['actif' => false]);
+            }
+        });
         static::deleted(fn () => static::oublierCourant());
     }
 

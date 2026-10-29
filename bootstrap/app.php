@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             // Serveur en ligne : échanges avec les serveurs locaux (lot 7)
-            if (config('gsante.mode') === 'en_ligne' || app()->runningUnitTests()) {
+            if (config('gsante.mode') === 'en_ligne' || \App\Models\Etablissement::espacePatientDisponible() || app()->runningUnitTests()) {
                 \Illuminate\Support\Facades\Route::group([], base_path('routes/en_ligne.php'));
             }
         },

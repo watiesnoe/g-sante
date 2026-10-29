@@ -1,4 +1,4 @@
-// Espace patient G-SANTÉ : pages servies par le réseau ; page de secours hors connexion.
+// Espace patient : pages servies par le réseau ; page de secours hors connexion.
 const CACHE = 'gsante-patient-v1';
 const SECOURS = '{{ route('patient.hors_ligne', [], false) }}';
 

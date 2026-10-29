@@ -14,14 +14,19 @@ use Illuminate\Support\Facades\Log;
  */
 class SmsService
 {
-    /** @param bool $horsQuota messages de la plateforme elle-même (rappels d'abonnement), non décomptés */
-    public function envoyer(string $telephone, string $message, ?Model $source = null, bool $horsQuota = false): bool
+    /**
+     * @param bool $horsQuota messages de la plateforme elle-même (rappels d'abonnement), non décomptés
+     * @param bool $sansEtablissement messages de l'espace patient (codes de connexion) : aucun établissement concerné
+     */
+    public function envoyer(string $telephone, string $message, ?Model $source = null, bool $horsQuota = false, bool $sansEtablissement = false): bool
     {
+        $sansEtablissement = $sansEtablissement || config('gsante.mode') === 'en_ligne';
+
         $pilote = config('sms.pilote');
         $erreur = null;
 
         // Quota mensuel de la formule d'abonnement (serveur local seulement)
-        if (!$horsQuota && config('gsante.mode') !== 'en_ligne'
+        if (!$horsQuota && !$sansEtablissement
             && ($quota = app(AbonnementService::class)->depassement(Etablissement::courant(), 'sms'))) {
             DB::table('sms_envois')->insert([
                 'etablissement_id' => Etablissement::courantId(), 'telephone' => $telephone, 'message' => $message, 'pilote' => $pilote,
@@ -49,7 +54,7 @@ class SmsService
 
         DB::table('sms_envois')->insert([
             // Serveur en ligne : pas d'établissement courant (codes de connexion des patients)
-            'etablissement_id' => config('gsante.mode') === 'en_ligne' ? null : Etablissement::courantId(),
+            'etablissement_id' => $sansEtablissement ? null : Etablissement::courantId(),
             'telephone' => $telephone, 'message' => $message, 'pilote' => $pilote,
             'statut' => $erreur ? 'echec' : 'envoye', 'erreur' => $erreur,
             'source_type' => $source?->getMorphClass(), 'source_id' => $source?->getKey(),

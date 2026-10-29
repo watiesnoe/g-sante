@@ -47,7 +47,7 @@ class ConnexionPatientService
             ]);
         });
 
-        $this->sms->envoyer($telephone, "G-SANTÉ : votre code de connexion est {$code}. Il expire dans " . self::VALIDITE_MINUTES . ' minutes. Ne le communiquez à personne.');
+        $this->sms->envoyer($telephone, config('gsante.nom_espace_patient') . " : votre code de connexion est {$code}. Il expire dans " . self::VALIDITE_MINUTES . ' minutes. Ne le communiquez à personne.', sansEtablissement: true);
 
         return $code;
     }

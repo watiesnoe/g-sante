@@ -24,7 +24,18 @@
         </div>
 
         @if(!$etablissement->connecteEnLigne())
-            <div class="alert alert-info">L'établissement n'est pas relié à un serveur en ligne. Le réglage se fait dans Paramètres → Établissement → Serveur en ligne.</div>
+            @if(\App\Models\Etablissement::espacePatientDisponible())
+                <div class="alert alert-info">L'espace patient n'est pas activé pour cet établissement : l'administrateur de la plateforme doit cocher le module « Espace patient en ligne ».</div>
+            @else
+                <div class="alert alert-info">L'établissement n'est pas relié à un serveur en ligne. Le réglage se fait dans Paramètres → Établissement → Serveur en ligne.</div>
+            @endif
+        @elseif($etablissement->espacePatientIntegre())
+            <p class="small text-muted">
+                Espace patient : <a href="{{ url('/patient') }}" target="_blank">{{ url('/patient') }}</a>
+                @unless($etablissement->parametre('en_ligne.rendez_vous'))
+                    — <span class="text-warning">vos créneaux ne sont pas encore publiés (règles de fonctionnement : « Publier les créneaux libres »)</span>
+                @endunless
+            </p>
         @elseif($journal)
             <p class="small {{ $journal->statut === 'ok' ? 'text-muted' : 'text-danger' }}">
                 Dernière synchronisation : {{ $journal->debut->format('d/m/Y H:i') }} —

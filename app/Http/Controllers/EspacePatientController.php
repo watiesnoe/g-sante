@@ -193,21 +193,34 @@ class EspacePatientController extends Controller
     public function manifeste()
     {
         return response()->json([
-            'name'             => 'G-SANTÉ — Espace patient',
-            'short_name'       => 'G-SANTÉ',
+            'id'               => '/patient/',
+            'name'             => config('gsante.nom_espace_patient') . ' — Espace patient',
+            'short_name'       => config('gsante.nom_espace_patient'),
             'description'      => 'Vos rendez-vous dans les établissements de santé',
             'lang'             => 'fr',
             'start_url'        => route('patient.accueil', [], false),
             'scope'            => '/patient/',
             'display'          => 'standalone',
             'background_color' => '#ffffff',
-            'theme_color'      => '#0b5d8f',
+            'theme_color'      => '#0a3366',
             'icons'            => [
                 ['src' => '/patient-icone-192.png', 'sizes' => '192x192', 'type' => 'image/png'],
                 ['src' => '/patient-icone-512.png', 'sizes' => '512x512', 'type' => 'image/png'],
-                ['src' => '/patient-icone-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+                ['src' => '/patient-icone-maskable-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
             ],
         ], 200, ['Content-Type' => 'application/manifest+json']);
+    }
+
+    /** Liaison avec l'application Android : sans elle, l'appli affiche une barre d'adresse. */
+    public function assetLinks()
+    {
+        $paquet = config('gsante.android.paquet');
+        abort_unless($paquet && config('gsante.android.empreintes'), 404);
+
+        return response()->json([[
+            'relation' => ['delegate_permission/common.handle_all_urls'],
+            'target'   => ['namespace' => 'android_app', 'package_name' => $paquet, 'sha256_cert_fingerprints' => array_values(config('gsante.android.empreintes'))],
+        ]]);
     }
 
     public function serviceWorker()

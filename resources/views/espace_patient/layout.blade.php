@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0b5d8f">
-    <title>@yield('titre', 'Espace patient') — G-SANTÉ</title>
+    <meta name="theme-color" content="#0a3366">
+    <title>@yield('titre', 'Espace patient') — {{ config('gsante.nom_espace_patient') }}</title>
     <link rel="manifest" href="{{ route('patient.manifeste') }}">
     <link rel="icon" href="/patient-icone-192.png">
-    <link rel="apple-touch-icon" href="/patient-icone-192.png">
+    <link rel="apple-touch-icon" href="/patient-icone-180.png">
     <style>
-        :root { --bleu: #0b5d8f; --bleu-clair: #e8f1f7; --texte: #1d2733; --gris: #6b7684; --fond: #f5f7f9; --bord: #dde3e9;
+        :root { --bleu: #0a3366; --bleu-clair: #e8f1f7; --texte: #1d2733; --gris: #6b7684; --fond: #f5f7f9; --bord: #dde3e9;
                 --vert: #1e7e34; --rouge: #b42318; --orange: #9a5b00; }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 16px; line-height: 1.45; color: var(--texte); background: var(--fond); }
@@ -51,7 +51,7 @@
 </head>
 <body>
     <header>
-        <a class="marque" href="{{ route('patient.accueil') }}">G-SANTÉ</a>
+        <a class="marque" href="{{ route('patient.accueil') }}"><img src="/patient-icone-192.png" alt="" width="28" height="28" style="vertical-align:middle;border-radius:50%;background:#fff;margin-right:8px">{{ config('gsante.nom_espace_patient') }}</a>
         @if(session()->has(\App\Http\Middleware\PatientConnecte::SESSION))
             <form method="POST" action="{{ route('patient.deconnexion') }}">@csrf<button type="submit">Se déconnecter</button></form>
         @endif

@@ -2,6 +2,8 @@
 
 namespace App\Services\EnLigne;
 
+use App\Models\EnLigne\Evenement;
+use App\Models\EnLigne\Site;
 use App\Models\Etablissement;
 use App\Models\SynchroJournal;
 use App\Models\SynchroSortante;
@@ -10,6 +12,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -21,10 +24,13 @@ use Throwable;
  * envoi des décisions en attente, publication du catalogue (créneaux libres).
  * Sans connexion, rien n'est perdu : les décisions restent en file et les
  * demandes attendent sur le serveur en ligne jusqu'au passage suivant.
+ *
+ * Espace patient intégré (GSANTE_ESPACE_PATIENT=true) : les mêmes échanges ont
+ * lieu directement en base, sans HTTP ni identifiants, avec la même logique.
  */
 class SynchroService
 {
-    public function __construct(private CreneauxService $creneaux, private DemandesService $demandes) {}
+    public function __construct(private CreneauxService $creneaux, private DemandesService $demandes, private PortailService $portail) {}
 
     public function synchroniser(Etablissement $etablissement): SynchroJournal
     {
@@ -36,6 +42,9 @@ class SynchroService
             if (!$etablissement->connecteEnLigne()) {
                 throw new RuntimeException('Serveur en ligne non configuré pour cet établissement.');
             }
+            if ($etablissement->espacePatientIntegre()) {
+                $this->siteIntegre($etablissement);
+            }
             // Demandes d'abord : les décisions qu'elles entraînent (conflits) partent
             // dans le même passage, et les créneaux publiés en tiennent compte
             $recus = $this->recupererDemandes($etablissement);
@@ -44,6 +53,10 @@ class SynchroService
 
             $journal->update(['statut' => 'ok', 'fin' => now(), 'envoyes' => $envoyes, 'recus' => $recus]);
             $etablissement->forceFill(['en_ligne_synchro_at' => now(), 'en_ligne_erreur' => null])->saveQuietly();
+            // Espace intégré : passage chaque minute ; un passage sans échange n'est pas gardé au journal
+            if ($etablissement->espacePatientIntegre() && !$envoyes && !$recus) {
+                $journal->delete();
+            }
         } catch (Throwable $e) {
             $message = mb_substr($e->getMessage(), 0, 250);
             $journal->update(['fin' => now(), 'envoyes' => $envoyes, 'recus' => $recus, 'message' => $message]);
@@ -79,7 +92,7 @@ class SynchroService
             $reponse = $this->appeler($etablissement, 'POST', '/api/synchro/evenements', [
                 'evenements' => $lot->map(fn($e) => ['uuid' => $e->uuid, 'type' => $e->type, 'donnees' => $e->donnees])->all(),
             ]);
-            $acquis = (array) $reponse->json('acquis', []);
+            $acquis = (array) ($reponse['acquis'] ?? []);
             SynchroSortante::whereIn('uuid', $acquis)->update(['envoye_at' => now()]);
             $total += count($acquis);
         } while (count($acquis) === $lot->count());
@@ -91,8 +104,8 @@ class SynchroService
     {
         $total = 0;
         do {
-            $evenements = (array) $this->appeler($etablissement, 'GET', '/api/synchro/evenements?apres=' . (int) $etablissement->en_ligne_curseur)
-                ->json('evenements', []);
+            $reponse = $this->appeler($etablissement, 'GET', '/api/synchro/evenements?apres=' . (int) $etablissement->en_ligne_curseur);
+            $evenements = (array) ($reponse['evenements'] ?? []);
             foreach ($evenements as $evenement) {
                 // Un événement et l'avancée du curseur sont enregistrés ensemble
                 DB::transaction(function () use ($etablissement, $evenement) {
@@ -106,7 +119,61 @@ class SynchroService
         return $total;
     }
 
-    private function appeler(Etablissement $etablissement, string $methode, string $chemin, ?array $donnees = null): Response
+    /** Réponse décodée du serveur en ligne, ou de l'espace patient intégré. */
+    private function appeler(Etablissement $etablissement, string $methode, string $chemin, ?array $donnees = null): array
+    {
+        if ($etablissement->espacePatientIntegre()) {
+            return $this->appelerIntegre($this->siteIntegre($etablissement), $methode, $chemin, $donnees ?? []);
+        }
+
+        return (array) $this->appelerDistant($etablissement, $methode, $chemin, $donnees)->json();
+    }
+
+    /** Mêmes traitements que SynchroController, sans passer par le réseau. */
+    private function appelerIntegre(Site $site, string $methode, string $chemin, array $donnees): array
+    {
+        $route = $methode . ' ' . strtok($chemin, '?');
+        switch ($route) {
+            case 'POST /api/synchro/catalogue':
+                $this->portail->publierCatalogue($site, $donnees);
+
+                return ['ok' => true];
+            case 'POST /api/synchro/evenements':
+                foreach ($donnees['evenements'] as $evenement) {
+                    $this->portail->appliquer($site, $evenement);
+                }
+                $site->update(['derniere_synchro_at' => now()]);
+
+                return ['acquis' => array_column($donnees['evenements'], 'uuid')];
+            case 'GET /api/synchro/evenements':
+                parse_str((string) parse_url($chemin, PHP_URL_QUERY), $parametres);
+
+                return ['evenements' => Evenement::where('site_id', $site->id)->where('id', '>', max(0, (int) ($parametres['apres'] ?? 0)))
+                    ->orderBy('id')->limit(config('gsante.synchro.lot'))->get(['id', 'type', 'donnees'])->toArray()];
+        }
+
+        throw new RuntimeException('Échange inconnu : ' . $route);
+    }
+
+    /** Fiche de l'établissement dans l'espace patient intégré, créée à la première synchronisation. */
+    private function siteIntegre(Etablissement $etablissement): Site
+    {
+        $site = Site::firstOrNew(['uuid' => $etablissement->uuid]);
+        if (!$site->exists) {
+            // Identifiants jamais utilisés (pas d'échange réseau), mais exigés par la table
+            $site->fill(['cle' => 'INT-' . Str::upper(Str::random(16)), 'secret' => Str::random(64), 'nom' => $etablissement->nom]);
+            // Nouvelle file d'événements : le curseur d'un ancien serveur séparé ne vaut plus
+            $etablissement->forceFill(['en_ligne_curseur' => 0])->saveQuietly();
+        }
+        if (!$site->actif) {
+            $site->actif = true;
+        }
+        $site->save();
+
+        return $site;
+    }
+
+    private function appelerDistant(Etablissement $etablissement, string $methode, string $chemin, ?array $donnees = null): Response
     {
         $url = rtrim($etablissement->en_ligne_url, '/') . $chemin;
         $corps = $donnees === null ? '' : json_encode($donnees, JSON_UNESCAPED_UNICODE);

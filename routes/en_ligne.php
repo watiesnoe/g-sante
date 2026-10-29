@@ -5,7 +5,8 @@ use App\Http\Middleware\VerifierSignatureSynchro;
 use Illuminate\Support\Facades\Route;
 
 /*
-| Serveur en ligne (GSANTE_MODE=en_ligne). Échanges avec les serveurs locaux :
+| Serveur en ligne (GSANTE_MODE=en_ligne), ou espace patient intégré
+| (GSANTE_ESPACE_PATIENT=true) pour la partie /patient. Échanges avec les serveurs locaux :
 | requêtes signées par établissement, débit limité (SEC-13, SEC-14).
 */
 Route::prefix('api/synchro')->middleware(['throttle:120,1', VerifierSignatureSynchro::class])->group(function () {
@@ -19,6 +20,7 @@ Route::prefix('api/synchro')->middleware(['throttle:120,1', VerifierSignatureSyn
 | l'application interne (établissement courant, comptes du personnel).
 */
 Route::prefix('patient')->name('patient.')->middleware([
+    \App\Http\Middleware\SessionEspacePatient::class,
     \Illuminate\Cookie\Middleware\EncryptCookies::class,
     \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
     \Illuminate\Session\Middleware\StartSession::class,
@@ -50,6 +52,9 @@ Route::prefix('patient')->name('patient.')->middleware([
     Route::get('/rendez-vous/{demande}/{action}', fn() => redirect()->route('patient.accueil'))->whereIn('action', ['annuler', 'accepter']);
     Route::get('/deconnexion', fn() => redirect()->route('patient.accueil'));
 });
+
+// Application Android de l'espace patient (Trusted Web Activity) : 404 tant qu'elle n'est pas déclarée
+Route::get('/.well-known/assetlinks.json', [\App\Http\Controllers\EspacePatientController::class, 'assetLinks'])->name('patient.assetlinks');
 
 // Sur le serveur en ligne, l'adresse racine mène à l'espace patient
 if (config('gsante.mode') === 'en_ligne') {

@@ -168,6 +168,12 @@
                     </button>
                 </form>
 
+                @if(\App\Models\Etablissement::espacePatientDisponible())
+                    <p class="text-center mt-3 mb-0">
+                        Vous êtes patient ? <a href="{{ route('patient.connexion') }}"><i class="fa fa-mobile-alt me-1"></i>Espace patient</a>
+                    </p>
+                @endif
+
                 <div class="pied">&copy; {{ date('Y') }} Mali Kènèya Hub · Développé par <strong>DigitAfrika</strong></div>
             </div>
         </main>

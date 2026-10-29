@@ -23,6 +23,12 @@ class DemandeEnLigneController extends Controller
     {
         abort_unless(Auth::user()->can('rendezvous.en_ligne'), 403, 'Accès non autorisé.');
 
+        // Espace patient intégré : échange immédiat (sans réseau), la liste est toujours à jour
+        $etablissement = Etablissement::courant();
+        if ($etablissement->espacePatientIntegre()) {
+            app(SynchroService::class)->synchroniser($etablissement);
+        }
+
         $statut = $request->statut ?: 'a_traiter';
         $demandes = DemandeEnLigne::with(['medecin', 'patient', 'rendezVous'])
             ->when($statut === 'a_traiter', fn($q) => $q->whereIn('statut', ['recue', 'conflit']), fn($q) => $q->when($statut !== 'toutes', fn($s) => $s->where('statut', $statut)))
@@ -34,8 +40,6 @@ class DemandeEnLigneController extends Controller
                 ->merge(Patient::doublonsProbables($d->patient_nom, $d->patient_prenom))
                 ->unique('id')->take(5),
         ]);
-
-        $etablissement = Etablissement::courant();
 
         return view('application.rendezvous.en_ligne', [
             'demandes'        => $demandes,

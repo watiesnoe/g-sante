@@ -198,6 +198,27 @@ php artisan en-ligne:site <UUID> "Nom" --renouveler   # nouveau secret
 
 > Sans opérateur SMS branché (`SMS_PILOTE=journal`), les codes ne partent pas. Hors production, ils s'affichent à l'écran pour les essais ; en production, ils ne s'affichent jamais. Choisissez un fournisseur SMS avant d'ouvrir l'espace aux patients.
 
+**Variante : espace patient intégré** (application hébergée en ligne, sans second serveur) :
+
+1. Dans le `.env` de l'application, ajoutez `GSANTE_ESPACE_PATIENT=true` (garder `GSANTE_MODE=local`), puis `php artisan config:clear`.
+2. Dans Administration → configuration de l'espace, cochez le module **« Espace patient en ligne »**, puis, dans les règles de fonctionnement, **« Publier les créneaux libres »**.
+3. Les patients se connectent sur `https://adresse-de-l-application/patient` (lien « Espace patient » aussi présent sur la page de connexion). Aucune clé, aucun secret : les échanges se font en base, chaque minute par la tâche cron, et à chaque ouverture de l'écran « Demandes en ligne ».
+
+Décocher le module retire aussitôt l'établissement de l'espace patient.
+
+**Application Android « Kènèya Hub »** (APK ou Play Store, sans code à part) :
+
+1. Sur pwabuilder.com, saisissez `https://adresse-de-l-application/patient`, puis « Package for stores » → Android. Nom du paquet conseillé : `io.digitafrika.keneyahub`. **Conservez la clé de signature (fichier .keystore et mots de passe)** : sans elle, plus aucune mise à jour possible.
+2. Dans le `.env`, déclarez l'application avec l'empreinte SHA-256 donnée par PWABuilder (fichier `assetlinks.json` du paquet) :
+   ```
+   ANDROID_PAQUET=io.digitafrika.keneyahub
+   ANDROID_EMPREINTES_SHA256=AB:CD:…
+   ```
+   Puis `php artisan config:clear`. Vérifiez `https://adresse-de-l-application/.well-known/assetlinks.json`. Sur le Play Store, Google signe à nouveau l'application : ajoutez aussi son empreinte (Play Console → Intégrité de l'application), séparée par une virgule.
+3. L'application affiche le site : toute mise à jour de l'espace patient s'applique sans republier l'APK.
+
+Le nom affiché se change avec `GSANTE_NOM_ESPACE_PATIENT` (avant de générer l'APK).
+
 **Essai sur un poste de développement** (deux serveurs sur la même machine) :
 ```bash
 scripts/serveur-en-ligne.sh installer                     # base gsante_en_ligne

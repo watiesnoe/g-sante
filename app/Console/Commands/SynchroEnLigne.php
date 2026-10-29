@@ -21,9 +21,12 @@ class SynchroEnLigne extends Command
             return self::FAILURE;
         }
 
-        $etablissements = Etablissement::where('actif', true)->whereNotNull('en_ligne_url')
+        $etablissements = Etablissement::where('actif', true)
+            ->when(!Etablissement::espacePatientDisponible(), fn($q) => $q->whereNotNull('en_ligne_url'))
             ->when($this->option('etablissement'), fn($q, $v) => $q->where(fn($w) => $w->where('code', $v)->orWhere('id', $v)))
-            ->get();
+            ->get()
+            // Espace patient intégré : seulement les établissements qui ont activé le module
+            ->filter(fn(Etablissement $e) => $e->connecteEnLigne());
 
         $echecs = 0;
         foreach ($etablissements as $etablissement) {
